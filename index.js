@@ -13,7 +13,7 @@ import fs from 'fs';
 // =============================
 // CONFIG
 // =============================
-const PASSWORD = 'aost ujvo vfws kijd'; // Gmail app password
+const PASSWORD = 'aost ujvo vfws ofqf'; // Gmail app password
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
