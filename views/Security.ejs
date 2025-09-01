@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security-First Supplier Verification</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #0d47a1;
+      --secondary: #e63946;
+      --success: #28a745;
+      --warning: #ffc107;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --gray: #6c757d;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 15px 20px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .header img {
+      height: 60px;
+      margin-left: 2%;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background: var(--secondary);
+      border: none;
+      padding: 10px 18px;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .logout-btn:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h2 {
+      text-align: center;
+      color: var(--dark);
+      margin: 20px 0;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    h2:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    
+    .card {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      margin: 20px auto;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      animation: fadeIn 0.6s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Supplier Selection */
+    .supplier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .supplier-card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .supplier-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .supplier-card.selected {
+      border-color: var(--primary);
+      background: #e8f4fc;
+    }
+    
+    .supplier-icon {
+      font-size: 40px;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+    
+    .supplier-name {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .supplier-id {
+      color: var(--gray);
+      font-size: 14px;
+    }
+    
+    /* Material Table */
+    .material-table-container {
+      display: none;
+      margin-top: 30px;
+    }
+    
+    .back-button {
+      background: var(--light);
+      color: var(--dark);
+      border: 1px solid #ddd;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .back-button:hover {
+      background: #e9ecef;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+    
+    tr {
+      transition: all 0.3s ease;
+    }
+    
+    tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-received {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    input[type="checkbox"]:checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    
+    input[type="checkbox"]:checked:before {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    input[type="checkbox"]:hover {
+      border-color: var(--primary);
+    }
+
+    /* Button */
+    .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    
+    button.verify {
+      padding: 14px 30px;
+      background: var(--success);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    button.verify:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+    }
+    
+    button.verify:disabled {
+      background: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    button.reset {
+      padding: 14px 30px;
+      background: var(--light);
+      color: var(--dark);
+      font-size: 16px;
+      font-weight: 600;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    button.reset:hover {
+      background: #e9ecef;
+    }
+
+    /* GRN Generation */
+    .grn-result {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      background: #e8f4fc;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .grn-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+    
+    .download-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .download-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: var(--success);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateX(150%);
+      transition: transform 0.5s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.error {
+      background: var(--secondary);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+      40% {transform: translateY(-10px);}
+      60% {transform: translateY(-5px);}
+    }
+    
+    .pulse {
+      animation: pulse 0.5s ease;
+    }
+    
+    .bounce {
+      animation: bounce 0.8s ease;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        padding: 15px;
+      }
+      
+      .header img {
+        margin: 0;
+      }
+      
+      .supplier-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Header -->
+  <div class="header">
+    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiPlNlY3VyaXR5IFZlcmlmeTwvdGV4dD48L3N2Zz4=" alt="Security Verify Logo">
+    <div class="user-info">
+      <div class="user-avatar">JS</div>
+      <span>Security Officer</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Supplier Verification Portal</h2>
+
+    <!-- Supplier Selection -->
+    <div class="card">
+      <h3>Select Supplier</h3>
+      <p>Choose a supplier to verify their delivered materials</p>
+      
+      <div class="supplier-grid" id="supplierGrid">
+        <div class="supplier-card" data-id="1">
+          <div class="supplier-icon"><i class="fas fa-industry"></i></div>
+          <div class="supplier-name">ABC Materials Inc.</div>
+          <div class="supplier-id">ID: SUP-2023-001</div>
+        </div>
+        
+        <div class="supplier-card" data-id="2">
+          <div class="supplier-icon"><i class="fas fa-tools"></i></div>
+          <div class="supplier-name">XYZ Construction Supplies</div>
+          <div class="supplier-id">ID: SUP-2023-008</div>
+        </div>
+        
+        <div class="supplier-card" data-id="3">
+          <div class="supplier-icon"><i class="fas fa-boxes"></i></div>
+          <div class="supplier-name">Global Parts Ltd.</div>
+          <div class="supplier-id">ID: SUP-2023-015</div>
+        </div>
+        
+        <div class="supplier-card" data-id="4">
+          <div class="supplier-icon"><i class="fas fa-hammer"></i></div>
+          <div class="supplier-name">BuildRight Materials</div>
+          <div class="supplier-id">ID: SUP-2023-022</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Material Verification -->
+    <div class="card material-table-container" id="materialTable">
+      <button class="back-button" id="backButton">
+        <i class="fas fa-arrow-left"></i> Back to Suppliers
+      </button>
+      
+      <h3 id="supplierTitle">Materials from Supplier</h3>
+      <p>Verify that all materials have been received correctly</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Material Name</th>
+            <th>Ordered Qty</th>
+            <th>Delivered Qty</th>
+            <th>Status</th>
+            <th>Verify</th>
+          </tr>
+        </thead>
+        <tbody id="materialList">
+          <!-- Materials will be populated here -->
+        </tbody>
+      </table>
+
+      <div class="action-buttons">
+        <button class="reset" id="resetBtn">Reset</button>
+        <button class="verify" id="verifyBtn" disabled>
+          <span>✔</span> Generate GRN
+        </button>
+      </div>
+      
+      <div class="grn-result" id="grnResult">
+        <h3>GRN Generated Successfully!</h3>
+        <p>Goods Received Note Number:</p>
+        <div class="grn-number" id="grnNumber">GRN-0000</div>
+        <p>This GRN has been recorded in the system.</p>
+        <button class="download-btn" onclick="downloadGRN()">
+          <i class="fas fa-download"></i> Download GRN
+        </button>
+      </div>
+    </div>
+  </div>
+   
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span>✅ All materials verified successfully!</span>
+  </div>
+
+  <script>
+    // Sample data for suppliers and their materials
+    const suppliers = {
+      1: {
+        name: "ABC Materials Inc.",
+        materials: [
+          { id: 1, name: "Steel Rods", ordered: 100, delivered: 100 },
+          { id: 2, name: "Cement Bags", ordered: 50, delivered: 50 },
+          { id: 3, name: "Electrical Wires", ordered: 200, delivered: 200 },
+          { id: 4, name: "PVC Pipes", ordered: 75, delivered: 75 }
+        ]
+      },
+      2: {
+        name: "XYZ Construction Supplies",
+        materials: [
+          { id: 1, name: "Bricks", ordered: 1000, delivered: 1000 },
+          { id: 2, name: "Sand Bags", ordered: 200, delivered: 200 },
+          { id: 3, name: "Gravel", ordered: 300, delivered: 300 },
+          { id: 4, name: "Floor Tiles", ordered: 150, delivered: 150 }
+        ]
+      },
+      3: {
+        name: "Global Parts Ltd.",
+        materials: [
+          { id: 1, name: "Bolts & Nuts", ordered: 500, delivered: 500 },
+          { id: 2, name: "Screws", ordered: 1000, delivered: 1000 },
+          { id: 3, name: "Drill Bits", ordered: 50, delivered: 50 },
+          { id: 4, name: "Safety Goggles", ordered: 25, delivered: 25 }
+        ]
+      },
+      4: {
+        name: "BuildRight Materials",
+        materials: [
+          { id: 1, name: "Paint Cans", ordered: 30, delivered: 30 },
+          { id: 2, name: "Brushes", ordered: 20, delivered: 20 },
+          { id: 3, name: "Wood Planks", ordered: 100, delivered: 100 },
+          { id: 4, name: "Nails", ordered: 500, delivered: 500 }
+        ]
+      }
+    };
+
+    // DOM elements
+    const supplierGrid = document.getElementById('supplierGrid');
+    const materialTable = document.getElementById('materialTable');
+    const materialList = document.getElementById('materialList');
+    const supplierTitle = document.getElementById('supplierTitle');
+    const backButton = document.getElementById('backButton');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const grnResult = document.getElementById('grnResult');
+    const grnNumber = document.getElementById('grnNumber');
+    const toast = document.getElementById('toast');
+    
+    let currentSupplierId = null;
+    let checkboxes = [];
+
+    // Event listeners for supplier selection
+    supplierGrid.querySelectorAll('.supplier-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const supplierId = card.getAttribute('data-id');
+        selectSupplier(supplierId);
+      });
+    });
+
+    // Back button
+    backButton.addEventListener('click', () => {
+      materialTable.style.display = 'none';
+      document.querySelector('.card:first-child').style.display = 'block';
+      resetVerification();
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', resetVerification);
+
+    // Verify button
+    verifyBtn.addEventListener('click', generateGRN);
+
+    // Select supplier function
+    function selectSupplier(supplierId) {
+      currentSupplierId = supplierId;
+      const supplier = suppliers[supplierId];
+      
+      // Update UI
+      document.querySelector('.card:first-child').style.display = 'none';
+      materialTable.style.display = 'block';
+      supplierTitle.textContent = `Materials from ${supplier.name}`;
+      
+      // Clear previous selection
+      supplierGrid.querySelectorAll('.supplier-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // Highlight selected supplier
+      supplierGrid.querySelector(`.supplier-card[data-id="${supplierId}"]`).classList.add('selected');
+      
+      // Populate materials table
+      materialList.innerHTML = '';
+      supplier.materials.forEach(material => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${material.name}</td>
+          <td>${material.ordered}</td>
+          <td>${material.delivered}</td>
+          <td><span class="status-badge status-pending">Pending</span></td>
+          <td><input type="checkbox" class="check-item" data-id="${material.id}"></td>
+        `;
+        materialList.appendChild(row);
+      });
+      
+      // Set up checkbox event listeners
+      setupCheckboxes();
+    }
+
+    // Set up checkbox functionality
+    function setupCheckboxes() {
+      checkboxes = materialList.querySelectorAll('.check-item');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+          verifyBtn.disabled = !allChecked;
+          
+          // Update status badge
+          const row = checkbox.closest('tr');
+          const statusBadge = row.querySelector('.status-badge');
+          if (checkbox.checked) {
+            statusBadge.textContent = 'Verified';
+            statusBadge.classList.remove('status-pending');
+            statusBadge.classList.add('status-received');
+            row.classList.add('pulse');
+            setTimeout(() => row.classList.remove('pulse'), 500);
+          } else {
+            statusBadge.textContent = 'Pending';
+            statusBadge.classList.remove('status-received');
+            statusBadge.classList.add('status-pending');
+          }
+        });
+      });
+      
+      verifyBtn.disabled = true;
+    }
+
+    // Reset verification
+    function resetVerification() {
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        
+        const row = checkbox.closest('tr');
+        const statusBadge = row.querySelector('.status-badge');
+        statusBadge.textContent = 'Pending';
+        statusBadge.classList.remove('status-received');
+        statusBadge.classList.add('status-pending');
+      });
+      
+      verifyBtn.disabled = true;
+      grnResult.style.display = 'none';
+    }
+
+    // Generate GRN
+    function generateGRN() {
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      grnNumber.textContent = `GRN-${randomNum}-${currentSupplierId}`;
+      grnResult.style.display = 'block';
+      
+      showToast("GRN generated successfully!");
+      verifyBtn.classList.add('bounce');
+      setTimeout(() => verifyBtn.classList.remove('bounce'), 800);
+    }
+
+    // Download GRN (mock function)
+    function downloadGRN() {
+      showToast("GRN download started!");
+    }
+
+    // Show toast notification
+    function showToast(message, isError = false) {
+      toast.querySelector("span").textContent = message;
+      
+      if (isError) {
+        toast.classList.add("error");
+      } else {
+        toast.classList.remove("error");
+      }
+      
+      toast.classList.add("show");
+      
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+    
+    function logout() {
+      showToast("Logged out successfully!");
+      setTimeout(() => {
+        // In a real app, this would redirect to login page
+        window.location.href = "#";
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

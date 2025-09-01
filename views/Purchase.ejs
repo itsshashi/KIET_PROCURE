@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Comparison Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #1a2530);
+            color: white;
+            padding: 25px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .filters {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-group input:focus, .filter-group select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .orders-table {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            font-weight: 600;
+            color: #444;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        th:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+        }
+        
+        th::after {
+            content: "↕";
+            position: absolute;
+            right: 15px;
+            opacity: 0.5;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .low-price {
+            color: #27ae60;
+            font-weight: 700;
+        }
+        
+        .savings {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .status-pass {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .status-fail {
+            background-color: #ffebee;
+            color: #e74c3c;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 35px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .supplier-list {
+            margin-top: 25px;
+        }
+        
+        .supplier-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 18px;
+            border: 1px solid #eee;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .supplier-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .supplier-info {
+            flex: 2;
+        }
+        
+        .supplier-price {
+            flex: 1;
+            text-align: right;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .best-price {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.3s;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(135deg, #2c3e50, #4a6580);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .order-id {
+            font-family: monospace;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        /* New styles for quotation upload */
+        .upload-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px dashed #ccc;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #2471a3);
+        }
+        
+        .supplier-level {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 12px;
+        }
+        
+        .level-l1 {
+            background-color: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .level-l2 {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .level-l3 {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .quotation-file {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        
+        .file-icon {
+            margin-right: 10px;
+            color: #666;
+        }
+        
+        .file-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .file-action-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 0;
+        }
+        
+        .file-action-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .quotation-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        
+        /* PDF Viewer Styles */
+        .pdf-viewer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pdf-viewer-content {
+            background-color: white;
+            width: 80%;
+            height: 80%;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pdf-viewer-header {
+            padding: 15px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pdf-viewer-body {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        .pdf-viewer-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .pdf-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Cost entry form */
+        .cost-entry-form {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        
+        .cost-entry-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .cost-entry-row label {
+            min-width: 120px;
+            font-weight: 600;
+        }
+        
+        .cost-entry-row input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 900px) {
+            .filter-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            th, td {
+                padding: 12px 8px;
+            }
+            
+            .hide-mobile {
+                display: none;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .cost-entry-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .modal-content {
+                padding: 25px 15px;
+            }
+            
+            .supplier-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .supplier-price {
+                text-align: left;
+            }
+            
+            .pdf-viewer-content {
+                width: 95%;
+                height: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Supplier Comparison Tool</h1>
+        <p>Compare supplier prices for pending product order requests</p>
+    </header>
+
+    <div class="container">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">₹12,450</div>
+                <div class="stat-label">Potential Savings</div>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search">Search Orders</label>
+                    <input type="text" id="search" placeholder="Product name, employee, etc.">
+                </div>
+                <div class="filter-group">
+                    <label for="status">Order Status</label>
+                    <select id="status">
+                        <option value="pending">Pending Only</option>
+                        <option value="all">All Statuses</option>
+                        <option value="pass">Pass</option>
+                        <option value="fail">Fail</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="department">Department</label>
+                    <select id="department">
+                        <option value="all">All Departments</option>
+                        <option value="it">IT</option>
+                        <option value="hr">HR</option>
+                        <option value="finance">Finance</option>
+                        <option value="operations">Operations</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date">Date Range</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="filter-group" style="align-self: flex-end;">
+                    <button id="applyFilters">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="orders-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Order Request ID</th>
+                        <th>Product Name</th>
+                        <th>Employee</th>
+                        <th class="hide-mobile">Department</th>
+                        <th class="hide-mobile">Current Supplier</th>
+                        <th>Current Price (₹)</th>
+                        <th>Lowest Available (₹)</th>
+                        <th>Potential Savings (₹)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Supplier Comparison Modal -->
+    <div class="modal" id="supplierModal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>Supplier Comparison for <span id="modal-product-name"></span></h2>
+            <p><strong>Requested by:</strong> <span id="modal-employee"></span></p>
+            <p><strong>Current Supplier:</strong> <span id="modal-current-supplier"></span></p>
+            <p><strong>Current Price:</strong> ₹<span id="modal-current-price"></span></p>
+            
+            <div class="upload-section">
+                <h3>Upload Supplier Quotations</h3>
+                <p>Upload quotation files to compare suppliers. Files will be automatically assigned L1, L2, L3 levels based on pricing.</p>
+                <input type="file" id="quotationUpload" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple style="display: none;">
+                <label for="quotationUpload" class="upload-btn">Select Quotation Files</label>
+                <div id="uploaded-files-list"></div>
+            </div>
+            
+            <div class="supplier-list" id="supplier-list">
+                <!-- Supplier list will be populated by JavaScript -->
+            </div>
+            
+            <div class="cost-entry-form">
+                <h3>Manual Cost Entry</h3>
+                <div class="cost-entry-row">
+                    <label for="supplier-name">Supplier Name:</label>
+                    <input type="text" id="supplier-name" placeholder="Enter supplier name">
+                </div>
+                <div class="cost-entry-row">
+                    <label for="supplier-cost">Cost (₹):</label>
+                    <input type="number" id="supplier-cost" placeholder="Enter cost in rupees">
+                </div>
+                <div class="cost-entry-row">
+                    <button id="add-manual-cost">Add to Comparison</button>
+                </div>
+            </div>
+            
+            <div class="quotation-actions">
+                <button id="compareQuotations">Compare Quotations</button>
+            </div>
+            
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
+                <button id="passOrder" style="background: linear-gradient(135deg, #27ae60, #219653);">Pass Order</button>
+                <button id="failOrder" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Fail Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div class="pdf-viewer" id="pdfViewer">
+        <div class="pdf-viewer-content">
+            <div class="pdf-viewer-header">
+                <h3 id="pdf-viewer-title">Quotation Document</h3>
+                <span class="close" id="closePdfViewer">&times;</span>
+            </div>
+            <div class="pdf-viewer-body">
+                <div class="pdf-placeholder" id="pdfPlaceholder">
+                    PDF preview would be shown here. In a real application, this would display the actual PDF.
+                </div>
+                <iframe id="pdfFrame" style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration with prices in rupees and longer order IDs
+        const orders = [
+            {
+                id: 'PROD-REQ-2023-001-XYZ-IT-DELL',
+                product: 'Laptop Dell XPS 13',
+                employee: 'John Smith',
+                department: 'IT',
+                currentSupplier: 'TechSupply Inc.',
+                currentPrice: 102999,
+                suppliers: [
+                    { name: 'TechSupply Inc.', price: 102999 },
+                    { name: 'CompWorld', price: 97999 },
+                    { name: 'DirectTech', price: 94999 },
+                    { name: 'OfficeEquipment Co.', price: 99999 }
+                ],
+                status: 'pending'
+            },
+            {
+                id: 'PROD-REQ-2023-002-ABC-HR-ERGOCHAIR',
+                product: 'Office Chair Ergonomic',
+                employee: 'Sarah Johnson',
+                department: 'HR',
+                currentSupplier: 'OfficeFurniture Direct',
+                currentPrice: 18499,
+                suppliers: [
+                    { name: 'OfficeFurniture Direct', price: 18499 },
+                    { name: 'WorkSpace Solutions', price: 16999 },
+                    { name: 'ComfortSeating Ltd.', price: 15999 },
+                    { name: 'BizChair.com', price: 17999 }
+                ],
+                status: 'pending'
+            },
+            {
+                id: 'PROD-REQ-2023-003-DEF-OPS-EPSONPROJ',
+                product: 'Projector Epson EB-U05',
+                employee: 'Michael Chen',
+                department: 'Operations',
+                currentSupplier: 'AVEquipment Pro',
+                currentPrice: 44999,
+                suppliers: [
+                    { name: 'AVEquipment Pro', price: 44999 },
+                    { name: 'ProjectorWorld', price: 42999 },
+                    { name: 'TechDeals', price: 39999 },
+                    { name: 'OfficeTech Supply', price: 43999 }
+                ],
+                status: 'pending'
+            },
+            {
+                id: 'PROD-REQ-2023-004-GHI-MKT-ADOBECC',
+                product: 'Software License - Adobe Creative Cloud',
+                employee: 'Lisa Rodriguez',
+                department: 'Marketing',
+                currentSupplier: 'SoftwareDirect',
+                currentPrice: 44999,
+                suppliers: [
+                    { name: 'SoftwareDirect', price: 44999 },
+                    { name: 'TechSoft Inc.', price: 43999 },
+                    { name: 'DigitalLicense Group', price: 39999 },
+                    { name: 'CreativeSoftware Co.', price: 42999 }
+                ],
+                status: 'pass'
+            },
+            {
+                id: 'PROD-REQ-2023-005-JKL-FIN-STANDDESK',
+                product: 'Desk - Standing Adjustable',
+                employee: 'Robert Kim',
+                department: 'Finance',
+                currentSupplier: 'OfficeDesigners',
+                currentPrice: 33499,
+                suppliers: [
+                    { name: 'OfficeDesigners', price: 33499 },
+                    { name: 'ErgoWorks', price: 31999 },
+                    { name: 'ModernOffice Solutions', price: 30999 },
+                    { name: 'Workspace Furniture', price: 32499 }
+                ],
+                status: 'pending'
+            }
+        ];
+
+        // Store current order being viewed in modal
+        let currentOrder = null;
+        // Store uploaded quotation files
+        let uploadedQuotations = [];
+
+        // Function to display orders in the table
+        function displayOrders(ordersToDisplay) {
+            const ordersBody = document.getElementById('orders-body');
+            ordersBody.innerHTML = '';
+            
+            ordersToDisplay.forEach(order => {
+                // Find the lowest price from suppliers
+                const lowestPrice = Math.min(...order.suppliers.map(s => s.price));
+                const potentialSavings = order.currentPrice - lowestPrice;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="order-id">${order.id}</td>
+                    <td>${order.product}</td>
+                    <td>${order.employee}</td>
+                    <td class="hide-mobile">${order.department}</td>
+                    <td class="hide-mobile">${order.currentSupplier}</td>
+                    <td>₹${order.currentPrice.toLocaleString('en-IN')}</td>
+                    <td class="low-price">₹${lowestPrice.toLocaleString('en-IN')}</td>
+                    <td class="savings">₹${potentialSavings.toLocaleString('en-IN')}</td>
+                    <td><span class="status-${order.status}">${order.status === 'pass' ? 'Pass' : order.status === 'fail' ? 'Fail' : 'Pending'}</span></td>
+                    <td>
+                        <button class="action-btn view-suppliers" data-id="${order.id}">View Suppliers</button>
+                    </td>
+                `;
+                ordersBody.appendChild(row);
+            });
+            
+            // Add event listeners to the view buttons
+            document.querySelectorAll('.view-suppliers').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-id');
+                    openSupplierModal(orderId);
+                });
+            });
+        }
+        
+        // Function to open the supplier modal
+        function openSupplierModal(orderId) {
+            currentOrder = orders.find(o => o.id === orderId);
+            if (!currentOrder) return;
+            
+            // Reset uploaded files
+            uploadedQuotations = [];
+            document.getElementById('uploaded-files-list').innerHTML = '';
+            
+            // Update modal content
+            document.getElementById('modal-product-name').textContent = currentOrder.product;
+            document.getElementById('modal-employee').textContent = currentOrder.employee;
+            document.getElementById('modal-current-supplier').textContent = currentOrder.currentSupplier;
+            document.getElementById('modal-current-price').textContent = currentOrder.currentPrice.toLocaleString('en-IN');
+            
+            // Populate supplier list
+            populateSupplierList();
+            
+            // Set up file upload handler
+            document.getElementById('quotationUpload').onchange = handleFileUpload;
+            
+            // Set up compare quotations button
+            document.getElementById('compareQuotations').onclick = compareQuotations;
+            
+            // Set up manual cost entry
+            document.getElementById('add-manual-cost').onclick = addManualCost;
+            
+            // Set up pass/fail buttons
+            document.getElementById('passOrder').onclick = function() {
+                currentOrder.status = 'pass';
+                displayOrders(orders.filter(o => o.status === 'pending'));
+                document.getElementById('supplierModal').style.display = 'none';
+                alert(`Order ${currentOrder.id} has been passed!`);
+            };
+            
+            document.getElementById('failOrder').onclick = function() {
+                currentOrder.status = 'fail';
+                displayOrders(orders.filter(o => o.status === 'pending'));
+                document.getElementById('supplierModal').style.display = 'none';
+                alert(`Order ${currentOrder.id} has been failed!`);
+            };
+            
+            // Show the modal
+            document.getElementById('supplierModal').style.display = 'flex';
+        }
+        
+        // Populate supplier list with current data
+        function populateSupplierList() {
+            const supplierList = document.getElementById('supplier-list');
+            supplierList.innerHTML = '';
+            
+            // Sort suppliers by price (lowest first)
+            const sortedSuppliers = [...currentOrder.suppliers].sort((a, b) => a.price - b.price);
+            
+            sortedSuppliers.forEach((supplier, index) => {
+                const supplierItem = document.createElement('div');
+                supplierItem.className = 'supplier-item';
+                if (supplier.price === Math.min(...currentOrder.suppliers.map(s => s.price))) {
+                    supplierItem.classList.add('best-price');
+                }
+                
+                // Assign L1, L2, L3 levels based on price ranking
+                const levelClass = index === 0 ? 'level-l1' : index === 1 ? 'level-l2' : 'level-l3';
+                const levelText = index === 0 ? 'L1 (Lowest)' : index === 1 ? 'L2' : `L${index + 1}`;
+                
+                supplierItem.innerHTML = `
+                    <div class="supplier-info">
+                        <span class="supplier-level ${levelClass}">${levelText}</span>
+                        <h3>${supplier.name}</h3>
+                    </div>
+                    <div class="supplier-price">
+                        ₹${supplier.price.toLocaleString('en-IN')}
+                    </div>
+                `;
+                supplierList.appendChild(supplierItem);
+            });
+        }
+        
+        // Handle file uploads
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            const uploadedFilesList = document.getElementById('uploaded-files-list');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Generate a mock price for demonstration (in real app, this would be extracted from the file)
+                const mockPrice = Math.floor(Math.random() * 20000) + 50000;
+                
+                // Store file info
+                uploadedQuotations.push({
+                    file: file,
+                    name: file.name,
+                    price: mockPrice,
+                    supplier: file.name.split('_')[0] || `Supplier ${uploadedQuotations.length + 1}`
+                });
+                
+                // Display uploaded file
+                const fileElement = document.createElement('div');
+                fileElement.className = 'quotation-file';
+                fileElement.innerHTML = `
+                    <span class="file-icon">📄</span>
+                    <span>${file.name}</span>
+                    <div class="file-actions">
+                        <button class="file-action-btn view-file" data-filename="${file.name}">View</button>
+                        <button class="file-action-btn remove-file">Remove</button>
+                    </div>
+                `;
+                
+                // Add event listeners for view and remove
+                fileElement.querySelector('.view-file').addEventListener('click', function() {
+                    const filename = this.getAttribute('data-filename');
+                    openPdfViewer(filename);
+                });
+                
+                fileElement.querySelector('.remove-file').addEventListener('click', function() {
+                    // Remove from array
+                    const index = uploadedQuotations.findIndex(q => q.name === file.name);
+                    if (index !== -1) {
+                        uploadedQuotations.splice(index, 1);
+                    }
+                    // Remove from UI
+                    fileElement.remove();
+                });
+                
+                uploadedFilesList.appendChild(fileElement);
+            }
+            
+            // Reset the file input
+            event.target.value = '';
+        }
+        
+        // Open PDF viewer
+        function openPdfViewer(filename) {
+            document.getElementById('pdf-viewer-title').textContent = filename;
+            document.getElementById('pdfViewer').style.display = 'flex';
+            
+            // In a real application, this would display the actual PDF
+            document.getElementById('pdfPlaceholder').style.display = 'flex';
+            document.getElementById('pdfFrame').style.display = 'none';
+            
+            // Simulate PDF loading (in a real app, this would load the actual PDF)
+            document.getElementById('pdfPlaceholder').textContent = `Preview of ${filename} would be shown here. In a real application, this would display the actual PDF content.`;
+        }
+        
+        // Close PDF viewer
+        document.getElementById('closePdfViewer').addEventListener('click', function() {
+            document.getElementById('pdfViewer').style.display = 'none';
+        });
+        
+        // Add manual cost entry
+        function addManualCost() {
+            const supplierName = document.getElementById('supplier-name').value;
+            const supplierCost = document.getElementById('supplier-cost').value;
+            
+            if (!supplierName || !supplierCost) {
+                alert('Please enter both supplier name and cost.');
+                return;
+            }
+            
+            // Add to current order suppliers
+            currentOrder.suppliers.push({
+                name: supplierName,
+                price: parseInt(supplierCost)
+            });
+            
+            // Repopulate the supplier list
+            populateSupplierList();
+            
+            // Clear the form
+            document.getElementById('supplier-name').value = '';
+            document.getElementById('supplier-cost').value = '';
+            
+            alert(`Added ${supplierName} with cost ₹${supplierCost} to comparison.`);
+        }
+        
+        // Compare uploaded quotations
+        function compareQuotations() {
+            if (uploadedQuotations.length === 0) {
+                alert('Please upload at least one quotation file to compare.');
+                return;
+            }
+            
+            // Add uploaded quotations to suppliers list
+            uploadedQuotations.forEach(quotation => {
+                currentOrder.suppliers.push({
+                    name: quotation.supplier,
+                    price: quotation.price
+                });
+            });
+            
+            // Repopulate the supplier list
+            populateSupplierList();
+            
+            // Show comparison message
+            const sortedSuppliers = [...currentOrder.suppliers].sort((a, b) => a.price - b.price);
+            const lowestSupplier = sortedSuppliers[0];
+            const savings = currentOrder.currentPrice - lowestSupplier.price;
+            
+            if (savings > 0) {
+                alert(`Comparison complete! Potential savings with ${lowestSupplier.name}: ₹${savings.toLocaleString('en-IN')}`);
+            } else {
+                alert(`Comparison complete. Current supplier offers the best price.`);
+            }
+        }
+        
+        // Close modal when clicking the close button
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('supplierModal').style.display = 'none';
+        });
+        
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('supplierModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Filter functionality
+        document.getElementById('applyFilters').addEventListener('click', function() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const statusFilter = document.getElementById('status').value;
+            const departmentFilter = document.getElementById('department').value;
+            
+            let filteredOrders = orders;
+            
+            // If "Pending Only" is selected, filter by pending status
+            if (statusFilter === 'pending') {
+                filteredOrders = filteredOrders.filter(order => order.status === 'pending');
+            } 
+            // If a specific status is selected, filter by that status
+            else if (statusFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+            }
+            
+            // Apply other filters
+            filteredOrders = filteredOrders.filter(order => {
+                // Search term filter
+                const matchesSearch = searchTerm === '' || 
+                    order.product.toLowerCase().includes(searchTerm) ||
+                    order.employee.toLowerCase().includes(searchTerm) ||
+                    order.id.toLowerCase().includes(searchTerm);
+                
+                // Department filter
+                const matchesDepartment = departmentFilter === 'all' || order.department.toLowerCase() === departmentFilter;
+                
+                return matchesSearch && matchesDepartment;
+            });
+            
+            displayOrders(filteredOrders);
+        });
+        
+        // Initialize the page with only pending orders
+        displayOrders(orders.filter(order => order.status === 'pending'));
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management Dashboard - Orders View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .card.pending { border-top: 4px solid #FF9800; }
+        .card.approved { border-top: 4px solid #4CAF50; }
+        .card.rejected { border-top: 4px solid #F44336; }
+        .card.total { border-top: 4px solid #3498db; }
+        
+        /* Filters */
+        .filters {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .form-control {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn i {
+            font-size: 14px;
+        }
+        
+        /* Orders Table */
+        .orders-table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+        
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .orders-table th, .orders-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .orders-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+        
+        .orders-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background-color: #FFF3E0;
+            color: #FF9800;
+        }
+        
+        .status-approved {
+            background-color: #E8F5E9;
+            color: #4CAF50;
+        }
+        
+        .status-rejected {
+            background-color: #FFEBEE;
+            color: #F44336;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 5px;
+        }
+        
+        .action-view {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .action-edit {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .action-delete {
+            background-color: #F44336;
+            color: white;
+        }
+        
+        /* Order Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 25px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            color: #2c3e50;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .order-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .detail-group {
+            margin-bottom: 15px;
+        }
+        
+        .detail-group label {
+            font-weight: 500;
+            color: #7f8c8d;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .detail-group .value {
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .orders-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-clipboard-list"></i> Order Management Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn" id="exportBtn">
+                    <i class="fas fa-file-export"></i> Export Data
+                </button>
+                <button class="btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Dashboard Cards -->
+        <div class="dashboard-cards">
+            <div class="card total">
+                <h3>Total Orders</h3>
+                <div class="value">42</div>
+            </div>
+            <div class="card pending">
+                <h3>Pending Orders</h3>
+                <div class="value">18</div>
+            </div>
+            <div class="card approved">
+                <h3>Approved Orders</h3>
+                <div class="value">20</div>
+            </div>
+            <div class="card rejected">
+                <h3>Rejected Orders</h3>
+                <div class="value">4</div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="statusFilter">Status</label>
+                <select class="form-control" id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="dateFrom">Date From</label>
+                <input type="date" class="form-control" id="dateFrom">
+            </div>
+            
+            <div class="filter-group">
+                <label for="dateTo">Date To</label>
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+            
+            <div class="filter-group">
+                <label for="search">Search</label>
+                <input type="text" class="form-control" id="search" placeholder="Product, supplier...">
+            </div>
+            
+            <div class="filter-group" style="align-self: flex-end;">
+                <button class="btn" id="applyFilters">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Orders Table -->
+        <div class="orders-table-container">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Product</th>
+                        <th>Supplier</th>
+                        <th>Cost</th>
+                        <th>Request Date</th>
+                        <th>Required Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="fade-in">
+                        <td>#ORD-001</td>
+                        <td>Network Switches</td>
+                        <td>Network Solutions Inc.</td>
+                        <td>$1,250.00</td>
+                        <td>Aug 15, 2023</td>
+                        <td>Sep 10, 2023</td>
+                        <td><span class="status-badge status-pending">Pending</span></td>
+                        <td>
+                            <button class="action-btn action-view" onclick="viewOrder(1)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn action-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="fade-in">
+                        <td>#ORD-002</td>
+                        <td>Laptop Dell XPS 15</td>
+                        <td>Dell Technologies</td>
+                        <td>$1,899.99</td>
+                        <td>Aug 10, 2023</td>
+                        <td>Aug 25, 2023</td>
+                        <td><span class="status-badge status-approved">Approved</span></td>
+                        <td>
+                            <button class="action-btn action-view" onclick="viewOrder(2)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn action-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="fade-in">
+                        <td>#ORD-003</td>
+                        <td>Projector Epson EB-1985</td>
+                        <td>Epson Direct</td>
+                        <td>$1,575.50</td>
+                        <td>Jul 28, 2023</td>
+                        <td>Aug 15, 2023</td>
+                        <td><span class="status-badge status-rejected">Rejected</span></td>
+                        <td>
+                            <button class="action-btn action-view" onclick="viewOrder(3)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn action-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="fade-in">
+                        <td>#ORD-004</td>
+                        <td>Office Chairs (Set of 5)</td>
+                        <td>Office Comfort Inc.</td>
+                        <td>$2,350.00</td>
+                        <td>Aug 05, 2023</td>
+                        <td>Sep 05, 2023</td>
+                        <td><span class="status-badge status-approved">Approved</span></td>
+                        <td>
+                            <button class="action-btn action-view" onclick="viewOrder(4)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn action-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="fade-in">
+                        <td>#ORD-005</td>
+                        <td>Server Rack Cabinet</td>
+                        <td>DataCenter Equipment Ltd.</td>
+                        <td>$3,200.00</td>
+                        <td>Aug 20, 2023</td>
+                        <td>Sep 30, 2023</td>
+                        <td><span class="status-badge status-pending">Pending</span></td>
+                        <td>
+                            <button class="action-btn action-view" onclick="viewOrder(5)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn action-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="order-details">
+                <div class="detail-group">
+                    <label>Order ID</label>
+                    <div class="value" id="modal-orderId">#ORD-001</div>
+                </div>
+                <div class="detail-group">
+                    <label>Status</label>
+                    <div class="value"><span class="status-badge status-pending" id="modal-status">Pending</span></div>
+                </div>
+                <div class="detail-group">
+                    <label>Product Name</label>
+                    <div class="value" id="modal-productName">Network Switches</div>
+                </div>
+                <div class="detail-group">
+                    <label>Serial Number</label>
+                    <div class="value" id="modal-serialNumber">NS-7822-5G</div>
+                </div>
+                <div class="detail-group">
+                    <label>Cost</label>
+                    <div class="value" id="modal-cost">$1,250.00</div>
+                </div>
+                <div class="detail-group">
+                    <label>Description</label>
+                    <div class="value" id="modal-description">10 port gigabit network switches with PoE support</div>
+                </div>
+                <div class="detail-group">
+                    <label>Supplier Name</label>
+                    <div class="value" id="modal-supplierName">Network Solutions Inc.</div>
+                </div>
+                <div class="detail-group">
+                    <label>Supplier Email</label>
+                    <div class="value" id="modal-supplierEmail">orders@netsolutions.com</div>
+                </div>
+                <div class="detail-group">
+                    <label>Date Requested</label>
+                    <div class="value" id="modal-dateRequested">August 15, 2023</div>
+                </div>
+                <div class="detail-group">
+                    <label>Date Required</label>
+                    <div class="value" id="modal-dateRequired">September 10, 2023</div>
+                </div>
+                <div class="detail-group">
+                    <label>Quotation File</label>
+                    <div class="value" id="modal-quotation"><a href="#">quotation_network.pdf</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample order data
+        const orders = [
+            {
+                id: 1,
+                orderId: "#ORD-001",
+                productName: "Network Switches",
+                serialNumber: "NS-7822-5G",
+                cost: "$1,250.00",
+                description: "10 port gigabit network switches with PoE support",
+                supplierName: "Network Solutions Inc.",
+                supplierEmail: "orders@netsolutions.com",
+                dateRequested: "August 15, 2023",
+                dateRequired: "September 10, 2023",
+                status: "pending",
+                quotation: "quotation_network.pdf"
+            },
+            {
+                id: 2,
+                orderId: "#ORD-002",
+                productName: "Laptop Dell XPS 15",
+                serialNumber: "DL-XPS15-1022",
+                cost: "$1,899.99",
+                description: "Dell XPS 15 laptop with 16GB RAM, 1TB SSD, Intel i7",
+                supplierName: "Dell Technologies",
+                supplierEmail: "sales@dell.com",
+                dateRequested: "August 10, 2023",
+                dateRequired: "August 25, 2023",
+                status: "approved",
+                quotation: "quotation_dell.pdf"
+            },
+            {
+                id: 3,
+                orderId: "#ORD-003",
+                productName: "Projector Epson EB-1985",
+                serialNumber: "EP-EB1985-77",
+                cost: "$1,575.50",
+                description: "Epson EB-1985 5000 lumens HD projector",
+                supplierName: "Epson Direct",
+                supplierEmail: "quotes@epson.com",
+                dateRequested: "July 28, 2023",
+                dateRequired: "August 15, 2023",
+                status: "rejected",
+                quotation: "quotation_epson.pdf"
+            },
+            {
+                id: 4,
+                orderId: "#ORD-004",
+                productName: "Office Chairs (Set of 5)",
+                serialNumber: "OF-CHR5-3398",
+                cost: "$2,350.00",
+                description: "Ergonomic office chairs with lumbar support",
+                supplierName: "Office Comfort Inc.",
+                supplierEmail: "info@officecomfort.com",
+                dateRequested: "August 05, 2023",
+                dateRequired: "September 05, 2023",
+                status: "approved",
+                quotation: "quotation_chairs.pdf"
+            },
+            {
+                id: 5,
+                orderId: "#ORD-005",
+                productName: "Server Rack Cabinet",
+                serialNumber: "SR-42U-1000",
+                cost: "$3,200.00",
+                description: "42U server rack cabinet with cooling system",
+                supplierName: "DataCenter Equipment Ltd.",
+                supplierEmail: "sales@dcequipment.com",
+                dateRequested: "August 20, 2023",
+                dateRequired: "September 30, 2023",
+                status: "pending",
+                quotation: "quotation_rack.pdf"
+            }
+        ];
+
+        // View order details
+        function viewOrder(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                document.getElementById('modal-orderId').textContent = order.orderId;
+                document.getElementById('modal-productName').textContent = order.productName;
+                document.getElementById('modal-serialNumber').textContent = order.serialNumber;
+                document.getElementById('modal-cost').textContent = order.cost;
+                document.getElementById('modal-description').textContent = order.description;
+                document.getElementById('modal-supplierName').textContent = order.supplierName;
+                document.getElementById('modal-supplierEmail').textContent = order.supplierEmail;
+                document.getElementById('modal-dateRequested').textContent = order.dateRequested;
+                document.getElementById('modal-dateRequired').textContent = order.dateRequired;
+                document.getElementById('modal-quotation').innerHTML = `<a href="#">${order.quotation}</a>`;
+                
+                // Update status badge
+                const statusBadge = document.getElementById('modal-status');
+                statusBadge.textContent = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+                statusBadge.className = 'status-badge';
+                if (order.status === 'pending') {
+                    statusBadge.classList.add('status-pending');
+                } else if (order.status === 'approved') {
+                    statusBadge.classList.add('status-approved');
+                } else if (order.status === 'rejected') {
+                    statusBadge.classList.add('status-rejected');
+                }
+                
+                // Show modal
+                document.getElementById('orderModal').style.display = 'flex';
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        // Close modal if clicked outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Refreshing...';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                alert('Data refreshed successfully!');
+            }, 1500);
+        });
+
+        // Export button
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-download"></i> Exporting...';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-file-export"></i> Export Data';
+                alert('Data exported successfully!');
+            }, 1500);
+        });
+
+        // Apply filters
+        document.getElementById('applyFilters').addEventListener('click', function() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const search = document.getElementById('search').value.toLowerCase();
+            
+            // In a real application, this would filter the data from the server
+            // For this demo, we'll just show an alert
+            let filterMsg = "Applying filters: ";
+            if (statusFilter !== 'all') filterMsg += `Status: ${statusFilter}, `;
+            if (dateFrom) filterMsg += `From: ${dateFrom}, `;
+            if (dateTo) filterMsg += `To: ${dateTo}, `;
+            if (search) filterMsg += `Search: ${search}`;
+            
+            alert(filterMsg);
+        });
+
+        // Set today's date as default for dateTo
+        document.getElementById('dateTo').valueAsDate = new Date();
+    </script>
+      <% if (message) { %>
+    <script>
+      alert("<%= message %>");
+    </script>
+  <% } %>
+</body>
+</html>

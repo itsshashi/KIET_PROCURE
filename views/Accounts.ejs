@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #0d47a1;
+      --secondary: #e63946;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 15px 20px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .header img {
+      height: 100px;
+      margin-left: 2%;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background: var(--secondary);
+      border: none;
+      padding: 10px 18px;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .logout-btn:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .page-title {
+      text-align: center;
+      color: var(--dark);
+      margin: 20px 0;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    .page-title:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    @media (max-width: 992px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .account-summary {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--light-gray);
+      margin-bottom: 20px;
+    }
+    
+    .account-summary .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 15px;
+    }
+    
+    .account-summary h3 {
+      margin-bottom: 5px;
+      color: var(--dark);
+    }
+    
+    .account-summary p {
+      color: var(--gray);
+      margin-bottom: 10px;
+    }
+    
+    .account-detail {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+    
+    .account-detail:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .account-detail .label {
+      color: var(--gray);
+      font-weight: 500;
+    }
+    
+    .account-detail .value {
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    /* Main Content Area */
+    .content-area {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--light-gray);
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      padding: 8px 16px;
+      background: var(--light);
+      border: 1px solid var(--light-gray);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .filter-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--light);
+      padding: 8px 15px;
+      border-radius: 30px;
+      width: 100%;
+      max-width: 300px;
+      margin-left: auto;
+    }
+    
+    .search-box input {
+      border: none;
+      background: transparent;
+      padding: 5px;
+      width: 100%;
+      outline: none;
+    }
+    
+    /* Table Styles */
+    .table-responsive {
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr {
+      transition: all 0.3s ease;
+    }
+    
+    tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-paid {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-overdue {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-processing {
+      background: #cce5ff;
+      color: #004085;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 13px;
+      margin-right: 5px;
+    }
+    
+    .view-btn {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .download-btn {
+      background: var(--success);
+      color: white;
+    }
+    
+    .action-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      gap: 8px;
+    }
+    
+    .pagination-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--light-gray);
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .pagination-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .pagination-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: var(--success);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateX(150%);
+      transition: transform 0.5s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.error {
+      background: var(--danger);
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse {
+      animation: pulse 0.5s ease;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        padding: 15px;
+      }
+      
+      .header img {
+        margin: 0;
+      }
+      
+      .filters {
+        flex-direction: column;
+      }
+      
+      .search-box {
+        max-width: 100%;
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Header -->
+  <div class="header">
+    <img src="images/wt_img.png" alt="Company Logo">
+    <div class="user-info">
+      <div class="user-avatar">RG</div>
+      <span>RAGHAVENDRA</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1 class="page-title">Account Dashboard</h1>
+    
+    <div class="dashboard">
+      <!-- Sidebar with Account Summary -->
+      <div class="sidebar">
+        <div class="account-summary">
+          <div class="avatar">RG</div>
+          <h3>Raghavendra</h3>
+          <p>Account Manager</p>
+          <div class="status-badge status-paid">Active Account</div>
+        </div>
+        
+        <h3>Account Details</h3>
+        
+        <div class="account-detail">
+          <span class="label">Account ID:</span>
+          <span class="value">ACCT-789456</span>
+        </div>
+        
+        <div class="account-detail">
+          <span class="label">Credit Limit:</span>
+          <span class="value">$50,000.00</span>
+        </div>
+        
+        <div class="account-detail">
+          <span class="label">Current Balance:</span>
+          <span class="value">$12,345.67</span>
+        </div>
+        
+        <div class="account-detail">
+          <span class="label">Payment Terms:</span>
+          <span class="value">Net 30</span>
+        </div>
+        
+        <div class="account-detail">
+          <span class="label">Last Payment:</span>
+          <span class="value">Aug 15, 2023</span>
+        </div>
+        
+        <div class="account-detail">
+          <span class="label">Account Since:</span>
+          <span class="value">Jan 12, 2018</span>
+        </div>
+      </div>
+      
+      <!-- Main Content Area -->
+      <div class="content-area">
+        <div class="section-title">
+          <i class="fas fa-file-invoice-dollar"></i>
+          Payment History & PO Status
+        </div>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+          <div class="filters">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Paid</button>
+            <button class="filter-btn">Pending</button>
+            <button class="filter-btn">Overdue</button>
+          </div>
+          
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search PO number...">
+          </div>
+        </div>
+        
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PO-78945</td>
+                <td>Aug 20, 2023</td>
+                <td>Construction Materials Order</td>
+                <td>$8,450.00</td>
+                <td><span class="status-badge status-paid">Paid</span></td>
+                <td>
+                  <button class="action-btn view-btn">View</button>
+                  <button class="action-btn download-btn">Download</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PO-78231</td>
+                <td>Aug 18, 2023</td>
+                <td>Electrical Components</td>
+                <td>$3,215.50</td>
+                <td><span class="status-badge status-processing">Processing</span></td>
+                <td>
+                  <button class="action-btn view-btn">View</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PO-78102</td>
+                <td>Aug 10, 2023</td>
+                <td>Hardware Supplies</td>
+                <td>$1,578.25</td>
+                <td><span class="status-badge status-pending">Pending</span></td>
+                <td>
+                  <button class="action-btn view-btn">View</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PO-77986</td>
+                <td>Jul 28, 2023</td>
+                <td>Tools and Equipment</td>
+                <td>$5,220.00</td>
+                <td><span class="status-badge status-overdue">Overdue</span></td>
+                <td>
+                  <button class="action-btn view-btn">View</button>
+                  <button class="action-btn download-btn">Download</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PO-77654</td>
+                <td>Jul 15, 2023</td>
+                <td>Safety Equipment</td>
+                <td>$2,150.75</td>
+                <td><span class="status-badge status-paid">Paid</span></td>
+                <td>
+                  <button class="action-btn view-btn">View</button>
+                  <button class="action-btn download-btn">Download</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="pagination">
+          <button class="pagination-btn"><i class="fas fa-chevron-left"></i></button>
+          <button class="pagination-btn active">1</button>
+          <button class="pagination-btn">2</button>
+          <button class="pagination-btn">3</button>
+          <button class="pagination-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span>✅ Payment status updated successfully!</span>
+  </div>
+
+  <script>
+    // Filter buttons functionality
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        showToast('Filter applied: ' + button.textContent);
+      });
+    });
+    
+    // Action buttons functionality
+    const viewButtons = document.querySelectorAll('.view-btn');
+    viewButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const poNumber = button.closest('tr').querySelector('td:first-child').textContent;
+        showToast('Viewing details for: ' + poNumber);
+      });
+    });
+    
+    // Download buttons functionality
+    const downloadButtons = document.querySelectorAll('.download-btn');
+    downloadButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const poNumber = button.closest('tr').querySelector('td:first-child').textContent;
+        showToast('Downloading invoice for: ' + poNumber);
+      });
+    });
+    
+    // Pagination buttons functionality
+    const paginationButtons = document.querySelectorAll('.pagination-btn');
+    paginationButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        if (!button.querySelector('i')) {
+          paginationButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          showToast('Page ' + button.textContent + ' loaded');
+        }
+      });
+    });
+    
+    // Show toast notification
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.querySelector("span").textContent = message;
+      
+      if (isError) {
+        toast.classList.add("error");
+      } else {
+        toast.classList.remove("error");
+      }
+      
+      toast.classList.add("show");
+      
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+    
+    function logout() {
+      showToast("🚪 Logged out successfully!");
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

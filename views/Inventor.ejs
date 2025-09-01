@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventor Hub - Goods Entry</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #e4efe9);
+      padding: 20px;
+      color: #2c3e50;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #3498db;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .btn {
+      background: #3498db;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .btn:hover {
+      background: #2980b9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #f0f4f8;
+    }
+    .hidden {
+      display: none;
+    }
+    .destination-toggle {
+      display: flex;
+      background: #f0f4f8;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .destination-option {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .destination-option.active {
+      background: #3498db;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- STEP 1: SECURITY ENTRY -->
+  <div id="security-step">
+    <h2>Security - Product Arrival</h2>
+
+    <div class="form-group">
+      <label for="supplier">Supplier Name</label>
+      <input type="text" id="supplier" placeholder="Enter supplier name">
+    </div>
+
+    <h3>Product Details</h3>
+    <div class="form-group">
+      <label for="product">Product Name</label>
+      <input type="text" id="product" placeholder="Enter product name">
+    </div>
+    <div class="form-group">
+      <label for="quantity">Quantity Received</label>
+      <input type="number" id="quantity" placeholder="Enter quantity">
+    </div>
+    <button class="btn" onclick="addProduct()">➕ Add Product</button>
+
+    <table id="product-table" class="hidden">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button class="btn" onclick="submitSecurity()">➡ Submit Arrival</button>
+  </div>
+
+  <!-- STEP 2: INVENTORY VERIFICATION -->
+  <div id="inventory-step" class="hidden">
+    <h2>Inventory - Verification</h2>
+    <p><strong>Supplier:</strong> <span id="verify-supplier"></span></p>
+
+    <table id="verify-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Destination</th>
+          <th>Project (if applicable)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button class="btn" onclick="finalSubmit()">✅ Finalize & Submit</button>
+  </div>
+
+  <!-- STEP 3: CONFIRMATION -->
+  <div id="confirmation-step" class="hidden">
+    <h2>✔ Submission Complete</h2>
+    <p>Your entry has been recorded successfully.</p>
+    <p><strong>GRN Number:</strong> <span id="grn-number"></span></p>
+    <h3>Final Entries:</h3>
+    <ul id="final-list"></ul>
+  </div>
+</div>
+
+<script>
+  let products = [];
+
+  function addProduct() {
+    const product = document.getElementById('product').value.trim();
+    const quantity = document.getElementById('quantity').value;
+
+    if (!product || !quantity) {
+      alert("Enter product name and quantity.");
+      return;
+    }
+
+    products.push({ product, quantity });
+
+    const table = document.getElementById('product-table');
+    const tbody = table.querySelector("tbody");
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${product}</td>
+      <td>${quantity}</td>
+      <td><button onclick="removeProduct(this)">❌ Remove</button></td>
+    `;
+    tbody.appendChild(row);
+
+    table.classList.remove("hidden");
+
+    // clear inputs
+    document.getElementById('product').value = "";
+    document.getElementById('quantity').value = "";
+  }
+
+  function removeProduct(button) {
+    const row = button.parentElement.parentElement;
+    const productName = row.cells[0].innerText;
+
+    products = products.filter(p => p.product !== productName);
+    row.remove();
+
+    if (products.length === 0) {
+      document.getElementById("product-table").classList.add("hidden");
+    }
+  }
+
+  function submitSecurity() {
+    const supplier = document.getElementById('supplier').value.trim();
+    if (!supplier || products.length === 0) {
+      alert("Enter supplier and at least one product.");
+      return;
+    }
+
+    document.getElementById('verify-supplier').innerText = supplier;
+
+    const verifyTableBody = document.querySelector("#verify-table tbody");
+    verifyTableBody.innerHTML = "";
+    products.forEach((p, index) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${p.product}</td>
+        <td>${p.quantity}</td>
+        <td>
+          <select onchange="toggleProject(this, ${index})">
+            <option value="inventory">Inventory</option>
+            <option value="project">Project</option>
+          </select>
+        </td>
+        <td>
+          <select class="project-select hidden">
+            <option value="">Select Project</option>
+            <option value="Smart Home Automation">Smart Home Automation</option>
+            <option value="Solar Charger">Solar Charger</option>
+            <option value="AI Inventory System">AI Inventory System</option>
+          </select>
+        </td>
+      `;
+      verifyTableBody.appendChild(row);
+    });
+
+    document.getElementById('security-step').classList.add('hidden');
+    document.getElementById('inventory-step').classList.remove('hidden');
+  }
+
+  function toggleProject(select, index) {
+    const projectSelect = select.parentElement.nextElementSibling.querySelector("select");
+    if (select.value === "project") {
+      projectSelect.classList.remove("hidden");
+    } else {
+      projectSelect.classList.add("hidden");
+    }
+  }
+
+  function finalSubmit() {
+    const rows = document.querySelectorAll("#verify-table tbody tr");
+    let finalData = [];
+
+    for (let row of rows) {
+      const product = row.cells[0].innerText;
+      const quantity = row.cells[1].innerText;
+      const destination = row.cells[2].querySelector("select").value;
+      let destinationText = destination;
+
+      if (destination === "project") {
+        const project = row.cells[3].querySelector("select").value;
+        if (!project) {
+          alert("Please select a project for product: " + product);
+          return;
+        }
+        destinationText = "Project - " + project;
+      }
+
+      finalData.push({ product, quantity, destination: destinationText });
+    }
+
+    const grnNumber = "GRN-" + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById("grn-number").innerText = grnNumber;
+
+    const finalList = document.getElementById("final-list");
+    finalList.innerHTML = "";
+    finalData.forEach(item => {
+      const li = document.createElement("li");
+      li.innerText = `${item.product} (Qty: ${item.quantity}) → ${item.destination}`;
+      finalList.appendChild(li);
+    });
+
+    document.getElementById('inventory-step').classList.add('hidden');
+    document.getElementById('confirmation-step').classList.remove('hidden');
+  }
+</script>
+
+</body>
+</html>
