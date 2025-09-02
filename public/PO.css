@@ -1,0 +1,62 @@
+.head{
+    display: flex;
+    
+}
+.right{
+    
+    width: 50%;
+    
+    
+}
+.left{
+    left:0;
+    width: 50%;
+    height:50%;
+    margin:15% 0 0 0;
+}
+.right img{
+    margin-left:10%;
+    float: left;
+}
+.right_info h4{
+    margin: auto;
+}
+body{
+    font-family: "Roboto", sans-serif;
+    padding:1.5%;
+    border: 0.5px solid black;
+}
+.container{
+    display: flex;
+}
+.rightin{
+    margin-left: 2%;
+}
+table, th{
+    border: 0.5px solid black;
+    border-collapse: collapse;
+}
+td,th{
+    padding:5px 8px;
+}
+td{
+    border-left: 0.5px solid black;
+}
+.end{
+    border: 1px solid black;
+}
+.lefty{
+    border-bottom: 0.5px solid black;
+    border-right:0.5px solid black;
+}
+.righty{
+    border:0.5px solid black;
+}
+table{
+    margin:1% auto;
+}
+.special_notes{
+    width: 60%;
+    font-size: smaller;
+    border-right: 1px solid black;
+};

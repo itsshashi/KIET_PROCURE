@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer';
 import session from 'express-session';
 import multer from 'multer';
 import fs from 'fs';
+import cors from 'cors';
 
 // =============================
 // CONFIG
@@ -36,6 +37,7 @@ const app = express();
 // =============================
 // MIDDLEWARE
 // =============================
+app.use(cors()); // Enable CORS for API requests
 app.use(session({
     secret: 'super-secret-key',
     resave: false,
@@ -45,6 +47,13 @@ app.use(session({
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
+// Serve uploaded PDFs so frontend can view them
+app.use("/uploads", express.static(uploadsDir));
+
+// Serve frontend (place index.html in /public)
+app.use(express.static(path.join(__dirname, "public")));
+
+
 app.use(express.static('public'));
 app.set("view engine", "ejs");
 
@@ -85,7 +94,165 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // =============================
-// ROUTES
+// API ROUTES FOR ORDERS MANAGEMENT
+// =============================
+
+// Get all orders for the orders management interface
+app.get('/api/orders', async (req, res) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT 
+                id,
+                purchase_order_number as order_id,
+                project_name as project,
+                supplier_name as supplier,
+                ordered_by as requested_by,
+                date_required,
+                COALESCE(total_amount, 0) as total_amount,
+                status,
+                urgency,
+                notes,
+                quotation_file,
+                created_at
+            FROM purchase_orders 
+            ORDER BY created_at DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get order by ID
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rows } = await pool.query(`
+            SELECT 
+                id,
+                purchase_order_number as order_id,
+                project_name as project,
+                supplier_name as supplier,
+                ordered_by as requested_by,
+                date_required,
+                COALESCE(total_amount, 0) as total_amount,
+                status,
+                urgency,
+                notes,
+                quotation_file,
+                created_at
+            FROM purchase_orders 
+            WHERE id = $1
+        `, [id]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Update order status
+app.put('/api/orders/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        const { rows } = await pool.query(
+            'UPDATE purchase_orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+            [status, id]
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Search and filter orders
+app.get('/api/orders/search/filter', async (req, res) => {
+    try {
+        const { search, supplier, status, dateFrom, dateTo, requester } = req.query;
+        
+        let query = `
+            SELECT 
+                id,
+                purchase_order_number as order_id,
+                project_name as project,
+                supplier_name as supplier,
+                ordered_by as requested_by,
+                date_required,
+                COALESCE(total_amount, 0) as total_amount,
+                status,
+                urgency,
+                notes,
+                quotation_file,
+                created_at
+            FROM purchase_orders 
+            WHERE 1=1
+        `;
+        
+        let params = [];
+        let paramCount = 0;
+        
+        if (search) {
+            paramCount++;
+            query += ` AND (purchase_order_number ILIKE $${paramCount} OR project_name ILIKE $${paramCount})`;
+            params.push(`%${search}%`);
+        }
+        
+        if (supplier && supplier !== 'All Suppliers') {
+            paramCount++;
+            query += ` AND supplier_name = $${paramCount}`;
+            params.push(supplier);
+        }
+        
+        if (status && status !== 'All Statuses') {
+            paramCount++;
+            query += ` AND status = $${paramCount}`;
+            params.push(status.toLowerCase());
+        }
+        
+        if (dateFrom) {
+            paramCount++;
+            query += ` AND date_required >= $${paramCount}`;
+            params.push(dateFrom);
+        }
+        
+        if (dateTo) {
+            paramCount++;
+            query += ` AND date_required <= $${paramCount}`;
+            params.push(dateTo);
+        }
+        
+        if (requester && requester !== 'All Requesters') {
+            paramCount++;
+            query += ` AND ordered_by = $${paramCount}`;
+            params.push(requester);
+        }
+        
+        query += ' ORDER BY created_at DESC';
+        
+        const { rows } = await pool.query(query, params);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// =============================
+// EXISTING ROUTES (KEEP THESE AS IS)
 // =============================
 
 // Home / Login
@@ -107,13 +274,33 @@ app.post('/submit', async (req, res) => {
         if (user.role !== role) return res.render("index.ejs", { message: "Unauthorized: Incorrect role" });
 
         req.session.user = { id: user.id, email: user.email, role: user.role };
-        res.render('procurement.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+        switch (user.role){
+            case "Employee":
+                res.render('procurement.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break;
+            case "Purchase":
+                res.render('Purchase.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break;
+            case "Security":
+                res.render('Security.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break;
+            case "Inventory":
+                res.render('Inventor.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break;
+            case "Accounts":
+                res.render('Accounts.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break; 
+            case "MD":
+                res.render('Md.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+        }
+        
     } catch (err) {
         console.error(err);
         res.status(500).send("Error processing request");
     }
 });
 
+// Order Raise
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
@@ -122,16 +309,34 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? req.file.filename : null;
-
+    
     try {
+        console.log(req.body);
         await pool.query("BEGIN");
         const purchaseOrderNumber = await generatePurchaseOrderNumber();
+        
+        // Calculate total amount
+        let totalAmount = 0;
+        for (let p of products) {
+            const quantity = parseInt(p.quantity);
+            const unitPrice = parseFloat(p.unitPrice);
+            const gst = parseFloat(p.gst);
+            
+            // Calculate item total with GST
+            const itemTotal = quantity * unitPrice;
+            const gstAmount = itemTotal * (gst / 100);
+            totalAmount += itemTotal + gstAmount;
+        }
 
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders 
-            (project_name, project_code_number, purchase_order_number, supplier_name, supplier_gst, supplier_address, urgency, date_required, notes, ordered_by, quotation_file)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
-            [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, orderedBy, quotationFile]
+            (project_name, project_code_number, purchase_order_number, supplier_name, 
+             supplier_gst, supplier_address, urgency, date_required, notes, 
+             ordered_by, quotation_file, total_amount)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+            [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
+             supplierGst, supplierAddress, urgency, dateRequired, notes, 
+             orderedBy, quotationFile, totalAmount]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -139,14 +344,24 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         for (let p of products) {
             await pool.query(
                 `INSERT INTO purchase_order_items
-                (purchase_order_id, part_no, description, hsn, quantity, unit_price, gst,project_name)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-                [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity), parseFloat(p.unitPrice), parseFloat(p.gst),projectName]
+                (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity), 
+                 parseFloat(p.unitPrice), parseFloat(p.gst), projectName]
             );
         }
 
         await pool.query("COMMIT");
-        res.json({ success: true, message: "✅ Order inserted successfully", purchaseOrderNumber, orderedBy, file: quotationFile });
+        
+        res.json({ 
+            success: true, 
+            message: "✅ Order inserted successfully", 
+            purchaseOrderNumber, 
+            orderedBy, 
+            file: quotationFile,
+            totalAmount 
+        });
+        
 
     } catch (err) {
         await pool.query("ROLLBACK");
@@ -186,8 +401,6 @@ app.post("/forgot-password", async (req, res) => {
     }
 });
 
-
-
 app.get("/status", async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in" });
@@ -195,22 +408,22 @@ app.get("/status", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, 
-              project_name AS "projectName",
-              project_code_number AS "projectCode",
-              purchase_order_number AS "purchaseOrderNumber",
-              supplier_name AS "supplierName",
-              supplier_gst AS "supplierGst",
-              supplier_address AS "supplierAddress",
-              urgency, 
-              date_required AS "dateRequired",
-              created_at AS "dateRequested",
-              status, 
-              quotation_file AS "quotationFile",
-              notes
-       FROM purchase_orders
-       WHERE ordered_by = $1
-       ORDER BY id DESC`,
+            `SELECT id, 
+            project_name AS "projectName",
+            project_code_number AS "projectCodeNumber",
+            purchase_order_number AS "purchaseOrderNumber",
+            supplier_name AS "supplierName",
+            supplier_gst AS "supplierGst",
+            supplier_address AS "supplierAddress",
+            urgency, 
+            date_required AS "dateRequired",
+            created_at AS "dateRequested",
+            status, 
+            quotation_file AS "quotationFile",
+            notes
+        FROM purchase_orders
+        WHERE ordered_by = $1
+        ORDER BY id DESC`,
       [req.session.user.email]
     );
 
@@ -220,6 +433,106 @@ app.get("/status", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
+
+// Update quotation file (Edit)
+app.put("/api/orders/:id/quotation", upload.single("quotation"), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+        const newFile = req.file.filename;
+
+        // Delete old file if exists
+        const oldFileResult = await pool.query("SELECT quotation_file FROM purchase_orders WHERE id=$1", [id]);
+        if (oldFileResult.rows.length && oldFileResult.rows[0].quotation_file) {
+            const oldFilePath = path.join(uploadsDir, oldFileResult.rows[0].quotation_file);
+            if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+        }
+
+        // Update DB
+        const { rows } = await pool.query(
+            "UPDATE purchase_orders SET quotation_file=$1 WHERE id=$2 RETURNING *",
+            [newFile, id]
+        );
+
+        res.json({ success: true, order: rows[0] });
+    } catch (err) {
+        console.error("❌ Error updating quotation:", err);
+        res.status(500).json({ error: "Failed to update quotation" });
+    }
+});
+
+
+
+// Approve an order (set status to 'pass')
+// Move to Purchase Dept
+app.put("/api/orders/:id/purchase", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await pool.query(
+    "UPDATE purchase_orders SET status='purchase' WHERE id=$1 RETURNING *",
+    [id]
+  );
+  if (!rows.length) return res.status(404).json({ error: "Order not found" });
+  res.json({ success: true, order: rows[0] });
+});
+
+// Approve
+app.put("/api/orders/:id/approve", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await pool.query(
+    "UPDATE purchase_orders SET status='approved' WHERE id=$1 RETURNING *",
+    [id]
+  );
+  if (!rows.length) return res.status(404).json({ error: "Order not found" });
+  res.json({ success: true, order: rows[0] });
+});
+
+// Send PO
+app.put("/api/orders/:id/send", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await pool.query(
+    "UPDATE purchase_orders SET status='sent'WHERE id=$1 RETURNING *",
+    [id]
+  );
+  if (!rows.length) return res.status(404).json({ error: "Order not found" });
+  res.json({ success: true, order: rows[0] });
+});
+
+// Mark as Received
+app.put("/api/orders/:id/receive", async (req, res) => {
+  const { id } = req.params;
+  const { rows } = await pool.query(
+    "UPDATE purchase_orders SET status='received' WHERE id=$1 RETURNING *",
+    [id]
+  );
+  if (!rows.length) return res.status(404).json({ error: "Order not found" });
+  res.json({ success: true, order: rows[0] });
+});
+
+
+
+//md 
+// Get only purchase-enquired orders
+app.get("/api/purchase-orders", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM purchase_orders WHERE status IN ('enquired','purchase') ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Error fetching purchase orders:", err);
+    res.status(500).json({ error: "Failed to fetch purchase orders" });
+  }
+});
+
+
+
+
+
+
+
+
+
 
 
 

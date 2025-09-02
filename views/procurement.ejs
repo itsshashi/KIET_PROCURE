@@ -283,42 +283,47 @@
         }
         
         /* Order Tracking Visualization */
-        .tracking-progress {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            margin: 30px 0;
-            padding: 0 40px;
+        .tracking-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 40px auto;
         }
-        
-        .tracking-progress::before {
-            content: '';
-            position: absolute;
-            top: 12px;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #e0e0e0;
-            z-index: 1;
+
+        .tracking-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 20px; /* aligns with step centers */
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: #e0e0e0;
+        z-index: 1;
         }
-        
-        .progress-bar {
-            position: absolute;
-            top: 12px;
-            left: 0;
-            height: 4px;
-            background: #4CAF50;
-            z-index: 2;
-            transition: width 1s ease-in-out;
+
+        #progressBar {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 4px;
+        background: #4CAF50;
+        z-index: 2;
+        transition: width 0.6s ease;
         }
-        
+
+        .tracking-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        z-index: 3;
+        }
+
         .tracking-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         }
+
         
         .step-icon {
             width: 30px;
@@ -456,6 +461,14 @@
         .pulse {
             animation: pulse 2s infinite;
         }
+        .checky{
+            display:flex;
+            margin:3%;
+        }
+        .chk{
+            margin:0.2% 0 0 1%;
+            width: 50px;
+        }
         
         /* ... (all other CSS remains exactly the same) ... */
         
@@ -520,6 +533,7 @@
       <label for="supplierName">Supplier Name *</label>
       <input type="text" class="form-control" id="supplierName" name="supplierName" required>
     </div>
+   
     <div class="form-group">
       <label for="supplierGst">Supplier GST *</label>
       <input type="text" class="form-control" id="supplierGst" name="supplierGst" required>
@@ -530,6 +544,10 @@
     <label for="supplierAddress">Supplier Address *</label>
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" required></textarea>
   </div>
+    <div class="checky">
+      <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
+      <input type="checkbox" class="chk" id="singleSupplier" name="singleSupplier" required>
+    </div>
   <div class="form-group">
     <label for="quotation">Quotation*</label>
     <input type="file" name="quotation" id="quotation" required>
@@ -604,6 +622,7 @@
 
 
 
+
             </div>
             
             <!-- Status Tab -->
@@ -620,40 +639,40 @@
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
+          5                  <option value="rejected">Rejected</option>
                         </select>
                     </div>
                 </div>
                 
-                <!-- Order Tracking Visualization -->
-                <div class="tracking-progress" id="orderTracking">
-                    <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
-                    
-                    <div class="tracking-step">
-                        <div class="step-icon active pulse"><i class="fas fa-file-alt"></i></div>
-                        <div class="step-label active">Order Raised</div>
-                    </div>
-                    
-                    <div class="tracking-step">
-                        <div class="step-icon"><i class="fas fa-clipboard-check"></i></div>
-                        <div class="step-label">Purchase Dept</div>
-                    </div>
-                    
-                    <div class="tracking-step">
-                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="step-label">Approval</div>
-                    </div>
-                    
-                    <div class="tracking-step">
-                        <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
-                        <div class="step-label">PO Sent</div>
-                    </div>
-                    
-                    <div class="tracking-step">
-                        <div class="step-icon"><i class="fas fa-box-open"></i></div>
-                        <div class="step-label">Items Received</div>
-                    </div>
+              <div class="tracking-wrapper">
+  <!-- Progress line -->
+            <div id="progressBar"></div>
+
+            <!-- Steps -->
+            <div class="tracking-steps">
+                <div class="tracking-step">
+                <div class="step-icon">1</div>
+                <span class="step-label">Pending</span>
                 </div>
+                <div class="tracking-step">
+                <div class="step-icon">2</div>
+                <span class="step-label">Purchase</span>
+                </div>
+                <div class="tracking-step">
+                <div class="step-icon">3</div>
+                <span class="step-label">Approved</span>
+                </div>
+                <div class="tracking-step">
+                <div class="step-icon">4</div>
+                <span class="step-label">Sent</span>
+                </div>
+                <div class="tracking-step">
+                <div class="step-icon">5</div>
+                <span class="step-label">Received</span>
+                </div>
+            </div>
+            </div>
+
                 
                 <div class="status-cards" id="statusCardsContainer">
                     <!-- Status cards will be dynamically generated -->
@@ -692,6 +711,7 @@
         document.getElementById("statusFilter").addEventListener("change", renderStatusCards);
         });
 
+        
 
 
 
@@ -715,32 +735,45 @@
             document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
             
             // Form submission handling - UPDATED FOR FILE UPLOAD
-            const orderForm = document.getElementById("orderForm");
-            if (orderForm) {
-                orderForm.addEventListener("submit", async function(e) {
-                    e.preventDefault();
-                    
-                    // Create FormData object to handle file upload
-                    const formData = new FormData(orderForm);
-                    
-                    // Add product data to the form
-                    const products = getProductData();
-                    formData.append('products', JSON.stringify(products));
-                    
-                    try {
-                        const res = await fetch("/order_raise", {
-                            method: "POST",
-                            body: formData // Send as FormData, not JSON
-                        });
 
-                        const result = await res.json();
+            const orderForm = document.getElementById("orderForm");
+
+            orderForm.addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(orderForm);
+                const products = getProductData();
+                formData.append('products', JSON.stringify(products));
+
+                try {
+                    const res = await fetch("/order_raise", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const result = await res.json();
+
+                    if (result.success) {
                         alert(result.message);
-                    } catch (err) {
-                        console.error("❌ Error submitting order:", err);
-                        alert("Order submission failed!");
+
+                        // 🔹 Reset form fields
+                        orderForm.reset();
+
+                        // 🔹 Reset product table
+                        resetProductTable();
+
+                        // 🔹 Reset total
+                        document.getElementById("grandTotal").textContent = "0.00";
+                    } else {
+                        alert("Order submission failed: " + result.message);
                     }
-                });
-            }
+                } catch (err) {
+                    console.error("❌ Error submitting order:", err);
+                    alert("Order submission failed!");
+                }
+            });
+
+
 
             // Logout button
       
@@ -888,13 +921,7 @@
                 <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                 <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
                 <td>
-                    <select class="form-control gst-rate" name="gst[]">
-                        <option value="0">0%</option>
-                        <option value="5">5%</option>
-                        <option value="12">12%</option>
-                        <option value="18" selected>18%</option>
-                        <option value="28">28%</option>
-                    </select>
+                    <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
                 </td>
                 <td class="total">0.00</td>
                 <td class="actions">
@@ -933,152 +960,161 @@
             
             return products;
         }
-        
+        let selectedOrder=null;
         // Setup order tracking visualization
         function setupOrderTracking() {
             updateOrderTracking();
         }
-        
-        // Update order tracking visualization based on selected order
-        function updateOrderTracking() {
-            if (orders.length === 0) return;
+        function updateOrderTracking(order) {
+            if (!order) return;
 
-            // Map DB status to step numbers
             const stepMap = {
-                pending: 1,       // Order Raised
-                purchase: 2,      // Purchase Dept
-                approved: 3,      // Approval
-                sent: 4,          // PO Sent
-                received: 5       // Items Received
+                pending: 1,
+                purchase: 2,
+                approved: 3,
+                sent: 4,
+                received: 5
             };
 
-            const currentOrder = orders[0]; // show first order for now
-            const trackingStep = stepMap[currentOrder.status] || 1;
+            const trackingStep = stepMap[order.status] || 1;
             const progressPercentage = ((trackingStep - 1) / 4) * 100;
 
-            document.getElementById("progressBar").style.width = `${progressPercentage}%`;
+            // Fill line
+            function updateOrderTracking(order) {
+                if (!order) return;
 
+                const stepMap = {
+                    pending: 1,
+                    purchase: 2,
+                    approved: 3,
+                    sent: 4,
+                    received: 5
+                };
+
+                const totalSteps = 5;
+                const trackingStep = stepMap[order.status] || 1;
+
+                // Line should reach exactly the current step
+                const progressPercentage = ((trackingStep - 1) / (totalSteps - 1)) * 100;
+
+                // ✅ update green line
+                document.getElementById("progressBar").style.width = `${progressPercentage}%`;
+
+                // ✅ highlight steps
+                const steps = document.querySelectorAll(".tracking-step");
+                steps.forEach((step, index) => {
+                    const icon = step.querySelector(".step-icon");
+                    const label = step.querySelector(".step-label");
+
+                    if (index < trackingStep) {
+                        icon.classList.add("bg-green-600", "text-white", "border-green-600");
+                        label.classList.add("text-green-600", "font-bold");
+                    } else {
+                        icon.classList.remove("bg-green-600", "text-white", "border-green-600");
+                        label.classList.remove("text-green-600", "font-bold");
+                    }
+                });
+            }
+
+
+
+            // Circles + labels
             const steps = document.querySelectorAll(".tracking-step");
             steps.forEach((step, index) => {
                 const icon = step.querySelector(".step-icon");
                 const label = step.querySelector(".step-label");
 
                 if (index < trackingStep) {
-                icon.classList.add("active");
-                label.classList.add("active");
-                if (index === trackingStep - 1) {
-                    icon.classList.add("pulse");
+                    icon.classList.add("active");
+                    label.classList.add("active");
                 } else {
-                    icon.classList.remove("pulse");
+                    icon.classList.remove("active");
+                    label.classList.remove("active");
                 }
-                } else {
-                icon.classList.remove("active", "pulse");
-                label.classList.remove("active");
-                }
-            });
-            }
-
-
-
-        
-        // Render status cards
-        
-        
-        function renderStatusCards() {
-            const container = document.getElementById('statusCardsContainer');
-            const statusFilter = document.getElementById('statusFilter').value;
-            
-            // Filter orders based on status
-            let filteredOrders = orders;
-            if (statusFilter !== 'all') {
-                filteredOrders = orders.filter(order => order.status === statusFilter);
-            }
-            
-            // Clear container
-            container.innerHTML = '';
-            
-            if (filteredOrders.length === 0) {
-                container.innerHTML = '<p>No orders found with the selected status.</p>';
-                return;
-            }
-            
-            // Create cards for each order
-            filteredOrders.forEach(order => {
-                const card = document.createElement('div');
-                card.className = `status-card ${order.status}`;
-                
-                // Determine badge class based on status
-                let badgeClass = '';
-                let statusText = '';
-                switch(order.status) {
-                    case 'pending':
-                        badgeClass = 'badge-pending';
-                        statusText = 'Pending Approval';
-                        break;
-                    case 'approved':
-                        badgeClass = 'badge-approved';
-                        statusText = 'Approved';
-                        break;
-                    case 'rejected':
-                        badgeClass = 'badge-rejected';
-                        statusText = 'Rejected';
-                        break;
-                    default:
-                        badgeClass = 'badge-pending';
-                        statusText = order.status || 'Pending';
-                }
-                
-                // Determine priority badge
-                let priorityClass = '';
-                let priorityText = '';
-                switch(order.urgency) {
-                    case 'high':
-                        priorityClass = 'priority-high';
-                        priorityText = 'High Priority';
-                        break;
-                    case 'medium':
-                        priorityClass = 'priority-medium';
-                        priorityText = 'Medium Priority';
-                        break;
-                    case 'low':
-                        priorityClass = 'priority-low';
-                        priorityText = 'Low Priority';
-                        break;
-                    default:
-                        priorityClass = 'priority-medium';
-                        priorityText = order.urgency || 'Normal Priority';
-                }
-                
-                card.innerHTML = `
-                    <div class="status-header">
-                        <h4>${order.projectName || 'Unnamed Project'} - PO: ${order.purchaseOrderNumber}</h4>
-                        <div>
-                            <span class="status-badge ${badgeClass}">${statusText}</span>
-                            <span class="priority-badge ${priorityClass}">${priorityText}</span>
-                        </div>
-                    </div>
-                    <div class="status-body">
-                        <p><strong>Project Code:</strong> ${order.projectCodeNumber || 'N/A'}</p>
-                        <p><strong>Supplier:</strong> ${order.supplierName || 'N/A'} (GST: ${order.supplierGst || 'N/A'})</p>
-                        <p><strong>Address:</strong> ${order.supplierAddress || 'N/A'}</p>
-                    </div>
-                    <div class="status-footer">
-                        <div class="detail-row">
-                            <span>Date Requested:</span>
-                            <span>${formatDate(order.created_at)}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span>Date Required:</span>
-                            <span>${formatDate(order.dateRequired)}</span>
-                        </div>
-                        ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
-                    </div>
-                `;
-                
-                container.appendChild(card);
             });
         }
 
+
+// Render status cards
+function renderStatusCards() {
+    const container = document.getElementById('statusCardsContainer');
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    let filteredOrders = [...orders];
+    if (statusFilter !== 'all') {
+        filteredOrders = orders.filter(order => order.status === statusFilter);
+    }
+
+    container.innerHTML = '';
+
+    if (filteredOrders.length === 0) {
+        container.innerHTML = '<p>No orders found with the selected status.</p>';
+        return;
+    }
+
+    filteredOrders.forEach(order => {
+        const card = document.createElement('div');
+        card.className = `status-card ${order.status}`;
+
+        // Badge & priority (same as before)...
+        let badgeClass = '', statusText = '';
+        switch(order.status) {
+            case 'pending': badgeClass = 'badge-pending'; statusText = 'Pending Approval'; break;
+            case 'approved': badgeClass = 'badge-approved'; statusText = 'Approved'; break;
+            case 'rejected': badgeClass = 'badge-rejected'; statusText = 'Rejected'; break;
+            default: badgeClass = 'badge-pending'; statusText = order.status || 'Pending';
+        }
+
+        let priorityClass = '', priorityText = '';
+        switch(order.urgency) {
+            case 'high': priorityClass = 'priority-high'; priorityText = 'High Priority'; break;
+            case 'medium': priorityClass = 'priority-medium'; priorityText = 'Medium Priority'; break;
+            case 'low': priorityClass = 'priority-low'; priorityText = 'Low Priority'; break;
+            default: priorityClass = 'priority-medium'; priorityText = order.urgency || 'Normal Priority';
+        }
+
+        card.innerHTML = `
+            <div class="status-header">
+                <h4>${order.projectName || 'Unnamed Project'} - PO: ${order.purchaseOrderNumber}</h4>
+                <div>
+                    <span class="status-badge ${badgeClass}">${statusText}</span>
+                    <span class="priority-badge ${priorityClass}">${priorityText}</span>
+                </div>
+            </div>
+            <div class="status-body">
+                <p><strong>Project Code:</strong> ${order.projectCodeNumber || 'N/A'}</p>
+                <p><strong>Supplier:</strong> ${order.supplierName || 'N/A'} (GST: ${order.supplierGst || 'N/A'})</p>
+                <p><strong>Address:</strong> ${order.supplierAddress || 'N/A'}</p>
+            </div>
+            <div class="status-footer">
+                <div class="detail-row">
+                    <span>Date Requested:</span>
+                    <span>${formatDate(order.dateRequested)}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Date Required:</span>
+                    <span>${formatDate(order.dateRequired)}</span>
+                </div>
+                ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
+            </div>
+        `;
+
+        // 🔹 When card clicked, update tracking bar
+        card.addEventListener("click", () => {
+            selectedOrder = order;
+            updateOrderTracking(order);
+
+            // highlight selected card
+            document.querySelectorAll(".status-card").forEach(c => c.classList.remove("active"));
+            card.classList.add("active");
+        });
+
+        container.appendChild(card);
+    });
+}
+        
+        // Update order tracking visualization based on selected order
+        
 
 
 
