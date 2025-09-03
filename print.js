@@ -1,0 +1,449 @@
+// print.js
+import puppeteer from 'puppeteer';
+import path from 'path';
+import fs from 'fs';
+
+function fileUrl(filePath) {
+  return `file:///${path.resolve(filePath).replace(/\\/g, "/")}`;
+}
+
+async function createPDF() {
+  // Create absolute paths for images
+  const ASSETS = {
+    img1: fileUrl("./public/images/page_logo.png"), // page logo
+    img2: fileUrl("./public/images/sl.png"),        // signature/seal
+    img3: fileUrl("./public/images/logo.png"),      // optional extra
+    img4: fileUrl("./public/images/wt_img.png"),    // optional
+    img5: fileUrl("./public/images/white_img.png"), // optional
+    img6: fileUrl("./public/images/m_.png"),        // optional
+  };
+
+  const browser = await puppeteer.launch({
+  headless: true,
+  args: ['--allow-file-access-from-files']
+});
+
+  const page = await browser.newPage();
+
+  // (Optional) quick check so you see missing assets in console
+
+
+  // Full HTML (cleaned for Puppeteer: no html2pdf, no borders)
+  const htmlContent = `
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+
+  
+  <title>PURCHASE ORDER</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    .left{
+        text-align: left;
+        justify-content: center;
+        align-items: center;
+        margin-top: 8%;
+    }
+    body {
+      font-family:"Roboto", sans-serif;
+      background: #fff;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    .page {
+      width: 210mm;
+      height: 297mm;
+      margin: auto;
+      padding:10mm 10mm;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      
+    }
+    .head {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-start;
+    }
+    .right {
+      text-align: left;
+      margin-left: 8%;
+      
+    }
+    .right h3 {
+      margin: 5px 0;
+    }
+    .right p{
+        font-size: small;
+        line-height: 0.5;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #aaa;
+      margin: 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    table th, table td {
+      border: 1px solid #000;
+      padding: 2px;
+      text-align: center;
+    }
+    table th {
+      background: #f4f4f4;
+    }
+/* Special Notes section */
+.special_notes {
+  font-size: 12px;
+  margin: 10px 40px;
+}
+
+.special_last {
+  font-size: 12px;
+  margin: 15px 40px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Footer group */
+.nrw {
+  margin: 20px 40px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.signature {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.inf {
+  font-size: small;
+  text-align: right;
+  margin-top: 10px;
+}
+.page-break {
+  page-break-before: always; /* force next page */
+  break-before: page;        /* modern browsers */
+}
+.no-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+@media print {
+  .special_last {
+    padding-top: 20mm; 
+      /* ✅ spacing from top when it jumps */
+  }
+  .nrw {
+    padding-top: 10mm;
+  }
+}
+
+
+
+  </style>
+</head>
+<body>
+  div
+  <div class="page">
+    <!-- Header -->
+    <div class="head">
+      <div class="left">
+        <br>
+        <p><strong>Supplier Address:</strong><hr style="margin-top: -10px;">
+ABC Supplier Pvt. Ltd,<br>
+123 Industrial Area,<br>
+Peenya, Bengaluru - 560058</p>
+
+
+        
+      </div>
+      
+      <div class="right" style="height: 25%;">
+        <img style="margin-left: 100px;" src="${ASSETS.img1}" alt="company logo" width="180px"><hr>
+        
+        <p style="font-size: medium;"><strong>PURCHASE ORDER</strong></p>
+        <p><strong>PO Number:</strong> ####</p>
+        
+        <p><strong>Supplier Number:</strong> +91*******</p>
+         <p><strong>Date:</strong> ####</p>
+         <hr>
+        
+       
+        <p><strong>Name of the Requester: </strong>:</strong> ####</p>
+        <p><strong>Plant:</strong>Aaryan Tech Park</p>
+        <p><strong>Requester Email:</strong> example@mail.com</p>
+        <p><strong>Contact number(Internal):</strong> +91-XXXXXXXXXX</p>
+      </div>
+    </div>
+    <hr>
+    <div style="line-height: 1;">
+    <p style="font-size: small;line-height: 1.2;"><strong>Ship-to-address:</strong>
+        <strong></strong>KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd cross,
+        Bikasipura Main Rd, Vikram Nagar,
+        Kumaraswamy Layout, Bengaluru - 560111</p>
+
+        <p style="font-size:small;line-height: 1.2;"><strong >Invoice address:</strong>KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd cross,
+        Bikasipura Main Rd, Vikram Nagar,
+        Kumaraswamy Layout, Bengaluru - 560111</p>
+
+        <p style="font-size: small;"><strong>Goods Recipient:</strong> Kiet-ATPLog1</p>
+
+    <hr>
+    </div>
+
+    
+    <p style="font-size: small;">With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.</p>
+
+    <!-- Order Table -->
+    <table>
+  <tr>
+    <th>SL.</th>
+    <th>Part No.</th>
+    <th>Item Description</th>
+    <th>HSN</th>
+    <th>GST%</th>
+    <th>Qty(N)</th>
+    <th>Unit</th>
+    <th>Unit Price</th>
+    <th>Total</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td></td>
+    <td>M bond 200 Adhesive</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>16,800</td>
+    <td>16,800</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td colspan="7" style="text-align:left;">
+      <p><strong>Terms of Payment:</strong> 45 days net</p>
+      <p><strong>Terms of Delivery:</strong> DAP Ship, address</p>
+    </td>
+    <td><strong>Subtotal</strong></td>
+    <td>22,800</td>
+  </tr>
+  <tr>
+    <td colspan="8" style="text-align:right;">CGST @ 9%</td>
+    <td>2,052</td>
+  </tr>
+  <tr>
+    <td colspan="8" style="text-align:right;">SGST @ 9%</td>
+    <td>2,052</td>
+  </tr>
+  <tr>
+    <td colspan="8" style="text-align:right;"><strong>Grand Total</strong></td>
+    <td><strong>26,904</strong></td>
+  </tr>
+</table>
+
+
+    <p><strong>Amount in words:</strong> INR Twenty Six Thousand Nine Hundred Four Only</p>
+<hr style="margin-top: -5px;">
+    <!-- Terms & Conditions -->
+    <div class="special_notes">
+      <h4>Terms & Conditions</h4>
+      <p>The supplier shall comply with all applicable laws, export regulations, and ethical business practices at all times.</p>
+      <p>Any form of bribery, gratification, or involvement of restricted materials is strictly prohibited.</p>
+      <p>The goods supplied must not contain iron or steel originating from sanctioned countries.</p>
+      <p>All invoices must exactly match the purchase order details, clearly reference the PO number, and be submitted within three days of issuance.</p>
+      <p>Payments will be made within forty-five days from the date of goods receipt or invoice receipt, whichever is applicable.</p>
+      </div><div class="special_last" style="width:70%">
+      <p>Deliveries will only be accepted from Monday to Friday between 9:00 AM and 5:00 PM, and must be routed through the designated material gates.</p>
+      <p>Each delivery must be accompanied by three copies of the invoice to ensure proper processing.</p>
+      <p>Supplier personnel entering the premises must wear safety shoes and carry valid identification, driving licenses, and vehicle documents.</p>
+      <p>The buyer reserves the right to reject goods or terminate the purchase order immediately in the event of non-compliance with these conditions.</p>
+    </div>
+    
+<div class="nrw">
+    <!-- Signature -->
+    <div class="signature">
+      <div class="signature-box"><img src="${ASSETS.img6}" alt="" width="100px"> <img class="sl" src="${ASSETS.img2}" alt="" width="100px"></div>
+    
+   
+    <hr>
+  </div>
+   <p style="font-size: small; text-align: right;position: relative;right:35px;" class="inf" >
+    **Computer Generated**
+    </p>
+  </div>
+ 
+
+
+
+</body>
+</html>  
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  `;
+
+  // Load and render
+  await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+  // Create PDF
+  await page.pdf({
+    path: 'Purchase_Order.pdf',
+    format: 'A4',
+    printBackground: true,
+    preferCSSPageSize: true,
+    margin: { top: '7mm', right: '7mm', bottom: '5mm', left: '7mm' }
+  });
+
+  await browser.close();
+  console.log('✅ PDF generated successfully!');
+  console.log("ASSETS", ASSETS);
+
+}
+
+createPDF();

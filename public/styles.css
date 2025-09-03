@@ -7,7 +7,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #b4cbe9, #55a6e0);
+  background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -48,6 +48,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  
 }
 
 .login-box {
@@ -58,6 +59,7 @@ body {
   text-align: center;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   animation: fadeIn 1.5s ease;
+  border: 1px solid lightblue;
 }
 
 .login-box .logo {
