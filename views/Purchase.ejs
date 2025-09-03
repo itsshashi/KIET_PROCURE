@@ -2,155 +2,474 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Purchase Orders</title>
+  <title>Purchase Orders Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .quotation-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .quotation-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: #f9fafb;
+    }
+    .quotation-item:hover {
+      background: #f3f4f6;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-purchase { background: #dbeafe; color: #1e40af; }
+    .status-sent { background: #e0e7ff; color: #3730a3; }
+    .status-received { background: #f0fdf4; color: #166534; }
+  </style>
 </head>
 <body class="bg-gray-100 p-6">
-  <h1 class="text-2xl font-bold mb-6 text-center">📑 Purchase Orders</h1>
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">📑 Purchase Orders Management</h1>
 
-  <!-- Table -->
-  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-    <table class="min-w-full text-sm text-left">
-      <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
-        <tr>
-          <th class="px-4 py-2">Order ID</th>
-          <th class="px-4 py-2">Project</th>
-          <th class="px-4 py-2">Supplier</th>
-          <th class="px-4 py-2">Requested By</th>
-          <th class="px-4 py-2">Date Required</th>
-          <th class="px-4 py-2">Amount</th>
-          <th class="px-4 py-2">Status</th>
-          <th class="px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="ordersTable" class="divide-y"></tbody>
-    </table>
-  </div>
-
-  <!-- View Modal -->
-  <div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-lg w-3/4 p-4">
-      <div class="flex justify-between items-center border-b pb-2 mb-4">
-        <h2 class="text-lg font-semibold">View Quotation</h2>
-        <button onclick="closeView()" class="text-red-500 font-bold">X</button>
+    <!-- Filters -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="text" id="searchInput" placeholder="Search by Order ID or Project..." class="border p-2 rounded">
+        <select id="supplierFilter" class="border p-2 rounded">
+          <option value="">All Suppliers</option>
+        </select>
+        <select id="statusFilter" class="border p-2 rounded">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="purchase">Purchase</option>
+          <option value="approved">Approved</option>
+          <option value="sent">Sent</option>
+          <option value="received">Received</option>
+        </select>
+        <button onclick="applyFilters()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <i class="fas fa-search mr-2"></i>Filter
+        </button>
       </div>
-      <iframe id="quotationPreview" class="w-full h-[500px]" frameborder="0"></iframe>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="min-w-full text-sm text-left">
+        <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3">Order ID</th>
+            <th class="px-4 py-3">Project</th>
+            <th class="px-4 py-3">Supplier</th>
+            <th class="px-4 py-3">Requested By</th>
+            <th class="px-4 py-3">Date Required</th>
+            <th class="px-4 py-3">Amount</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Quotations</th>
+            <th class="px-4 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable" class="divide-y divide-gray-200"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- Edit Modal -->
-  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-lg w-[400px] p-6">
-      <h2 class="text-lg font-semibold mb-4">Upload New Quotation</h2>
-      <input type="file" id="newQuotationFile" class="mb-4 border p-2 w-full" accept="application/pdf" />
-      <div class="flex justify-end gap-3">
-        <button onclick="closeEdit()" class="px-4 py-2 bg-gray-400 rounded text-white">Cancel</button>
-        <button onclick="saveQuotation()" class="px-4 py-2 bg-blue-600 rounded text-white">Save</button>
+  <!-- View Quotations Modal -->
+  <div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-4/5 max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">📄 View All Quotations</h2>
+        <button onclick="closeView()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
       </div>
+
+      <div id="quotationsList" class="quotation-list space-y-4">
+        <!-- Quotations will be loaded here -->
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button onclick="closeView()" class="px-4 py-2 bg-gray-400 rounded text-white hover:bg-gray-500">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Order Modal -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-2/3 max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">✏️ Edit Order Details</h2>
+        <button onclick="closeEdit()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+      </div>
+
+      <form id="editOrderForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+            <input type="text" id="editProjectName" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" readonly>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
+            <input type="text" id="editProjectCode" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" readonly>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
+            <input type="text" id="editSupplierName" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Supplier GST *</label>
+            <input type="text" id="editSupplierGst" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Address *</label>
+          <textarea id="editSupplierAddress" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Urgency *</label>
+            <select id="editUrgency" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+              <option value="low">Low - Normal</option>
+              <option value="medium">Medium - Soon</option>
+              <option value="high">High - Immediate</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Date Required *</label>
+            <input type="date" id="editDateRequired" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+          <textarea id="editNotes" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- Upload New Quotation -->
+        <div class="border-t pt-4">
+          <h3 class="text-lg font-medium text-gray-800 mb-3">📎 Upload New Quotation</h3>
+          <input type="file" id="newQuotationFile" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" accept="application/pdf" multiple>
+          <p class="text-sm text-gray-500 mt-1">Select multiple PDF files to upload new quotations</p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onclick="closeEdit()" class="px-4 py-2 bg-gray-400 rounded text-white hover:bg-gray-500">Cancel</button>
+          <button type="submit" class="px-6 py-2 bg-blue-600 rounded text-white hover:bg-blue-700">
+            <i class="fas fa-save mr-2"></i>Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quotation Preview Modal -->
+  <div id="quotationPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-5/6 max-w-5xl p-4 max-h-[95vh]">
+      <div class="flex justify-between items-center border-b pb-2 mb-4">
+        <h2 class="text-lg font-semibold" id="previewTitle">Quotation Preview</h2>
+        <button onclick="closePreview()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+      </div>
+      <iframe id="quotationIframe" class="w-full h-[600px] border rounded" frameborder="0"></iframe>
     </div>
   </div>
 
   <script>
     const API_URL = "http://localhost:3000/api/orders";
     let currentEditId = null;
+    let allOrders = [];
+    let filteredOrders = [];
+
+    // Load orders on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadOrders();
+      setupFilters();
+    });
 
     async function loadOrders() {
-      const res = await fetch(API_URL);
-      const orders = await res.json();
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error('Failed to fetch orders');
+
+        allOrders = await res.json();
+        filteredOrders = [...allOrders];
+
+        populateSupplierFilter();
+        renderOrdersTable();
+      } catch (error) {
+        console.error('Error loading orders:', error);
+        document.getElementById("ordersTable").innerHTML =
+          '<tr><td colspan="9" class="text-center py-8 text-red-500">Failed to load orders. Please try again.</td></tr>';
+      }
+    }
+
+    function populateSupplierFilter() {
+      const supplierFilter = document.getElementById('supplierFilter');
+      const suppliers = [...new Set(allOrders.map(order => order.supplier).filter(Boolean))];
+
+      suppliers.forEach(supplier => {
+        const option = document.createElement('option');
+        option.value = supplier;
+        option.textContent = supplier;
+        supplierFilter.appendChild(option);
+      });
+    }
+
+    function setupFilters() {
+      document.getElementById('searchInput').addEventListener('input', applyFilters);
+      document.getElementById('supplierFilter').addEventListener('change', applyFilters);
+      document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    }
+
+    function applyFilters() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const supplierFilter = document.getElementById('supplierFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      filteredOrders = allOrders.filter(order => {
+        const matchesSearch = !searchTerm ||
+          order.order_id.toLowerCase().includes(searchTerm) ||
+          order.project.toLowerCase().includes(searchTerm);
+
+        const matchesSupplier = !supplierFilter || order.supplier === supplierFilter;
+        const matchesStatus = !statusFilter || order.status === statusFilter;
+
+        return matchesSearch && matchesSupplier && matchesStatus;
+      });
+
+      renderOrdersTable();
+    }
+
+    function renderOrdersTable() {
       const tbody = document.getElementById("ordersTable");
       tbody.innerHTML = "";
 
-      orders.forEach(order => {
+      if (filteredOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">No orders found matching your criteria.</td></tr>';
+        return;
+      }
+
+      filteredOrders.forEach(order => {
         const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50";
+
+        const statusBadgeClass = `status-badge status-${order.status}`;
+
         tr.innerHTML = `
-  <td class="px-4 py-2">${order.order_id}</td>
-  <td class="px-4 py-2">${order.project}</td>
-  <td class="px-4 py-2">${order.supplier}</td>
-  <td class="px-4 py-2">${order.requested_by}</td>
-  <td class="px-4 py-2">${order.date_required}</td>
-  <td class="px-4 py-2">₹${order.total_amount.toLocaleString()}</td>
-  <td class="px-4 py-2">
-    <span class="px-2 py-1 rounded text-white ${
-      order.status === 'pending' ? 'bg-yellow-500' : 'bg-green-600'
-    }">
-      ${order.status}
-    </span>
-  </td>
-  <td class="px-4 py-2 flex gap-2">
-    <button onclick="viewOrder('${order.quotation_file}')" class="px-3 py-1 bg-blue-500 text-white rounded">View</button>
-    <button onclick="editOrder(${order.id})" class="px-3 py-1 bg-green-600 text-white rounded">Edit</button>
-    ${order.status === 'pending' 
-      ? `<button onclick="approveOrder(${order.id})" class="px-3 py-1 bg-purple-600 text-white rounded">Approve</button>` 
-      : ""}
-  </td>
-`;
+          <td class="px-4 py-3 font-medium">${order.order_id}</td>
+          <td class="px-4 py-3">${order.project}</td>
+          <td class="px-4 py-3">${order.supplier}</td>
+          <td class="px-4 py-3">${order.requested_by}</td>
+          <td class="px-4 py-3">${formatDate(order.date_required)}</td>
+          <td class="px-4 py-3 font-semibold">₹${order.total_amount.toLocaleString()}</td>
+          <td class="px-4 py-3">
+            <span class="${statusBadgeClass}">${capitalizeFirst(order.status)}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-file-pdf text-red-500"></i>
+              <span class="text-sm text-gray-600">${order.quotation_file ? '1 file' : 'No files'}</span>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <button onclick="viewQuotations(${order.id})" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition">
+                <i class="fas fa-eye mr-1"></i>View
+              </button>
+              <button onclick="editOrder(${order.id})" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition">
+                <i class="fas fa-edit mr-1"></i>Edit
+              </button>
+              ${order.status === 'pending'
+                ? `<button onclick="approveOrder(${order.id})" class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition">
+                     <i class="fas fa-check mr-1"></i>Approve
+                   </button>`
+                : ""}
+            </div>
+          </td>
+        `;
 
         tbody.appendChild(tr);
       });
     }
 
-    function viewOrder(fileName) {
-      document.getElementById("quotationPreview").src = "/uploads/" + fileName;
-      document.getElementById("viewModal").classList.remove("hidden");
-    }
-    function closeView() {
-      document.getElementById("viewModal").classList.add("hidden");
-    }
-
-    function editOrder(id) {
-      currentEditId = id;
-      document.getElementById("editModal").classList.remove("hidden");
-    }
-    function closeEdit() {
-      document.getElementById("editModal").classList.add("hidden");
-    }
-
-
-
-    
-
-    async function saveQuotation() {
-      const file = document.getElementById("newQuotationFile").files[0];
-      if (!file) return alert("Please choose a file");
-
-      const formData = new FormData();
-      formData.append("quotation", file);
-
-      const res = await fetch(`${API_URL}/${currentEditId}/quotation`, {
-        method: "PUT",
-        body: formData
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
+    }
 
-      if (res.ok) {
-        alert("Quotation updated ✅");
+    function capitalizeFirst(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // View All Quotations
+    async function viewQuotations(orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const quotationsList = document.getElementById('quotationsList');
+      quotationsList.innerHTML = '';
+
+      if (order.quotation_file) {
+        const quotationItem = document.createElement('div');
+        quotationItem.className = 'quotation-item';
+        quotationItem.innerHTML = `
+          <div class="flex items-center gap-3">
+            <i class="fas fa-file-pdf text-red-500 text-lg"></i>
+            <div>
+              <p class="font-medium text-gray-800">${order.quotation_file}</p>
+              <p class="text-sm text-gray-500">Uploaded on ${formatDate(order.created_at)}</p>
+            </div>
+          </div>
+          <button onclick="previewQuotation('${order.quotation_file}')" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+            <i class="fas fa-eye mr-1"></i>Preview
+          </button>
+        `;
+        quotationsList.appendChild(quotationItem);
+      } else {
+        quotationsList.innerHTML = '<p class="text-gray-500 text-center py-4">No quotations available for this order.</p>';
+      }
+
+      document.getElementById('viewModal').classList.remove('hidden');
+    }
+
+    function closeView() {
+      document.getElementById('viewModal').classList.add('hidden');
+    }
+
+    // Preview Single Quotation
+    function previewQuotation(fileName) {
+      document.getElementById('previewTitle').textContent = `Preview: ${fileName}`;
+      document.getElementById('quotationIframe').src = `/uploads/${fileName}`;
+      document.getElementById('quotationPreviewModal').classList.remove('hidden');
+    }
+
+    function closePreview() {
+      document.getElementById('quotationPreviewModal').classList.add('hidden');
+      document.getElementById('quotationIframe').src = '';
+    }
+
+    // Edit Order
+    async function editOrder(orderId) {
+      currentEditId = orderId;
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      // Populate form fields
+      document.getElementById('editProjectName').value = order.project;
+      document.getElementById('editProjectCode').value = order.project_code_number || '';
+      document.getElementById('editSupplierName').value = order.supplier;
+      document.getElementById('editSupplierGst').value = order.supplier_gst || '';
+      document.getElementById('editSupplierAddress').value = order.supplier_address || '';
+      document.getElementById('editUrgency').value = order.urgency;
+      document.getElementById('editDateRequired').value = order.date_required;
+      document.getElementById('editNotes').value = order.notes || '';
+
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEdit() {
+      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('editOrderForm').reset();
+    }
+
+    // Handle Edit Form Submission
+    document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = {
+        supplier_name: document.getElementById('editSupplierName').value,
+        supplier_gst: document.getElementById('editSupplierGst').value,
+        supplier_address: document.getElementById('editSupplierAddress').value,
+        urgency: document.getElementById('editUrgency').value,
+        date_required: document.getElementById('editDateRequired').value,
+        notes: document.getElementById('editNotes').value
+      };
+
+      try {
+        // Update order details
+        const response = await fetch(`${API_URL}/${currentEditId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) throw new Error('Failed to update order');
+
+        // Handle file uploads if any
+        const files = document.getElementById('newQuotationFile').files;
+        if (files.length > 0) {
+          const fileFormData = new FormData();
+          for (let file of files) {
+            fileFormData.append('quotations', file);
+          }
+
+          const fileResponse = await fetch(`${API_URL}/${currentEditId}/quotations`, {
+            method: 'POST',
+            body: fileFormData
+          });
+
+          if (!fileResponse.ok) {
+            console.warn('File upload failed, but order details were updated');
+          }
+        }
+
+        alert('Order updated successfully! ✅');
         closeEdit();
         loadOrders();
-      } else {
-        alert("Failed to update quotation ❌");
+
+      } catch (error) {
+        console.error('Error updating order:', error);
+        alert('Failed to update order. Please try again.');
+      }
+    });
+
+    // Approve Order
+    async function approveOrder(orderId) {
+      if (!confirm('Are you sure you want to approve this order?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/${orderId}/purchase`, {
+          method: 'PUT'
+        });
+
+        if (!response.ok) throw new Error('Failed to approve order');
+
+        alert('Order approved successfully! ✅');
+        loadOrders();
+
+      } catch (error) {
+        console.error('Error approving order:', error);
+        alert('Failed to approve order. Please try again.');
       }
     }
 
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+      const viewModal = document.getElementById('viewModal');
+      const editModal = document.getElementById('editModal');
+      const previewModal = document.getElementById('quotationPreviewModal');
 
-
-
-
-
-
-    async function approveOrder(id) {
-  const confirmApprove = confirm("Are you sure you want to approve this order?");
-  if (!confirmApprove) return;
-
-    const res = await fetch(`${API_URL}/${id}/purchase`, { method: "PUT" });
-    if (res.ok) {
-        alert("Order approved ✅");
-        loadOrders();
-    } else {
-        alert("Failed to approve order ❌");
-    }
-    }
-
-
-    loadOrders();
+      if (e.target === viewModal) closeView();
+      if (e.target === editModal) closeEdit();
+      if (e.target === previewModal) closePreview();
+    });
   </script>
 </body>
 </html>

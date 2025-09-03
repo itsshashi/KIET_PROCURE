@@ -86,6 +86,74 @@
     .close { float: right; color: #e74c3c; font-size: 28px; cursor: pointer; font-weight: bold; }
     iframe { flex: 1; border: none; width: 100%; }
     .details { font-size: 13px; margin-top: 5px; padding: 10px; background: #f9f9f9; border-radius: 6px; line-height: 1.5; border: 1px solid #eee; }
+
+    /* Tabs */
+    .tabs { margin-bottom: 20px; }
+    .tab-button {
+      padding: 10px 20px;
+      border: none;
+      background: #ecf0f1;
+      color: #2c3e50;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.2s ease;
+    }
+    .tab-button.active {
+      background: #2c3e50;
+      color: #fff;
+    }
+    .tab-button:hover { background: #bdc3c7; }
+
+    /* Filters */
+    .filters { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+    .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .filter-row input, .filter-row select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .filter-row button {
+      padding: 8px 16px;
+      background: #6c757d;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .filter-row button:hover { background: #5a6268; }
+
+    /* Tab Content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      color: #007bff;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .pagination button:hover { background: #e9ecef; }
+    .pagination button.active { background: #007bff; color: #fff; }
+    .pagination button:disabled { background: #6c757d; color: #fff; cursor: not-allowed; }
+
+    /* Sortable headers */
+    table th { cursor: pointer; user-select: none; }
+    table th:hover { background: #34495e; }
   </style>
 </head>
 <body>
@@ -102,24 +170,76 @@
       </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Order ID</th>
-          <th>Project</th>
-          <th>Department</th>
-          <th>Supplier</th>
-          <th>Description</th>
-          <th>Requested By</th>
-          <th>Date Required</th>
-          <th>Total Amount</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="purchaseOrdersBody"></tbody>
-    </table>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchTab('pending')">Pending Approvals</button>
+      <button class="tab-button" onclick="switchTab('quotations')">All Quotations</button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="filters" id="filtersSection">
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="Search by Order ID, Project, Supplier..." onkeyup="applyFilters()">
+        <select id="supplierFilter" onchange="applyFilters()">
+          <option value="All Suppliers">All Suppliers</option>
+        </select>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="All Statuses">All Statuses</option>
+          <option value="enquired">Enquired</option>
+          <option value="purchase">Purchase Requested</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input type="date" id="dateFrom" onchange="applyFilters()">
+        <input type="date" id="dateTo" onchange="applyFilters()">
+        <button onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Pending Approvals Table -->
+    <div id="pendingTab" class="tab-content">
+      <table id="pendingTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('purchase_order_number')">Order ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('project_name')">Project <i class="fas fa-sort"></i></th>
+            <th>Department</th>
+            <th onclick="sortTable('supplier_name')">Supplier <i class="fas fa-sort"></i></th>
+            <th>Description</th>
+            <th>Requested By</th>
+            <th onclick="sortTable('date_required')">Date Required <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="purchaseOrdersBody"></tbody>
+      </table>
+    </div>
+
+    <!-- All Quotations Table -->
+    <div id="quotationsTab" class="tab-content">
+      <table id="quotationsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('purchase_order_number')">Order ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('project_name')">Project <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('supplier_name')">Supplier <i class="fas fa-sort"></i></th>
+            <th>Requested By</th>
+            <th onclick="sortTable('date_required')">Date Required <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Uploaded Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="quotationsBody"></tbody>
+      </table>
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+    </div>
   </div>
 
   <!-- Modal for PDF preview -->
@@ -135,13 +255,88 @@
   </div>
 
   <script>
-    const API_URL = "/api/purchase-orders";
+    let currentTab = 'pending';
+    let currentPage = 1;
+    let currentSortBy = 'created_at';
+    let currentSortOrder = 'DESC';
+    let suppliers = [];
 
+    // Initialize
+    document.addEventListener("DOMContentLoaded", function() {
+      loadSuppliers();
+      switchTab('pending');
+    });
+
+    // Load suppliers for filter dropdown
+    async function loadSuppliers() {
+      try {
+        const res = await fetch('/api/orders');
+        const orders = await res.json();
+        const uniqueSuppliers = [...new Set(orders.map(o => o.supplier))].filter(s => s);
+        suppliers = uniqueSuppliers;
+
+        const supplierFilter = document.getElementById('supplierFilter');
+        supplierFilter.innerHTML = '<option value="All Suppliers">All Suppliers</option>';
+        suppliers.forEach(supplier => {
+          supplierFilter.innerHTML += `<option value="${supplier}">${supplier}</option>`;
+        });
+      } catch (err) {
+        console.error('Failed to load suppliers:', err);
+      }
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      currentTab = tab;
+      currentPage = 1;
+
+      // Update tab buttons
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+      // Show/hide content
+      document.getElementById('pendingTab').style.display = tab === 'pending' ? 'block' : 'none';
+      document.getElementById('quotationsTab').style.display = tab === 'quotations' ? 'block' : 'none';
+
+      // Load data
+      if (tab === 'pending') {
+        loadPurchaseOrders();
+      } else {
+        loadAllQuotations();
+      }
+    }
+
+    // Load pending orders
     async function loadPurchaseOrders() {
       const res = await fetch(API_URL);
       const orders = await res.json();
+      renderOrders(orders, 'purchaseOrdersBody');
+    }
 
-      const tbody = document.getElementById("purchaseOrdersBody");
+    // Load all quotations with filters
+    async function loadAllQuotations() {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 10,
+        sortBy: currentSortBy,
+        sortOrder: currentSortOrder,
+        search: document.getElementById('searchInput').value,
+        supplier: document.getElementById('supplierFilter').value,
+        status: document.getElementById('statusFilter').value,
+        dateFrom: document.getElementById('dateFrom').value,
+        dateTo: document.getElementById('dateTo').value
+      });
+
+      const res = await fetch(`/api/all-quotations?${params}`);
+      const data = await res.json();
+
+      renderQuotations(data.quotations, 'quotationsBody');
+      renderPagination(data.pagination);
+    }
+
+    // Render orders table
+    function renderOrders(orders, tbodyId) {
+      const tbody = document.getElementById(tbodyId);
       tbody.innerHTML = "";
 
       orders.forEach(order => {
@@ -174,6 +369,98 @@
       });
     }
 
+    // Render quotations table
+    function renderQuotations(quotations, tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = "";
+
+      quotations.forEach(quotation => {
+        const row = `
+          <tr>
+            <td>${quotation.id}</td>
+            <td>${quotation.order_id}</td>
+            <td>${quotation.project}</td>
+            <td>${quotation.supplier}</td>
+            <td>${quotation.requested_by}</td>
+            <td>${new Date(quotation.date_required).toLocaleDateString()}</td>
+            <td>₹${quotation.total_amount.toLocaleString()}</td>
+            <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+            <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
+            <td class="actions">
+              <button class="view" onclick='viewQuotation(${JSON.stringify(quotation)})'>
+                <i class="fas fa-file-pdf"></i> Preview
+              </button>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+
+    // Render pagination
+    function renderPagination(pagination) {
+      const paginationDiv = document.getElementById('pagination');
+      paginationDiv.innerHTML = '';
+
+      if (pagination.pages <= 1) return;
+
+      // Previous button
+      paginationDiv.innerHTML += `<button onclick="changePage(${pagination.page - 1})" ${pagination.page === 1 ? 'disabled' : ''}>Previous</button>`;
+
+      // Page numbers
+      for (let i = Math.max(1, pagination.page - 2); i <= Math.min(pagination.pages, pagination.page + 2); i++) {
+        paginationDiv.innerHTML += `<button onclick="changePage(${i})" class="${i === pagination.page ? 'active' : ''}">${i}</button>`;
+      }
+
+      // Next button
+      paginationDiv.innerHTML += `<button onclick="changePage(${pagination.page + 1})" ${pagination.page === pagination.pages ? 'disabled' : ''}>Next</button>`;
+    }
+
+    // Change page
+    function changePage(page) {
+      currentPage = page;
+      loadAllQuotations();
+    }
+
+    // Apply filters
+    function applyFilters() {
+      currentPage = 1;
+      if (currentTab === 'quotations') {
+        loadAllQuotations();
+      } else {
+        loadPurchaseOrders(); // Could add filtering to pending orders too
+      }
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('supplierFilter').value = 'All Suppliers';
+      document.getElementById('statusFilter').value = 'All Statuses';
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      applyFilters();
+    }
+
+    // Sort table
+    function sortTable(column) {
+      if (currentSortBy === column) {
+        currentSortOrder = currentSortOrder === 'ASC' ? 'DESC' : 'ASC';
+      } else {
+        currentSortBy = column;
+        currentSortOrder = 'ASC';
+      }
+
+      if (currentTab === 'quotations') {
+        loadAllQuotations();
+      } else {
+        // For pending orders, we could implement client-side sorting
+        // For now, just reload
+        loadPurchaseOrders();
+      }
+    }
+
+    // View quotation
     function viewQuotation(order) {
       if (!order.quotation_file) {
         alert("No quotation uploaded ❌");
@@ -181,21 +468,22 @@
       }
       document.getElementById("pdfFrame").src = `/uploads/${order.quotation_file}`;
       document.getElementById("orderDetails").innerHTML = `
-        <strong>Project:</strong> ${order.project_name} &nbsp; | 
-        <strong>Department:</strong> ${order.department || "-"} &nbsp; | 
-        <strong>Supplier:</strong> ${order.supplier_name} &nbsp; | 
-        <strong>Requested By:</strong> ${order.ordered_by} &nbsp; | 
-        <strong>Date Required:</strong> ${new Date(order.date_required).toLocaleDateString()} &nbsp; | 
+        <strong>Project:</strong> ${order.project_name || order.project} &nbsp; |
+        <strong>Supplier:</strong> ${order.supplier_name || order.supplier} &nbsp; |
+        <strong>Requested By:</strong> ${order.ordered_by || order.requested_by} &nbsp; |
+        <strong>Date Required:</strong> ${new Date(order.date_required).toLocaleDateString()} &nbsp; |
         <strong>Total:</strong> ₹${order.total_amount.toLocaleString()}
       `;
       document.getElementById("pdfModal").style.display = "block";
     }
 
+    // Close modal
     function closeModal() {
       document.getElementById("pdfModal").style.display = "none";
       document.getElementById("pdfFrame").src = "";
     }
 
+    // Update status
     async function updateStatus(id, status) {
       const res = await fetch(`/api/orders/${id}/approve`, {
         method: "PUT",
@@ -205,14 +493,16 @@
 
       if (res.ok) {
         alert(`Order ${id} ${status} ✅`);
-        loadPurchaseOrders();
+        if (currentTab === 'pending') {
+          loadPurchaseOrders();
+        } else {
+          loadAllQuotations();
+        }
       } else {
         const err = await res.json();
         alert("Failed: " + err.error);
       }
     }
-
-    document.addEventListener("DOMContentLoaded", loadPurchaseOrders);
   </script>
 </body>
 </html>

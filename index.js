@@ -285,7 +285,7 @@ app.post('/submit', async (req, res) => {
                 res.render('Security.ejs', { user, out_fl: email, message: "Login Successful ✅" });
                 break;
             case "Inventory":
-                res.render('Inventor.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                res.render('Inventry.ejs', { user, out_fl: email, message: "Login Successful ✅" });
                 break;
             case "Accounts":
                 res.render('Accounts.ejs', { user, out_fl: email, message: "Login Successful ✅" });
@@ -530,7 +530,10 @@ app.get("/api/purchase-orders", async (req, res) => {
 
 
 
-
+//print test 
+app.get("/print/test", (req, res) => {
+  res.render("print"); // will render views/print.ejs
+});
 
 
 

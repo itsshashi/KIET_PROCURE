@@ -136,8 +136,9 @@
       <div class="left">
         <br>
         <p><strong>Supplier Address:</strong><hr style="margin-top: -10px;">
-<%= order.supplier_name %>,<br>
-<%= order.supplier_address %></p>
+ABC Supplier Pvt. Ltd,<br>
+123 Industrial Area,<br>
+Peenya, Bengaluru - 560058</p>
 
 
         
@@ -147,16 +148,16 @@
         <img style="margin-left: 100px;" src="images/page_logo.png" alt="company logo" width="180px"><hr>
         
         <p style="font-size: medium;"><strong>PURCHASE ORDER</strong></p>
-        <p><strong>PO Number:</strong> <%= order.purchase_order_number %></p>
-
-        <p><strong>Supplier Number:</strong> <%= order.supplier_gst || '+91*******' %></p>
-         <p><strong>Date:</strong> <%= new Date(order.created_at).toLocaleDateString() %></p>
+        <p><strong>PO Number:</strong> ####</p>
+        
+        <p><strong>Supplier Number:</strong> +91*******</p>
+         <p><strong>Date:</strong> ####</p>
          <hr>
-
-
-        <p><strong>Name of the Requester: </strong><%= order.ordered_by %></p>
+        
+       
+        <p><strong>Name of the Requester: </strong>:</strong> ####</p>
         <p><strong>Plant:</strong>Aaryan Tech Park</p>
-        <p><strong>Requester Email:</strong> <%= order.ordered_by %></p>
+        <p><strong>Requester Email:</strong> example@mail.com</p>
         <p><strong>Contact number(Internal):</strong> +91-XXXXXXXXXX</p>
       </div>
     </div>
@@ -192,48 +193,144 @@
     <th>Unit Price</th>
     <th>Total</th>
   </tr>
-  <% let subtotal = 0; %>
-  <% items.forEach((item, index) => { %>
-    <% 
-      const itemTotal = (item.quantity * item.unit_price) + ((item.quantity * item.unit_price) * (item.gst / 100));
-      subtotal += itemTotal;
-    %>
-    <tr>
-      <td><%= index + 1 %></td>
-      <td><%= item.part_no || '' %></td>
-      <td><%= item.description || '' %></td>
-      <td><%= item.hsn_code || '' %></td>
-      <td><%= item.gst || 0 %>%</td>
-      <td><%= item.quantity || 0 %></td>
-      <td><%= item.unit || '' %></td>
-      <td>₹<%= item.unit_price.toFixed(2) %></td>
-      <td>₹<%= itemTotal.toFixed(2) %></td>
-    </tr>
-  <% }) %>
+  <tr>
+    <td>1</td>
+    <td></td>
+    <td>M bond 200 Adhesive</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>16,800</td>
+    <td>16,800</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td></td>
+    <td>200 Catalyst</td>
+    <td>90249000</td>
+    <td>18%</td>
+    <td>1</td>
+    <td>
+      <select>
+        <option value="pcs">pcs</option>
+        <option value="mm">mm</option>
+        <option value="set">set</option>
+      </select>
+    </td>
+    <td>6,000</td>
+    <td>6,000</td>
+  </tr>
   <tr>
     <td colspan="7" style="text-align:left;">
       <p><strong>Terms of Payment:</strong> 45 days net</p>
       <p><strong>Terms of Delivery:</strong> DAP Ship, address</p>
     </td>
     <td><strong>Subtotal</strong></td>
-    <td>₹<%= subtotal.toFixed(2) %></td>
+    <td>22,800</td>
   </tr>
-  <% 
-    const cgst = subtotal * 0.09;
-    const sgst = subtotal * 0.09;
-    const grandTotal = subtotal + cgst + sgst;
-  %>
   <tr>
     <td colspan="8" style="text-align:right;">CGST @ 9%</td>
-    <td>₹<%= cgst.toFixed(2) %></td>
+    <td>2,052</td>
   </tr>
   <tr>
     <td colspan="8" style="text-align:right;">SGST @ 9%</td>
-    <td>₹<%= sgst.toFixed(2) %></td>
+    <td>2,052</td>
   </tr>
   <tr>
     <td colspan="8" style="text-align:right;"><strong>Grand Total</strong></td>
-    <td><strong>₹<%= grandTotal.toFixed(2) %></strong></td>
+    <td><strong>26,904</strong></td>
   </tr>
 </table>
 

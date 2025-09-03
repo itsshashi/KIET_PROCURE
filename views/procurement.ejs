@@ -291,31 +291,32 @@
         padding: 20px;
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .tracking-wrapper::before {
         content: '';
         position: absolute;
-        top: 40px; /* aligns with step centers */
+        top: 50%;
         left: 50px;
         right: 50px;
         height: 6px;
-        background: linear-gradient(90deg, #e0e0e0 0%, #d1d5db 100%);
+        background: linear-gradient(90deg, #e0e0e0 0%, #f0f0f0 100%);
         border-radius: 3px;
         z-index: 1;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        transform: translateY(-50%);
         }
 
         #progressBar {
         position: absolute;
-        top: 40px;
+        top: 50%;
         left: 50px;
         height: 6px;
-        background: linear-gradient(90deg, #4CAF50 0%, #45a049 50%, #3d8b40 100%);
+        background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%);
         border-radius: 3px;
         z-index: 2;
-        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(-50%);
         box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
         }
 
@@ -324,6 +325,7 @@
         justify-content: space-between;
         position: relative;
         z-index: 3;
+        padding: 0 20px;
         }
 
         .tracking-step {
@@ -337,109 +339,93 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e0e0e0 0%, #d1d5db 100%);
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 12px;
-            color: #6b7280;
-            font-size: 18px;
+            color: #666;
+            font-size: 16px;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-            border: 3px solid #ffffff;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-        }
-
-        .step-icon:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            z-index: 4;
         }
 
         .step-icon.active {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
             color: white;
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
             animation: pulse 2s infinite;
         }
 
-        .step-icon.active::after {
-            content: '';
+        .step-icon.completed {
+            background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .step-icon.completed::after {
+            content: '✓';
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            opacity: 0.3;
-            z-index: -1;
-            animation: ripple 1.5s infinite;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: white;
+            animation: checkmark 0.8s ease-in-out;
         }
 
         .step-label {
-            font-size: 14px;
+            font-size: 13px;
             text-align: center;
-            color: #6b7280;
+            color: #757575;
             font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
+            margin-top: 5px;
         }
 
         .step-label.active {
             color: #4CAF50;
-            font-weight: 700;
-            font-size: 16px;
-            text-shadow: 0 1px 2px rgba(76, 175, 80, 0.3);
+            font-weight: 600;
+            transform: translateY(-2px);
         }
 
+        .step-label.completed {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        /* Enhanced animations */
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1.1); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6); }
+            50% { transform: scale(1.15); box-shadow: 0 8px 25px rgba(76, 175, 80, 0.8); }
+            100% { transform: scale(1.1); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6); }
         }
 
-        @keyframes ripple {
-            0% { transform: scale(1); opacity: 0.3; }
-            100% { transform: scale(1.5); opacity: 0; }
+        @keyframes checkmark {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
         }
 
-        /* Responsive enhancements for tracking bar */
-        @media (max-width: 768px) {
-            .tracking-wrapper {
-                margin: 20px auto;
-                padding: 15px;
-            }
-
-            .tracking-wrapper::before {
-                top: 35px;
-                left: 30px;
-                right: 30px;
-                height: 5px;
-            }
-
-            #progressBar {
-                top: 35px;
-                left: 30px;
-                height: 5px;
-            }
-
-            .step-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-                margin-bottom: 10px;
-            }
-
-            .step-label {
-                font-size: 12px;
-            }
-
-            .step-label.active {
-                font-size: 14px;
-            }
+        @keyframes slideIn {
+            0% { transform: translateX(-20px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
         }
+
+        .tracking-step {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .tracking-step:nth-child(1) { animation-delay: 0.1s; }
+        .tracking-step:nth-child(2) { animation-delay: 0.2s; }
+        .tracking-step:nth-child(3) { animation-delay: 0.3s; }
+        .tracking-step:nth-child(4) { animation-delay: 0.4s; }
+        .tracking-step:nth-child(5) { animation-delay: 0.5s; }
         
         /* Product Table Styles */
         .product-table {
@@ -727,7 +713,7 @@
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
-          5                  <option value="rejected">Rejected</option>
+                            <option value="rejected">Rejected</option>
                         </select>
                     </div>
                 </div>
@@ -1048,14 +1034,16 @@
             
             return products;
         }
-        let selectedOrder=null;
+        let selectedOrder = null;
+
         // Setup order tracking visualization
         function setupOrderTracking() {
-            updateOrderTracking();
+            // Initialize with no order selected
+            updateOrderTracking(null);
         }
-        function updateOrderTracking(order) {
-            if (!order) return;
 
+        // Update order tracking visualization based on selected order
+        function updateOrderTracking(order) {
             const stepMap = {
                 pending: 1,
                 purchase: 2,
@@ -1064,62 +1052,46 @@
                 received: 5
             };
 
-            const trackingStep = stepMap[order.status] || 1;
-            const progressPercentage = ((trackingStep - 1) / 4) * 100;
+            const totalSteps = 5;
+            const trackingStep = order ? (stepMap[order.status] || 1) : 1;
 
-            // Fill line
-            function updateOrderTracking(order) {
-                if (!order) return;
+            // Calculate progress percentage - line should reach the current step
+            const progressPercentage = ((trackingStep - 1) / (totalSteps - 1)) * 100;
 
-                const stepMap = {
-                    pending: 1,
-                    purchase: 2,
-                    approved: 3,
-                    sent: 4,
-                    received: 5
-                };
+            // Update progress bar with smooth animation
+            const progressBar = document.getElementById("progressBar");
+            progressBar.style.width = `${progressPercentage}%`;
 
-                const totalSteps = 5;
-                const trackingStep = stepMap[order.status] || 1;
-
-                // Line should reach exactly the current step
-                const progressPercentage = ((trackingStep - 1) / (totalSteps - 1)) * 100;
-
-                // ✅ update green line
-                document.getElementById("progressBar").style.width = `${progressPercentage}%`;
-
-                // ✅ highlight steps
-                const steps = document.querySelectorAll(".tracking-step");
-                steps.forEach((step, index) => {
-                    const icon = step.querySelector(".step-icon");
-                    const label = step.querySelector(".step-label");
-
-                    if (index < trackingStep) {
-                        icon.classList.add("bg-green-600", "text-white", "border-green-600");
-                        label.classList.add("text-green-600", "font-bold");
-                    } else {
-                        icon.classList.remove("bg-green-600", "text-white", "border-green-600");
-                        label.classList.remove("text-green-600", "font-bold");
-                    }
-                });
-            }
-
-
-
-            // Circles + labels
+            // Update all step icons and labels
             const steps = document.querySelectorAll(".tracking-step");
             steps.forEach((step, index) => {
                 const icon = step.querySelector(".step-icon");
                 const label = step.querySelector(".step-label");
 
+                // Remove all previous states
+                icon.classList.remove("active", "completed");
+                label.classList.remove("active", "completed");
+
                 if (index < trackingStep) {
-                    icon.classList.add("active");
-                    label.classList.add("active");
-                } else {
-                    icon.classList.remove("active");
-                    label.classList.remove("active");
+                    // Completed steps
+                    if (index === trackingStep - 1) {
+                        // Current active step
+                        icon.classList.add("active");
+                        label.classList.add("active");
+                    } else {
+                        // Previously completed steps
+                        icon.classList.add("completed");
+                        label.classList.add("completed");
+                    }
                 }
+                // Future steps remain in default state (no classes)
             });
+
+            // Add visual feedback for the current step
+            if (order && trackingStep > 1) {
+                const currentStepIcon = steps[trackingStep - 1].querySelector(".step-icon");
+                currentStepIcon.style.animation = "pulse 2s infinite";
+            }
         }
 
 
