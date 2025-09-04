@@ -654,20 +654,24 @@
         <th>Quantity</th>
         <th>Unit Price (₹)</th>
         <th>GST %</th>
+        <th>Unit</th>
+        <th>Discount</th>
         <th>Total (₹)</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>1</td>
-        <td><input type="text" class="form-control" name="partNo[]" required></td>
-        <td><input type="text" class="form-control" name="description[]" required></td>
-        <td><input type="text" class="form-control" name="hsn[]" required></td>
-        <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
-        <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
-        <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
-        <td class="total">0.00</td>
+      <tr> <td>1</td>
+          <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                <td><input type="text" class="form-control" name="description[]" placeholder="Product Description" required></td>
+                <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code" required></td>
+                <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
+                <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+                <td><input type='text' class="form-control unit" name="unit[]" placeholder='Unit' ></td>
+                <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
+                <td class="total">0.00</td>  
+   
         <td>
           <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
         </td>
@@ -748,6 +752,7 @@
             </div>
 
                 
+                
                 <div class="status-cards" id="statusCardsContainer">
                     <!-- Status cards will be dynamically generated -->
                 </div>
@@ -789,8 +794,6 @@
 
 
 
-
-
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set current date as default for date requested
@@ -804,6 +807,7 @@
             
             // Setup order tracking visualization
             setupOrderTracking();
+        
             
             // Setup filter handlers
             document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
@@ -811,6 +815,7 @@
             // Form submission handling - UPDATED FOR FILE UPLOAD
 
             const orderForm = document.getElementById("orderForm");
+        });
 
             orderForm.addEventListener("submit", async function(e) {
                 e.preventDefault();
@@ -846,7 +851,7 @@
                     alert("Order submission failed!");
                 }
             });
-
+        
 
 
             // Logout button
@@ -904,6 +909,8 @@
                 <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                 <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
                 <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+                <td><input type='text' class="form-control unit" name="unit[]" placeholder='Unit' ></td>
+                <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
                 <td class="total">0.00</td>
                 <td class="actions">
                     <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
@@ -951,8 +958,9 @@
             const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
             const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
             const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
+            const discount=parseFloat(row.querySelector('.discount').value||0);
             
-            const subtotal = quantity * unitPrice;
+            const subtotal = quantity * (unitPrice-discount);
             const gstAmount = subtotal * (gstRate / 100);
             const total = subtotal + gstAmount;
             
@@ -994,9 +1002,9 @@
                 <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code" required></td>
                 <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                 <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
-                <td>
-                    <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
-                </td>
+                <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+                <td><input type='text' class="form-control unit" name="unit[]" placeholder='Unit' ></td>
+                <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
                 <td class="total">0.00</td>
                 <td class="actions">
                     <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
@@ -1019,7 +1027,11 @@
                 const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
                 const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
                 const gst = parseFloat(row.querySelector('.gst-rate').value) || 0;
+                const unit = row.querySelector('td:nth-child(8) input').value; // Fixed: get value from select
+                const discount = parseFloat(row.querySelector('.discount').value) || 0;
                 const total = parseFloat(row.querySelector('.total').textContent) || 0;
+                
+                
                 
                 products.push({
                     partNo,
@@ -1028,7 +1040,10 @@
                     quantity,
                     unitPrice,
                     gst,
-                    total
+                    unit,
+                    discount,
+                    total,
+                    grandTotal
                 });
             });
             
@@ -1052,170 +1067,84 @@
                 received: 5
             };
 
-            const totalSteps = 5;
-            const trackingStep = order ? (stepMap[order.status] || 1) : 1;
+            const progressBar = document.getElementById('progressBar');
+            const steps = document.querySelectorAll('.tracking-step .step-icon');
+            const labels = document.querySelectorAll('.tracking-step .step-label');
 
-            // Calculate progress percentage - line should reach the current step
-            const progressPercentage = ((trackingStep - 1) / (totalSteps - 1)) * 100;
-
-            // Update progress bar with smooth animation
-            const progressBar = document.getElementById("progressBar");
-            progressBar.style.width = `${progressPercentage}%`;
-
-            // Update all step icons and labels
-            const steps = document.querySelectorAll(".tracking-step");
-            steps.forEach((step, index) => {
-                const icon = step.querySelector(".step-icon");
-                const label = step.querySelector(".step-label");
-
-                // Remove all previous states
-                icon.classList.remove("active", "completed");
-                label.classList.remove("active", "completed");
-
-                if (index < trackingStep) {
-                    // Completed steps
-                    if (index === trackingStep - 1) {
-                        // Current active step
-                        icon.classList.add("active");
-                        label.classList.add("active");
-                    } else {
-                        // Previously completed steps
-                        icon.classList.add("completed");
-                        label.classList.add("completed");
-                    }
-                }
-                // Future steps remain in default state (no classes)
-            });
-
-            // Add visual feedback for the current step
-            if (order && trackingStep > 1) {
-                const currentStepIcon = steps[trackingStep - 1].querySelector(".step-icon");
-                currentStepIcon.style.animation = "pulse 2s infinite";
+            let currentStep = 0;
+            if (order && order.status && stepMap[order.status.toLowerCase()]) {
+                currentStep = stepMap[order.status.toLowerCase()];
             }
-        }
 
+            // Update progress bar width
+            const totalSteps = Object.keys(stepMap).length;
+            const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progressBar.style.width = progressPercent + '%';
 
-// Render status cards
-function renderStatusCards() {
-    const container = document.getElementById('statusCardsContainer');
-    const statusFilter = document.getElementById('statusFilter').value;
+            // Update step icons and labels
+            steps.forEach((stepIcon, index) => {
+                stepIcon.classList.remove('active', 'completed');
+                labels[index].classList.remove('active', 'completed');
 
-    let filteredOrders = [...orders];
-    if (statusFilter !== 'all') {
-        filteredOrders = orders.filter(order => order.status === statusFilter);
-    }
-
-    container.innerHTML = '';
-
-    if (filteredOrders.length === 0) {
-        container.innerHTML = '<p>No orders found with the selected status.</p>';
-        return;
-    }
-
-    filteredOrders.forEach(order => {
-        const card = document.createElement('div');
-        card.className = `status-card ${order.status}`;
-
-        // Badge & priority (same as before)...
-        let badgeClass = '', statusText = '';
-        switch(order.status) {
-            case 'pending': badgeClass = 'badge-pending'; statusText = 'Pending Approval'; break;
-            case 'approved': badgeClass = 'badge-approved'; statusText = 'Approved'; break;
-            case 'rejected': badgeClass = 'badge-rejected'; statusText = 'Rejected'; break;
-            default: badgeClass = 'badge-pending'; statusText = order.status || 'Pending';
-        }
-
-        let priorityClass = '', priorityText = '';
-        switch(order.urgency) {
-            case 'high': priorityClass = 'priority-high'; priorityText = 'High Priority'; break;
-            case 'medium': priorityClass = 'priority-medium'; priorityText = 'Medium Priority'; break;
-            case 'low': priorityClass = 'priority-low'; priorityText = 'Low Priority'; break;
-            default: priorityClass = 'priority-medium'; priorityText = order.urgency || 'Normal Priority';
-        }
-
-        card.innerHTML = `
-            <div class="status-header">
-                <h4>${order.projectName || 'Unnamed Project'} - PO: ${order.purchaseOrderNumber}</h4>
-                <div>
-                    <span class="status-badge ${badgeClass}">${statusText}</span>
-                    <span class="priority-badge ${priorityClass}">${priorityText}</span>
-                </div>
-            </div>
-            <div class="status-body">
-                <p><strong>Project Code:</strong> ${order.projectCodeNumber || 'N/A'}</p>
-                <p><strong>Supplier:</strong> ${order.supplierName || 'N/A'} (GST: ${order.supplierGst || 'N/A'})</p>
-                <p><strong>Address:</strong> ${order.supplierAddress || 'N/A'}</p>
-            </div>
-            <div class="status-footer">
-                <div class="detail-row">
-                    <span>Date Requested:</span>
-                    <span>${formatDate(order.dateRequested)}</span>
-                </div>
-                <div class="detail-row">
-                    <span>Date Required:</span>
-                    <span>${formatDate(order.dateRequired)}</span>
-                </div>
-                ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
-            </div>
-        `;
-
-        // 🔹 When card clicked, update tracking bar
-        card.addEventListener("click", () => {
-            selectedOrder = order;
-            updateOrderTracking(order);
-
-            // highlight selected card
-            document.querySelectorAll(".status-card").forEach(c => c.classList.remove("active"));
-            card.classList.add("active");
-        });
-
-        container.appendChild(card);
-    });
-}
-        
-        // Update order tracking visualization based on selected order
-        
-
-
-
-
-
-
-        
-        // Format date for display
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+                if (index + 1 < currentStep) {
+                    stepIcon.classList.add('completed');
+                    labels[index].classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    stepIcon.classList.add('active');
+                    labels[index].classList.add('active');
+                }
             });
         }
-        // Logout button functionality
-        document.getElementById('logout-btn').addEventListener('click', async function() {
-            if (confirm('Are you sure you want to logout?')) {
-                try {
-                    const response = await fetch('/logout', {
-                        method: 'POST',
-                        credentials: 'same-origin'
-                    });
-                    
-                    if (response.ok) {
-                        // Redirect to login page after successful logout
-                        window.location.href = '/';
-                    } else {
-                        console.error('Logout failed');
-                        alert('Logout failed. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Error during logout:', error);
-                    alert('An error occurred during logout. Please try again.');
-                }
+
+        // Render status cards based on orders and filter
+        function renderStatusCards() {
+            const container = document.getElementById('statusCardsContainer');
+            container.innerHTML = '';
+
+            const filter = document.getElementById('statusFilter').value.toLowerCase();
+
+            const filteredOrders = orders.filter(order => {
+                if (filter === 'all') return true;
+                return order.status.toLowerCase() === filter;
+            });
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = '<p>No orders found for the selected status.</p>';
+                return;
             }
-        });
-    });
+
+            filteredOrders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'status-card ' + order.status.toLowerCase();
+
+                card.innerHTML = `
+                    <div class="status-header">
+                        <h4>${order.purchaseOrderNumber}</h4>
+                        <span class="status-badge badge-${order.status.toLowerCase()}">${order.status}</span>
+                    </div>
+                    <div class="status-body">
+                        <p><strong>Project:</strong> ${order.projectName}</p>
+                        <p><strong>Supplier:</strong> ${order.supplierName}</p>
+                        <p><strong>Requested By:</strong> ${order.requestedBy}</p>
+                        <p><strong>Date Required:</strong> ${new Date(order.dateRequired).toLocaleDateString()}</p>
+                        <p><strong>Urgency:</strong> ${order.urgency}</p>
+                        <p><strong>Total Amount:</strong> ₹${order.totalAmount.toFixed(2)}</p>
+                        <p><strong>Notes:</strong> ${order.notes || 'N/A'}</p>
+                    </div>
+                    <div class="status-footer">
+                        <button class="btn btn-sm btn-primary" onclick="selectOrder(${order.id})">View Details</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Select an order to update tracking visualization
+        function selectOrder(orderId) {
+            selectedOrder = orders.find(o => o.id === orderId);
+            updateOrderTracking(selectedOrder);
+        }
     </script>
 </body>
 </html>

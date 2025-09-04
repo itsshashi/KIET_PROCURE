@@ -320,12 +320,14 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         for (let p of products) {
             const quantity = parseInt(p.quantity);
             const unitPrice = parseFloat(p.unitPrice);
+            const discount=parseFloat(p.discount);
             const gst = parseFloat(p.gst);
             
             // Calculate item total with GST
-            const itemTotal = quantity * unitPrice;
+            const itemTotal = quantity * (unitPrice-gst);
             const gstAmount = itemTotal * (gst / 100);
-            totalAmount += itemTotal + gstAmount;
+            
+            totalAmount +=itemTotal+ gstAmount;
         }
 
         const orderResult = await pool.query(
@@ -336,7 +338,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
              supplierGst, supplierAddress, urgency, dateRequired, notes, 
-             orderedBy, quotationFile, totalAmount]
+             orderedBy, quotationFile, totalAmount,]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -344,10 +346,10 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         for (let p of products) {
             await pool.query(
                 `INSERT INTO purchase_order_items
-                (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name,discount,unit)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10)`,
                 [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity), 
-                 parseFloat(p.unitPrice), parseFloat(p.gst), projectName]
+                 parseFloat(p.unitPrice), parseFloat(p.gst), projectName,parseFloat(p.discount),p.unit]
             );
         }
 

@@ -1,10 +1,13 @@
-# TODO: Enhance MD Admin Interactive Website
+# Procurement Form Fixes
 
-## Tasks
-- [x] Add /api/all-quotations route in index.js for fetching all quotations with search/filter support
-- [x] Update Md.ejs to add tabs for "Pending Approvals" and "All Quotations"
-- [x] Add search and filter UI elements (search bar, dropdowns for supplier/status, date pickers)
-- [x] Implement pagination controls and logic
-- [x] Add sortable column headers
-- [x] Update JavaScript for tab switching, search/filter, pagination, sorting
-- [ ] Test the new features and ensure compatibility
+## Frontend Fixes (procurement.ejs)
+- [ ] Add unit select dropdown to initial product row
+- [ ] Fix HTML structure for discount input (add missing closing </td>)
+- [ ] Fix getProductData function to get unit.value instead of textContent
+
+## Backend Fixes (index.js)
+- [ ] Change unit handling from parseFloat to string in /order_raise route
+
+## Testing
+- [ ] Test form submission after fixes
+- [ ] Verify unit is properly saved and visible
