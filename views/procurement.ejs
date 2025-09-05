@@ -434,6 +434,7 @@
             margin: 20px 0;
         }
         
+        
         .product-table th, .product-table td {
             padding: 12px 15px;
             text-align: left;
@@ -604,19 +605,21 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label for="supplierName">Supplier Name *</label>
-      <input type="text" class="form-control" id="supplierName" name="supplierName" required>
+      <label for="supplierName">Supplier Name </label>
+      <input type="text" class="form-control" id="supplierName" name="supplierName" >
     </div>
    
     <div class="form-group">
-      <label for="supplierGst">Supplier GST *</label>
-      <input type="text" class="form-control" id="supplierGst" name="supplierGst" required>
+      <label for="supplierGst">Supplier GSTIN </label>
+      <input type="text" class="form-control" id="supplierGst" name="supplierGst" >
     </div>
   </div>
 
   <div class="form-group">
-    <label for="supplierAddress">Supplier Address *</label>
-    <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" required></textarea>
+    <label for="supplierAddress">Supplier Address </label>
+    <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" ></textarea>
+    <label for="referenceNumber">Ref number *</label>
+    <input style="height: 25px;" type="text" name="refernceNumber" id="referenceNumber" placeholder="Reference no." required>
   </div>
     <div class="checky">
       <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
@@ -1128,23 +1131,33 @@
                         <p><strong>Requested By:</strong> ${order.requestedBy}</p>
                         <p><strong>Date Required:</strong> ${new Date(order.dateRequired).toLocaleDateString()}</p>
                         <p><strong>Urgency:</strong> ${order.urgency}</p>
-                        <p><strong>Total Amount:</strong> ₹${total}</p>
+                        
                         <p><strong>Notes:</strong> ${order.notes || 'N/A'}</p>
                     </div>
-                    <div class="status-footer">
-                        <button class="btn btn-sm btn-primary" onclick="selectOrder(${order.id})">View Details</button>
-                    </div>
+                    
                 `;
 
                 container.appendChild(card);
+                card.addEventListener("click", () => {
+                selectedOrder = order;
+                updateOrderTracking(order);
+
+            // highlight selected card
+                document.querySelectorAll(".status-card").forEach(c => c.classList.remove("active"));
+                card.style.backgroundColor = "lightgreen";
+
+// remove highlight after 1 second
+                setTimeout(() => {
+                    card.style.backgroundColor = "";
+                }, 100);
+                 // ✅ correct way
+        });
+
             });
         }
 
         // Select an order to update tracking visualization
-        function selectOrder(orderId) {
-            selectedOrder = orders.find(o => o.id === orderId);
-            updateOrderTracking(selectedOrder);
-        }
+        
     </script>
 </body>
 </html>
