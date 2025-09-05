@@ -943,7 +943,10 @@
             row.querySelector('.gst-rate').addEventListener('change', function() {
                 calculateRowTotal(row);
             });
-            
+
+            row.querySelector('.discount').addEventListener('input', function() {
+            calculateRowTotal(row);
+    });
             // Delete row
             row.querySelector('.delete-row').addEventListener('click', function() {
                 if (document.querySelectorAll('#productTable tbody tr').length > 1) {
@@ -958,18 +961,27 @@
         
         // Calculate total for a row
         function calculateRowTotal(row) {
-            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
-            const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
-            const discount=parseFloat(row.querySelector('.discount').value||0);
-            
-            const subtotal = quantity * (unitPrice-discount);
-            const gstAmount = subtotal * (gstRate / 100);
-            const total = subtotal + gstAmount;
-            
-            row.querySelector('.total').textContent = total.toFixed(2);
-            calculateGrandTotal();
-        }
+    const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+    const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+    const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
+    const discount = parseFloat(row.querySelector('.discount').value) || 0;
+
+    // Subtotal before discount
+    const subtotal = quantity * unitPrice;
+
+    // Apply discount to subtotal (not per unit)
+    const discountedSubtotal = subtotal - discount;
+
+    // GST on discounted amount
+    const gstAmount = discountedSubtotal * (gstRate / 100);
+
+    // Final total
+    const total = discountedSubtotal + gstAmount;
+
+    row.querySelector('.total').textContent = total.toFixed(2);
+    calculateGrandTotal();
+}
+
         
         // Calculate grand total for all products
         function calculateGrandTotal() {
