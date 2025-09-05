@@ -305,6 +305,7 @@ app.post('/submit', async (req, res) => {
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
 
+
     const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes } = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
@@ -318,16 +319,19 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         // Calculate total amount
         let totalAmount = 0;
         for (let p of products) {
-            const quantity = parseInt(p.quantity);
             const unitPrice = parseFloat(p.unitPrice);
-            const discount=parseFloat(p.discount);
+             const discount=parseFloat(p.discount);
+            const quantity = parseInt(p.quantity);
+            
+           
             const gst = parseFloat(p.gst);
             
             // Calculate item total with GST
-            const itemTotal = quantity * (unitPrice-gst);
-            const gstAmount = itemTotal * (gst / 100);
+            const itemTotal = quantity * unitPrice;
+            const discounted= itemTotal-discount;
+            const gstAmount = discounted * (gst / 100);
             
-            totalAmount +=itemTotal+ gstAmount;
+            totalAmount +=discounted+ gstAmount;
         }
 
         const orderResult = await pool.query(
@@ -338,7 +342,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
              supplierGst, supplierAddress, urgency, dateRequired, notes, 
-             orderedBy, quotationFile, totalAmount,]
+             orderedBy, quotationFile, totalAmount]
         );
 
         const orderId = orderResult.rows[0].id;
