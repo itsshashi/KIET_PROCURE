@@ -35,28 +35,50 @@
     .status-sent { background: #e0e7ff; color: #3730a3; }
     .status-received { background: #f0fdf4; color: #166534; }
     .status-rejected { background: #fee2e2; color: #b91c1c; }
+    .blink {
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
   </style>
 </head>
-<body class="bg-gray-100 p-6">
+<body class="bg-blue-100 p-6">
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-      <div class="flex items-center gap-4">
-        <img src="images/page_logo.png" alt="Company_logo" width="120px">
-        <div class="flex items-center gap-2 text-gray-600">
-          <i class="fas fa-user-circle text-2xl"></i>
-          <span class="text-sm font-medium">purchase@kietsindia.com</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <h1 class="text-3xl font-bold text-gray-800">📑 Purchase Orders Management</h1>
-        <form action="/logout" method="POST" style="display:inline;">
-          <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-            <i class="fas fa-sign-out-alt"></i>
-            Logout
-          </button>
-        </form>
-      </div>
+   <div class="mb-6">
+  <!-- Top bar -->
+  <div class="flex justify-between items-center mb-3">
+    <!-- Logo -->
+    <div>
+      <img src="images/page_logo.png" alt="Company_logo" class="h-20">
     </div>
+
+    <!-- Right side: user + logout -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2 text-gray-600">
+        <i class="fas fa-user-circle text-2xl"></i>
+        <span class="text-sm font-medium">purchase@kietsindia.com</span>
+      </div>
+      <form action="/logout" method="POST">
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Page Title -->
+  <h1 class="text-3xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">
+    📑 <span>Purchase Orders Management</span>
+  </h1>
+</div>
+
+
+  <!-- Page Title -->
+  
 
     <!-- Filters -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-6">
@@ -120,11 +142,15 @@
   </div>
 
   <!-- Edit Order Modal -->
-  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div id="editModal" class="hidden fixed inset-0 bg-transparent flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-20/22 max-w-7xl p-6 max-h-[98vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-4 mb-6">
         <h2 class="text-xl font-semibold text-gray-800">✏️ Edit Order Details</h2>
         <button onclick="closeEdit()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div id="dateRequiredDisplay" class="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded blink">
+        Date Required: <span id="dateRequiredValue"></span>
       </div>
 
       <form id="editOrderForm" class="space-y-4">
@@ -317,6 +343,21 @@
               <button onclick="editOrder(${order.id})" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition">
                 <i class="fas fa-edit mr-1"></i>Edit
               </button>
+
+
+
+
+              
+             <button onclick="generatePO(${order.id})"
+    class="w-20 px-3 py-1 bg-gray-400 text-white rounded text-sm transition flex items-center justify-center" disabled>
+    <i class="fas fa-file-invoice mr-1"></i>P O
+</button>
+
+
+
+
+
+
               ${order.status === 'pending'
                 ? `<button onclick="approveOrder(${order.id})" class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition">
                      <i class="fas fa-check mr-1"></i>Approve
@@ -412,6 +453,9 @@
         document.getElementById('editSupplierGst').value = order.supplier_gst || '';
         document.getElementById('editSupplierAddress').value = order.supplier_address || '';
 
+        // Populate date required display
+        document.getElementById('dateRequiredValue').textContent = formatDate(order.date_required);
+
         // Populate product table with fetched items
         populateEditProductTable(order, items);
 
@@ -460,8 +504,7 @@
         const response = await fetch(`${API_URL}/${currentEditId}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
-          },
+            'Content-Type': 'application/json'          },
           body: JSON.stringify(formData)
         });
 
@@ -651,6 +694,19 @@
     }
 
     // Add event listener for add button
+  
+
+
+    async function generatePO(orderId) {
+      try {
+        // Placeholder: Implement PO generation logic here
+        alert(`PO generation requested for order ID: ${orderId}`);
+        // You can add API call or other logic to generate PO here
+      } catch (error) {
+        console.error('Error generating PO:', error);
+        alert('Failed to generate PO. Please try again.');
+      }
+    }
   </script>
 </body>
 </html>
