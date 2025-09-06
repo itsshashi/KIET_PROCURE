@@ -748,7 +748,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: "Order not found" });
 
-    console.log("✅ Order updated:", rows[0]);
+    
     res.json({ success: true, order: rows[0] });
   } catch (err) {
     console.error("❌ Error updating status:", err);
