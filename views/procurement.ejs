@@ -564,7 +564,11 @@
                     <i class="fas fa-tasks"></i> Status
                 </li>
                 <li class="menu-item" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i><form action="/logout" method="POST" style="display:inline;">
+          <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+            Logout
+          </button>
+        </form>
                 </li>
             </ul>
         </div>
@@ -619,7 +623,7 @@
     <label for="supplierAddress">Supplier Address </label>
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" ></textarea>
     <label for="reference_no">Ref number *</label>
-    <input style="height: 25px;" type="text" name="refernce_no" id="referenceNumber" placeholder="Reference no." required>
+    <input style="height: 25px;" type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
   </div>
     <div class="checky">
       <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
