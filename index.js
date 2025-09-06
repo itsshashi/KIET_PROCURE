@@ -101,7 +101,7 @@ const upload = multer({ storage });
 app.get('/api/orders', async (req, res) => {
     try {
         const { rows } = await pool.query(`
-            SELECT 
+            SELECT
                 id,
                 purchase_order_number as order_id,
                 project_name as project,
@@ -114,7 +114,34 @@ app.get('/api/orders', async (req, res) => {
                 notes,
                 quotation_file,
                 created_at
-            FROM purchase_orders 
+            FROM purchase_orders
+            ORDER BY created_at DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get all orders for MD section (All Orders tab)
+app.get('/api/all-orders', async (req, res) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+                id,
+                purchase_order_number,
+                project_name,
+                'Design and Development' as department,
+                supplier_name,
+                urgency as description,
+                ordered_by,
+                date_required,
+                COALESCE(total_amount, 0) as total_amount,
+                status,
+                quotation_file,
+                created_at
+            FROM purchase_orders
             ORDER BY created_at DESC
         `);
         res.json(rows);
@@ -512,15 +539,42 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
   res.json({ success: true, order: rows[0] });
 });
 
-// Approve
+// Approve or Reject order
 app.put("/api/orders/:id/approve", async (req, res) => {
   const { id } = req.params;
-  const { rows } = await pool.query(
-    "UPDATE purchase_orders SET status='approved' WHERE id=$1 RETURNING *",
-    [id]
-  );
-  if (!rows.length) return res.status(404).json({ error: "Order not found" });
-  res.json({ success: true, order: rows[0] });
+  const { status } = req.body; // Get status from request body
+
+
+  // Validate status
+  if (!['approved', 'rejected'].includes(status)) {
+    console.log(`❌ Backend: Invalid status: ${status}`);
+    return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+  }
+
+  try {
+    // First, let's check if the order exists
+    const existingOrder = await pool.query('SELECT * FROM purchase_orders WHERE id = $1', [id]);
+    console.log(`🔄 Backend: Existing order:`, existingOrder.rows[0]);
+
+    const { rows } = await pool.query(
+      "UPDATE purchase_orders SET status=$1 WHERE id=$2 RETURNING *",
+      [status, id]
+    );
+    if (!rows.length) {
+      console.log(`❌ Backend: Order ${id} not found`);
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Verify the update
+    const updatedOrder = await pool.query('SELECT * FROM purchase_orders WHERE id = $1', [id]);
+    console.log(`✅ Backend: Updated order:`, updatedOrder.rows[0]);
+
+    console.log(`✅ Backend: Order ${id} status updated to ${status}`);
+    res.json({ success: true, order: rows[0] });
+  } catch (err) {
+    console.error(`❌ Backend: Error updating order ${id}:`, err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Send PO
@@ -547,7 +601,9 @@ app.put("/api/orders/:id/receive", async (req, res) => {
 
 
 
-//md 
+
+
+//md
 // Get only purchase-enquired orders
 app.get("/api/purchase-orders", async (req, res) => {
   try {
@@ -558,6 +614,95 @@ app.get("/api/purchase-orders", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching purchase orders:", err);
     res.status(500).json({ error: "Failed to fetch purchase orders" });
+  }
+});
+
+// Get all quotations for MD section (All Quotations tab)
+app.get("/api/all-quotations", async (req, res) => {
+  try {
+    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'DESC', search, supplier, status, dateFrom, dateTo } = req.query;
+
+    let query = `
+      SELECT
+        id,
+        purchase_order_number as order_id,
+        project_name as project,
+        supplier_name as supplier,
+        ordered_by as requested_by,
+        date_required,
+        COALESCE(total_amount, 0) as total_amount,
+        status,
+        quotation_file,
+        created_at
+      FROM purchase_orders
+      WHERE quotation_file IS NOT NULL AND array_length(quotation_file, 1) > 0
+    `;
+
+    let params = [];
+    let paramCount = 0;
+
+    // Add filters
+    if (search) {
+      paramCount++;
+      query += ` AND (purchase_order_number ILIKE $${paramCount} OR project_name ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
+
+    if (supplier && supplier !== 'All Suppliers') {
+      paramCount++;
+      query += ` AND supplier_name = $${paramCount}`;
+      params.push(supplier);
+    }
+
+    if (status && status !== 'All Statuses') {
+      paramCount++;
+      query += ` AND status = $${paramCount}`;
+      params.push(status.toLowerCase());
+    }
+
+    if (dateFrom) {
+      paramCount++;
+      query += ` AND date_required >= $${paramCount}`;
+      params.push(dateFrom);
+    }
+
+    if (dateTo) {
+      paramCount++;
+      query += ` AND date_required <= $${paramCount}`;
+      params.push(dateTo);
+    }
+
+    // Add sorting
+    query += ` ORDER BY ${sortBy} ${sortOrder}`;
+
+    // Add pagination
+    const offset = (page - 1) * limit;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(limit, offset);
+
+    const { rows } = await pool.query(query, params);
+
+    // Get total count for pagination
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM purchase_orders
+      WHERE quotation_file IS NOT NULL AND array_length(quotation_file, 1) > 0
+    `;
+    const { rows: countRows } = await pool.query(countQuery);
+    const total = parseInt(countRows[0].total);
+
+    res.json({
+      quotations: rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error fetching all quotations:", err);
+    res.status(500).json({ error: "Failed to fetch quotations" });
   }
 });
 

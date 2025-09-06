@@ -719,8 +719,11 @@
                         <select class="form-control" id="statusFilter">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
+                            <option value="purchase">Purchase</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
+                            <option value="sent">Sent</option>
+                            <option value="received">Received</option>
                         </select>
                     </div>
                 </div>
@@ -750,6 +753,10 @@
                 <div class="tracking-step">
                 <div class="step-icon">5</div>
                 <span class="step-label">Received</span>
+                </div>
+                <div class="tracking-step">
+                <div class="step-icon">6</div>
+                <span class="step-label">Rejected</span>
                 </div>
             </div>
             </div>
@@ -1079,7 +1086,8 @@
                 purchase: 2,
                 approved: 3,
                 sent: 4,
-                received: 5
+                received: 5,
+                rejected: 6
             };
 
             const progressBar = document.getElementById('progressBar');
