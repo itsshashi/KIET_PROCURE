@@ -150,29 +150,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Urgency *</label>
-            <select id="editUrgency" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
-              <option value="low">Low - Normal</option>
-              <option value="medium">Medium - Soon</option>
-              <option value="high">High - Immediate</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date Required *</label>
-            <input type="date" id="editDateRequired" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cost of Product *</label>
-            <input type="number" id="editCostOfProduct" step="0.01" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">GST Discount Given (%)</label>
-            <input type="number" id="editGstDiscount" step="0.01" min="0" max="100" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
-          </div>
         </div>
 
         <div>
@@ -205,10 +182,7 @@
           </table>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-          <textarea id="editNotes" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
+
 
         <!-- Upload New Quotation -->
         <div class="border-t pt-4">
@@ -437,11 +411,6 @@
         document.getElementById('editSupplierName').value = order.supplier;
         document.getElementById('editSupplierGst').value = order.supplier_gst || '';
         document.getElementById('editSupplierAddress').value = order.supplier_address || '';
-        document.getElementById('editUrgency').value = order.urgency;
-        document.getElementById('editDateRequired').value = order.date_required;
-        document.getElementById('editCostOfProduct').value = order.cost_of_product || '';
-        document.getElementById('editGstDiscount').value = order.gst_discount || '';
-        document.getElementById('editNotes').value = order.notes || '';
 
         // Populate product table with fetched items
         populateEditProductTable(order, items);
@@ -483,12 +452,7 @@
       const formData = {
         supplier_name: document.getElementById('editSupplierName').value,
         supplier_gst: document.getElementById('editSupplierGst').value,
-        supplier_address: document.getElementById('editSupplierAddress').value,
-        urgency: document.getElementById('editUrgency').value,
-        date_required: document.getElementById('editDateRequired').value,
-        cost_of_product: document.getElementById('editCostOfProduct').value,
-        gst_discount: document.getElementById('editGstDiscount').value,
-        notes: document.getElementById('editNotes').value
+        supplier_address: document.getElementById('editSupplierAddress').value
       };
 
       try {
@@ -601,19 +565,19 @@
       row.innerHTML = `
         <td class="px-6 py-3 border text-center">${slNo}</td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partNo || '' : ''}" placeholder="Part No">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partno || '' : ''}" placeholder="Part No" >
         </td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
         </td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsnCode || '' : ''}" placeholder="HSN Code">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsncode || '' : ''}" placeholder="HSN Code">
         </td>
         <td class="px-6 py-3 border">
           <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
         </td>
         <td class="px-6 py-3 border">
-          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitPrice || '' : ''}" placeholder="Price" step="0.01">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitprice || '' : ''}" placeholder="Price" step="0.01">
         </td>
         <td class="px-6 py-3 border">
           <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
@@ -634,9 +598,11 @@
         </td>
       `;
 
-      tbody.appendChild(row);
+  tbody.appendChild(row);
 
-      // Add event listeners
+  calculateEditRowTotal(row);
+
+  // Add event listeners
       row.querySelector('.delete-edit-row').addEventListener('click', function() {
         row.remove();
         updateEditSlNos();
