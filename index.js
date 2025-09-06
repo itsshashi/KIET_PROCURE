@@ -306,16 +306,17 @@ app.post('/submit', async (req, res) => {
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
+    
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes,referenceNumber } = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, referenceNumber} = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
 
     
     try {
-        console.log(req.body);
+        
         await pool.query("BEGIN");
         const purchaseOrderNumber = await generatePurchaseOrderNumber();
         
@@ -336,13 +337,16 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             
             totalAmount +=discounted+ gstAmount;
         }
+        console.log(projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
+             supplierGst, supplierAddress, urgency, dateRequired, notes, 
+             orderedBy, quotationFile, totalAmount,referenceNumber);
 
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders 
             (project_name, project_code_number, purchase_order_number, supplier_name, 
              supplier_gst, supplier_address, urgency, date_required, notes, 
              ordered_by, quotation_file, total_amount,reference_no)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,$13) RETURNING id`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
              supplierGst, supplierAddress, urgency, dateRequired, notes, 
              orderedBy, quotationFile, totalAmount,referenceNumber]

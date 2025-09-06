@@ -151,6 +151,17 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cost of Product *</label>
+            <input type="number" id="editCostOfProduct" step="0.01" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">GST Discount Given (%)</label>
+            <input type="number" id="editGstDiscount" step="0.01" min="0" max="100" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
           <textarea id="editNotes" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500"></textarea>
@@ -278,7 +289,7 @@
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
               <i class="fas fa-file-pdf text-red-500"></i>
-              <span class="text-sm text-gray-600">${order.quotation_file ? '1 file' : 'No files'}</span>
+              <span class="text-sm text-gray-600">${order.quotation_file && order.quotation_file.length > 0 ? order.quotation_file.length + ' file' + (order.quotation_file.length > 1 ? 's' : '') : 'No files'}</span>
             </div>
           </td>
           <td class="px-4 py-3">
@@ -324,22 +335,25 @@
       const quotationsList = document.getElementById('quotationsList');
       quotationsList.innerHTML = '';
 
-      if (order.quotation_file) {
-        const quotationItem = document.createElement('div');
-        quotationItem.className = 'quotation-item';
-        quotationItem.innerHTML = `
-          <div class="flex items-center gap-3">
-            <i class="fas fa-file-pdf text-red-500 text-lg"></i>
-            <div>
-              <p class="font-medium text-gray-800">${order.quotation_file}</p>
-              <p class="text-sm text-gray-500">Uploaded on ${formatDate(order.created_at)}</p>
+      if (order.quotation_file && order.quotation_file.length > 0) {
+        order.quotation_file.forEach((fileName, index) => {
+          const quotationItem = document.createElement('div');
+          quotationItem.className = 'quotation-item';
+          quotationItem.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-bold text-blue-600">${index + 1}.</span>
+              <i class="fas fa-file-pdf text-red-500 text-lg"></i>
+              <div>
+                <p class="font-medium text-gray-800">${fileName}</p>
+                <p class="text-sm text-gray-500">Uploaded on ${formatDate(order.created_at)}</p>
+              </div>
             </div>
-          </div>
-          <button onclick="previewQuotation('${order.quotation_file}')" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
-            <i class="fas fa-eye mr-1"></i>Preview
-          </button>
-        `;
-        quotationsList.appendChild(quotationItem);
+            <button onclick="previewQuotation('${fileName}')" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+              <i class="fas fa-eye mr-1"></i>Preview
+            </button>
+          `;
+          quotationsList.appendChild(quotationItem);
+        });
       } else {
         quotationsList.innerHTML = '<p class="text-gray-500 text-center py-4">No quotations available for this order.</p>';
       }
@@ -377,6 +391,8 @@
       document.getElementById('editSupplierAddress').value = order.supplier_address || '';
       document.getElementById('editUrgency').value = order.urgency;
       document.getElementById('editDateRequired').value = order.date_required;
+      document.getElementById('editCostOfProduct').value = order.cost_of_product || '';
+      document.getElementById('editGstDiscount').value = order.gst_discount || '';
       document.getElementById('editNotes').value = order.notes || '';
 
       document.getElementById('editModal').classList.remove('hidden');
@@ -397,6 +413,8 @@
         supplier_address: document.getElementById('editSupplierAddress').value,
         urgency: document.getElementById('editUrgency').value,
         date_required: document.getElementById('editDateRequired').value,
+        cost_of_product: document.getElementById('editCostOfProduct').value,
+        gst_discount: document.getElementById('editGstDiscount').value,
         notes: document.getElementById('editNotes').value
       };
 
