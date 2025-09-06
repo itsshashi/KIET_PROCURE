@@ -105,7 +105,10 @@ app.get('/api/orders', async (req, res) => {
                 id,
                 purchase_order_number as order_id,
                 project_name as project,
+                project_code_number as projectCodeNumber,
                 supplier_name as supplier,
+                supplier_gst,
+                supplier_address,
                 ordered_by as requested_by,
                 date_required,
                 COALESCE(total_amount, 0) as total_amount,
@@ -156,7 +159,7 @@ app.get('/api/orders/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { rows } = await pool.query(`
-            SELECT 
+            SELECT
                 id,
                 purchase_order_number as order_id,
                 project_name as project,
@@ -169,15 +172,42 @@ app.get('/api/orders/:id', async (req, res) => {
                 notes,
                 quotation_file,
                 created_at
-            FROM purchase_orders 
+            FROM purchase_orders
             WHERE id = $1
         `, [id]);
-        
+
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
-        
+
         res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get order items by order ID
+app.get('/api/orders/:id/items', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rows } = await pool.query(`
+            SELECT
+                id,
+                part_no as partNo,
+                description,
+                hsn_code as hsnCode,
+                quantity,
+                unit_price as unitPrice,
+                gst,
+                discount,
+                unit
+            FROM purchase_order_items
+            WHERE purchase_order_id = $1
+            ORDER BY id
+        `, [id]);
+
+        res.json(rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
@@ -204,6 +234,60 @@ app.put('/api/orders/:id', async (req, res) => {
         res.json(rows[0]);
     } catch (err) {
         console.error("Error in PUT /api/orders/:id:", err.stack || err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Update order product items
+app.put('/api/orders/:id/items', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { products } = req.body;
+
+        if (!products || !Array.isArray(products)) {
+            return res.status(400).json({ error: 'Products array is required' });
+        }
+
+        await pool.query("BEGIN");
+
+        // Delete existing items
+        await pool.query("DELETE FROM purchase_order_items WHERE purchase_order_id = $1", [id]);
+
+        // Insert new items and calculate total
+        let totalAmount = 0;
+        for (let p of products) {
+            const unitPrice = parseFloat(p.unitPrice);
+            const discount = parseFloat(p.discount || 0);
+            const quantity = parseInt(p.quantity);
+            const gst = parseFloat(p.gst);
+
+            // Calculate item total with GST
+            const itemTotal = quantity * unitPrice;
+            const discounted = itemTotal - discount;
+            const gstAmount = discounted * (gst / 100);
+            const finalTotal = discounted + gstAmount;
+            totalAmount += finalTotal;
+
+            await pool.query(
+                `INSERT INTO purchase_order_items
+                (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, discount, unit)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [id, p.partNo, p.description, p.hsnCode, quantity, unitPrice, gst, discount, p.unit]
+            );
+        }
+
+        // Update total amount in purchase_orders
+        await pool.query(
+            "UPDATE purchase_orders SET total_amount = $1 WHERE id = $2",
+            [totalAmount, id]
+        );
+
+        await pool.query("COMMIT");
+
+        res.json({ success: true, totalAmount });
+    } catch (err) {
+        await pool.query("ROLLBACK");
+        console.error("Error in PUT /api/orders/:id/items:", err.stack || err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -430,7 +514,6 @@ app.post("/forgot-password", async (req, res) => {
 
         const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass: PASSWORD } });
         const resetURL = `http://localhost:3000/reset-password/${token}`;
-
         await transporter.sendMail({ to: email, from: "acc19105@gmail.com", subject: "Password Reset", html: `<p>Click this <a href="${resetURL}">link</a> to reset your password.</p>` });
 
         res.sendFile(path.join(__dirname, 'public', 'sucess.html'));

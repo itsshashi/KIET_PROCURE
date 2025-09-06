@@ -121,22 +121,16 @@
 
   <!-- Edit Order Modal -->
   <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl w-2/3 max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl w-20/22 max-w-7xl p-6 max-h-[98vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-4 mb-6">
         <h2 class="text-xl font-semibold text-gray-800">✏️ Edit Order Details</h2>
         <button onclick="closeEdit()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
       </div>
 
       <form id="editOrderForm" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
-            <input type="text" id="editProjectName" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" readonly>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
-            <input type="text" id="editProjectCode" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" readonly>
-          </div>
+        <div class="bg-gray-50 p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2" id="editProjectName">Project Name</h3>
+          <p class="text-sm text-gray-600" id="editProjectCode">Project Code</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -179,6 +173,36 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">GST Discount Given (%)</label>
             <input type="number" id="editGstDiscount" step="0.01" min="0" max="100" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
           </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Product Details</label>
+          <table class="product-table min-w-full text-sm text-left border border-gray-300 rounded" id="editProductTable">
+            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+              <tr>
+                <th class="px-6 py-3 border">SL No</th>
+                <th class="px-6 py-3 border">Part No</th>
+                <th class="px-6 py-3 border">Description</th>
+                <th class="px-6 py-3 border">HSN Code</th>
+                <th class="px-6 py-3 border">Quantity</th>
+                <th class="px-6 py-3 border">Unit Price (₹)</th>
+                <th class="px-6 py-3 border">GST %</th>
+                <th class="px-6 py-3 border">Unit</th>
+                <th class="px-6 py-3 border">Discount</th>
+                <th class="px-6 py-3 border">Total (₹)</th>
+                <th class="px-6 py-3 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="editProductTableBody">
+              <!-- Rows will be dynamically populated -->
+            </tbody>
+          <tfoot id="editProductTableFooter" class="bg-gray-100">
+            <tr>
+              <td colspan="10" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
+              <td class="px-4 py-2 border font-bold text-lg" id="editGrandTotal">₹0.00</td>
+            </tr>
+          </tfoot>
+          </table>
         </div>
 
         <div>
@@ -402,19 +426,31 @@
       const order = allOrders.find(o => o.id === orderId);
       if (!order) return;
 
-      // Populate form fields
-      document.getElementById('editProjectName').value = order.project;
-      document.getElementById('editProjectCode').value = order.project_code_number || '';
-      document.getElementById('editSupplierName').value = order.supplier;
-      document.getElementById('editSupplierGst').value = order.supplier_gst || '';
-      document.getElementById('editSupplierAddress').value = order.supplier_address || '';
-      document.getElementById('editUrgency').value = order.urgency;
-      document.getElementById('editDateRequired').value = order.date_required;
-      document.getElementById('editCostOfProduct').value = order.cost_of_product || '';
-      document.getElementById('editGstDiscount').value = order.gst_discount || '';
-      document.getElementById('editNotes').value = order.notes || '';
+      try {
+        // Fetch product items for this order
+        const itemsResponse = await fetch(`${API_URL}/${orderId}/items`);
+        const items = await itemsResponse.json();
 
-      document.getElementById('editModal').classList.remove('hidden');
+        // Populate form fields
+        document.getElementById('editProjectName').textContent = order.project;
+        document.getElementById('editProjectCode').textContent = order.projectcodenumber || '';
+        document.getElementById('editSupplierName').value = order.supplier;
+        document.getElementById('editSupplierGst').value = order.supplier_gst || '';
+        document.getElementById('editSupplierAddress').value = order.supplier_address || '';
+        document.getElementById('editUrgency').value = order.urgency;
+        document.getElementById('editDateRequired').value = order.date_required;
+        document.getElementById('editCostOfProduct').value = order.cost_of_product || '';
+        document.getElementById('editGstDiscount').value = order.gst_discount || '';
+        document.getElementById('editNotes').value = order.notes || '';
+
+        // Populate product table with fetched items
+        populateEditProductTable(order, items);
+
+        document.getElementById('editModal').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error fetching order items:', error);
+        alert('Failed to load order details. Please try again.');
+      }
     }
 
     function closeEdit() {
@@ -425,6 +461,24 @@
     // Handle Edit Form Submission
     document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+
+      // Collect product details
+      const products = [];
+      const productRows = document.querySelectorAll('#editProductTableBody tr');
+
+      productRows.forEach(row => {
+        const product = {
+          partNo: row.querySelector('.edit-part-no').value,
+          description: row.querySelector('.edit-description').value,
+          hsnCode: row.querySelector('.edit-hsn').value,
+          quantity: row.querySelector('.edit-quantity').value,
+          unitPrice: row.querySelector('.edit-unit-price').value,
+          gst: row.querySelector('.edit-gst').value,
+          unit: row.querySelector('.edit-unit').value,
+          discount: row.querySelector('.edit-discount').value
+        };
+        products.push(product);
+      });
 
       const formData = {
         supplier_name: document.getElementById('editSupplierName').value,
@@ -448,6 +502,17 @@
         });
 
         if (!response.ok) throw new Error('Failed to update order');
+
+        // Update product items
+        const itemsResponse = await fetch(`${API_URL}/${currentEditId}/items`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ products })
+        });
+
+        if (!itemsResponse.ok) throw new Error('Failed to update product items');
 
         // Handle file uploads if any
         const files = document.getElementById('newQuotationFile').files;
@@ -507,6 +572,119 @@
       if (e.target === editModal) closeEdit();
       if (e.target === previewModal) closePreview();
     });
+
+    // Product table functions for edit modal
+    function populateEditProductTable(order, items = []) {
+      const tbody = document.getElementById('editProductTableBody');
+      tbody.innerHTML = '';
+
+      if (items && items.length > 0) {
+        items.forEach((product, index) => {
+          addEditProductRow(product, index + 1);
+        });
+      } else {
+        addEditProductRow(null, 1);
+      }
+
+      calculateEditTotal();
+    }
+
+    function addEditProductRow(product = null, slNo = null) {
+      const tbody = document.getElementById('editProductTableBody');
+      const row = document.createElement('tr');
+
+      if (!slNo) {
+        const rows = tbody.querySelectorAll('tr');
+        slNo = rows.length + 1;
+      }
+
+      row.innerHTML = `
+        <td class="px-6 py-3 border text-center">${slNo}</td>
+        <td class="px-6 py-3 border">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partNo || '' : ''}" placeholder="Part No">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsnCode || '' : ''}" placeholder="HSN Code">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitPrice || '' : ''}" placeholder="Price" step="0.01">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-unit" value="${product ? product.unit || '' : ''}" placeholder="Unit">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-discount" value="${product ? product.discount || '' : ''}" placeholder="Discount" step="0.01">
+        </td>
+        <td class="px-6 py-3 border">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-total" value="${product ? product.total || '' : ''}" placeholder="Total" readonly>
+        </td>
+        <td class="px-6 py-3 border text-center">
+          <button type="button" class="text-red-500 hover:text-red-700 delete-edit-row" title="Delete Row">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(row);
+
+      // Add event listeners
+      row.querySelector('.delete-edit-row').addEventListener('click', function() {
+        row.remove();
+        updateEditSlNos();
+        calculateEditTotal();
+      });
+
+      row.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', function() {
+          calculateEditRowTotal(row);
+          calculateEditTotal();
+        });
+      });
+    }
+
+    function updateEditSlNos() {
+      const rows = document.querySelectorAll('#editProductTableBody tr');
+      rows.forEach((row, index) => {
+        row.cells[0].textContent = index + 1;
+      });
+    }
+
+    function calculateEditRowTotal(row) {
+      const quantity = parseFloat(row.querySelector('.edit-quantity').value) || 0;
+      const unitPrice = parseFloat(row.querySelector('.edit-unit-price').value) || 0;
+      const gst = parseFloat(row.querySelector('.edit-gst').value) || 0;
+      const discount = parseFloat(row.querySelector('.edit-discount').value) || 0;
+
+      const subtotal = quantity * unitPrice;
+      const gstAmount = subtotal * (gst / 100);
+      const discountAmount = subtotal * (discount / 100);
+      const total = subtotal + gstAmount - discountAmount;
+
+      row.querySelector('.edit-total').value = total.toFixed(2);
+    }
+
+    function calculateEditTotal() {
+      const rows = document.querySelectorAll('#editProductTableBody tr');
+      let grandTotal = 0;
+
+      rows.forEach(row => {
+        const total = parseFloat(row.querySelector('.edit-total').value) || 0;
+        grandTotal += total;
+      });
+
+      document.getElementById('editGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+    }
+
+    // Add event listener for add button
   </script>
 </body>
 </html>
