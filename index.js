@@ -280,6 +280,7 @@ app.get('/api/orders/search/filter', async (req, res) => {
     }
 });
 
+
 // =============================
 // EXISTING ROUTES (KEEP THESE AS IS)
 // =============================
@@ -540,42 +541,63 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 });
 
 // Approve or Reject order
-app.put("/api/orders/:id/approve", async (req, res) => {
+
+
+  app.put('/api/orders/:id/status', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // Get status from request body
+  const { status } = req.body;
 
-
-  // Validate status
   if (!['approved', 'rejected'].includes(status)) {
-    console.log(`❌ Backend: Invalid status: ${status}`);
-    return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+    return res.status(400).json({ error: "Invalid status" });
   }
 
   try {
-    // First, let's check if the order exists
-    const existingOrder = await pool.query('SELECT * FROM purchase_orders WHERE id = $1', [id]);
-    console.log(`🔄 Backend: Existing order:`, existingOrder.rows[0]);
-
     const { rows } = await pool.query(
       "UPDATE purchase_orders SET status=$1 WHERE id=$2 RETURNING *",
       [status, id]
     );
-    if (!rows.length) {
-      console.log(`❌ Backend: Order ${id} not found`);
-      return res.status(404).json({ error: "Order not found" });
-    }
 
-    // Verify the update
-    const updatedOrder = await pool.query('SELECT * FROM purchase_orders WHERE id = $1', [id]);
-    console.log(`✅ Backend: Updated order:`, updatedOrder.rows[0]);
+    if (!rows.length) return res.status(404).json({ error: "Order not found" });
 
-    console.log(`✅ Backend: Order ${id} status updated to ${status}`);
+    
     res.json({ success: true, order: rows[0] });
   } catch (err) {
-    console.error(`❌ Backend: Error updating order ${id}:`, err);
+    console.error("❌ Error updating status:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Send PO
 app.put("/api/orders/:id/send", async (req, res) => {
@@ -709,12 +731,35 @@ app.get("/api/all-quotations", async (req, res) => {
 
 
 
+app.put('/api/orders/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  // Validate status
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE purchase_orders SET status=$1 WHERE id=$2 RETURNING *`,
+      [status, id]
+    );
+
+    if (!rows.length) return res.status(404).json({ error: "Order not found" });
+
+    console.log("✅ Order updated:", rows[0]);
+    res.json({ success: true, order: rows[0] });
+  } catch (err) {
+    console.error("❌ Error updating status:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 
 //print test 
-app.get("/print/test", (req, res) => {
-  res.render("print"); // will render views/print.ejs
-});
 
 
 

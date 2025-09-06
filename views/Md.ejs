@@ -776,44 +776,100 @@
     }
 
     // Update status
-    async function updateStatus(id, status) {
-      console.log(`🔄 Frontend: Function called with id=${id}, status=${status}`);
-      alert(`🔄 Frontend: Function called with id=${id}, status=${status}`);
+   
 
-      try {
-        console.log(`🔄 Frontend: Sending request to /api/orders/${id}/approve`);
-        const res = await fetch(`/api/orders/${id}/approve`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status })
-        });
 
-        console.log(`🔄 Frontend: Response received, status: ${res.status}`);
 
-        if (res.ok) {
-          const data = await res.json();
-          console.log(`✅ Frontend: Update successful`, data);
-          alert(`✅ Order ${id} ${status} successfully!`);
-          // Refresh summary counts
-          loadSummaryCounts();
-          // Refresh current tab data
-          if (currentTab === 'pending') {
-            loadPurchaseOrders();
-          } else if (currentTab === 'all') {
-            loadAllOrders();
-          } else {
-            loadAllQuotations();
-          }
-        } else {
-          const err = await res.json();
-          console.log(`❌ Frontend: Update failed`, err);
-          alert(`❌ Failed: ${err.error || 'Unknown error'}`);
+
+
+// Update status
+async function updateStatus(id, status) {
+  console.log(`🔄 Frontend: Function called with id=${id}, status=${status}`);
+
+  try {
+    console.log(`🔄 Frontend: Sending request to /api/orders/${id}/status`);
+    const res = await fetch(`/api/orders/${id}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+
+    console.log(`🔄 Frontend: Response received, status: ${res.status}`);
+
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`✅ Frontend: Update successful`, data);
+
+      alert(`✅ Order ${id} ${status} successfully!`);
+      loadSummaryCounts();
+
+      // 🔥 Handle tab reloads properly
+      if (status === "rejected") {
+        // Refresh rejected tab so the order moves there
+        loadRejectedOrders();
+
+        // Also refresh pending so it disappears
+        if (currentTab === "pending") {
+          loadPurchaseOrders();
         }
-      } catch (error) {
-        console.error(`❌ Frontend: Network error`, error);
-        alert(`❌ Network error: ${error.message}`);
+      } else if (status === "approved") {
+        if (currentTab === "pending") loadPurchaseOrders();
+        else if (currentTab === "all") loadAllOrders();
+      } else {
+        if (currentTab === "all") loadAllOrders();
+        else if (currentTab === "quotations") loadAllQuotations();
       }
+    } else {
+      const err = await res.json();
+      console.log(`❌ Frontend: Update failed`, err);
+      alert(`❌ Failed: ${err.error || 'Unknown error'}`);
     }
+  } catch (error) {
+    console.error(`❌ Frontend: Network error`, error);
+    alert(`❌ Network error: ${error.message}`);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
