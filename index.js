@@ -157,24 +157,26 @@ app.get('/api/orders/:id', async (req, res) => {
     }
 });
 
-// Update order status
+// Update order details
 app.put('/api/orders/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
-        
+        const { supplier_name, urgency, date_required, notes } = req.body;
+
         const { rows } = await pool.query(
-            'UPDATE purchase_orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
-            [status, id]
+            `UPDATE purchase_orders SET
+             supplier_name = $1, urgency = $2, date_required = $3, notes = $4
+             WHERE id = $5 RETURNING *`,
+            [supplier_name, urgency, date_required, notes, id]
         );
-        
+
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
-        
+
         res.json(rows[0]);
     } catch (err) {
-        console.error(err);
+        console.error("Error in PUT /api/orders/:id:", err.stack || err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -309,7 +311,8 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes,referenceNumber } = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
-    const quotationFile = req.file ? req.file.filename : null;
+    const quotationFile = req.file ? [req.file.filename] : [];
+
     
     try {
         console.log(req.body);
@@ -440,24 +443,25 @@ app.get("/status", async (req, res) => {
   }
 });
 
-// Update quotation file (Edit)
+// Update quotation file (Edit) - Single file
 app.put("/api/orders/:id/quotation", upload.single("quotation"), async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(req.params);
         if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
         const newFile = req.file.filename;
 
         // Delete old file if exists
-        const oldFileResult = await pool.query("SELECT quotation_file FROM purchase_orders WHERE id=$1", [id]);
-        if (oldFileResult.rows.length && oldFileResult.rows[0].quotation_file) {
-            const oldFilePath = path.join(uploadsDir, oldFileResult.rows[0].quotation_file);
-            if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
-        }
+        // const oldFileResult = await pool.query("SELECT quotation_file FROM purchase_orders WHERE id=$1", [id]);
+        // if (oldFileResult.rows.length && oldFileResult.rows[0].quotation_file) {
+        //     const oldFilePath = path.join(uploadsDir, oldFileResult.rows[0].quotation_file);
+        //     if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+        // }
 
         // Update DB
         const { rows } = await pool.query(
-            "UPDATE purchase_orders SET quotation_file=$1 WHERE id=$2 RETURNING *",
+            "UPDATE purchase_orders SET quotation_file= array_append(quatation_file,$1) WHERE id=$2 RETURNING *",
             [newFile, id]
         );
 
@@ -467,6 +471,30 @@ app.put("/api/orders/:id/quotation", upload.single("quotation"), async (req, res
         res.status(500).json({ error: "Failed to update quotation" });
     }
 });
+
+app.post("/api/orders/:id/quotations", upload.array("quotations"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // filenames of uploaded files
+    const newFiles = req.files.map(file => file.filename);
+
+    // Append to existing array instead of overwrite
+    const result = await pool.query(
+      `UPDATE purchase_orders
+       SET quotation_file = quotation_file || $1::text[]
+       WHERE id = $2
+       RETURNING *`,
+      [newFiles, id]
+    );
+
+    res.json({ success: true, order: result.rows[0] });
+  } catch (err) {
+    console.error("Upload quotations error:", err);
+    res.status(500).json({ success: false, error: "Failed to upload quotations" });
+  }
+});
+
 
 
 
