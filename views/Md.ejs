@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       margin: 0;
       padding: 20px;
       min-height: 100vh;
@@ -29,36 +29,52 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #667eea, #764ba2);
+      background: linear-gradient(90deg, #e5e7ef, #764ba2);
     }
     h1 { margin: 0; color: #2c3e50; font-size: 28px; font-weight: 600; }
 
     /* Header with logo + user info */
     .header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 25px; 
-      border-bottom: 2px solid #eee; 
-      padding-bottom: 12px;
-    }
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .logo-section img {
-      height: 45px;
-    }
-    .user-info { 
-      display: flex; 
-      align-items: center; 
-      gap: 10px; 
-      font-size: 14px; 
-      font-weight: bold; 
-      color: #2c3e50; 
-    }
-    .user-info i { font-size: 22px; color: #3498db; }
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px 25px;
+  border-bottom: 2px solid #eee; 
+  background: #fdfdfd;
+  border-radius: 12px 12px 0 0;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+
+.logo-section h1 {
+  font-size: 22px;
+  margin: 0;
+  color: #9da6b0;
+}
+
+.user-info { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  font-size: 15px; 
+  font-weight: 500; 
+  color: #2c3e50;
+  background: #f1f3f6;
+  padding: 8px 14px;
+  border-radius: 20px;
+}
+
+.user-info i { 
+  font-size: 28px; 
+  color: #667eea;
+}
+
 
     table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
     table th, table td { border: 1px solid #e5e5e5; padding: 10px; text-align: center; }
@@ -83,15 +99,20 @@
     .card {
       flex: 1;
       min-width: 200px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      color: #2c3e50;
       padding: 20px;
       border-radius: 12px;
       text-align: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease;
+      border: 1px solid #e9ecef;
+      transition: all 0.3s ease;
     }
-    .card:hover { transform: translateY(-5px); }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
     .card i { font-size: 32px; margin-bottom: 10px; opacity: 0.9; }
     .card h3 { margin: 0; font-size: 28px; font-weight: 700; }
     .card p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
@@ -199,8 +220,8 @@
     <!-- Header with Logo + User -->
     <div class="header">
       <div class="logo-section">
-        <img src="images/page_logo.png" alt="Company Logo" width="100px">
-        <h1>Purchase Orders (Final Approval)</h1>
+        <img src="images/page_logo.png" alt="Company Logo" width="200px" height="100px">
+        <h1 style="color: black;font-weight:700">Purchase Orders (Final Approval)</h1>
       </div>
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
@@ -461,20 +482,93 @@
 
     // Load pending orders
     async function loadPurchaseOrders() {
-      const res = await fetch('/api/purchase-orders');
-      const orders = await res.json();
-      renderOrders(orders, 'purchaseOrdersBody');
+      try {
+        const res = await fetch('/api/orders');
+        const allOrders = await res.json();
+        let orders = allOrders.filter(order => order.status === 'purchase' || order.status === 'enquired');
+
+        // Apply search filter
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+          orders = orders.filter(order =>
+            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
+            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        // Apply supplier filter
+        const supplierFilter = document.getElementById('supplierFilter').value;
+        if (supplierFilter !== 'All Suppliers') {
+          orders = orders.filter(order => order.supplier_name === supplierFilter || order.supplier === supplierFilter);
+        }
+
+        // Apply status filter
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== 'All Statuses') {
+          orders = orders.filter(order => order.status === statusFilter.toLowerCase());
+        }
+
+        // Apply date filters
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (dateFrom) {
+          orders = orders.filter(order => new Date(order.date_required) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+          orders = orders.filter(order => new Date(order.date_required) <= new Date(dateTo));
+        }
+
+        renderOrders(orders, 'purchaseOrdersBody');
+      } catch (err) {
+        console.error('Failed to load purchase orders:', err);
+        document.getElementById('purchaseOrdersBody').innerHTML = '<tr><td colspan="11">Failed to load purchase orders</td></tr>';
+      }
     }
 
     // Load rejected orders
     async function loadRejectedOrders() {
       try {
-        const res = await fetch('/api/orders/search/filter?status=rejected');
-        const orders = await res.json();
+        const res = await fetch('/api/orders');
+        const allOrders = await res.json();
+        let orders = allOrders.filter(order => order.status === 'rejected');
+
+        // Apply search filter
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+          orders = orders.filter(order =>
+            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
+            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        // Apply supplier filter
+        const supplierFilter = document.getElementById('supplierFilter').value;
+        if (supplierFilter !== 'All Suppliers') {
+          orders = orders.filter(order => order.supplier_name === supplierFilter || order.supplier === supplierFilter);
+        }
+
+        // Apply status filter
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== 'All Statuses') {
+          orders = orders.filter(order => order.status === statusFilter.toLowerCase());
+        }
+
+        // Apply date filters
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (dateFrom) {
+          orders = orders.filter(order => new Date(order.date_required) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+          orders = orders.filter(order => new Date(order.date_required) <= new Date(dateTo));
+        }
+
         renderOrders(orders, 'rejectedOrdersBody');
       } catch (err) {
         console.error('Failed to load rejected orders:', err);
-        document.getElementById('rejectedOrdersBody').innerHTML = '<tr><td colspan="10">Failed to load rejected orders</td></tr>';
+        document.getElementById('rejectedOrdersBody').innerHTML = '<tr><td colspan="11">Failed to load rejected orders</td></tr>';
       }
     }
 
@@ -482,11 +576,45 @@
     async function loadAllOrders() {
       try {
         const res = await fetch('/api/orders');
-        const orders = await res.json();
+        const allOrders = await res.json();
+        let orders = allOrders;
+
+        // Apply search filter
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+          orders = orders.filter(order =>
+            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
+            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        // Apply supplier filter
+        const supplierFilter = document.getElementById('supplierFilter').value;
+        if (supplierFilter !== 'All Suppliers') {
+          orders = orders.filter(order => order.supplier_name === supplierFilter || order.supplier === supplierFilter);
+        }
+
+        // Apply status filter
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== 'All Statuses') {
+          orders = orders.filter(order => order.status === statusFilter.toLowerCase());
+        }
+
+        // Apply date filters
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (dateFrom) {
+          orders = orders.filter(order => new Date(order.date_required) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+          orders = orders.filter(order => new Date(order.date_required) <= new Date(dateTo));
+        }
+
         renderOrders(orders, 'allOrdersBody');
       } catch (err) {
         console.error('Failed to load all orders:', err);
-        document.getElementById('allOrdersBody').innerHTML = '<tr><td colspan="10">Failed to load orders</td></tr>';
+        document.getElementById('allOrdersBody').innerHTML = '<tr><td colspan="11">Failed to load orders</td></tr>';
       }
     }
 
@@ -712,13 +840,14 @@
 
     // Apply filters
     function applyFilters() {
-      currentPage = 1;
-      if (currentTab === 'quotations') {
-        loadAllQuotations();
+      if (currentTab === 'pending') {
+        loadPurchaseOrders();
       } else if (currentTab === 'all') {
-        loadAllOrders(); // Could add filtering to all orders too
-      } else {
-        loadPurchaseOrders(); // Could add filtering to pending orders too
+        loadAllOrders();
+      } else if (currentTab === 'quotations') {
+        loadAllQuotations();
+      } else if (currentTab === 'rejected') {
+        loadRejectedOrders();
       }
     }
 
@@ -754,11 +883,13 @@
 
     // View quotation
     function viewQuotation(order) {
-      if (!order.quotation_file) {
+      if (!order.quotation_file || order.quotation_file.length === 0) {
         alert("No quotation uploaded ❌");
         return;
       }
-      document.getElementById("pdfFrame").src = `/uploads/${order.quotation_file}`;
+      // Show the most recent quotation file (assuming last in array is most recent)
+      const recentFile = Array.isArray(order.quotation_file) ? order.quotation_file[order.quotation_file.length - 1] : order.quotation_file;
+      document.getElementById("pdfFrame").src = `/uploads/${recentFile}`;
       document.getElementById("orderDetails").innerHTML = `
         <strong>Project:</strong> ${order.project_name || order.project} &nbsp; |
         <strong>Supplier:</strong> ${order.supplier_name || order.supplier} &nbsp; |

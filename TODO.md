@@ -1,2 +1,7 @@
-- [ ] Modify GET /api/orders/:id/items in index.js to include calculated total_amount
-- [ ] Test the edit modal to ensure product total displays correctly
+- [x] Modify loadPurchaseOrders() to apply UI filters (search, supplier, status, date)
+- [x] Modify loadAllOrders() to apply UI filters
+- [x] Modify loadRejectedOrders() to apply UI filters
+- [x] Test filters on all tabs
+- [x] Update card background to professional look and enhance hover effect
+- [x] Update PDF preview to show most recent quotation from database
+- [x] Make logo little bigger (increased from 150x100 to 180x120)
