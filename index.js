@@ -309,7 +309,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, referenceNumber} = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, reference_no} = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
@@ -337,9 +337,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             
             totalAmount +=discounted+ gstAmount;
         }
-        console.log(projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
-             supplierGst, supplierAddress, urgency, dateRequired, notes, 
-             orderedBy, quotationFile, totalAmount,referenceNumber);
+        
 
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders 
@@ -349,7 +347,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
              supplierGst, supplierAddress, urgency, dateRequired, notes, 
-             orderedBy, quotationFile, totalAmount,referenceNumber]
+             orderedBy, quotationFile, totalAmount,reference_no]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -465,7 +463,7 @@ app.put("/api/orders/:id/quotation", upload.single("quotation"), async (req, res
 
         // Update DB
         const { rows } = await pool.query(
-            "UPDATE purchase_orders SET quotation_file= array_append(quatation_file,$1) WHERE id=$2 RETURNING *",
+            "UPDATE purchase_orders SET quotation_file= array_append(quotation_file,$1) WHERE id=$2 RETURNING *",
             [newFile, id]
         );
 
