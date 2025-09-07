@@ -663,6 +663,28 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
 
 
+//suggestion
+app.get("/supplier/:name", async (req, res) => {
+  try {
+    const { name } = req.params; // use "name" because route is /supplier/:name
+
+    const result = await pool.query(
+      "SELECT supplier_name, supplier_address, supplier_gst FROM purchase_orders WHERE supplier_name ILIKE $1 LIMIT 1",
+      [name]
+    );
+
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ message: "Supplier not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 
 
