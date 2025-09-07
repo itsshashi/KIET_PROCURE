@@ -1,4 +1,7 @@
 // server.js
+import generatePurchaseOrder from "./generatePurchaseOrder.js"; // adjust path if needed
+
+import dotenv from 'dotenv'
 import express from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
@@ -8,13 +11,18 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import session from 'express-session';
 import multer from 'multer';
+
 import fs from 'fs';
 import cors from 'cors';
+import bcrypt from 'bcrypt';
 
 // =============================
 // CONFIG
 // =============================
-const PASSWORD = 'aost ujvo vfws ofqf'; // Gmail app password
+const app = express();
+dotenv.config({ path: "SCR.env" });
+
+const PASSWORD = process.env.EMAIL_PASS;// Gmail app password
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -25,14 +33,14 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-    user: "postgres",
-    host: "localhost",
-    database: "kiet",
-    password: "Shashi@1504",
-    port: 5432
+    user: process.env.DB_USER,
+    host:process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port:process.env.DB_PORT,
 });
 
-const app = express();
+
 
 // =============================
 // MIDDLEWARE
@@ -375,20 +383,31 @@ app.get('/', (req, res) => res.render('index.ejs', { message: "" }));
 // Login submit
 app.post('/submit', async (req, res) => {
     const { email, password, role } = req.body;
+
     try {
         const result = await pool.query(
             "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
             [email]
         );
 
-        if (!result.rows.length) return res.render("index.ejs", { message: "Invalid email or password" });
+        if (!result.rows.length) 
+            return res.render("index.ejs", { message: "Invalid email or password" });
 
         const user = result.rows[0];
-        if (user.password !== password) return res.render("index.ejs", { message: "Invalid email or password" });
-        if (user.role !== role) return res.render("index.ejs", { message: "Unauthorized: Incorrect role" });
 
+        // Compare hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) 
+            return res.render("index.ejs", { message: "Invalid email or password" });
+
+        if (user.role !== role) 
+            return res.render("index.ejs", { message: "Unauthorized: Incorrect role" });
+
+        // Set session
         req.session.user = { id: user.id, email: user.email, role: user.role };
-        switch (user.role){
+
+        // Render dashboard based on role
+        switch (user.role) {
             case "Employee":
                 res.render('procurement.ejs', { user, out_fl: email, message: "Login Successful ✅" });
                 break;
@@ -403,16 +422,20 @@ app.post('/submit', async (req, res) => {
                 break;
             case "Accounts":
                 res.render('Accounts.ejs', { user, out_fl: email, message: "Login Successful ✅" });
-                break; 
+                break;
             case "MD":
                 res.render('Md.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                break;
+            default:
+                res.render("index.ejs", { message: "Role not recognized" });
         }
-        
+
     } catch (err) {
         console.error(err);
         res.status(500).send("Error processing request");
     }
 });
+
 
 // Order Raise
 // Order Raise
@@ -514,7 +537,17 @@ app.post("/forgot-password", async (req, res) => {
 
         const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass: PASSWORD } });
         const resetURL = `http://localhost:3000/reset-password/${token}`;
-        await transporter.sendMail({ to: email, from: "acc19105@gmail.com", subject: "Password Reset", html: `<p>Click this <a href="${resetURL}">link</a> to reset your password.</p>` });
+        const mailSubject = "Password Reset Request - KIET Technologies";
+        const mailBody = `
+          <p>Hello ${email},</p>
+          <p>We received a request to reset your password for your KIET Technologies account.</p>
+          <p>If you made this request, please click the link below to reset your password:</p>
+          <p><a href="${resetURL}">Reset Password</a></p>
+          <p>This link will expire in 15 minutes for security reasons.</p>
+          <p>If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
+          <p>Thank you,<br>The KIET Technologies Team</p>
+        `;
+        await transporter.sendMail({ to: email, from: "acc19105@gmail.com", subject: mailSubject, html: mailBody });
 
         res.sendFile(path.join(__dirname, 'public', 'sucess.html'));
     } catch (err) {
@@ -522,6 +555,69 @@ app.post("/forgot-password", async (req, res) => {
         res.status(500).send("Error processing request");
     }
 });
+
+// Show reset password form
+// Show reset password form
+app.get("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()",
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.send("Invalid or expired reset token");
+    }
+
+    // Render reset form with hidden token
+    res.render("reset-password.ejs", { token });
+  } catch (error) {
+    console.error(error);
+    res.send("Something went wrong");
+  }
+});
+
+
+// Handle reset password submission
+app.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()",
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "Invalid or expired reset token" });
+    }
+
+    const user = result.rows[0];
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      "UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2",
+      [hashedPassword, user.id]
+    );
+
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+
+
+
+
+
+
+
+
 
 app.get("/status", async (req, res) => {
   if (!req.session.user) {
@@ -669,9 +765,10 @@ app.get("/supplier/:name", async (req, res) => {
     const { name } = req.params; // use "name" because route is /supplier/:name
 
     const result = await pool.query(
-      "SELECT supplier_name, supplier_address, supplier_gst FROM purchase_orders WHERE supplier_name ILIKE $1 LIMIT 1",
-      [name]
-    );
+     "SELECT supplier_name, supplier_address, supplier_gst FROM purchase_orders WHERE supplier_name ILIKE $1 LIMIT 1",
+    [`%${name}%`]
+);
+
 
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
@@ -865,6 +962,104 @@ app.put('/api/orders/:id/status', async (req, res) => {
 
 
 //print test 
+
+
+
+
+
+// =============================
+// GENERATE PURCHASE ORDER PDF
+// =============================
+app.post("/api/orders/:id/generate-po", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch order
+    const orderResult = await pool.query(
+      `SELECT * FROM purchase_orders WHERE id=$1`,
+      [id]
+    );
+    const itemsResult = await pool.query(
+      `SELECT * FROM purchase_order_items WHERE purchase_order_id=$1`,
+      [id]
+    );
+
+    if (!orderResult.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const poData = {
+      ...orderResult.rows[0],
+      items: itemsResult.rows,
+      supplier: {
+        name: orderResult.rows[0].supplier_name,
+        address: orderResult.rows[0].supplier_address,
+        contact: orderResult.rows[0].supplier_contact,
+      },
+      company: { logo: "path/to/logo.png" }, // update with actual
+      amountInWords: "One Lakh Rupees Only", // optional
+      terms: "Goods once sold will not be taken back", // optional
+    };
+
+    const filePath = path.join(uploadsDir, `PO_${id}.pdf`);
+    generatePurchaseOrder(poData, filePath);
+
+    // --- OPTION 1: force download ---
+    // res.download(filePath, `PO_${id}.pdf`);
+
+    // --- OPTION 2: return a URL (frontend can preview) ---
+    res.json({
+      url: `/uploads/PO_${id}.pdf`,
+    });
+  } catch (err) {
+    console.error("❌ Error generating PO:", err);
+    res.status(500).json({ error: "Failed to generate PO" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// purchaseOrder.js
+
+
+
+
+
 
 
 
