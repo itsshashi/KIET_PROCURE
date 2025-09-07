@@ -338,6 +338,7 @@
       </table>
     </div>
 
+
     <!-- All Quotations Table -->
     <div id="quotationsTab" class="tab-content">
       <table id="quotationsTable">
@@ -780,6 +781,13 @@
               <button class="reject" onclick="updateStatus(${order.id}, 'rejected')">
                 <i class="fas fa-times"></i> Reject
               </button>
+              ${order.status === 'approved' || order.status === 'sent' || order.status === 'received'
+                ? `<button class="view" onclick="generatePO(${order.id})">
+                     <i class="fas fa-file-alt"></i> Generate PO
+                   </button>`
+                : `<button class="view" onclick="generatePO(${order.id})" disabled style="opacity: 0.5; cursor: not-allowed;">
+                     <i class="fas fa-file-alt"></i> Generate PO
+                   </button>`}
             </td>
           </tr>
         `;
@@ -810,6 +818,9 @@
               </button>
               <button class="view" onclick="viewAllQuotations(${quotation.id})">
                 <i class="fas fa-list"></i> View All Quotations
+              </button>
+              <button class="view" onclick="generatePO(${quotation.id})">
+                <i class="fas fa-file-alt"></i> Generate PO
               </button>
             </td>
           </tr>
@@ -973,6 +984,20 @@ async function updateStatus(id, status) {
 
 
 
+
+
+
+
+
+    async function generatePO(orderId) {
+  try {
+    // Open the PDF in a new tab by directly navigating to the PDF endpoint
+    window.open(`/api/orders/${orderId}/pdf`, "_blank");
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Something went wrong");
+  }
+}
 
 
 

@@ -1,5 +1,5 @@
 // server.js
-import generatePurchaseOrder from "./generatePurchaseOrder.js"; // adjust path if needed
+import generatePurchaseOrder from "./print.js"; // adjust path if needed
 
 import dotenv from 'dotenv'
 import express from 'express';
@@ -444,45 +444,47 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, reference_no} = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier} = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
 
-    
+    const contact = phone;
+    const single = singleSupplier === 'on' ? true : false;
+
     try {
-        
+
         await pool.query("BEGIN");
         const purchaseOrderNumber = await generatePurchaseOrderNumber();
-        
+
         // Calculate total amount
         let totalAmount = 0;
         for (let p of products) {
             const unitPrice = parseFloat(p.unitPrice);
              const discount=parseFloat(p.discount);
             const quantity = parseInt(p.quantity);
-            
-           
+
+
             const gst = parseFloat(p.gst);
-            
+
             // Calculate item total with GST
             const itemTotal = quantity * unitPrice;
             const discounted= itemTotal-discount;
             const gstAmount = discounted * (gst / 100);
-            
+
             totalAmount +=discounted+ gstAmount;
         }
-        
+
 
         const orderResult = await pool.query(
-            `INSERT INTO purchase_orders 
-            (project_name, project_code_number, purchase_order_number, supplier_name, 
-             supplier_gst, supplier_address, urgency, date_required, notes, 
-             ordered_by, quotation_file, total_amount,reference_no)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
-            [projectName, projectCodeNumber, purchaseOrderNumber, supplierName, 
-             supplierGst, supplierAddress, urgency, dateRequired, notes, 
-             orderedBy, quotationFile, totalAmount,reference_no]
+            `INSERT INTO purchase_orders
+            (project_name, project_code_number, purchase_order_number, supplier_name,
+             supplier_gst, supplier_address, urgency, date_required, notes,
+             ordered_by, quotation_file, total_amount, reference_no, contact, single)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
+            [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
+             supplierGst, supplierAddress, urgency, dateRequired, notes,
+             orderedBy, quotationFile, totalAmount, reference_no, contact, single]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -626,17 +628,19 @@ app.get("/status", async (req, res) => {
 
   try {
     const result = await pool.query(
-            `SELECT id, 
+            `SELECT id,
             project_name AS "projectName",
             project_code_number AS "projectCodeNumber",
             purchase_order_number AS "purchaseOrderNumber",
             supplier_name AS "supplierName",
             supplier_gst AS "supplierGst",
             supplier_address AS "supplierAddress",
-            urgency, 
+            contact,
+            single,
+            urgency,
             date_required AS "dateRequired",
             created_at AS "dateRequested",
-            status, 
+            status,
             quotation_file AS "quotationFile",
             notes
         FROM purchase_orders
@@ -765,7 +769,7 @@ app.get("/supplier/:name", async (req, res) => {
     const { name } = req.params; // use "name" because route is /supplier/:name
 
     const result = await pool.query(
-     "SELECT supplier_name, supplier_address, supplier_gst FROM purchase_orders WHERE supplier_name ILIKE $1 LIMIT 1",
+     "SELECT supplier_name, supplier_address, supplier_gst, contact FROM purchase_orders WHERE supplier_name ILIKE $1 ORDER BY created_at DESC LIMIT 1",
     [`%${name}%`]
 );
 
@@ -967,57 +971,129 @@ app.put('/api/orders/:id/status', async (req, res) => {
 
 
 
-// =============================
-// GENERATE PURCHASE ORDER PDF
-// =============================
-app.post("/api/orders/:id/generate-po", async (req, res) => {
-  try {
-    const { id } = req.params;
 
-    // Fetch order
-    const orderResult = await pool.query(
-      `SELECT * FROM purchase_orders WHERE id=$1`,
-      [id]
-    );
-    const itemsResult = await pool.query(
-      `SELECT * FROM purchase_order_items WHERE purchase_order_id=$1`,
-      [id]
-    );
 
-    if (!orderResult.rows.length) {
-      return res.status(404).json({ error: "Order not found" });
-    }
 
-    const poData = {
-      ...orderResult.rows[0],
-      items: itemsResult.rows,
-      supplier: {
-        name: orderResult.rows[0].supplier_name,
-        address: orderResult.rows[0].supplier_address,
-        contact: orderResult.rows[0].supplier_contact,
-      },
-      company: { logo: "path/to/logo.png" }, // update with actual
-      amountInWords: "One Lakh Rupees Only", // optional
-      terms: "Goods once sold will not be taken back", // optional
-    };
 
-    const filePath = path.join(uploadsDir, `PO_${id}.pdf`);
-    generatePurchaseOrder(poData, filePath);
 
-    // --- OPTION 1: force download ---
-    // res.download(filePath, `PO_${id}.pdf`);
 
-    // --- OPTION 2: return a URL (frontend can preview) ---
-    res.json({
-      url: `/uploads/PO_${id}.pdf`,
-    });
-  } catch (err) {
-    console.error("❌ Error generating PO:", err);
-    res.status(500).json({ error: "Failed to generate PO" });
-  }
+
+
+app.get("/test", (req, res) => {
+  res.send("✅ Test route working");
 });
 
 
+
+
+app.get("/api/orders/:id/pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1️⃣ Fetch order details from DB
+    const orderResult = await pool.query(
+      "SELECT * FROM purchase_orders WHERE id = $1",
+      [id]
+    );
+     
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    const order = orderResult.rows[0];
+  
+    // Fetch order items
+    const itemsResult = await pool.query(
+      "SELECT * FROM purchase_order_items WHERE purchase_order_id = $1",
+      [id]
+    );
+    const items = itemsResult.rows.map(row => ({
+      part_no: row.part_no,
+      description: row.description,
+      hsn_code: row.hsn_code,
+      gst: row.gst,
+      quantity: row.quantity,
+      unit: row.unit || "pcs",
+      unit_price: Number(row.unit_price) || 0,
+    }));
+
+    // 2️⃣ Prepare poData object
+   const poData = {
+  supplier: {
+    name: order.supplier_name,
+    address: order.supplier_address,
+    contact: order.contact || order.supplier_gst || "N/A",
+  },
+  poNumber: order.po_number,
+  date: new Date(order.created_at).toLocaleDateString(),
+
+  requester: {
+    name: order.ordered_by,
+    plant: "Aaryan Tech Park", // fixed or from DB
+    email: order.ordered_by_email || "example@mail.com",
+    
+  },
+
+  shipTo: "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+  invoiceTo: "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+  goodsRecipient: "Kiet-ATPLog1",
+
+  termsOfPayment: "45 days net",
+  termsOfDelivery: "DAP Ship, address",
+
+  items: items, // from DB query purchase_order_items
+
+  amountInWords: "INR Twenty Six Thousand Nine Hundred Four Only", // use converter
+  terms: `
+    1. The supplier shall comply with all applicable laws, export regulations, and ethical business practices at all times.
+    2. Any form of bribery, gratification, or involvement of restricted materials is strictly prohibited.
+    3. The goods supplied must not contain iron or steel originating from sanctioned countries.
+    4. All invoices must exactly match the purchase order details and clearly reference the PO number.
+    5. Payments will be made within 45 days from goods receipt or invoice receipt, whichever is applicable.
+    6. Deliveries accepted only Mon–Fri 9:00 AM to 5:00 PM, routed through designated material gates.
+    7. Each delivery must be accompanied by three copies of the invoice.
+    8. Supplier personnel entering premises must wear safety shoes and carry valid ID, license & vehicle docs.
+    9. Buyer reserves the right to reject goods or terminate this PO for non-compliance.
+  `,
+
+  signPath: "public/images/wt_img.png",
+  company: { logo: "public/images/page_logo.png" },
+};
+
+
+    // 3️⃣ Generate unique filename
+    const timestamp = Date.now();
+    const fileName = `PO_${order.po_number}_${timestamp}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // 4️⃣ Generate PDF
+    generatePurchaseOrder(poData, filePath);
+
+    // 5️⃣ Send PDF as response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Wait a bit for PDF generation to complete, then send file
+    setTimeout(() => {
+      if (fs.existsSync(filePath)) {
+        res.sendFile(filePath, (err) => {
+          if (err) {
+            console.error("Error sending PDF:", err);
+            res.status(500).json({ error: "Failed to send PDF" });
+          } else {
+            // Optionally delete the file after sending
+            // fs.unlinkSync(filePath);
+          }
+        });
+      } else {
+        res.status(500).json({ error: "PDF generation failed - file not found" });
+      }
+    }, 1000); // Wait 1 second for PDF generation
+
+  } catch (err) {
+    console.error("❌ Error generating PDF:", err.stack || err);
+    res.status(500).json({ error: err.message || "Failed to generate PDF" });
+  }
+});
 
 
 

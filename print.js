@@ -1,52 +1,68 @@
 import PdfPrinter from "pdfmake";
-import fs from 'fs';
+import fs from "fs";
+import {ToWords} from 'to-words';
+
+const toWordsInstance = new ToWords();
+
+
+const fonts = {
+  Roboto: {
+    normal: "Helvetica",
+    bold: "Helvetica-Bold",
+    italics: "Helvetica-Oblique",
+    bolditalics: "Helvetica-BoldOblique",
+  },
+};
+const printer = new PdfPrinter(fonts);
+
+function getBase64Image(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return null;
+  return "data:image/png;base64," + fs.readFileSync(filePath).toString("base64");
+}
+
+// Layout = horizontal lines only
+const horizontalLineLayout = {
+  hLineWidth: () => 1,
+  vLineWidth: () => 1,
+  hLineColor: () => "#000000",
+};
+
 
 function generatePurchaseOrder(poData, filePath) {
-  const fonts = {
-    Roboto: {
-      normal: "node_modules/pdfmake/fonts/Roboto-Regular.ttf",
-      bold: "node_modules/pdfmake/fonts/Roboto-Medium.ttf",
-      italics: "node_modules/pdfmake/fonts/Roboto-Italic.ttf",
-      bolditalics: "node_modules/pdfmake/fonts/Roboto-MediumItalic.ttf",
-    },
-  };
+  const logoBase64 = getBase64Image(poData.company.logo);
+  const signBase64 = getBase64Image(poData.signPath);
 
-  const printer = new PdfPrinter(fonts);
-
-  // Table body for items
+  // 👉 Build the items table
   const itemsTable = [
-    [
-      { text: "SL", bold: true },
-      { text: "Part No.", bold: true },
-      { text: "Item Description", bold: true },
-      { text: "HSN", bold: true },
-      { text: "GST%", bold: true },
-      { text: "Qty", bold: true },
-      { text: "Unit", bold: true },
-      { text: "Unit Price", bold: true },
-      { text: "Total", bold: true },
-    ],
-    ...poData.items.map((item, i) => [
-      i + 1,
-      item.partNo || "",
-      item.description,
-      item.hsn,
-      item.gst + "%",
-      item.qty,
-      item.unit,
-      item.unitPrice.toLocaleString(),
-      (item.qty * item.unitPrice).toLocaleString(),
-    ]),
+    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty(N)", "Unit", "Unit Price", "Total"],
   ];
 
-  const subtotal = poData.items.reduce(
-    (acc, item) => acc + item.qty * item.unitPrice,
-    0
-  );
+  let subtotal = 0;
+  poData.items.forEach((item, i) => {
+    const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0);
+    const quantity = item.quantity || 0;
+    const gst = item.gst || "0";
+    const total = unitPrice * quantity;
+    subtotal += total;
+
+    itemsTable.push([
+      i + 1,
+      item.part_no || item.partNo || "",
+      item.description || "",
+      item.hsn_code || item.hsnCode || "",
+      gst + "%",
+      quantity,
+      item.unit || "",
+      unitPrice.toFixed(2),
+      total.toFixed(2),
+    ]);
+  });
+
   const cgst = subtotal * 0.09;
   const sgst = subtotal * 0.09;
   const grandTotal = subtotal + cgst + sgst;
 
+  // 👉 Document definition
   const docDefinition = {
     content: [
       {
@@ -54,60 +70,92 @@ function generatePurchaseOrder(poData, filePath) {
           {
             width: "50%",
             stack: [
-              { text: "Supplier Address", bold: true },
-              { text: poData.supplier.name },
-              { text: poData.supplier.address },
-              { text: `Contact: ${poData.supplier.contact}` },
+              { text: "Supplier Address:", bold: true, margin: [80,50 , 0, 5] },
+              { text: poData.supplier.name ,margin:[80,0 , 0, 5] },
+              { text: poData.supplier.address ,margin:[80,0 , 0, 5]},
+              { text: `Supplier Number: ${poData.supplier.contact}`,margin:[80,0 , 0, 5] },
             ],
           },
           {
             width: "50%",
             stack: [
-              { image: poData.company.logo, width: 120, alignment: "right" },
-              { text: "PURCHASE ORDER", bold: true, alignment: "right" },
-              { text: `PO No: ${poData.poNumber}`, alignment: "right" },
+              logoBase64 ? { image: logoBase64, width: 100, alignment: "right" } : {},
+              { canvas: [{ type: "line", x1: 0, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
+              { text: "PURCHASE ORDER", bold: true, alignment: "right", margin: [0, 5, 0, 5] },
+              { text: `PO Number: ${poData.poNumber}`, alignment: "right" },
               { text: `Date: ${poData.date}`, alignment: "right" },
+              { text: `Name of the Requester: ${poData.requester?.name}`, alignment: "right" },
+              { text: `Plant: ${poData.requester?.plant}`, alignment: "right" },
+              { text: `Requester Email: ${poData.requester?.email}`, alignment: "right" },
+              
             ],
           },
         ],
       },
-      { text: "\n" },
-      {
-        text: "Ship-to-address",
-        bold: true,
+
+      { text: "\nShip-to-address: " + poData.shipTo, bold: true,
+        lineHeight:1.3
       },
-      { text: poData.shipTo },
-      { text: "\n" },
-      {
-        table: {
-          widths: ["auto", "*", "*", "auto", "auto", "auto", "auto", "auto", "auto"],
-          body: itemsTable,
-        },
-        layout: "lightHorizontalLines",
+      { text: "Invoice address: " + poData.invoiceTo, bold: true ,
+        lineHeight:1.3
       },
-      {
-        table: {
-          widths: ["*", "auto"],
-          body: [
-            ["Subtotal", subtotal.toLocaleString()],
-            ["CGST (9%)", cgst.toLocaleString()],
-            ["SGST (9%)", sgst.toLocaleString()],
-            [{ text: "Grand Total", bold: true }, { text: grandTotal.toLocaleString(), bold: true }],
-          ],
-        },
-        layout: "noBorders",
-        margin: [0, 10, 0, 0],
-      },
-      { text: `\nAmount in words: ${poData.amountInWords}`, italics: true },
-      { text: "\nTerms & Conditions", bold: true },
+      { text: "Goods Recipient: " + poData.goodsRecipient, bold: true, margin: [0, 0, 0, 10],
+        lineHeight:1.3
+       },
+
+      { text: "With reference to the above, we are pleased to place an order with you...", margin: [0, 0, 0, 10] },
+
+   
+
+  // ✅ Items Table
+{
+  table: {
+    widths: ["auto", "auto", "*", "auto", "auto", "auto", "auto", "auto", "auto"],
+    body: itemsTable,
+  },
+  layout: horizontalLineLayout,
+},
+
+// ✅ Totals Table (with blank row first)
+{
+  table: {
+    widths: ["*", "auto"],
+    body: [
+      ["", ""], // 🔹 empty row
+      ["Subtotal", { text: subtotal.toFixed(2), alignment: "right" ,margin:[0,0,0,0] }],
+      ["CGST @ 9%", { text: cgst.toFixed(2), alignment: "right" ,margin:[0,0,0,0]}],
+      ["SGST @ 9%", { text: sgst.toFixed(2) , alignment: "right",margin:[80,0,0,0]}],
+      [
+        { text: "Grand Total", bold: true },
+        { text: grandTotal.toFixed(2), bold: true, alignment: "right" },
+      ],
+    ],
+  },
+  layout: horizontalLineLayout,
+  margin: [0, 10, 0, 10],
+},
+
+      { text: `Amount in words:${toWordsInstance.convert(grandTotal.toFixed(2))}`, italics: true },
+
+
+// ✅ Terms BELOW totals
+{ text: `Terms of Payment: ${poData.termsOfPayment}`, bold: true, margin: [0, 10, 0, 0] },
+{ text: `Terms of Delivery: ${poData.termsOfDelivery}`, bold: true, margin: [0, 0, 0, 10] },
+
+
+
+
+
+      { text: "Terms & Conditions", bold: true, margin: [0, 10, 0, 5] },
       { text: poData.terms },
+
       {
         columns: [
           { text: "" },
           {
             stack: [
               { text: "Authorized Signatory", margin: [0, 20, 0, 0] },
-              poData.signPath ? { image: poData.signPath, width: 80 } : {},
+              signBase64 ? { image: signBase64, width: 80 } : {},
             ],
             alignment: "right",
           },
@@ -120,4 +168,5 @@ function generatePurchaseOrder(poData, filePath) {
   pdfDoc.pipe(fs.createWriteStream(filePath));
   pdfDoc.end();
 }
+
 export default generatePurchaseOrder;
