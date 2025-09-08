@@ -126,12 +126,15 @@
         }
         
         .header h2 {
-            font-size: 28px;
-            color: #1e293b;
-            font-weight: 700;
-            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-            -webkit-text-fill-color: transparent;
-        }
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        background-clip: text;           /* Standard */
+        -webkit-background-clip: text;   /* Safari & Chrome */
+        -webkit-text-fill-color: transparent; /* Makes text transparent */
+        color: transparent;              /* Fallback for browsers without support */
+    }
+
         
         .user-info {
             display: flex;
