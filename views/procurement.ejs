@@ -816,15 +816,19 @@
                 <li  class="menu-item" data-tab="status">
                     <i class="fas fa-tasks"></i> Status
                 </li>
+
                 <li class="menu-item" id="logout-btn">
-                    <form action="/logout" method="POST" style="display:inline;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
-                            Logout
-                        </button>
-                    </form>
-                </li>
-                </li>
+                
+    <form action="/logout" method="post">
+<i class="fas fa-sign-out-alt"></i>
+   
+        <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+            Logout
+        </button>
+    </form>
+</li>
+
+                
             </ul>
         </div>
         
@@ -1152,6 +1156,9 @@
                 }
             });
         });
+        
+            
+       
 
         
         // Setup product table functionality
