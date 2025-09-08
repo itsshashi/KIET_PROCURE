@@ -3,7 +3,7 @@ import generatePurchaseOrder from "./print.js"; // adjust path if needed
 
 import dotenv from 'dotenv'
 import express from 'express';
-import bodyParser from 'body-parser';
+
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Pool } from 'pg';
@@ -52,8 +52,8 @@ app.use(session({
     saveUninitialized: false,
     cookie: { secure: false }
 }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 // Serve uploaded PDFs so frontend can view them
 app.use("/uploads", express.static(uploadsDir));
@@ -117,6 +117,7 @@ app.get('/api/orders', async (req, res) => {
                 supplier_name as supplier,
                 supplier_gst,
                 supplier_address,
+                shipping_address,
                 ordered_by as requested_by,
                 date_required,
                 COALESCE(total_amount, 0) as total_amount,
@@ -172,6 +173,9 @@ app.get('/api/orders/:id', async (req, res) => {
                 purchase_order_number as order_id,
                 project_name as project,
                 supplier_name as supplier,
+                supplier_gst,
+                supplier_address,
+                shipping_address,
                 ordered_by as requested_by,
                 date_required,
                 COALESCE(total_amount, 0) as total_amount,
@@ -304,13 +308,16 @@ app.put('/api/orders/:id/items', async (req, res) => {
 app.get('/api/orders/search/filter', async (req, res) => {
     try {
         const { search, supplier, status, dateFrom, dateTo, requester } = req.query;
-        
+
         let query = `
-            SELECT 
+            SELECT
                 id,
                 purchase_order_number as order_id,
                 project_name as project,
                 supplier_name as supplier,
+                supplier_gst,
+                supplier_address,
+                shipping_address,
                 ordered_by as requested_by,
                 date_required,
                 COALESCE(total_amount, 0) as total_amount,
@@ -319,51 +326,51 @@ app.get('/api/orders/search/filter', async (req, res) => {
                 notes,
                 quotation_file,
                 created_at
-            FROM purchase_orders 
+            FROM purchase_orders
             WHERE 1=1
         `;
-        
+
         let params = [];
         let paramCount = 0;
-        
+
         if (search) {
             paramCount++;
             query += ` AND (purchase_order_number ILIKE $${paramCount} OR project_name ILIKE $${paramCount})`;
             params.push(`%${search}%`);
         }
-        
+
         if (supplier && supplier !== 'All Suppliers') {
             paramCount++;
             query += ` AND supplier_name = $${paramCount}`;
             params.push(supplier);
         }
-        
+
         if (status && status !== 'All Statuses') {
             paramCount++;
             query += ` AND status = $${paramCount}`;
             params.push(status.toLowerCase());
         }
-        
+
         if (dateFrom) {
             paramCount++;
             query += ` AND date_required >= $${paramCount}`;
             params.push(dateFrom);
         }
-        
+
         if (dateTo) {
             paramCount++;
             query += ` AND date_required <= $${paramCount}`;
             params.push(dateTo);
         }
-        
+
         if (requester && requester !== 'All Requesters') {
             paramCount++;
             query += ` AND ordered_by = $${paramCount}`;
             params.push(requester);
         }
-        
+
         query += ' ORDER BY created_at DESC';
-        
+
         const { rows } = await pool.query(query, params);
         res.json(rows);
     } catch (err) {
@@ -444,7 +451,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier} = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier} = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
@@ -479,11 +486,11 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders
             (project_name, project_code_number, purchase_order_number, supplier_name,
-             supplier_gst, supplier_address, urgency, date_required, notes,
+             supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
              ordered_by, quotation_file, total_amount, reference_no, contact, single)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
-             supplierGst, supplierAddress, urgency, dateRequired, notes,
+             supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
              orderedBy, quotationFile, totalAmount, reference_no, contact, single]
         );
 
@@ -665,7 +672,7 @@ app.get('/api/account-details', async (req, res) => {
 
     const { rows } = await pool.query(query, params);
 
-    console.log('Query result rows:', rows);
+    
 
     if (rows.length === 0) {
       return res.json({ message: 'No payment details found' });
@@ -704,6 +711,7 @@ app.get("/status", async (req, res) => {
             supplier_name AS "supplierName",
             supplier_gst AS "supplierGst",
             supplier_address AS "supplierAddress",
+            shipping_address AS "shippingAddress",
             contact,
             single,
             urgency,
@@ -799,7 +807,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!['approved', 'rejected'].includes(status)) {
+  if (!['approved', 'rejected', 'paid'].includes(status)) {
     return res.status(400).json({ error: "Invalid status" });
   }
 
@@ -811,7 +819,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: "Order not found" });
 
-    
+
     res.json({ success: true, order: rows[0] });
   } catch (err) {
     console.error("❌ Error updating status:", err);
@@ -1066,7 +1074,8 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   supplier: {
     name: order.supplier_name,
     address: order.supplier_address,
-    contact: order.contact || order.supplier_gst || "N/A",
+    contact: order.contact  || "N/A",
+    gst:order.supplier_gst||"N/A"
   },
   poNumber: order.po_number,
   date: new Date(order.created_at).toLocaleDateString(),
@@ -1078,8 +1087,8 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     
   },
 
-  shipTo: "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
-  invoiceTo: "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+  shipTo: "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+  invoiceTo: "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
   goodsRecipient: "Kiet-ATPLog1",
 
   termsOfPayment: "45 days net",
@@ -1100,8 +1109,9 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     9. Buyer reserves the right to reject goods or terminate this PO for non-compliance.
   `,
 
-  signPath: "public/images/wt_img.png",
+  signPath: "public/images/signature.png",
   company: { logo: "public/images/page_logo.png" },
+  
 };
 
 

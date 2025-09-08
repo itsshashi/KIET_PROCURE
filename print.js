@@ -2,6 +2,7 @@ import PdfPrinter from "pdfmake";
 import fs from "fs";
 import {ToWords} from 'to-words';
 
+
 const toWordsInstance = new ToWords();
 
 
@@ -88,11 +89,11 @@ function generatePurchaseOrder(poData, filePath) {
           {
             width: "50%",
             stack: [
-              { text: "Supplier Address:", font: 'Times', bold: true, margin: [50,80 , 0, 5] },
-              { text: poData.supplier.name, font: 'Times', margin:[50,0 , 0, 5] },
-              { text: poData.supplier.address, font: 'Times', margin:[50,0 , 0, 5]},
-              { text: `Supplier Number: ${poData.supplier.contact}`, font: 'Times', margin:[50,0 , 0, 5] },
-              { text: `GSTIN: ${poData.supplier.gst}`, font: 'Times', margin:[50,0 , 0, 5] },
+              { text: "Supplier Address:", font: 'Times', bold: true, margin: [30,40 , 0, 5] },
+              { text: poData.supplier.name, font: 'Times', margin:[30,0 , 0, 5] },
+              { text: poData.supplier.address, font: 'Times', margin:[30,0 , 0, 5]},
+              { text: `Supplier Number: ${poData.supplier.contact}`, font: 'Times', margin:[30,0 , 0, 5] },
+              { text: `GSTIN: ${poData.supplier.gst}`, font: 'Times', margin:[30,0 , 0, 15] },
               
               
             ],
@@ -102,29 +103,57 @@ function generatePurchaseOrder(poData, filePath) {
             stack: [
               logoBase64 ? { image: logoBase64, width: 100, alignment: "right" } : {},
               { canvas: [{ type: "line", x1: 0, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
-              { text: "PURCHASE ORDER", font: 'Times', bold: true, alignment: "right", margin: [0, 5, 0, 5] },
-              { text: `PO Number: ${poData.poNumber}`, font: 'Times', alignment: "right" },
-              { text: `Date: ${poData.date}`, font: 'Times', alignment: "right" },
+              { text: "PURCHASE ORDER", font: 'Times', bold: true, alignment: "right", margin: [0, 10, 0, 5] },
+              { text: `PO Number: ${poData.poNumber}`, font: 'Times', alignment: "right",margin: [0, 10, 0, 5]},
+              { text: `Date: ${poData.date}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
              
-              { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" },
-              { text: `Requester Email: ${poData.requester?.email}`, font: 'Times', alignment: "right" },
+              { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
+              { text: `Requester Email: ${poData.requester?.name}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
 
             ],
           },
         ],
       },
+       // Divider line
+{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
 
-      { text: "\nShip-to-address: " + poData.shipTo, font: 'Times', bold: true,
-        lineHeight:1.3
-      },
-      { text: "Invoice address: " + poData.invoiceTo, font: 'Times', bold: true ,
-        lineHeight:1.3
-      },
-      { text: "Goods Recipient: " + poData.goodsRecipient, font: 'Times', bold: true, margin: [0, 0, 0, 10],
-        lineHeight:1.3
-       },
+// Ship-to
+{
+  text: [
+    { text: "Ship-to-address: ", font: 'Times', bold: true },
+    { text: poData.shipTo, font: 'Times', bold: false }
+  ],
+  lineHeight: 1.3,
+  margin: [0, 5, 0, 5]
+},
 
-      { text: "With reference to the above, we are pleased to place an order with you...", font: 'Times', margin: [0, 0, 0, 10] },
+// Divider line
+
+
+// Invoice
+{
+  text: [
+    { text: "Invoice address: ", font: 'Times', bold: true },
+    { text: poData.invoiceTo, font: 'Times', bold: false}
+  ],
+  lineHeight: 1.3,
+  margin: [0, 5, 0, 5]
+},
+
+// Goods Recipient
+{
+  text: [
+    { text: "Goods Recipient: ", font: 'Times', bold: true },
+    { text: poData.goodsRecipient, font: 'Times', bold: false }
+  ],
+  lineHeight: 1.3,
+  margin: [0, 10, 0, 10]
+},
+
+{canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] }
+,
+
+      { text: "With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.", font: 'Times', margin: [0, 10, 0, 20] ,lineHeight:1.2},
 
    
 
@@ -135,6 +164,7 @@ function generatePurchaseOrder(poData, filePath) {
     body: itemsTable,
   },
   layout: horizontalLineLayout,
+  font:"Times"
 },
 
 // ✅ Totals Table (with blank row first)
@@ -142,7 +172,7 @@ function generatePurchaseOrder(poData, filePath) {
   table: {
     widths: ["*", "auto"],
     body: [
-      ["", ""], // 🔹 empty row
+      
       ["Subtotal", { text: subtotal.toFixed(2), alignment: "right" ,margin:[0,0,0,0] }],
       ["CGST @ 9%", { text: cgst.toFixed(2), alignment: "right" ,margin:[0,0,0,0]}],
       ["SGST @ 9%", { text: sgst.toFixed(2) , alignment: "right",margin:[80,0,0,0]}],
@@ -153,314 +183,117 @@ function generatePurchaseOrder(poData, filePath) {
     ],
   },
   layout: horizontalLineLayout,
-  margin: [0, 10, 0, 10],
+  margin: [0, 10, 0, 15],
+  font:"Times"
 },
 
+
       { text: `Amount in words:${toWordsInstance.convert(grandTotal.toFixed(2))}`, font: 'Times', italics: true },
+{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
 
 
 // ✅ Terms BELOW totals
-{ text: `Terms of Payment: ${poData.termsOfPayment}`, font: 'Times', bold: true, margin: [0, 10, 0, 0] },
-{ text: `Terms of Delivery: ${poData.termsOfDelivery}`, font: 'Times', bold: true, margin: [0, 0, 0, 10] },
+{
+
+  text: [
+    { text: 'Terms of Payment: ', font: 'Times', bold: false },
+    { text: poData.termsOfPayment, font: 'Times', bold: true }
+  ],
+  margin: [0, 10, 0, 0]
+},
+
+{
+  text: [
+    { text: 'Terms of Delivery: ', font: 'Times', bold: false },
+    { text: poData.termsOfDelivery, font: 'Times', bold: true }
+  ],
+  margin: [0, 0, 0, 10]
+},
+{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
 
 
+{
+  text: 'Terms & Conditions',
+  style: 'header',
+  margin: [0, 10, 0, 10],
+  bold:false,
+  font:'Times'
+},
+{
+  ol: [
+    { text: 'Acceptance / Modification: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' , 
+      stack: ['Orders are binding only upon written confirmation. Any modifications require mutual agreement.'] },
+    { text: 'Delivery, Shipment & Packaging: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier must ensure timely delivery, safe shipment, and proper packaging to avoid damages.'] },
+    { text: 'Excusable Delay: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Delays due to force majeure (natural disasters, strikes, etc.) may be excused if communicated promptly.'] },
+    { text: 'Delivery Terms / Risk of Loss: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Risk transfers to the buyer only after goods are received in good condition at the agreed location.'] },
+    { text: 'Import / Customs Compliance: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier must comply with applicable import/export and customs regulations.'] },
+    { text: 'Price: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Prices are firm and inclusive of all applicable duties, taxes, and charges unless agreed otherwise.'] },
+    { text: 'Invoicing & Payment: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Invoices must match the purchase order details. Payments will follow agreed terms.'] },
+    { text: 'Inspection: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['All goods are subject to inspection and approval upon delivery. Non-conforming goods may be rejected.'] },
+    { text: 'Warranty: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier warrants that goods are free from defects in material, design, and workmanship.'] },
+    { text: 'Changes: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Buyer reserves the right to request reasonable changes in scope, specifications, or delivery.'] },
+    { text: 'Design & Process Changes: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Any design or process modifications by supplier require prior written approval.'] },
+    { text: 'Termination: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['The buyer may terminate the order for default, insolvency, or breach of contract terms.'] },
+    { text: 'General Indemnification: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier shall indemnify the buyer against any claims arising from negligence or misconduct.'] },
+    { text: 'Intellectual Property Indemnification: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier guarantees that goods do not infringe on any third-party intellectual property rights.'] },
+    { text: 'Insurance: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier must maintain adequate insurance coverage for goods and liabilities.'] },
+    { text: 'Confidentiality: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['All shared business or technical information must be kept strictly confidential.'] },
+    { text: 'Audit: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Buyer reserves the right to audit supplier’s compliance with contractual obligations.'] },
+    { text: 'Compliance with Laws & Integrity: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['Supplier must comply with all applicable laws, regulations, and ethical standards.'] },
+    { text: 'Applicable Law & Forum: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
+      stack: ['This contract shall be governed by applicable law, and disputes settled under the agreed jurisdiction.'] },
+      { text: 'Compliance with Laws: The supplier shall comply with all applicable laws, export regulations, and ethical business practices at all times. Any form of bribery, gratification, or involvement of restricted materials is strictly prohibited.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Material Restrictions: The goods supplied must not contain iron or steel originating from sanctioned countries.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Invoicing: All invoices must exactly match the purchase order details, clearly reference the PO number, and be submitted within three days of issuance.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Payment Terms: Payments will be made within forty-five days from the date of goods receipt or invoice receipt, whichever is applicable.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Delivery Timing & Routing: Deliveries will only be accepted from Monday to Friday between 9:00 AM and 5:00 PM, and must be routed through the designated material gates.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Delivery Documentation: Each delivery must be accompanied by three copies of the invoice to ensure proper processing.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Personnel Requirements: Supplier personnel entering the premises must wear safety shoes and carry valid identification, driving licenses, and vehicle documents.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+    { text: 'Right of Rejection / Termination: The buyer reserves the right to reject goods or terminate the purchase order immediately in the event of non-compliance with these conditions.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
+  ],
+  font: 'Times',
+  fontSize: 10,
+  lineHeight: 1.3
+}
 
 
-
-      { text: "KIET TECHNOLOGIES PVT LTD – TERMS AND CONDITIONS OF PURCHASE", font: 'Times', bold: true, margin: [0, 15, 0, 5] },
       
-      [
-  {
-    text: "1. Acceptance / Modification:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "This Purchase Order (PO) is accepted when the Supplier either confirms it in writing or starts working on it. "
-        + "Any extra terms, conditions, or changes suggested by the Supplier will not apply unless KIET Technologies Pvt Ltd "
-        + "gives written approval and signs them officially.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "2. Delivery, Shipment & Packaging:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "The Supplier must deliver Goods in exact quantities and on the dates mentioned in the PO. "
-        + "On-time delivery is very important (time is of the essence). "
-        + "If items arrive too early or too late, KIET Technologies Pvt Ltd may reject them or keep them at the Supplier’s cost.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "3. Excusable Delay:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Higher material costs or finding other customers with better prices are not valid reasons for delay. "
-        + "If delivery is delayed by more than 14 days, KIET Technologies Pvt Ltd can cancel the PO without liability.",
-   font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "4. Delivery Terms / Risk of Loss:",
-    bold: true,font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Ownership and risk of loss or damage pass based on the agreed delivery terms (F.O.B.). "
-        + "Even if goods are accepted, the Supplier is still responsible if hidden damages are later found.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "5. Import / Customs Compliance:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3},
-  {
-    text: "The Supplier will bear all duties, fees, or freight charges caused by non-compliance with PO conditions.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "6. Drawback:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must provide all documents and assistance needed for KIET Technologies Pvt Ltd to claim duty drawback benefits.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "7. Price:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3},
-  {
-    text: "Prices are fixed and include freight, packaging, and applicable taxes. "
-        + "If Supplier offers lower prices elsewhere for the same goods, KIET Technologies Pvt Ltd must be given the same price.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "8. Invoicing & Payment:",
-    bold: true,font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3},
-  {
-    text: "Invoices must match the PO and show part numbers, quantities, taxes, shipment details, and origin. "
-        + "Payment terms are net 120 days from receipt of a correct invoice.",
-   font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "9. Set Off:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3},
-  {
-    text: "KIET Technologies Pvt Ltd may deduct any amounts owed by the Supplier from payments due under this PO.",
-   font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "10. Inspection:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Goods may be inspected and tested by KIET Technologies Pvt Ltd or its customers. "
-        + "Defective or non-conforming goods may be rejected, replaced, or accepted at a reduced price.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "11. Warranty:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Goods are warranted for 36 months to be defect-free, compliant, merchantable, and fit for use. "
-        + "Supplier must handle recalls, epidemic failures, replacements, and related costs. "
-        + "Services must be professional and safe. No unauthorized use of open-source software.",
-   font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "12. Changes:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "KIET Technologies Pvt Ltd may change drawings, specifications, quantities, shipment methods, or schedules. "
-        + "Supplier must submit claims for adjustments within 7 days.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "13. Design & Process Changes:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier may not change design, materials, processes, or production location without written approval.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "14. Stop Work:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "KIET Technologies Pvt Ltd may order Supplier to stop work for up to 120 days at no cost. "
-        + "Work must restart immediately once notified.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "15. Termination:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "KIET Technologies Pvt Ltd may terminate for breach (10 days cure) or without cause (15 days’ notice). "
-        + "Only accepted goods/services before termination will be paid.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "16. General Indemnification:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must protect and indemnify KIET Technologies Pvt Ltd and its affiliates/customers from any losses, damages, or claims caused by goods, services, negligence, or misconduct.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "17. Intellectual Property Indemnification:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must defend and indemnify KIET Technologies Pvt Ltd against any intellectual property rights infringement claims connected with supplied Goods or Services.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "18. Insurance:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must maintain liability, product, workers’ compensation, and employer’s insurance "
-        + "with coverage at least 10 times the PO value, and provide proof before delivery.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "19. Confidentiality:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "All information shared by KIET Technologies Pvt Ltd is confidential. "
-        + "Supplier must not share or use it without written permission. NDA required.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "20. Audit:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must keep records for 8 years and allow audit access to KIET Technologies Pvt Ltd, regulators, or customers.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "21. Limitation of Liability:",
-    bold: true,font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "KIET Technologies Pvt Ltd is not responsible for indirect, incidental, or consequential damages "
-        + "such as lost profits, downtime, or loss of capital.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "22. Assignment & Subcontracting:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier may not assign or subcontract work without prior written approval. Supplier remains responsible for all work.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "23. Compliance with Laws & Integrity:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must comply with all laws and KIET Technologies Pvt Ltd’s Code of Conduct, "
-        + "including safety, labor, and environmental standards.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "24. Applicable Law & Forum:",
-    bold: true,font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "This PO is governed by Indian law. Disputes will be settled by arbitration in Bangalore (English language). "
-        + "Courts in Bangalore will have jurisdiction if unresolved.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "25. Notices:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "All official notices must be in writing and delivered personally, by courier, or certified mail.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "26. Publicity:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Supplier must not use KIET Technologies Pvt Ltd’s name, logo, or make public announcements "
-        + "without written approval.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "27. Waiver:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "If KIET Technologies Pvt Ltd delays or fails to enforce any term, it does not mean it waives its rights.",
-   font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "28. Severability:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "If any part of this PO is found invalid, the remaining terms will still apply.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  },
-
-  {
-    text: "29. Survival:",
-    bold: true, font: 'Ubuntu', fontSize: 10, margin: [0, 10, 0, 0],lineHeight:1.3
-  },
-  {
-    text: "Important obligations like Price, Payment, Warranty, Indemnity, Confidentiality, Insurance, and Governing Law "
-        + "will remain valid even after the PO ends or is terminated.",
-    font: 'Ubuntu', fontSize: 10, lineHeight: 1.2
-  }
-]
+      
+      
 
       ,{
         columns: [
           { text: "" },
           {
             stack: [
-              { text: "Authorized Signatory", margin: [0, 20, 0, 0] },
-              signBase64 ? { image: signBase64, width: 80 } : {},
+              { text: "**Authorized Signatory**", margin: [0, 20, 0, 0] },
+              signBase64 ? { image: signBase64, width:120  } : {},
             ],
             alignment: "right",
           },
         ],
+
       },
+      {
+        text:"**Computer generated** ",font:"Roboto",fontSize:6,alignment:'center'
+      }
     ],
   };
 

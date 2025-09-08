@@ -599,7 +599,7 @@
         showError('Order ID not found');
         return;
       }
-      
+
       // Find the button that was clicked and disable it
       const buttons = document.querySelectorAll('.paid-btn');
       buttons.forEach(btn => {
@@ -608,7 +608,7 @@
           btn.innerHTML = '<div class="spinner"></div> Processing';
         }
       });
-      
+
       try {
         const response = await fetch(`/api/orders/${item.id}/status`, {
           method: 'PUT',
@@ -616,35 +616,64 @@
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({ status: 'approved' })
+          body: JSON.stringify({ status: 'paid' })
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to update status');
         }
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
           showSuccess();
-          // Refresh the data after successful update
-          setTimeout(() => {
-            fetchAccountDetails();
-          }, 2000);
+          // Remove the order from the table immediately
+          removeOrderFromTable(item.id);
         } else {
           throw new Error('Status update failed');
         }
       } catch (error) {
         console.error('Error updating status:', error);
         showError(error.message || 'Error processing payment');
-        
+
         // Re-enable the button on error
         const buttons = document.querySelectorAll('.paid-btn');
         buttons.forEach(btn => {
           btn.disabled = false;
           btn.textContent = 'Mark as Paid';
         });
+      }
+    }
+
+    function removeOrderFromTable(orderId) {
+      // Find and remove the table row containing this order
+      const tableBody = document.getElementById('accountTableBody');
+      const rows = tableBody.querySelectorAll('tr');
+
+      rows.forEach(row => {
+        // Check if this row contains the order with the matching ID
+        // We need to find the row that has the order data matching this ID
+        const actionCell = row.querySelector('td:last-child');
+        if (actionCell) {
+          const paidBtn = actionCell.querySelector('.paid-btn');
+          if (paidBtn && paidBtn.onclick) {
+            // Extract the item from the onclick function to check the ID
+            const onclickString = paidBtn.onclick.toString();
+            if (onclickString.includes(`item.id`) && onclickString.includes(orderId)) {
+              row.remove();
+              return;
+            }
+          }
+        }
+      });
+
+      // Update the accountData array to remove this item
+      accountData = accountData.filter(item => item.id !== orderId);
+
+      // Check if table is now empty and show "no data" message if needed
+      if (accountData.length === 0) {
+        document.getElementById('noDataMessage').style.display = 'block';
       }
     }
 
