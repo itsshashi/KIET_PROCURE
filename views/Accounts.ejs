@@ -595,56 +595,44 @@
     }
 
     async function markAsPaid(item) {
-      if (!item.id) {
-        showError('Order ID not found');
-        return;
-      }
+  if (!item.id) {
+    showError('Order ID not found');
+    return;
+  }
 
-      // Find the button that was clicked and disable it
-      const buttons = document.querySelectorAll('.paid-btn');
-      buttons.forEach(btn => {
-        if (btn.textContent === 'Mark as Paid') {
-          btn.disabled = true;
-          btn.innerHTML = '<div class="spinner"></div> Processing';
-        }
-      });
+  try {
+    const response = await fetch(`/api/orders/${item.id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ status: 'paid' })
+    });
 
-      try {
-        const response = await fetch(`/api/orders/${item.id}/status`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'paid' })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update status');
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-          showSuccess();
-          // Remove the order from the table immediately
-          removeOrderFromTable(item.id);
-        } else {
-          throw new Error('Status update failed');
-        }
-      } catch (error) {
-        console.error('Error updating status:', error);
-        showError(error.message || 'Error processing payment');
-
-        // Re-enable the button on error
-        const buttons = document.querySelectorAll('.paid-btn');
-        buttons.forEach(btn => {
-          btn.disabled = false;
-          btn.textContent = 'Mark as Paid';
-        });
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update status');
     }
+
+    const result = await response.json();
+
+    if (result.success) {
+      showSuccess();
+
+      // ✅ Remove from local data
+      accountData = accountData.filter(order => order.id !== item.id);
+
+      // ✅ Refresh the table
+      populateTable();
+    } else {
+      throw new Error('Status update failed');
+    }
+  } catch (error) {
+    console.error('Error updating status:', error);
+    showError(error.message || 'Error processing payment');
+  }
+}
 
     function removeOrderFromTable(orderId) {
       // Find and remove the table row containing this order

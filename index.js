@@ -33,13 +33,9 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host:process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port:process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
-
 
 
 // =============================
@@ -637,7 +633,8 @@ app.get('/api/account-details', async (req, res) => {
     // Build the base query to fetch purchase orders with status 'sent', left join with inventory_entries for bank details
     let query = `
       SELECT
-        po.po_number,
+        po.id as id,
+        po.po_number as po_number,
         po.supplier_name,
         po.terms_of_payment,
         po.total_amount as amount,
@@ -668,7 +665,7 @@ app.get('/api/account-details', async (req, res) => {
     // Order the results by creation date, descending
     query += ' ORDER BY po.created_at DESC';
 
-    console.log('Executing query:', query, 'with params:', params);
+    
 
     const { rows } = await pool.query(query, params);
 

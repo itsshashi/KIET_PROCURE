@@ -398,58 +398,162 @@
         }
         
         /* Order Tracking Visualization - Enhanced */
-        .tracking-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 950px;
-            margin: 40px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            border: 1px solid #f1f5f9;
-        }
+       .tracking-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 950px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid #f1f5f9;
+}
 
-        .tracking-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 60px;
-            right: 60px;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            z-index: 1;
-            transform: translateY(-50%);
-        }
+.tracking-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 60px;
+    right: 60px;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    z-index: 1;
+    transform: translateY(-50%);
+}
 
-        #progressBar {
-            position: absolute;
-            top: 50%;
-            left: 60px;
-            height: 8px;
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
-            border-radius: 4px;
-            z-index: 2;
-            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateY(-50%);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
-        }
+#progressBar {
+    position: absolute;
+    top: 50%;
+    left: 60px;
+    height: 8px;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    border-radius: 4px;
+    z-index: 2;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-50%);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    width: 0; /* Start with 0 width */
+}
 
-        .tracking-steps {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            z-index: 3;
-            padding: 0 30px;
-        }
+.tracking-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 3;
+    padding: 0 30px;
+}
 
-        .tracking-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }
+.tracking-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.step-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    color: #94a3b8;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 4;
+}
+
+.step-label {
+    font-size: 14px;
+    text-align: center;
+    color: #64748b;
+    font-weight: 500;
+    transition: all 0.4s ease;
+    margin-top: 8px;
+}
+
+/* Active and completed states */
+.step-icon.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border-color: #bfdbfe;
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.step-icon.completed {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border-color: #a7f3d0;
+    transform: scale(1.1);
+}
+
+.step-icon.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px;
+    color: white;
+    animation: checkmark 0.8s ease-in-out;
+}
+
+.step-label.active {
+    color: #2563eb;
+    font-weight: 600;
+    transform: translateY(-2px);
+}
+
+.step-label.completed {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .tracking-wrapper::before {
+        left: 40px;
+        right: 40px;
+    }
+    
+    #progressBar {
+        left: 40px;
+    }
+    
+    .tracking-steps {
+        padding: 0 20px;
+    }
+    
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+    }
+    
+    .step-label {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tracking-wrapper {
+        overflow-x: auto; /* Allow horizontal scrolling on small screens */
+    }
+    
+    .tracking-steps {
+        min-width: 700px; /* Ensure all steps are visible when scrolling */
+    }
+}
 
         .step-icon {
             width: 60px;
@@ -1048,8 +1152,12 @@
                 <div class="step-icon">5</div>
                 <span class="step-label">Received</span>
                 </div>
+                   <div class="tracking-step">
+      <div class="step-icon">6</div>
+      <span class="step-label">Paid</span>
+    </div>
                 <div class="tracking-step">
-                    <div class="step-icon">6</div>
+                    <div class="step-icon">7</div>
                
                 <span class="step-label">Rejected</span>
                 </div>
@@ -1369,7 +1477,8 @@
                 approved: 3,
                 sent: 4,
                 received: 5,
-                rejected: 6
+                paid:6,
+                rejected: 7
             };
 
             const progressBar = document.getElementById('progressBar');
