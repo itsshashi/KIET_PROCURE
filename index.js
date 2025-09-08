@@ -1191,9 +1191,8 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
 
 
 
-
+const PORT = process.env.PORT || 3000; // use Render's PORT if available
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 // =============================
 // START SERVER
-// =============================
-app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
