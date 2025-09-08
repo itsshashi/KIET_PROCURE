@@ -418,7 +418,7 @@ app.post('/submit', async (req, res) => {
                 res.render('Security.ejs', { user, out_fl: email, message: "Login Successful ✅" });
                 break;
             case "Inventory":
-                res.render('Inventry.ejs', { user, out_fl: email, message: "Login Successful ✅" });
+                res.render('Inventory.ejs', { user, out_fl: email, message: "Login Successful ✅" });
                 break;
             case "Accounts":
                 res.render('Accounts.ejs', { user, out_fl: email, message: "Login Successful ✅" });
