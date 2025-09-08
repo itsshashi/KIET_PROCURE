@@ -1,10 +1,9 @@
-# render.yaml - place this in the root of your repo
 services:
-  - type: web          # type of service: web service
-    name: kiet-procure # name of the service on Render
-    env: node          # environment (node, python, static, etc.)
-    plan: free         # choose free, starter, or standard
-    region: oregon     # optional: choose deployment region
-    branch: master     # branch to deploy from
-    buildCommand: npm install    # command to build your app
-    startCommand: npm start      # command to start your app
+  - type: web
+    name: kiet-procure
+    env: node
+    plan: free
+    region: oregon
+    branch: master
+    buildCommand: npm install
+    startCommand: npm start
