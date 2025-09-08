@@ -1,17 +1,6 @@
-# Fix Logout Button in procurement.ejs
+# TODO: Modify PDF Generation to Fetch Requester Name from Users Table
 
 ## Tasks
-- [x] Analyze logout button implementation
-- [ ] Fix form structure and button placement
-- [ ] Test logout functionality
-
-## Current Issues
-- Form tag is improperly structured
-- Button is not inside the form
-- Inline styles may interfere with functionality
-
-## Plan
-1. Restructure the logout form to properly contain the button
-2. Ensure form action="/logout" method="POST" is correct
-3. Remove problematic inline styles
-4. Verify the button works after changes
+- [ ] Modify /api/orders/:id/pdf route in index.js to query users table for name where email matches order.ordered_by
+- [ ] Update poData.requester.name to use fetched name, with fallback to email if not found
+- [ ] Test PDF generation to verify name displays correctly

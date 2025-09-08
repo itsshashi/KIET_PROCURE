@@ -621,6 +621,75 @@ app.post("/reset-password/:token", async (req, res) => {
 
 
 
+app.get('/api/account-details', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+
+  try {
+    // Build the base query to fetch purchase orders with status 'sent', left join with inventory_entries for bank details
+    let query = `
+      SELECT
+        po.po_number,
+        po.supplier_name,
+        po.terms_of_payment,
+        po.total_amount as amount,
+        ie.supplier_account_number,
+        ie.supplier_account_name,
+        ie.supplier_ifsc_code
+      FROM purchase_orders po
+      LEFT JOIN inventory_entries ie ON po.id = ie.purchase_order_id
+      WHERE po.status IN ( 'inventory_processed')
+    `;
+    let params = [];
+    let paramCount = 0;
+
+    // If po_number is provided, filter by it
+    if (req.query.po_number && typeof req.query.po_number === 'string' && req.query.po_number.trim() && req.query.po_number !== '[object Event]') {
+      paramCount++;
+      query += ` AND po.purchase_order_number = $${paramCount}`;
+      params.push(req.query.po_number.trim());
+    }
+
+    // If the user role is not 'Accounts', restrict results to orders placed by the logged-in user
+    if (req.session.user.role !== 'Accounts') {
+      paramCount++;
+      query += ` AND po.ordered_by = $${paramCount}`;
+      params.push(req.session.user.email);
+    }
+
+    // Order the results by creation date, descending
+    query += ' ORDER BY po.created_at DESC';
+
+    console.log('Executing query:', query, 'with params:', params);
+
+    const { rows } = await pool.query(query, params);
+
+    console.log('Query result rows:', rows);
+
+    if (rows.length === 0) {
+      return res.json({ message: 'No payment details found' });
+    }
+
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Error fetching account details:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get("/status", async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in" });
@@ -937,30 +1006,6 @@ app.get("/api/all-quotations", async (req, res) => {
 
 
 
-app.put('/api/orders/:id/status', async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // Validate status
-  if (!['approved', 'rejected'].includes(status)) {
-    return res.status(400).json({ error: "Invalid status" });
-  }
-
-  try {
-    const { rows } = await pool.query(
-      `UPDATE purchase_orders SET status=$1 WHERE id=$2 RETURNING *`,
-      [status, id]
-    );
-
-    if (!rows.length) return res.status(404).json({ error: "Order not found" });
-
-    
-    res.json({ success: true, order: rows[0] });
-  } catch (err) {
-    console.error("❌ Error updating status:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 
 

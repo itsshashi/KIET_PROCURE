@@ -13,17 +13,20 @@
             box-sizing: border-box;
             font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
         body {
             background-color: #f8fafc;
             color: #334155;
             line-height: 1.6;
+            
         }
         
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
+  .container {
+    display: flex;
+    flex-wrap: wrap; /* <-- allows sidebar & content to stack */
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden; /* avoid horizontal scroll */
+}
         
         /* Sidebar Styles - Enhanced */
         .sidebar {
@@ -35,6 +38,10 @@
             position: relative;
             overflow: hidden;
             z-index: 10;
+            
+            flex-shrink: 0;
+            width: 280px;
+            max-width: 100%;
         }
         
         .sidebar::before {
@@ -284,8 +291,11 @@
             border-left: 5px solid #3b82f6;
             position: relative;
             overflow: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
-        
+
         .status-card::after {
             content: '';
             position: absolute;
@@ -297,7 +307,7 @@
             transform: translateY(-100%);
             transition: all 0.5s ease;
         }
-        
+
         .status-card:hover::after {
             transform: translateY(0);
         }
@@ -365,6 +375,9 @@
             margin-bottom: 12px;
             color: #475569;
             display: flex;
+            flex-wrap: wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .status-body strong {
@@ -885,7 +898,11 @@
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" ></textarea>
     <label for="reference_no">Ref number *</label>
     <input style="height: 25px;" type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
+  </div>
 
+  <div class="form-group">
+    <label for="termsOfPayment">Terms of Payment *</label>
+    <input type="text" class="form-control" id="termsOfPayment" name="termsOfPayment" placeholder="e.g., 45 days net" required>
   </div>
     <div class="checky">
       <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
@@ -1040,60 +1057,43 @@
 
     <script>
         // Sample data for orders
-        
         let orders = [];
 
         async function fetchOrders() {
-        try {
-            const res = await fetch("/status");
-            if (!res.ok) throw new Error("Failed to fetch orders");
+            try {
+                const res = await fetch("/status");
+                if (!res.ok) throw new Error("Failed to fetch orders");
 
-            orders = await res.json();
-            renderStatusCards();
-            updateOrderTracking();
-        } catch (err) {
-            console.error("❌ Error fetching orders:", err);
-            document.getElementById("statusCardsContainer").innerHTML =
-            "<p>Could not load your orders.</p>";
+                orders = await res.json();
+                renderStatusCards();
+                updateOrderTracking();
+            } catch (err) {
+                console.error("❌ Error fetching orders:", err);
+                document.getElementById("statusCardsContainer").innerHTML =
+                "<p>Could not load your orders.</p>";
+            }
         }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-        // load from backend instead of using sample orders
-        fetchOrders();
-
-        setupProductTable();
-        setupOrderTracking();
-
-        document.getElementById("statusFilter").addEventListener("change", renderStatusCards);
-        });
-
-        
-
-
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set current date as default for date requested
             const today = new Date().toISOString().split('T')[0];
-            
-            // Initialize status cards
-            renderStatusCards();
-            
+            document.getElementById('dateRequired').value = today;
+
+            // Load orders from backend
+            fetchOrders();
+
             // Setup product table functionality
             setupProductTable();
-            
+
             // Setup order tracking visualization
             setupOrderTracking();
-        
-            
+
             // Setup filter handlers
             document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
-            
-            // Form submission handling - UPDATED FOR FILE UPLOAD
 
+            // Form submission handling - UPDATED FOR FILE UPLOAD
             const orderForm = document.getElementById("orderForm");
-        });
 
             orderForm.addEventListener("submit", async function(e) {
                 e.preventDefault();
@@ -1129,6 +1129,7 @@
                     alert("Order submission failed!");
                 }
             });
+        });
         
 
 
@@ -1419,12 +1420,6 @@
                     <div class="status-body">
                         <p><strong>Project:</strong> ${order.projectName}</p>
                         <p><strong>Supplier:</strong> ${order.supplierName}</p>
-                        <p><strong>Requested By:</strong> ${order.requestedBy}</p>
-                        <p><strong>Date Required:</strong> ${new Date(order.dateRequired).toLocaleDateString()}</p>
-                        <p><strong>Urgency:</strong> ${order.urgency}</p>
-                        
-                        <p><strong>Notes:</strong> ${order.notes || 'N/A'}</p>
-                    </div>
                     
                 `;
 
@@ -1471,3 +1466,4 @@
     </script>
 </body>
 </html>
+        

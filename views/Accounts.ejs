@@ -2,675 +2,685 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Account Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #1a73e8;
-      --primary-dark: #0d47a1;
-      --secondary: #e63946;
-      --success: #28a745;
-      --warning: #ffc107;
-      --danger: #dc3545;
-      --light: #f8f9fa;
-      --dark: #343a40;
-      --gray: #6c757d;
-      --light-gray: #e9ecef;
-    }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f6f9;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      color: #333;
       margin: 0;
       padding: 0;
-      color: #333;
-      line-height: 1.6;
     }
 
-    /* Header */
-    .header {
+    /* Navbar */
+    .navbar {
+      background: #1e40af;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 15px 20px;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+      padding: 12px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
-
-    .header img {
-      height: 100px;
-      margin-left: 2%;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-
-    .logout-btn {
-      background: var(--secondary);
-      border: none;
-      padding: 10px 18px;
-      color: white;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .logout-btn:hover {
-      background: #c82333;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Main Content */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .page-title {
-      text-align: center;
-      color: var(--dark);
-      margin: 20px 0;
-      font-size: 28px;
-      position: relative;
-      padding-bottom: 10px;
-    }
-    
-    .page-title:after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: var(--primary);
-      border-radius: 2px;
-    }
-    
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 3fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    @media (max-width: 992px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    /* Sidebar */
-    .sidebar {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    
-    .account-summary {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--light-gray);
-      margin-bottom: 20px;
-    }
-    
-    .account-summary .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      margin: 0 auto 15px;
-    }
-    
-    .account-summary h3 {
-      margin-bottom: 5px;
-      color: var(--dark);
-    }
-    
-    .account-summary p {
-      color: var(--gray);
-      margin-bottom: 10px;
-    }
-    
-    .account-detail {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--light-gray);
-    }
-    
-    .account-detail:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-    
-    .account-detail .label {
-      color: var(--gray);
-      font-weight: 500;
-    }
-    
-    .account-detail .value {
-      font-weight: 600;
-      color: var(--dark);
-    }
-    
-    /* Main Content Area */
-    .content-area {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    
-    .section-title {
-      font-size: 20px;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--light-gray);
-      color: var(--primary-dark);
+    .navbar .logo {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+    .navbar img {
+      width: 140px;
+      height: 120px;
+      border-radius: 50%;
     }
-    
-    .filter-btn {
-      padding: 8px 16px;
-      background: var(--light);
-      border: 1px solid var(--light-gray);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
+    .navbar h2 {
+      font-size: 20px;
+      margin: 0;
     }
-    
-    .filter-btn.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-    
-    .filter-btn:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-    
-    .search-box {
+    .navbar .user-section {
       display: flex;
       align-items: center;
-      background: var(--light);
-      padding: 8px 15px;
-      border-radius: 30px;
-      width: 100%;
-      max-width: 300px;
-      margin-left: auto;
+      gap: 15px;
+      font-size: 16px;
     }
-    
-    .search-box input {
+    .logout-btn {
+      background: #ef4444;
       border: none;
-      background: transparent;
-      padding: 5px;
-      width: 100%;
-      outline: none;
+      padding: 6px 14px;
+      color: white;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
     }
-    
-    /* Table Styles */
-    .table-responsive {
-      overflow-x: auto;
+    .logout-btn:hover {
+      background: #dc2626;
     }
-    
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #1e293b;
+      margin-bottom: 30px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
-    }
-    
-    th, td {
-      padding: 15px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    
-    th {
-      background: var(--primary);
-      color: white;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-    }
-    
-    tr {
-      transition: all 0.3s ease;
-    }
-    
-    tr:hover {
-      background-color: #f8f9fa;
-    }
-    
-    /* Status Badges */
-    .status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 30px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .status-paid {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-overdue {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .status-processing {
-      background: #cce5ff;
-      color: #004085;
-    }
-    
-    /* Action Buttons */
-    .action-btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 13px;
-      margin-right: 5px;
-    }
-    
-    .view-btn {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .download-btn {
-      background: var(--success);
-      color: white;
-    }
-    
-    .action-btn:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-    }
-    
-    /* Pagination */
-    .pagination {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
-      gap: 8px;
-    }
-    
-    .pagination-btn {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--light-gray);
-      border-radius: 6px;
       background: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    thead {
+      background: #1e40af;
+      color: white;
+    }
+    th, td {
+      padding: 14px 18px;
+      text-align: center;
+    }
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .pay-btn, .paid-btn {
+      border: none;
+      padding: 8px 16px;
+      color: white;
+      font-size: 14px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.3s ease;
     }
-    
-    .pagination-btn.active {
-      background: var(--primary);
+    .pay-btn {
+      background: #22c55e;
+      margin-right: 8px;
+    }
+    .pay-btn:hover {
+      background: #16a34a;
+    }
+    .paid-btn {
+      background: #3b82f6;
+    }
+    .paid-btn:hover {
+      background: #2563eb;
+    }
+    .paid-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 14px;
+      width: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: slideIn 0.4s ease;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #1e293b;
+    }
+    .bank-details {
+      text-align: left;
+      margin: 15px 0;
+      font-size: 16px;
+    }
+    .close-btn {
+      margin-top: 20px;
+      background: #ef4444;
+      border: none;
+      padding: 8px 16px;
       color: white;
-      border-color: var(--primary);
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
     }
-    
-    .pagination-btn:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
+    .close-btn:hover {
+      background: #dc2626;
     }
-    
-    /* Toast Notification */
-    .toast {
+
+    /* Payment Done Popup */
+    .done-popup {
+      display: none;
       position: fixed;
       top: 20px;
       right: 20px;
-      padding: 15px 25px;
-      background: var(--success);
+      background: #16a34a;
       color: white;
+      padding: 12px 20px;
       border-radius: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transform: translateX(150%);
-      transition: transform 0.5s ease;
-      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-weight: 500;
+      animation: fadeInOut 3s ease forwards;
+      z-index: 1001;
     }
     
-    .toast.show {
-      transform: translateX(0);
+    .error-popup {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-weight: 500;
+      animation: fadeInOut 3s ease forwards;
+      z-index: 1001;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #3b82f6;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 10px;
+      vertical-align: middle;
     }
     
-    .toast.error {
-      background: var(--danger);
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
-    
-    /* Animations */
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(10px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    
-    .pulse {
-      animation: pulse 0.5s ease;
-    }
-    
-    /* Responsive */
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-      .header {
+      .navbar {
         flex-direction: column;
-        text-align: center;
-        gap: 15px;
+        padding: 10px 15px;
+      }
+      .navbar .logo {
+        margin-bottom: 10px;
+      }
+      .navbar img {
+        width: 100px;
+        height: 80px;
+      }
+      .navbar h2 {
+        font-size: 18px;
+      }
+      .navbar .user-section {
+        font-size: 14px;
+        gap: 10px;
+      }
+      .logout-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+      }
+
+      .container {
+        max-width: 95%;
+        margin: 20px auto;
         padding: 15px;
       }
-      
-      .header img {
-        margin: 0;
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
       }
-      
-      .filters {
+
+      .container > div {
+        margin-bottom: 15px;
+      }
+      #poSearch {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      .container > div button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      table {
+        font-size: 14px;
+      }
+      th, td {
+        padding: 10px 8px;
+      }
+      .pay-btn, .paid-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-right: 5px;
+      }
+
+      .modal-content {
+        width: 90%;
+        padding: 20px;
+      }
+      .bank-details {
+        font-size: 14px;
+      }
+      .close-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+      }
+
+      .done-popup, .error-popup {
+        padding: 10px 15px;
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 8px 10px;
+      }
+      .navbar img {
+        width: 80px;
+        height: 60px;
+      }
+      .navbar h2 {
+        font-size: 16px;
+      }
+      .navbar .user-section {
+        font-size: 12px;
         flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
       }
-      
-      .search-box {
+      .logout-btn {
+        align-self: flex-end;
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+
+      .container {
         max-width: 100%;
-        margin: 10px 0;
+        margin: 15px auto;
+        padding: 10px;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 15px;
+      }
+
+      #poSearch {
+        font-size: 14px;
+        padding: 8px;
+      }
+      .container > div button {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
+
+      table {
+        font-size: 12px;
+        overflow-x: auto;
+        display: block;
+        white-space: nowrap;
+      }
+      thead, tbody, tr, th, td {
+        display: block;
+      }
+      thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }
+      tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        border-radius: 8px;
+      }
+      td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        text-align: left;
+      }
+      td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+      }
+      .pay-btn, .paid-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+        margin-right: 5px;
+        margin-top: 5px;
+      }
+
+      .modal {
+        align-items: flex-start;
+        padding-top: 20px;
+      }
+      .modal-content {
+        width: 95%;
+        max-width: none;
+        padding: 15px;
+        border-radius: 10px;
+      }
+      .bank-details {
+        font-size: 13px;
+      }
+      .close-btn {
+        padding: 5px 12px;
+        font-size: 11px;
+      }
+
+      .done-popup, .error-popup {
+        padding: 8px 12px;
+        font-size: 12px;
       }
     }
   </style>
 </head>
 <body>
-  
-  <!-- Header -->
-  <div class="header">
-    <img src="images/wt_img.png" alt="Company Logo">
-    <div class="user-info">
-      <div class="user-avatar">RG</div>
-      <span>RAGHAVENDRA</span>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo">
+      <img src="images/wt_img.png" alt="Company Logo">
+    </div>
+    <div class="user-section">
+      <span><i class="fa fa-user"></i> accounts@kietsindia.com</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
 
+  <!-- Main Container -->
   <div class="container">
-    <h1 class="page-title">Account Dashboard</h1>
-    
-    <div class="dashboard">
-      <!-- Sidebar with Account Summary -->
-      <div class="sidebar">
-        <div class="account-summary">
-          <div class="avatar">RG</div>
-          <h3>Raghavendra</h3>
-          <p>Account Manager</p>
-          <div class="status-badge status-paid">Active Account</div>
-        </div>
-        
-        <h3>Account Details</h3>
-        
-        <div class="account-detail">
-          <span class="label">Account ID:</span>
-          <span class="value">ACCT-789456</span>
-        </div>
-        
-        <div class="account-detail">
-          <span class="label">Credit Limit:</span>
-          <span class="value">$50,000.00</span>
-        </div>
-        
-        <div class="account-detail">
-          <span class="label">Current Balance:</span>
-          <span class="value">$12,345.67</span>
-        </div>
-        
-        <div class="account-detail">
-          <span class="label">Payment Terms:</span>
-          <span class="value">Net 30</span>
-        </div>
-        
-        <div class="account-detail">
-          <span class="label">Last Payment:</span>
-          <span class="value">Aug 15, 2023</span>
-        </div>
-        
-        <div class="account-detail">
-          <span class="label">Account Since:</span>
-          <span class="value">Jan 12, 2018</span>
-        </div>
-      </div>
-      
-      <!-- Main Content Area -->
-      <div class="content-area">
-        <div class="section-title">
-          <i class="fas fa-file-invoice-dollar"></i>
-          Payment History & PO Status
-        </div>
-        
-        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
-          <div class="filters">
-            <button class="filter-btn active">All</button>
-            <button class="filter-btn">Paid</button>
-            <button class="filter-btn">Pending</button>
-            <button class="filter-btn">Overdue</button>
-          </div>
-          
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search PO number...">
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>PO Number</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>PO-78945</td>
-                <td>Aug 20, 2023</td>
-                <td>Construction Materials Order</td>
-                <td>$8,450.00</td>
-                <td><span class="status-badge status-paid">Paid</span></td>
-                <td>
-                  <button class="action-btn view-btn">View</button>
-                  <button class="action-btn download-btn">Download</button>
-                </td>
-              </tr>
-              <tr>
-                <td>PO-78231</td>
-                <td>Aug 18, 2023</td>
-                <td>Electrical Components</td>
-                <td>$3,215.50</td>
-                <td><span class="status-badge status-processing">Processing</span></td>
-                <td>
-                  <button class="action-btn view-btn">View</button>
-                </td>
-              </tr>
-              <tr>
-                <td>PO-78102</td>
-                <td>Aug 10, 2023</td>
-                <td>Hardware Supplies</td>
-                <td>$1,578.25</td>
-                <td><span class="status-badge status-pending">Pending</span></td>
-                <td>
-                  <button class="action-btn view-btn">View</button>
-                </td>
-              </tr>
-              <tr>
-                <td>PO-77986</td>
-                <td>Jul 28, 2023</td>
-                <td>Tools and Equipment</td>
-                <td>$5,220.00</td>
-                <td><span class="status-badge status-overdue">Overdue</span></td>
-                <td>
-                  <button class="action-btn view-btn">View</button>
-                  <button class="action-btn download-btn">Download</button>
-                </td>
-              </tr>
-              <tr>
-                <td>PO-77654</td>
-                <td>Jul 15, 2023</td>
-                <td>Safety Equipment</td>
-                <td>$2,150.75</td>
-                <td><span class="status-badge status-paid">Paid</span></td>
-                <td>
-                  <button class="action-btn view-btn">View</button>
-                  <button class="action-btn download-btn">Download</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="pagination">
-          <button class="pagination-btn"><i class="fas fa-chevron-left"></i></button>
-          <button class="pagination-btn active">1</button>
-          <button class="pagination-btn">2</button>
-          <button class="pagination-btn">3</button>
-          <button class="pagination-btn"><i class="fas fa-chevron-right"></i></button>
-        </div>
-      </div>
+    <h1>Account Dashboard</h1>
+    <div style="margin-bottom: 20px;">
+      <label for="poSearch">Search by PO Number:</label>
+      <input type="text" id="poSearch" placeholder="Enter PO Number" style="margin-left: 10px; padding: 5px;">
+      <button onclick="searchByPO()" style="margin-left: 10px; padding: 5px 10px;">Search</button>
+      <button onclick="clearSearch()" style="margin-left: 10px; padding: 5px 10px;">Clear</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>PO Number</th>
+          <th>Supplier</th>
+          <th>Amount to Pay</th>
+          <th>Terms to Pay</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="accountTableBody">
+        <!-- Data will be populated here -->
+      </tbody>
+    </table>
+    <div id="noDataMessage" style="text-align: center; margin-top: 20px; display: none;">
+      No payment details found.
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div class="toast" id="toast">
-    <span>✅ Payment status updated successfully!</span>
+  <!-- Modal -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content">
+      <h2>Supplier Bank Details</h2>
+      <div class="bank-details" id="bankDetails"></div>
+      <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- Payment Done Popup -->
+  <div class="done-popup" id="donePopup">
+    ✅ Payment Done Successfully!
+  </div>
+  
+  <!-- Error Popup -->
+  <div class="error-popup" id="errorPopup">
+    ❌ Error processing payment
   </div>
 
   <script>
-    // Filter buttons functionality
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        filterButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        showToast('Filter applied: ' + button.textContent);
-      });
-    });
-    
-    // Action buttons functionality
-    const viewButtons = document.querySelectorAll('.view-btn');
-    viewButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const poNumber = button.closest('tr').querySelector('td:first-child').textContent;
-        showToast('Viewing details for: ' + poNumber);
-      });
-    });
-    
-    // Download buttons functionality
-    const downloadButtons = document.querySelectorAll('.download-btn');
-    downloadButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const poNumber = button.closest('tr').querySelector('td:first-child').textContent;
-        showToast('Downloading invoice for: ' + poNumber);
-      });
-    });
-    
-    // Pagination buttons functionality
-    const paginationButtons = document.querySelectorAll('.pagination-btn');
-    paginationButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        if (!button.querySelector('i')) {
-          paginationButtons.forEach(btn => btn.classList.remove('active'));
-          button.classList.add('active');
-          showToast('Page ' + button.textContent + ' loaded');
+    let accountData = [];
+    let currentOrderId = null;
+
+    async function fetchAccountDetails(poNumber = '') {
+      try {
+        document.getElementById('noDataMessage').style.display = 'none';
+        
+        let url = '/api/account-details';
+        if (poNumber) {
+          url += `?po_number=${encodeURIComponent(poNumber)}`;
         }
-      });
-    });
-    
-    // Show toast notification
-    function showToast(message, isError = false) {
-      const toast = document.getElementById('toast');
-      toast.querySelector("span").textContent = message;
+        
+        const response = await fetch(url, { credentials: 'include' });
+        
+        if (response.status === 401) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '/';
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch account details');
+        }
+        
+        const data = await response.json();
+        
+        if (data.message) {
+          document.getElementById('noDataMessage').style.display = 'block';
+          accountData = [];
+          populateTable();
+          return;
+        }
+        
+        accountData = data;
+        populateTable();
+      } catch (error) {
+        console.error('Error fetching account details:', error);
+        document.getElementById('noDataMessage').style.display = 'block';
+        accountData = [];
+        populateTable();
+      }
+    }
+
+    function searchByPO() {
+      const poNumber = document.getElementById('poSearch').value.trim();
+      fetchAccountDetails(poNumber);
+    }
+
+    function clearSearch() {
+      document.getElementById('poSearch').value = '';
+      fetchAccountDetails();
+    }
+
+    function populateTable() {
+      const tbody = document.getElementById('accountTableBody');
+      tbody.innerHTML = '';
       
-      if (isError) {
-        toast.classList.add("error");
-      } else {
-        toast.classList.remove("error");
+      if (accountData.length === 0) {
+        document.getElementById('noDataMessage').style.display = 'block';
+        return;
       }
       
-      toast.classList.add("show");
+      document.getElementById('noDataMessage').style.display = 'none';
       
-      setTimeout(() => {
-        toast.classList.remove("show");
+      accountData.forEach(item => {
+        const tr = document.createElement('tr');
+
+        // PO Number
+        const poNumberTd = document.createElement('td');
+        poNumberTd.setAttribute('data-label', 'PO Number');
+        poNumberTd.textContent = item.po_number || 'N/A';
+        tr.appendChild(poNumberTd);
+
+        // Supplier
+        const supplierTd = document.createElement('td');
+        supplierTd.setAttribute('data-label', 'Supplier');
+        supplierTd.textContent = item.supplier_name || 'N/A';
+        tr.appendChild(supplierTd);
+
+        // Amount
+        const amountTd = document.createElement('td');
+        amountTd.setAttribute('data-label', 'Amount to Pay');
+        amountTd.textContent = `₹${item.amount ? parseFloat(item.amount).toFixed(2) : '0.00'}`;
+        tr.appendChild(amountTd);
+
+        // Terms
+        const termsTd = document.createElement('td');
+        termsTd.setAttribute('data-label', 'Terms to Pay');
+        termsTd.textContent = item.terms_of_payment || 'N/A';
+        tr.appendChild(termsTd);
+
+        // Action buttons
+        const actionTd = document.createElement('td');
+        actionTd.setAttribute('data-label', 'Action');
+
+        // Pay button
+        const payBtn = document.createElement('button');
+        payBtn.className = 'pay-btn';
+        payBtn.textContent = 'View Bank Details';
+        payBtn.onclick = () => openModal(item);
+        actionTd.appendChild(payBtn);
+
+        // Paid button
+        const paidBtn = document.createElement('button');
+        paidBtn.className = 'paid-btn';
+        paidBtn.textContent = 'Mark as Paid';
+        paidBtn.onclick = () => markAsPaid(item);
+        actionTd.appendChild(paidBtn);
+
+        tr.appendChild(actionTd);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModal(item) {
+      if (!item) return;
+      const info = {
+        account: item.supplier_account_number || 'N/A',
+        ifsc: item.supplier_ifsc_code || 'N/A',
+        bank: item.supplier_account_name || 'N/A'
+      };
+      document.getElementById('bankDetails').innerHTML = `
+        <p><strong>Supplier:</strong> ${item.supplier_name || 'N/A'}</p>
+        <p><strong>Account Number:</strong> ${info.account}</p>
+        <p><strong>IFSC Code:</strong> ${info.ifsc}</p>
+        <p><strong>Bank Name:</strong> ${info.bank}</p>
+      `;
+      document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    async function markAsPaid(item) {
+      if (!item.id) {
+        showError('Order ID not found');
+        return;
+      }
+      
+      // Find the button that was clicked and disable it
+      const buttons = document.querySelectorAll('.paid-btn');
+      buttons.forEach(btn => {
+        if (btn.textContent === 'Mark as Paid') {
+          btn.disabled = true;
+          btn.innerHTML = '<div class="spinner"></div> Processing';
+        }
+      });
+      
+      try {
+        const response = await fetch(`/api/orders/${item.id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'approved' })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update status');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showSuccess();
+          // Refresh the data after successful update
+          setTimeout(() => {
+            fetchAccountDetails();
+          }, 2000);
+        } else {
+          throw new Error('Status update failed');
+        }
+      } catch (error) {
+        console.error('Error updating status:', error);
+        showError(error.message || 'Error processing payment');
+        
+        // Re-enable the button on error
+        const buttons = document.querySelectorAll('.paid-btn');
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.textContent = 'Mark as Paid';
+        });
+      }
+    }
+
+    function showSuccess() {
+      const popup = document.getElementById('donePopup');
+      popup.style.display = 'block';
+      setTimeout(() => { 
+        popup.style.display = 'none'; 
       }, 3000);
     }
     
-    function logout() {
-      showToast("🚪 Logged out successfully!");
-      setTimeout(() => {
-        window.location.href = "login.html";
-      }, 1000);
+    function showError(message) {
+      const popup = document.getElementById('errorPopup');
+      popup.innerHTML = `❌ ${message}`;
+      popup.style.display = 'block';
+      setTimeout(() => { 
+        popup.style.display = 'none'; 
+      }, 3000);
     }
+
+    function logout() {
+      fetch('/api/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      })
+      .then(() => {
+        window.location.href = '/';
+      })
+      .catch(err => {
+        console.error('Logout error:', err);
+        window.location.href = '/';
+      });
+    }
+
+    // Fetch account details on page load
+    window.onload = fetchAccountDetails;
   </script>
 </body>
 </html>

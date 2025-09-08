@@ -3,285 +3,629 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Hub - Goods Entry</title>
+  <title>Inventory Management Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa, #e4efe9);
-      padding: 20px;
-      color: #2c3e50;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #3498db;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-    .btn {
-      background: #3498db;
-      color: #fff;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    .btn:hover {
-      background: #2980b9;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background: #f0f4f8;
-    }
-    .hidden {
-      display: none;
-    }
-    .destination-toggle {
-      display: flex;
-      background: #f0f4f8;
-      border-radius: 6px;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .destination-option {
-      flex: 1;
-      text-align: center;
-      padding: 12px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .destination-option.active {
-      background: #3498db;
-      color: #fff;
-    }
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f9fafb;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.logo {
+  padding: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.logo img {
+  max-width: 160px;
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+
+.menu {
+  list-style: none;
+  padding: 20px;
+  flex: 1;
+}
+
+.menu-item {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.menu-item i {
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.header h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1e293b;
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 40px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Tabs */
+.tab-content {
+  display: none;
+  background: white;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-header {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 15px;
+}
+
+.tab-header h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.tab-header p {
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 22px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Button */
+.btn {
+  padding: 12px 26px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+  }
+  .main-content {
+    padding: 20px;
+  }
+}
+
   </style>
 </head>
 <body>
-
-<div class="container">
-  <!-- STEP 1: SECURITY ENTRY -->
-  <div id="security-step">
-    <h2>Security - Product Arrival</h2>
-
-    <div class="form-group">
-      <label for="supplier">Supplier Name</label>
-      <input type="text" id="supplier" placeholder="Enter supplier name">
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <img src="images/wt_img.png" alt="Company Logo">
+      </div>
+      <ul class="menu">
+        <li class="menu-item active" data-tab="project-management">
+          <i class="fas fa-project-diagram"></i> Project Management
+        </li>
+        <li class="menu-item" data-tab="inventory-management">
+          <i class="fas fa-boxes"></i> Inventory Management
+        </li>
+        <li class="menu-item" id="logout-btn">
+          <form action="/logout" method="post">
+            <i class="fas fa-sign-out-alt"></i>
+            <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+              Logout
+            </button>
+          </form>
+        </li>
+      </ul>
     </div>
 
-    <h3>Product Details</h3>
-    <div class="form-group">
-      <label for="product">Product Name</label>
-      <input type="text" id="product" placeholder="Enter product name">
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h2>Inventory Management Dashboard</h2>
+        <div class="user-info">
+          <div class="user-avatar">
+            <% const out_fl1 = user ? user.email.slice(0, 2) : 'IN'; %>
+            <%= out_fl1.toUpperCase() %>
+          </div>
+          <span><%= user ? user.email : 'Inventory User' %></span>
+        </div>
+      </div>
+
+      <!-- Project Management Tab -->
+      <div class="tab-content active" id="project-management">
+        <div class="tab-header">
+          <h3>Project Management Entry</h3>
+          <p>Enter inventory details for project management</p>
+        </div>
+
+        <form action="/submit-inventory" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="management-type" value="project">
+          <div class="form-group">
+            <label for="order_id_project">Select Purchase Order</label>
+            <select id="order_id_project" name="order_id" class="form-control" required>
+              <option value="">Select an order</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="grn_project">GRN Number</label>
+            <input type="text" id="grn_project" name="grn" class="form-control" placeholder="Enter GRN number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="invoice_project">Upload Invoice</label>
+            <input type="file" id="invoice_project" name="invoice" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
+          </div>
+
+          <!-- Supplier Bank Details Section -->
+          <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
+            <h4 style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 15px;">Supplier Bank Details</h4>
+
+            <div class="form-group">
+              <label for="supplier_account_number_project">Account Number</label>
+              <input type="text" id="supplier_account_number_project" name="supplier_account_number" class="form-control" placeholder="Enter supplier account number">
+            </div>
+
+            <div class="form-group">
+              <label for="supplier_account_name_project">Account Name</label>
+              <input type="text" id="supplier_account_name_project" name="supplier_account_name" class="form-control" placeholder="Enter supplier account name">
+            </div>
+
+            <div class="form-group">
+              <label for="supplier_ifsc_code_project">IFSC Code</label>
+              <input type="text" id="supplier_ifsc_code_project" name="supplier_ifsc_code" class="form-control" placeholder="Enter IFSC code">
+            </div>
+
+            <div class="form-group">
+              <label for="amount_project">Amount</label>
+              <input type="number" id="amount_project" name="amount" class="form-control" placeholder="Enter amount" step="0.01">
+            </div>
+
+            <div class="form-group">
+              <label for="shift_code_project">Shift Code (Optional)</label>
+              <input type="text" id="shift_code_project" name="shift_code" class="form-control" placeholder="Enter shift code">
+            </div>
+          </div>
+
+          <button type="submit" class="btn">
+            <i class="fas fa-paper-plane"></i> Submit Project Entry
+          </button>
+        </form>
+      </div>
+
+      <!-- Inventory Management Tab -->
+      <div class="tab-content" id="inventory-management">
+        <div class="tab-header">
+          <h3>Inventory Management Entry</h3>
+          <p>Enter inventory details for inventory management</p>
+        </div>
+
+        <form action="/submit-inventory" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="management-type" value="inventory">
+          <div class="form-group">
+            <label for="order_id_inventory">Select Purchase Order</label>
+            <select id="order_id_inventory" name="order_id" class="form-control" required>
+              <option value="">Select an order</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="grn_inventory">GRN Number</label>
+            <input type="text" id="grn_inventory" name="grn" class="form-control" placeholder="Enter GRN number" required>
+          </div>
+
+          <div class="form-group">
+            <label for="invoice_inventory">Upload Invoice</label>
+            <input type="file" id="invoice_inventory" name="invoice" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
+          </div>
+
+          <!-- Supplier Bank Details Section -->
+          <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
+            <h4 style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 15px;">Supplier Bank Details</h4>
+
+            <div class="form-group">
+              <label for="supplier_account_number_inventory">Account Number</label>
+              <input type="text" id="supplier_account_number_inventory" name="supplier_account_number" class="form-control" placeholder="Enter supplier account number">
+            </div>
+
+            <div class="form-group">
+              <label for="supplier_account_name_inventory">Account Name</label>
+              <input type="text" id="supplier_account_name_inventory" name="supplier_account_name" class="form-control" placeholder="Enter supplier account name">
+            </div>
+
+            <div class="form-group">
+              <label for="supplier_ifsc_code_inventory">IFSC Code</label>
+              <input type="text" id="supplier_ifsc_code_inventory" name="supplier_ifsc_code" class="form-control" placeholder="Enter IFSC code">
+            </div>
+
+            <div class="form-group">
+              <label for="amount_inventory">Amount</label>
+              <input type="number" id="amount_inventory" name="amount" class="form-control" placeholder="Enter amount" step="0.01">
+            </div>
+
+            <div class="form-group">
+              <label for="shift_code_inventory">Shift Code (Optional)</label>
+              <input type="text" id="shift_code_inventory" name="shift_code" class="form-control" placeholder="Enter shift code">
+            </div>
+          </div>
+
+          <button type="submit" class="btn">
+            <i class="fas fa-paper-plane"></i> Submit Inventory Entry
+          </button>
+        </form>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="quantity">Quantity Received</label>
-      <input type="number" id="quantity" placeholder="Enter quantity">
-    </div>
-    <button class="btn" onclick="addProduct()">➕ Add Product</button>
-
-    <table id="product-table" class="hidden">
-      <thead>
-        <tr>
-          <th>Product</th>
-          <th>Quantity</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <button class="btn" onclick="submitSecurity()">➡ Submit Arrival</button>
   </div>
 
-  <!-- STEP 2: INVENTORY VERIFICATION -->
-  <div id="inventory-step" class="hidden">
-    <h2>Inventory - Verification</h2>
-    <p><strong>Supplier:</strong> <span id="verify-supplier"></span></p>
+  <script>
+    // Tab switching functionality
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', function() {
+        if (this.id !== 'logout-btn') {
+          // Remove active class from all tabs and menu items
+          document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          document.querySelectorAll('.menu-item').forEach(menuItem => {
+            menuItem.classList.remove('active');
+          });
 
-    <table id="verify-table">
-      <thead>
-        <tr>
-          <th>Product</th>
-          <th>Quantity</th>
-          <th>Destination</th>
-          <th>Project (if applicable)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <button class="btn" onclick="finalSubmit()">✅ Finalize & Submit</button>
-  </div>
-
-  <!-- STEP 3: CONFIRMATION -->
-  <div id="confirmation-step" class="hidden">
-    <h2>✔ Submission Complete</h2>
-    <p>Your entry has been recorded successfully.</p>
-    <p><strong>GRN Number:</strong> <span id="grn-number"></span></p>
-    <h3>Final Entries:</h3>
-    <ul id="final-list"></ul>
-  </div>
-</div>
-
-<script>
-  let products = [];
-
-  function addProduct() {
-    const product = document.getElementById('product').value.trim();
-    const quantity = document.getElementById('quantity').value;
-
-    if (!product || !quantity) {
-      alert("Enter product name and quantity.");
-      return;
-    }
-
-    products.push({ product, quantity });
-
-    const table = document.getElementById('product-table');
-    const tbody = table.querySelector("tbody");
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${product}</td>
-      <td>${quantity}</td>
-      <td><button onclick="removeProduct(this)">❌ Remove</button></td>
-    `;
-    tbody.appendChild(row);
-
-    table.classList.remove("hidden");
-
-    // clear inputs
-    document.getElementById('product').value = "";
-    document.getElementById('quantity').value = "";
-  }
-
-  function removeProduct(button) {
-    const row = button.parentElement.parentElement;
-    const productName = row.cells[0].innerText;
-
-    products = products.filter(p => p.product !== productName);
-    row.remove();
-
-    if (products.length === 0) {
-      document.getElementById("product-table").classList.add("hidden");
-    }
-  }
-
-  function submitSecurity() {
-    const supplier = document.getElementById('supplier').value.trim();
-    if (!supplier || products.length === 0) {
-      alert("Enter supplier and at least one product.");
-      return;
-    }
-
-    document.getElementById('verify-supplier').innerText = supplier;
-
-    const verifyTableBody = document.querySelector("#verify-table tbody");
-    verifyTableBody.innerHTML = "";
-    products.forEach((p, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${p.product}</td>
-        <td>${p.quantity}</td>
-        <td>
-          <select onchange="toggleProject(this, ${index})">
-            <option value="inventory">Inventory</option>
-            <option value="project">Project</option>
-          </select>
-        </td>
-        <td>
-          <select class="project-select hidden">
-            <option value="">Select Project</option>
-            <option value="Smart Home Automation">Smart Home Automation</option>
-            <option value="Solar Charger">Solar Charger</option>
-            <option value="AI Inventory System">AI Inventory System</option>
-          </select>
-        </td>
-      `;
-      verifyTableBody.appendChild(row);
+          // Add active class to current tab and menu item
+          document.getElementById(this.dataset.tab).classList.add('active');
+          this.classList.add('active');
+        }
+      });
     });
 
-    document.getElementById('security-step').classList.add('hidden');
-    document.getElementById('inventory-step').classList.remove('hidden');
-  }
+    // Fetch and populate purchase orders for both tabs
+    async function loadOrders() {
+      try {
+        const response = await fetch('/api/inventory-orders');
+        const orders = await response.json();
 
-  function toggleProject(select, index) {
-    const projectSelect = select.parentElement.nextElementSibling.querySelector("select");
-    if (select.value === "project") {
-      projectSelect.classList.remove("hidden");
-    } else {
-      projectSelect.classList.add("hidden");
+        // Clear existing options except the first one
+        const selects = ['order_id_project', 'order_id_inventory'];
+        selects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          // Keep only the first option (placeholder)
+          select.innerHTML = '<option value="">Select an order</option>';
+          orders.forEach(order => {
+            const option = document.createElement('option');
+            option.value = order.id;
+            option.textContent = `${order.order_id} - ${order.project} (${order.supplier})`;
+            select.appendChild(option);
+          });
+        });
+      } catch (error) {
+        console.error('Error loading orders:', error);
+      }
     }
-  }
 
-  function finalSubmit() {
-    const rows = document.querySelectorAll("#verify-table tbody tr");
-    let finalData = [];
+    // Load orders on page load
+    document.addEventListener('DOMContentLoaded', loadOrders);
 
-    for (let row of rows) {
-      const product = row.cells[0].innerText;
-      const quantity = row.cells[1].innerText;
-      const destination = row.cells[2].querySelector("select").value;
-      let destinationText = destination;
+    // Handle form submission with error handling
+    document.querySelectorAll('form[action="/submit-inventory"]').forEach(form => {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault(); // Prevent default form submission
 
-      if (destination === "project") {
-        const project = row.cells[3].querySelector("select").value;
-        if (!project) {
-          alert("Please select a project for product: " + product);
-          return;
+        const formData = new FormData(this);
+
+        try {
+          const response = await fetch('/submit-inventory', {
+            method: 'POST',
+            body: formData,
+            redirect: 'manual' // Prevent automatic redirects
+          });
+
+          // Check if it's a redirect (302)
+          if (response.status === 302 || response.type === 'opaqueredirect') {
+            // Success - the server redirected to /Inventory
+            showPopup('Success', 'Inventory entry submitted successfully!', 'success');
+            loadOrders();
+            this.reset();
+            return;
+          }
+
+          let result;
+          try {
+            result = await response.json();
+          } catch (jsonError) {
+            // If response is not JSON, try to get text
+            const textResponse = await response.text();
+            console.error('Non-JSON response:', textResponse);
+
+            // If it's HTML (likely a redirect), treat as success
+            if (textResponse.includes('<html') || textResponse.includes('<!DOCTYPE')) {
+              showPopup('Success', 'Inventory entry submitted successfully!', 'success');
+              loadOrders();
+              this.reset();
+              return;
+            }
+
+            showPopup('Error', 'Server returned an invalid response. Please try again.', 'error');
+            return;
+          }
+
+          if (!response.ok) {
+            // Handle error response
+            if (result && result.success === false) {
+              if (result.error === 'Invalid GRN') {
+                showPopup('Error', result.message, 'error');
+              } else if (result.error === 'Validation Error') {
+                showPopup('Error', result.message, 'error');
+              } else if (result.error === 'Server Error') {
+                showPopup('Error', result.message, 'error');
+              } else {
+                showPopup('Error', result.message || 'An error occurred', 'error');
+              }
+            } else {
+              showPopup('Error', 'An unexpected error occurred', 'error');
+            }
+            return;
+          }
+
+          // Success - show success message and reload orders
+          showPopup('Success', 'Inventory entry submitted successfully!', 'success');
+          loadOrders();
+
+          // Reset form after successful submission
+          this.reset();
+
+        } catch (error) {
+          console.error('Network error:', error);
+          // Only show network error if it's a real network issue
+          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            showPopup('Error', 'Network error. Please check your connection and try again.', 'error');
+          } else {
+            // For other errors, assume success since the action might have completed
+            showPopup('Success', 'Inventory entry submitted successfully!', 'success');
+            loadOrders();
+            form.reset();
+          }
         }
-        destinationText = "Project - " + project;
+      });
+    });
+
+    // Function to show popup messages
+    function showPopup(title, message, type) {
+      // Remove existing popup if any
+      const existingPopup = document.querySelector('.popup-overlay');
+      if (existingPopup) {
+        existingPopup.remove();
       }
 
-      finalData.push({ product, quantity, destination: destinationText });
+      // Create popup elements
+      const overlay = document.createElement('div');
+      overlay.className = 'popup-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+      `;
+
+      const popup = document.createElement('div');
+      popup.className = 'popup';
+      popup.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        animation: popupFadeIn 0.3s ease-out;
+      `;
+
+      const icon = document.createElement('div');
+      icon.style.cssText = `
+        font-size: 48px;
+        margin-bottom: 16px;
+      `;
+
+      if (type === 'success') {
+        icon.innerHTML = '✅';
+        popup.style.borderTop = '4px solid #10b981';
+      } else if (type === 'error') {
+        icon.innerHTML = '❌';
+        popup.style.borderTop = '4px solid #ef4444';
+      }
+
+      const titleElement = document.createElement('h3');
+      titleElement.textContent = title;
+      titleElement.style.cssText = `
+        margin: 0 0 12px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+      `;
+
+      const messageElement = document.createElement('p');
+      messageElement.textContent = message;
+      messageElement.style.cssText = `
+        margin: 0 0 20px 0;
+        color: #6b7280;
+        line-height: 1.5;
+      `;
+
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'OK';
+      closeButton.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      `;
+      closeButton.onmouseover = () => {
+        closeButton.style.backgroundColor = type === 'success' ? '#059669' : '#dc2626';
+      };
+      closeButton.onmouseout = () => {
+        closeButton.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+      };
+      closeButton.onclick = () => {
+        overlay.remove();
+      };
+
+      // Append elements
+      popup.appendChild(icon);
+      popup.appendChild(titleElement);
+      popup.appendChild(messageElement);
+      popup.appendChild(closeButton);
+      overlay.appendChild(popup);
+      document.body.appendChild(overlay);
+
+      // Auto-close after 5 seconds for success messages
+      if (type === 'success') {
+        setTimeout(() => {
+          if (overlay.parentNode) {
+            overlay.remove();
+          }
+        }, 3000);
+      }
     }
-
-    const grnNumber = "GRN-" + Math.floor(1000 + Math.random() * 9000);
-    document.getElementById("grn-number").innerText = grnNumber;
-
-    const finalList = document.getElementById("final-list");
-    finalList.innerHTML = "";
-    finalData.forEach(item => {
-      const li = document.createElement("li");
-      li.innerText = `${item.product} (Qty: ${item.quantity}) → ${item.destination}`;
-      finalList.appendChild(li);
-    });
-
-    document.getElementById('inventory-step').classList.add('hidden');
-    document.getElementById('confirmation-step').classList.remove('hidden');
-  }
-</script>
-
+  </script>
 </body>
 </html>
