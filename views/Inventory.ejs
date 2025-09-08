@@ -97,9 +97,10 @@ body {
   font-weight: 600;
   color: #1e293b;
   background: linear-gradient(90deg, #2563eb, #1d4ed8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+ /* fallback for browsers that don't support clipping */
+   background-clip: text; 
+  -webkit-background-clip: text;   /* Safari / Chrome */
+  -webkit-text-fill-color: transparent; /* Safari / Chrome */}
 
 .user-info {
   display: flex;
