@@ -57,28 +57,40 @@ function generatePurchaseOrder(poData, filePath) {
   ];
 
   let subtotal = 0;
-  poData.items.forEach((item, i) => {
-    const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0);
-    const quantity = item.quantity || 0;
-    const gst = item.gst || "0";
-    const total = unitPrice * quantity;
-    const discount=item.discount||0;
-    subtotal += total;
+ poData.items.forEach((item, i) => {
+  const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0);
+  const quantity = parseFloat(item.quantity || 0);
+  const gst = parseFloat(item.gst || 0);
+  const discount = parseFloat(item.discount || 0); // actual value (not %)
 
-    itemsTable.push([
-      i + 1,
-      item.part_no || item.partNo || "",
-      item.description || "",
-      item.hsn_code || item.hsnCode || "",
-      gst + "%",
-      quantity,
-      item.unit || "",
-      
-      unitPrice.toFixed(2),
-      discount|| 0,
-      total.toFixed(2),
-    ]);
-  });
+  // Step 1: Base price
+  const gross = unitPrice * quantity;
+
+  // Step 2: Apply discount directly
+  const afterDiscount = gross - discount;
+
+  // Step 3: GST on discounted value
+  const gstAmount = afterDiscount * (gst / 100);
+
+  // Step 4: Final total (after discount + GST)
+  const finalTotal = afterDiscount + gstAmount;
+
+  subtotal += finalTotal;
+
+  itemsTable.push([
+    i + 1,
+    item.part_no || item.partNo || "",
+    item.description || "",
+    item.hsn_code || item.hsnCode || "",
+    gst + "%",
+    quantity,
+    item.unit || "",
+    unitPrice.toFixed(2), 
+    discount.toFixed(2),        // ✅ show flat discount value
+          // ✅ unit price
+    finalTotal.toFixed(2),      // ✅ total after discount + GST
+  ]);
+});
 
   const cgst = subtotal * 0.09;
   const sgst = subtotal * 0.09;
