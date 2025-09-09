@@ -73,6 +73,7 @@ function generatePurchaseOrder(poData, filePath) {
       gst + "%",
       quantity,
       item.unit || "",
+      discount|| 0,
       unitPrice.toFixed(2),
       total.toFixed(2),
     ]);
