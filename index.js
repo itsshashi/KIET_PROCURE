@@ -541,7 +541,7 @@ app.post("/forgot-password", async (req, res) => {
         await pool.query("UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE email = $3", [token, expiry, email]);
 
         const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass: 'ujcf lhsf yzla dxiy' } });
-        const resetURL = `http://localhost:3000/reset-password/${token}`;
+        const resetURL = `https://kiet-procure.onrender.com/reset-password/${token}`;
         const mailSubject = "Password Reset Request - KIET Technologies";
         const mailBody = `
           <p>Hello ${email},</p>
