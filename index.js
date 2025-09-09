@@ -123,6 +123,7 @@ app.get('/api/orders', async (req, res) => {
                 urgency,
                 notes,
                 quotation_file,
+                single,
                 created_at
             FROM purchase_orders
             ORDER BY created_at DESC
