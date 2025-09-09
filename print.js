@@ -130,14 +130,14 @@ function generatePurchaseOrder(poData, filePath) {
             stack: [
               logoBase64 ? { image: logoBase64, width: 100, alignment: "right" } : {},
               { canvas: [{ type: "line", x1: 0, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
-              { text: "PURCHASE ORDER", font: 'Times', bold: true, alignment: "right", margin: [0, 10, 0, 5] },
-              { text: `PO Number: ${poData.poNumber}`, font: 'Times', alignment: "right",margin: [0, 10, 0, 5]},
-              { text: `Date: ${poData.date}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
+              { text: "PURCHASE ORDER", font: 'Times', bold: true, alignment: "right", margin: [0, 6, 0, 5] },
+              { text: `PO Number: ${poData.poNumber}`, font: 'Times', alignment: "right",margin: [0, 6, 0, 5]},
+              { text: `Date: ${poData.date}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
              
-              { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
-              { text: `Requester Email: ${poData.requester?.name}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
-              { text: `GSTIN:29AAFCK6528D1ZG`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
-              { text: `reference no : ${poData.reference_no}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
+              { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
+              { text: `Requester Email: ${poData.requester?.name}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
+              { text: `GSTIN:29AAFCK6528D1ZG`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
+              { text: `reference no : ${poData.reference_no}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
 
             ],
           },
