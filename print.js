@@ -53,7 +53,7 @@ function generatePurchaseOrder(poData, filePath) {
 
   // 👉 Build the items table
   const itemsTable = [
-    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty(N)", "Unit", "Unit Price", "Total"],
+    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty", "Unit", "Unit Price", "Total"],
   ];
 
   let subtotal = 0;
