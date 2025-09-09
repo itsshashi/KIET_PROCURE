@@ -395,14 +395,14 @@
                 <i class="fas fa-eye mr-1"></i>View
               </button>
    <button 
-  onclick="editOrder(${order.id})" 
-  id="editBtn-${order.id}" 
-  class="w-20 px-3 py-1 
-         ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} 
-         text-white rounded text-sm transition flex items-center justify-center"
->
-  <i class="fas fa-edit mr-1"></i>Edit
-</button>
+        onclick="openModal(${po.order_id})" 
+        id="editBtn-${po.order_id}" 
+        class="w-20 px-3 py-1 
+               ${po.single_supplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} 
+               text-white rounded text-sm transition flex items-center justify-center"
+      >
+        <i class="fas fa-edit mr-1"></i>Edit
+      </button>
 
    
               <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${order.status === 'approved' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'} text-white rounded text-sm transition flex items-center justify-center" ${order.status !== 'approved' ? 'disabled' : ''}>
