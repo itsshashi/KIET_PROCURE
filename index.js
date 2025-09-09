@@ -1068,6 +1068,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       quantity: row.quantity,
       unit: row.unit || "pcs",
       unit_price: Number(row.unit_price) || 0,
+      discount:row.discount || 'fail'
     }));
 
     // 2️⃣ Prepare poData object
@@ -1076,8 +1077,8 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     name: order.supplier_name,
     address: order.supplier_address,
     contact: order.contact  || "N/A",
-    gst:order.supplier_gst||"N/A",
-    discount:order.discount|| "N/A"
+    gst:order.supplier_gst||"N/A"
+    
   },
   poNumber: order.po_number,
   reference_no: order.reference_no,

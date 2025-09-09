@@ -62,7 +62,7 @@ function generatePurchaseOrder(poData, filePath) {
     const quantity = item.quantity || 0;
     const gst = item.gst || "0";
     const total = unitPrice * quantity;
-    const discount=poData.supplier.discount||0;
+    const discount=item.discount||0;
     subtotal += total;
 
     itemsTable.push([
