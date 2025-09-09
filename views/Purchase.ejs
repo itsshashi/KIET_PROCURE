@@ -723,10 +723,16 @@
       const gst = parseFloat(row.querySelector('.edit-gst').value) || 0;
       const discount = parseFloat(row.querySelector('.edit-discount').value) || 0;
 
-      const subtotal = quantity * unitPrice;
-      const gstAmount = subtotal * (gst / 100);
-      const discountAmount = subtotal * (discount / 100);
-      const total = subtotal + gstAmount - discountAmount;
+      //const subtotal = quantity * unitPrice;
+      //const gstAmount = subtotal * (gst / 100);
+      //const discountAmount = subtotal * (discount / 100);
+      //const total = subtotal + gstAmount - discountAmount;
+
+      const subtotal = quantity * unitPrice;               // Base price without tax or discount
+      const gstAmount = subtotal * (gst / 100);            // GST amount (percentage of subtotal)
+      const discountAmount = subtotal * (discount / 100);  // Discount amount (percentage of subtotal)
+      const total = subtotal + gstAmount - discountAmount; 
+      
 
       row.querySelector('.edit-total').value = total.toFixed(2);
     }
