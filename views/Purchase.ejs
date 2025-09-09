@@ -394,9 +394,16 @@
               <button onclick="viewQuotations(${order.id})" class="w-20 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition flex items-center justify-center">
                 <i class="fas fa-eye mr-1"></i>View
               </button>
-    <button onclick="editOrder(${order.id})" id="editBtn-${order.id}" class="w-20 px-3 py-1 ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded text-sm transition flex items-center justify-center">
-      <i class="fas fa-edit mr-1"></i>Edit
-    </button>
+   <button 
+  onclick="editOrder(${order.id})" 
+  id="editBtn-${order.id}" 
+  class="w-20 px-3 py-1 
+         ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} 
+         text-white rounded text-sm transition flex items-center justify-center"
+>
+  <i class="fas fa-edit mr-1"></i>Edit
+</button>
+
    
               <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${order.status === 'approved' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'} text-white rounded text-sm transition flex items-center justify-center" ${order.status !== 'approved' ? 'disabled' : ''}>
                 <i class="fas fa-file-invoice mr-1"></i>P O
