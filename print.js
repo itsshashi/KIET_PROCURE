@@ -291,7 +291,7 @@ function generatePurchaseOrder(poData, filePath) {
     { text: 'Personnel Requirements: Supplier personnel entering the premises must wear safety shoes and carry valid identification, driving licenses, and vehicle documents.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
     { text: 'Right of Rejection / Termination: The buyer reserves the right to reject goods or terminate the purchase order immediately in the event of non-compliance with these conditions.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
   ],
-  font: 'Times',
+  font: 'Roboto',
   fontSize: 10,
   lineHeight: 1.3
 }
