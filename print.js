@@ -52,9 +52,21 @@ function generatePurchaseOrder(poData, filePath) {
   const signBase64 = getBase64Image(poData.signPath);
 
   // 👉 Build the items table
-  const itemsTable = [
-    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty", "Unit", "Unit Price","Discount", "Total"],
-  ];
+ const itemsTable = [
+  [
+    { text: "SL", bold: true },
+    { text: "Part No.", bold: true },
+    { text: "Item Description", bold: true },
+    { text: "HSN", bold: true },
+    { text: "GST%", bold: true },
+    { text: "Qty", bold: true },
+    { text: "Unit", bold: true },
+    { text: "Unit Price", bold: true },
+    { text: "Discount", bold: true },
+    { text: "Total", bold: true },
+  ]
+];
+
 
   let subtotal = 0;
  poData.items.forEach((item, i) => {
