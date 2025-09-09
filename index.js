@@ -446,10 +446,11 @@ app.post('/submit', async (req, res) => {
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
+    console.log(req.body);
     
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier} = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier,termsOfPayment} = req.body;
     const products = JSON.parse(req.body.products || "[]");
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
@@ -485,11 +486,11 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
             `INSERT INTO purchase_orders
             (project_name, project_code_number, purchase_order_number, supplier_name,
              supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
-             ordered_by, quotation_file, total_amount, reference_no, contact, single)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
+             ordered_by, quotation_file, total_amount, reference_no, contact, single,terms_of_payment)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,$17) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
              supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
-             orderedBy, quotationFile, totalAmount, reference_no, contact, single]
+             orderedBy, quotationFile, totalAmount, reference_no, contact, single,termsOfPayment]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -1075,7 +1076,8 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     name: order.supplier_name,
     address: order.supplier_address,
     contact: order.contact  || "N/A",
-    gst:order.supplier_gst||"N/A"
+    gst:order.supplier_gst||"N/A",
+    discount:order.discount|| "N/A"
   },
   poNumber: order.po_number,
   reference_no: order.reference_no,
