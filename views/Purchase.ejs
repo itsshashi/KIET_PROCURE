@@ -728,12 +728,12 @@
       //const discountAmount = subtotal * (discount / 100);
       //const total = subtotal + gstAmount - discountAmount;
 
-      const subtotal = quantity * unitPrice;               // Base price without tax or discount
-      const gstAmount = subtotal * (gst / 100);            // GST amount (percentage of subtotal)
-      const discountAmount = subtotal * (discount / 100);  // Discount amount (percentage of subtotal)
-      const total = subtotal + gstAmount - discountAmount; 
-      
+      const subtotal = quantity * unitPrice;           // Base price
+      const discountAmount = discount;                 // Direct ₹ discount
+      const discountedSubtotal = subtotal - discountAmount;
 
+      const gstAmount = discountedSubtotal * (gst / 100); // GST after discount
+      const total = discountedSubtotal + gstAmount;
       row.querySelector('.edit-total').value = total.toFixed(2);
     }
 
