@@ -25,13 +25,13 @@ dotenv.config({ path: "SCR.env" });
 const PASSWORD = process.env.EMAIL_PASS;// Gmail app password
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+const uploadsDir = path.join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsDir));
 // Ensure uploads folder exists
-const uploadsDir = path.join(__dirname, '/uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -52,7 +52,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 // Serve uploaded PDFs so frontend can view them
-app.use("/uploads", express.static(uploadsDir));
+// Serve uploaded PDFs so frontend can view them
+
+
 
 // Serve frontend (place index.html in /public)
 app.use(express.static(path.join(__dirname, "public")));
