@@ -163,7 +163,7 @@ function generatePurchaseOrder(poData, filePath) {
   // ✅ Items Table
 {
   table: {
-    widths: ["auto", "auto", "*", "auto", "auto", "auto", "auto", "auto", "auto"],
+    widths: ["auto", "auto", "*", "auto", "auto", "auto", "auto", "auto", "auto",'auto'],
     body: itemsTable,
   },
   layout: horizontalLineLayout,
