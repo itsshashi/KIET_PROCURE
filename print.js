@@ -53,7 +53,7 @@ function generatePurchaseOrder(poData, filePath) {
 
   // 👉 Build the items table
   const itemsTable = [
-    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty", "Unit","Discount", "Unit Price", "Total"],
+    ["SL", "Part No.", "Item Description", "HSN", "GST%", "Qty", "Unit", "Unit Price","Discount", "Total"],
   ];
 
   let subtotal = 0;
@@ -62,7 +62,7 @@ function generatePurchaseOrder(poData, filePath) {
     const quantity = item.quantity || 0;
     const gst = item.gst || "0";
     const total = unitPrice * quantity;
-    const discount=item.discount||0;
+    const discount=poData.supplier.discount||0;
     subtotal += total;
 
     itemsTable.push([
@@ -73,8 +73,9 @@ function generatePurchaseOrder(poData, filePath) {
       gst + "%",
       quantity,
       item.unit || "",
-      discount|| 0,
+      
       unitPrice.toFixed(2),
+      discount|| 0,
       total.toFixed(2),
     ]);
   });
