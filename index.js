@@ -527,7 +527,7 @@ app.post('/logout', (req, res) => {
 });
 
 // Forgot password
-app.get('/forgot', (req, res) => res.sendFile(path.join(__dirname, 'public', 'forgot.html')));
+app.get('/forgot', (req, res) => res.sendFile((path.join(__dirname, 'public/forgot.html'))));
 
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
@@ -554,7 +554,7 @@ app.post("/forgot-password", async (req, res) => {
         `;
         await transporter.sendMail({ to: email, from: "acc19105@gmail.com", subject: mailSubject, html: mailBody });
 
-        res.sendFile(path.join(__dirname, 'public', 'sucess.html'));
+        res.sendFile(path.join(__dirname, 'public/sucess.html'));
     } catch (err) {
         console.error(err);
         res.status(500).send("Error processing request");
@@ -1050,6 +1050,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
     const order = orderResult.rows[0];
+    
   
     // Fetch order items
     const itemsResult = await pool.query(
@@ -1075,6 +1076,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     gst:order.supplier_gst||"N/A"
   },
   poNumber: order.po_number,
+  reference_no: order.reference_no,
   date: new Date(order.created_at).toLocaleDateString(),
 
   requester: {
@@ -1084,12 +1086,12 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     
   },
 
-  shipTo: "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+  shipTo: order.shipping_address,
   invoiceTo: "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
   goodsRecipient: "Kiet-ATPLog1",
 
-  termsOfPayment: "45 days net",
-  termsOfDelivery: "DAP Ship, address",
+  termsOfPayment: order.terms_of_payment,
+  
 
   items: items, // from DB query purchase_order_items
 

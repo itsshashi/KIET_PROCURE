@@ -109,6 +109,8 @@ function generatePurchaseOrder(poData, filePath) {
              
               { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
               { text: `Requester Email: ${poData.requester?.name}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
+              { text: `GSTIN:29AAFCK6528D1ZG`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
+              { text: `reference no : ${poData.reference_no}`, font: 'Times', alignment: "right" ,margin: [0, 10, 0, 5]},
 
             ],
           },
@@ -202,13 +204,7 @@ function generatePurchaseOrder(poData, filePath) {
   margin: [0, 10, 0, 0]
 },
 
-{
-  text: [
-    { text: 'Terms of Delivery: ', font: 'Times', bold: false },
-    { text: poData.termsOfDelivery, font: 'Times', bold: true }
-  ],
-  margin: [0, 0, 0, 10]
-},
+
 { canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
 
 

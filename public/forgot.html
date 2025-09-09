@@ -103,21 +103,85 @@
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <img src="images/page_logo.png" alt="Logo" class="logo">
-    <h2>Forgot Password?</h2>
-    <p>Please enter your registered email address to receive a reset link.</p>
-    
-    <form action="/forgot-password" method="POST">
-      <div class="input-group">
-        <input type="email" name="email" placeholder="Enter your email" required>
-      </div>
-      <button type="submit" class="login-btn">Send Reset Link</button>
-    </form>
-
-    <div class="options">
-      <a href="/">Back to Login</a>
+ <div class="login-container">
+  <img src="images/page_logo.png" alt="Logo" class="logo">
+  <h2>Forgot Password?</h2>
+  <p>Please enter your registered email address to receive a reset link.</p>
+  
+  <form id="forgotForm">
+    <div class="input-group">
+      <input type="email" name="email" placeholder="Enter your email" required>
     </div>
-  </div>
+    <button type="submit" class="login-btn">Send Reset Link</button>
+  </form>
+
+  <!-- Loading spinner -->
+  <div id="loading" class="loading-spinner" style="display:none;"></div>
+  <p id="message"></p>
+</div>
+
+<style>
+  .loading-spinner {
+    margin: 15px auto;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  #message {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+</style>
+
+<script>
+  const form = document.getElementById("forgotForm");
+  const loading = document.getElementById("loading");
+  const message = document.getElementById("message");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loading.style.display = "block";
+    message.textContent = "";
+
+    const formData = new FormData(form);
+    const data = { email: formData.get("email") };
+
+    try {
+      const res = await fetch("/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      loading.style.display = "none";
+
+      if (res.ok) {
+        message.textContent = "✅ Reset link sent! Check your email.";
+        message.style.color = "green";
+      } else {
+        const error = await res.text();
+        message.textContent = "❌ " + error;
+        message.style.color = "red";
+      }
+    } catch (err) {
+      loading.style.display = "none";
+      message.textContent = "❌ Something went wrong.";
+      message.style.color = "red";
+    }
+  });
+</script>
+
 </body>
 </html>
+
+
+
