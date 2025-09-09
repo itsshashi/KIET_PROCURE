@@ -6,4 +6,4 @@ services:
     region: oregon
     branch: master
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node index.js
