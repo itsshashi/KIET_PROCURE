@@ -1470,5 +1470,70 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
+import webpush from 'web-push';
+
 // =============================
 // START SERVER
+//=======
+
+// VAPID keys should be generated once and kept secret
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'YOUR_PUBLIC_VAPID_KEY',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'YOUR_PRIVATE_VAPID_KEY'
+};
+
+webpush.setVapidDetails(
+  'mailto:your-email@example.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
+// Store subscriptions in memory for demo; in production use DB
+const subscriptions = new Map();
+
+// Endpoint to save subscription from client
+app.post('/api/subscribe', (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: 'Invalid subscription' });
+  }
+  subscriptions.set(subscription.endpoint, subscription);
+  res.status(201).json({ message: 'Subscription saved' });
+});
+
+// Function to send push notification to all subscribers
+async function sendPushNotification(payload) {
+  const sendPromises = [];
+  subscriptions.forEach((sub) => {
+    sendPromises.push(
+      webpush.sendNotification(sub, JSON.stringify(payload)).catch(err => {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          // Remove expired subscription
+          subscriptions.delete(sub.endpoint);
+        } else {
+          console.error('Push notification error:', err);
+        }
+      })
+    );
+  });
+  await Promise.all(sendPromises);
+}
+
+// After order is raised, send push notification
+const originalOrderRaise = app._router.stack.find(layer => layer.route && layer.route.path === '/order_raise').route.stack[0].handle;
+
+app._router.stack.find(layer => layer.route && layer.route.path === '/order_raise').route.stack[0].handle = async (req, res, next) => {
+  await originalOrderRaise(req, res, async () => {
+    if (res.headersSent && res.statusCode === 200) {
+      // Send push notification about new order
+      const payload = {
+        title: 'New Purchase Order',
+        body: `Order ${res.locals.purchaseOrderNumber || 'created'} by ${req.session.user.email}`,
+        url: '/Purchase' // URL to open on click
+      };
+      await sendPushNotification(payload);
+    }
+    next();
+  });
+};
+

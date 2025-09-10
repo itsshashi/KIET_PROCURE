@@ -415,7 +415,7 @@
 
         // Count orders by status
         // Adjusted to match backend status values
-        const pendingCount = orders.filter(order => order.status === 'purchase' || order.status === 'enquired').length;
+        const pendingCount = orders.filter(order => order.status === 'purchase' || order.status === 'pending').length;
         const approvedCount = orders.filter(order => order.status === 'approved').length;
         const rejectedCount = orders.filter(order => order.status === 'rejected').length;
         // Remove othersCount since rejectedCount is shown separately now
