@@ -378,6 +378,36 @@ app.get('/api/orders/search/filter', async (req, res) => {
     }
 });
 
+// Get orders for inventory processing
+app.get('/api/inventory-orders', async (req, res) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+                id,
+                purchase_order_number as order_id,
+                project_name as project,
+                supplier_name as supplier,
+                supplier_gst,
+                supplier_address,
+                shipping_address,
+                ordered_by as requested_by,
+                date_required,
+                COALESCE(total_amount, 0) as total_amount,
+                status,
+                urgency,
+                notes,
+                quotation_file,
+                created_at
+            FROM purchase_orders
+            WHERE status IN ('sent', 'received')
+            ORDER BY created_at DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // =============================
 // EXISTING ROUTES (KEEP THESE AS IS)
