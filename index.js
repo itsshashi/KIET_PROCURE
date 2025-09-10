@@ -409,6 +409,68 @@ app.get('/api/inventory-orders', async (req, res) => {
     }
 });
 
+// POST route to handle inventory form submission from Inventory.ejs
+app.post('/submit-inventory', upload.single('invoice'), async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+        const {
+            order_id,
+            grn,
+            supplier_account_number,
+            supplier_account_name,
+            supplier_ifsc_code,
+            amount,
+            shift_code,
+            
+        } = req.body;
+
+        // Validate required fields
+        if (!order_id || !grn) {
+            return res.status(400).json({ success: false, error: 'Order ID and GRN are required' });
+        }
+
+        // Check if invoice file is uploaded
+        const invoiceFile = req.file ? req.file.filename : null;
+
+        // Insert inventory entry into inventory_entries table
+        const insertQuery = `
+            INSERT INTO inventory_entries
+            (purchase_order_id, grn_number, invoice_file, supplier_account_number, supplier_account_name, supplier_ifsc_code, amount, shift_code, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `;
+
+        const values = [
+            order_id,
+            grn,
+            invoiceFile,
+            supplier_account_number || null,
+            supplier_account_name || null,
+            supplier_ifsc_code || null,
+            amount ? parseFloat(amount) : null,
+            shift_code || null,
+            managementType || null,
+            req.session.user.email
+        ];
+
+        const { rows } = await pool.query(insertQuery, values);
+
+        // Optionally update purchase_orders status to 'inventory_processed' for the order
+        await pool.query(
+            "UPDATE purchase_orders SET status = 'inventory_processed' WHERE id = $1",
+            [order_id]
+        );
+
+        res.json({ success: true, message: 'Inventory entry submitted successfully', entry: rows[0] });
+    } catch (error) {
+        console.error('Error submitting inventory entry:', error);
+        res.status(500).json({ success: false, error: 'Failed to submit inventory entry' });
+    }
+});
+
 // =============================
 // EXISTING ROUTES (KEEP THESE AS IS)
 // =============================
