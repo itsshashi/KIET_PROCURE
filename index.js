@@ -305,14 +305,15 @@ app.get('/api/orders/:id/items', async (req, res) => {
 // Update order details
 app.put('/api/orders/:id', async (req, res) => {
     try {
+
         const { id } = req.params;
-        const { supplier_name, urgency, date_required, notes } = req.body;
+        const { supplier_name, supplier_gst, supplier_address } = req.body;
 
         const { rows } = await pool.query(
             `UPDATE purchase_orders SET
-             supplier_name = $1, urgency = $2, notes = $4
-             WHERE id = $5 RETURNING *`,
-            [supplier_name, urgency, date_required, notes, id]
+             supplier_name = $1, supplier_gst = $2, supplier_address = $3
+             WHERE id = $4 RETURNING *`,
+            [supplier_name, supplier_gst, supplier_address, id]
         );
 
         if (rows.length === 0) {
