@@ -6,30 +6,25 @@
   <title>Security Verification - All Orders</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-       :root {
-      --primary: #2563eb;
-      --primary-dark: #1e3a8a;
-      --secondary: #dc2626;
-      --success: #16a34a;
+     :root {
+      --primary: #3b82f6;
+      --primary-dark: #1e40af;
+      --secondary: #ef4444;
+      --success: #22c55e;
       --light: #ffffff;
-      --dark: #1f2937;
+      --dark: #111827;
       --gray: #6b7280;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      --bg: #f3f4f6;
+      --glass: rgba(255, 255, 255, 0.75);
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     body {
-      font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
-      background: var(--bg);
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #fef9c3);
+      min-height: 100vh;
+      margin: 0;
       color: var(--dark);
-      line-height: 1.6;
     }
 
     /* Header */
@@ -37,93 +32,93 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 14px 24px;
       background: var(--primary);
       color: white;
-      padding: 12px 20px;
       box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .header img {
-      height: 100px;
+      height: 150px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
     }
 
     .user-info {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .user-avatar {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.2);
+      background: var(--light);
+      color: var(--primary-dark);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      box-shadow: var(--shadow);
     }
 
     .logout-btn {
       background: var(--secondary);
       border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
+      padding: 8px 16px;
+      border-radius: 5px;
       color: #fff;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.3s;
     }
     .logout-btn:hover {
-      background: #b91c1c;
+      background: #dc2626;
+      transform: scale(1.05);
     }
 
     /* Container */
     .container {
-      max-width: 1000px;
-      margin: 30px auto;
+      max-width: 900px;
+      margin: 40px auto;
       padding: 0 16px;
     }
 
     h2 {
       text-align: center;
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 25px;
-      position: relative;
-      color: var(--dark);
-    }
-    h2::after {
-      content: "";
-      width: 60px;
-      height: 3px;
-      background: var(--primary);
-      display: block;
-      margin: 8px auto 0;
-      border-radius: 3px;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: var(--primary-dark);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     /* Card */
     .card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 20px;
+      background: var(--glass);
+      border-radius: 16px;
+      padding: 24px;
       box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
     }
 
-    /* Orders */
+    /* Order Cards */
     .order-card {
-      background: var(--bg);
-      border-radius: 10px;
-      padding: 16px;
+      background: var(--light);
+      border-radius: 14px;
+      padding: 16px 20px;
       margin-bottom: 16px;
       border: 1px solid #e5e7eb;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
     .order-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-4px);
       box-shadow: var(--shadow);
     }
 
@@ -131,12 +126,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
     }
 
     .supplier-name {
       font-weight: 600;
       color: var(--primary-dark);
+      font-size: 16px;
     }
 
     .order-id {
@@ -147,37 +142,35 @@
     .toggle-products-btn {
       background: none;
       border: none;
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
       color: var(--gray);
-      transition: color 0.2s;
+      transition: 0.2s;
     }
     .toggle-products-btn:hover {
       color: var(--primary);
-    }
-
-    .product-list {
-      margin-top: 10px;
+      transform: scale(1.1);
     }
 
     .product-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--card);
+      background: #f9fafb;
       border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 8px;
-      font-size: 18px;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 16px;
     }
 
+    /* Checkbox */
     input[type="checkbox"] {
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border: 2px solid #d1d5db;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
       position: relative;
       transition: 0.2s;
@@ -189,7 +182,7 @@
     input[type="checkbox"]:checked:before {
       content: "✓";
       color: white;
-      font-size: 12px;
+      font-size: 13px;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -200,17 +193,18 @@
       background: var(--success);
       border: none;
       color: #fff;
-      padding: 8px 14px;
-      border-radius: 6px;
-      margin-top: 10px;
+      padding: 10px 16px;
+      border-radius: 25px;
       font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
       cursor: pointer;
-      font-weight: 500;
       display: none;
-      transition: background 0.3s;
+      transition: all 0.3s;
     }
     .complete-btn:hover {
-      background: #15803d;
+      background: #16a34a;
+      transform: scale(1.05);
     }
     .complete-btn:disabled {
       background: #9ca3af;
@@ -220,14 +214,14 @@
     /* Toast */
     .toast {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
+      top: 25px;
+      right: 25px;
+      padding: 14px 20px;
       background: var(--success);
       color: white;
-      border-radius: 6px;
+      border-radius: 10px;
       box-shadow: var(--shadow);
-      font-size: 14px;
+      font-size: 15px;
       opacity: 0;
       transform: translateX(120%);
       transition: all 0.4s ease;
@@ -241,54 +235,43 @@
       background: var(--secondary);
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .order-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
-    }
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(2px);
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
       justify-content: center;
       align-items: center;
       z-index: 2000;
     }
     .modal-content {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
+      background: var(--light);
+      padding: 24px;
+      border-radius: 14px;
       width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      animation: fadeIn 0.3s ease;
+      max-width: 600px;
+      max-height: 80%;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.35s ease;
     }
     .modal-header {
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 10px;
-      color: #1e3a8a;
-    }
-    .modal-body {
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
     }
     .modal-actions {
       text-align: right;
-      margin-top: 10px;
+      margin-top: 12px;
     }
     .close-btn, .submit-btn {
       padding: 8px 14px;
       border: none;
-      border-radius: 6px;
+      border-radius: 25px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
@@ -300,10 +283,15 @@
     }
     .close-btn:hover { background: #4b5563; }
     .submit-btn {
-      background: #16a34a;
+      background: var(--success);
       color: #fff;
     }
-    .submit-btn:hover { background: #15803d; }
+    .submit-btn:hover { background: #16a34a; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body>

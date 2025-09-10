@@ -103,6 +103,83 @@ const upload = multer({ storage });
 // API ROUTES FOR ORDERS MANAGEMENT
 // =============================
 
+// New endpoint to download uploaded invoice file from inventory_entries
+
+
+
+
+
+app.get('/api/inventory-invoice/:poNumber', async (req, res) => {
+  try {
+    const { poNumber } = req.params;
+    
+    // 1. Get purchase order id by poNumber
+    const poResult = await pool.query(
+  'SELECT id FROM purchase_orders WHERE po_number = $1',
+  [poNumber]
+);
+
+    if (poResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Purchase order not found' });
+    }
+
+    const purchaseOrderId = poResult.rows[0].id;
+
+    // 2. Get invoice file from inventory_entries
+    const invoiceResult = await pool.query(
+      'SELECT invoice_file FROM inventory_entries WHERE purchase_order_id = $1 ORDER BY created_at DESC LIMIT 1',
+      [purchaseOrderId]
+    );
+
+    if (invoiceResult.rows.length === 0 || !invoiceResult.rows[0].invoice_file) {
+      return res.status(404).json({ error: 'Invoice file not found' });
+    }
+
+    const invoiceFile = invoiceResult.rows[0].invoice_file;
+    const safeFileName = path.basename(invoiceFile); // prevent traversal attacks
+    const filePath = path.join(uploadsDir, safeFileName);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Invoice file not found on server' });
+    }
+
+    // 3. Send file for download
+    res.sendFile(filePath, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${safeFileName}"`
+      }
+    });
+
+  } catch (err) {
+    console.error('Error downloading inventory invoice:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Get all orders for the orders management interface
 app.get('/api/orders', async (req, res) => {
     try {
@@ -233,7 +310,7 @@ app.put('/api/orders/:id', async (req, res) => {
 
         const { rows } = await pool.query(
             `UPDATE purchase_orders SET
-             supplier_name = $1, urgency = $2, date_required = $3, notes = $4
+             supplier_name = $1, urgency = $2, notes = $4
              WHERE id = $5 RETURNING *`,
             [supplier_name, urgency, date_required, notes, id]
         );
@@ -537,7 +614,7 @@ app.post('/submit', async (req, res) => {
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
-    console.log(req.body);
+  
     
 
 
