@@ -3,227 +3,221 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Store Dashboard</title>
+  <title>Store Management Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-body {
-  background-color: #f9fafb;
-  color: #374151;
-  line-height: 1.6;
-}
+    body {
+      background-color: #f9fafb;
+      color: #374151;
+      line-height: 1.6;
+    }
 
-.container {
-  display: flex;
-  min-height: 100vh;
-}
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
 
-/* Sidebar */
-.sidebar {
-  width: 260px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
-  z-index: 10;
-}
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+    }
 
-.logo {
-  padding: 25px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: center;
-}
+    .logo {
+      padding: 25px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: center;
+    }
 
-.logo img {
-  max-width: 160px;
-  height: auto;
-  filter: brightness(0) invert(1);
-}
+    .logo img {
+      max-width: 160px;
+      height: auto;
+      filter: brightness(0) invert(1);
+    }
 
-.menu {
-  list-style: none;
-  padding: 20px;
-  flex: 1;
-}
+    .menu {
+      list-style: none;
+      padding: 20px;
+      flex: 1;
+    }
 
-.menu-item {
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  font-weight: 500;
-}
+    .menu-item {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
 
-.menu-item i {
-  font-size: 1.1rem;
-  opacity: 0.85;
-}
+    .menu-item i {
+      font-size: 1.1rem;
+      opacity: 0.85;
+    }
 
-.menu-item:hover,
-.menu-item.active {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateX(4px);
-}
+    .menu-item:hover,
+    .menu-item.active {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateX(4px);
+    }
 
-/* Main Content */
-.main-content {
-  flex: 1;
-  padding: 40px;
-  overflow-y: auto;
-  background: #f9fafb;
-}
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 35px;
-}
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+    }
 
-.header h2 {
-  font-size: 26px;
-  font-weight: 600;
-  color: #1e293b;
-  background: linear-gradient(90deg, #2563eb, #1d4ed8);
- /* fallback for browsers that don't support clipping */
-   background-clip: text; 
-  -webkit-background-clip: text;   /* Safari / Chrome */
-  -webkit-text-fill-color: transparent; /* Safari / Chrome */}
+    .header h2 {
+      font-size: 26px;
+      font-weight: 600;
+      color: #1e293b;
+      background: linear-gradient(90deg, #2563eb, #1d4ed8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 8px 14px;
-  border-radius: 40px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 40px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
 
-.user-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 14px;
-}
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
 
-/* Tabs */
-.tab-content {
-  display: none;
-  background: white;
-  border-radius: 14px;
-  padding: 28px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
-}
+    /* Tab */
+    .tab-content {
+      background: white;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      margin-bottom: 30px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
 
-.tab-content.active {
-  display: block;
-  animation: fadeIn 0.3s ease-in-out;
-}
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    .tab-header {
+      margin-bottom: 25px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 15px;
+    }
 
-.tab-header {
-  margin-bottom: 25px;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 15px;
-}
+    .tab-header h3 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #111827;
+    }
 
-.tab-header h3 {
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #111827;
-}
+    .tab-header p {
+      color: #6b7280;
+      font-size: 15px;
+    }
 
-.tab-header p {
-  color: #6b7280;
-  font-size: 15px;
-}
+    /* Form */
+    .form-group {
+      margin-bottom: 22px;
+    }
 
-/* Form */
-.form-group {
-  margin-bottom: 22px;
-}
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
 
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #374151;
-  font-size: 14px;
-}
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+      background: #f9fafb;
+    }
 
-.form-control {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 15px;
-  transition: all 0.2s;
-  background: #f9fafb;
-}
+    .form-control:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
 
-.form-control:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-}
+    /* Button */
+    .btn {
+      padding: 12px 26px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+    }
 
-/* Button */
-.btn {
-  padding: 12px 26px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
-}
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
+    }
 
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-  .container {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-  }
-  .main-content {
-    padding: 20px;
-  }
-}
-
+    /* Responsive */
+    @media (max-width: 992px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .main-content {
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -234,8 +228,8 @@ body {
         <img src="images/wt_img.png" alt="Company Logo">
       </div>
       <ul class="menu">
-        <li class="menu-item active" data-tab="inventory-management">
-          <i class="fas fa-boxes"></i> Store
+        <li class="menu-item active" data-tab="store-management">
+          <i class="fas fa-warehouse"></i> Store Management
         </li>
         <li class="menu-item" id="logout-btn">
           <form action="/logout" method="post">
@@ -251,45 +245,40 @@ body {
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
-        <h2>Store Dashboard</h2>
+        <h2>Store Management Dashboard</h2>
         <div class="user-info">
           <div class="user-avatar">
             <% const out_fl1 = user ? user.email.slice(0, 2) : 'IN'; %>
             <%= out_fl1.toUpperCase() %>
           </div>
-          <span><%= user ? user.email : 'Inventory User' %></span>
+          <span><%= user ? user.email : 'Store User' %></span>
         </div>
       </div>
 
-      <!-- Project Management Tab -->
-      <!-- Removed project-management tab content as only one tab is needed -->
-      <div class="tab-content" id="project-management" style="display:none;">
-      </div>
-
-      <!-- Inventory Management Tab -->
-      <div class="tab-content active" id="inventory-management">
+      <!-- Store Management Tab -->
+      <div class="tab-content active" id="store-management">
         <div class="tab-header">
-          <h3>Store Entry</h3>
-          <p>Enter inventory details for store</p>
+          <h3>Store Management Entry</h3>
+          <p>Enter inventory details for store management</p>
         </div>
 
         <form action="/submit-inventory" method="post" enctype="multipart/form-data">
-          <input type="hidden" name="management-type" value="inventory">
+          <input type="hidden" name="management-type" value="store">
           <div class="form-group">
-            <label for="order_id_inventory">Select Purchase Order</label>
-            <select id="order_id_inventory" name="order_id" class="form-control" required>
+            <label for="order_id_store">Select Purchase Order</label>
+            <select id="order_id_store" name="order_id" class="form-control" required>
               <option value="">Select an order</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="grn_inventory">GRN Number</label>
-            <input type="text" id="grn_inventory" name="grn" class="form-control" placeholder="Enter GRN number" required>
+            <label for="grn_store">GRN Number</label>
+            <input type="text" id="grn_store" name="grn" class="form-control" placeholder="Enter GRN number" required>
           </div>
 
           <div class="form-group">
-            <label for="invoice_inventory">Upload Invoice</label>
-            <input type="file" id="invoice_inventory" name="invoice" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
+            <label for="invoice_store">Upload Invoice</label>
+            <input type="file" id="invoice_store" name="invoice" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
           </div>
 
           <!-- Supplier Bank Details Section -->
@@ -297,28 +286,28 @@ body {
             <h4 style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 15px;">Supplier Bank Details</h4>
 
             <div class="form-group">
-              <label for="supplier_account_number_inventory">Account Number</label>
-              <input type="text" id="supplier_account_number_inventory" name="supplier_account_number" class="form-control" placeholder="Enter supplier account number">
+              <label for="supplier_account_number_store">Account Number</label>
+              <input type="text" id="supplier_account_number_store" name="supplier_account_number" class="form-control" placeholder="Enter supplier account number">
             </div>
 
             <div class="form-group">
-              <label for="supplier_account_name_inventory">Account Name</label>
-              <input type="text" id="supplier_account_name_inventory" name="supplier_account_name" class="form-control" placeholder="Enter supplier account name">
+              <label for="supplier_account_name_store">Account Name</label>
+              <input type="text" id="supplier_account_name_store" name="supplier_account_name" class="form-control" placeholder="Enter supplier account name">
             </div>
 
             <div class="form-group">
-              <label for="supplier_ifsc_code_inventory">IFSC Code</label>
-              <input type="text" id="supplier_ifsc_code_inventory" name="supplier_ifsc_code" class="form-control" placeholder="Enter IFSC code">
+              <label for="supplier_ifsc_code_store">IFSC Code</label>
+              <input type="text" id="supplier_ifsc_code_store" name="supplier_ifsc_code" class="form-control" placeholder="Enter IFSC code">
             </div>
 
             <div class="form-group">
-              <label for="amount_inventory">Amount</label>
-              <input type="number" id="amount_inventory" name="amount" class="form-control" placeholder="Enter amount" step="0.01">
+              <label for="amount_store">Amount</label>
+              <input type="number" id="amount_store" name="amount" class="form-control" placeholder="Enter amount" step="0.01">
             </div>
 
             <div class="form-group">
-              <label for="shift_code_inventory">Shift Code (Optional)</label>
-              <input type="text" id="shift_code_inventory" name="shift_code" class="form-control" placeholder="Enter shift code">
+              <label for="shift_code_store">Shift Code (Optional)</label>
+              <input type="text" id="shift_code_store" name="shift_code" class="form-control" placeholder="Enter shift code">
             </div>
           </div>
 
@@ -331,237 +320,83 @@ body {
   </div>
 
   <script>
-    // Tab switching functionality
-    document.querySelectorAll('.menu-item').forEach(item => {
-      item.addEventListener('click', function() {
-        if (this.id !== 'logout-btn') {
-          // Remove active class from all menu items
-          document.querySelectorAll('.menu-item').forEach(menuItem => {
-            menuItem.classList.remove('active');
-          });
-
-          // Since only one tab, no tab switching needed
-        }
-      });
-    });
-
-    // Fetch and populate purchase orders for both tabs
+    // Fetch and populate purchase orders
     async function loadOrders() {
       try {
         const response = await fetch('/api/inventory-orders');
         const orders = await response.json();
-
-        // Clear existing options except the first one
-        const selects = ['order_id_inventory'];
-        selects.forEach(selectId => {
-          const select = document.getElementById(selectId);
-          // Keep only the first option (placeholder)
-          select.innerHTML = '<option value="">Select an order</option>';
-          orders.forEach(order => {
-            const option = document.createElement('option');
-            option.value = order.id;
-            option.textContent = `${order.order_id} - ${order.project} (${order.supplier})`;
-            select.appendChild(option);
-          });
+        const select = document.getElementById('order_id_store');
+        select.innerHTML = '<option value="">Select an order</option>';
+        orders.forEach(order => {
+          const option = document.createElement('option');
+          option.value = order.id;
+          option.textContent = `${order.order_id} - ${order.project} (${order.supplier})`;
+          select.appendChild(option);
         });
       } catch (error) {
         console.error('Error loading orders:', error);
       }
     }
 
-    // Load orders on page load
     document.addEventListener('DOMContentLoaded', loadOrders);
 
-    // Handle form submission with error handling
-    const form = document.querySelector('form[action="/submit-inventory"]');
-    if (form) {
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault(); // Prevent default form submission
+    // Handle form submission with popup
+    document.querySelector('form[action="/submit-inventory"]').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
 
-        const formData = new FormData(this);
-
-        try {
-          const response = await fetch('/submit-inventory', {
-            method: 'POST',
-            body: formData,
-            redirect: 'manual' // Prevent automatic redirects
-          });
-
-          // Check if it's a redirect (302)
-          if (response.status === 302 || response.type === 'opaqueredirect') {
-            // Success - the server redirected to /Inventory
-            showPopup('Success', 'Inventory entry submitted successfully!', 'success');
-            loadOrders();
-            this.reset();
-            return;
-          }
-
-          let result;
-          try {
-            result = await response.json();
-          } catch (jsonError) {
-            // If response is not JSON, try to get text
-            const textResponse = await response.text();
-            console.error('Non-JSON response:', textResponse);
-
-            // If it's HTML (likely a redirect), treat as success
-            if (textResponse.includes('<html') || textResponse.includes('<!DOCTYPE')) {
-              showPopup('Success', 'Inventory entry submitted successfully!', 'success');
-              loadOrders();
-              this.reset();
-              return;
-            }
-
-            showPopup('Error', 'Server returned an invalid response. Please try again.', 'error');
-            return;
-          }
-
-          if (!response.ok) {
-            // Handle error response
-            if (result && result.success === false) {
-              if (result.error === 'Invalid GRN') {
-                showPopup('Error', result.message, 'error');
-              } else if (result.error === 'Validation Error') {
-                showPopup('Error', result.message, 'error');
-              } else if (result.error === 'Server Error') {
-                showPopup('Error', result.message, 'error');
-              } else {
-                showPopup('Error', result.message || 'An error occurred', 'error');
-              }
-            } else {
-              showPopup('Error', 'An unexpected error occurred', 'error');
-            }
-            return;
-          }
-
-          // Success - show success message and reload orders
-          showPopup('Success', 'Inventory entry submitted successfully!', 'success');
-          loadOrders();
-
-          // Reset form after successful submission
-          this.reset();
-
-        } catch (error) {
-          console.error('Network error:', error);
-          // Only show network error if it's a real network issue
-          if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            showPopup('Error', 'Network error. Please check your connection and try again.', 'error');
-          } else {
-            // For other errors, assume success since the action might have completed
-            showPopup('Success', 'Inventory entry submitted successfully!', 'success');
-            loadOrders();
-            form.reset();
-          }
-        }
-      });
-    };
-
-    // Function to show popup messages
-    function showPopup(title, message, type) {
-      // Remove existing popup if any
-      const existingPopup = document.querySelector('.popup-overlay');
-      if (existingPopup) {
-        existingPopup.remove();
+      try {
+        const response = await fetch('/submit-inventory', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error("Server error");
+        showPopup('Success', 'Store entry submitted successfully!', 'success');
+        loadOrders();
+        this.reset();
+      } catch (error) {
+        showPopup('Error', 'Submission failed. Please try again.', 'error');
       }
+    });
 
-      // Create popup elements
+    // Popup function
+    function showPopup(title, message, type) {
+      const existingPopup = document.querySelector('.popup-overlay');
+      if (existingPopup) existingPopup.remove();
+
       const overlay = document.createElement('div');
       overlay.className = 'popup-overlay';
       overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        background: rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;
       `;
 
       const popup = document.createElement('div');
-      popup.className = 'popup';
       popup.style.cssText = `
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        animation: fadeIn 0.3s ease-out;
+        background:white; border-radius:12px; padding:24px; max-width:400px; width:90%;
+        box-shadow:0 10px 25px rgba(0,0,0,0.2); text-align:center;
       `;
 
       const icon = document.createElement('div');
-      icon.style.cssText = `
-        font-size: 48px;
-        margin-bottom: 16px;
+      icon.style.fontSize = '48px';
+      icon.innerHTML = type === 'success' ? '✅' : '❌';
+
+      const titleEl = document.createElement('h3');
+      titleEl.textContent = title;
+
+      const msgEl = document.createElement('p');
+      msgEl.textContent = message;
+
+      const btn = document.createElement('button');
+      btn.textContent = 'OK';
+      btn.style.cssText = `
+        background:${type === 'success' ? '#10b981' : '#ef4444'};
+        color:white; border:none; padding:10px 24px; border-radius:6px; cursor:pointer;
       `;
+      btn.onclick = () => overlay.remove();
 
-      if (type === 'success') {
-        icon.innerHTML = '✅';
-        popup.style.borderTop = '4px solid #10b981';
-      } else if (type === 'error') {
-        icon.innerHTML = '❌';
-        popup.style.borderTop = '4px solid #ef4444';
-      }
-
-      const titleElement = document.createElement('h3');
-      titleElement.textContent = title;
-      titleElement.style.cssText = `
-        margin: 0 0 12px 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #1f2937;
-      `;
-
-      const messageElement = document.createElement('p');
-      messageElement.textContent = message;
-      messageElement.style.cssText = `
-        margin: 0 0 20px 0;
-        color: #6b7280;
-        line-height: 1.5;
-      `;
-
-      const closeButton = document.createElement('button');
-      closeButton.textContent = 'OK';
-      closeButton.style.cssText = `
-        background: ` + (type === 'success' ? '#10b981' : '#ef4444') + `;
-        color: white;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.2s;
-      `;
-      closeButton.onmouseover = () => {
-        closeButton.style.backgroundColor = type === 'success' ? '#059669' : '#dc2626';
-      };
-      closeButton.onmouseout = () => {
-        closeButton.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
-      };
-      closeButton.onclick = () => {
-        overlay.remove();
-      };
-
-      // Append elements
-      popup.appendChild(icon);
-      popup.appendChild(titleElement);
-      popup.appendChild(messageElement);
-      popup.appendChild(closeButton);
+      popup.append(icon, titleEl, msgEl, btn);
       overlay.appendChild(popup);
       document.body.appendChild(overlay);
 
-      // Auto-close after 5 seconds for success messages
-      if (type === 'success') {
-        setTimeout(() => {
-          if (overlay.parentNode) {
-            overlay.remove();
-          }
-        }, 3000);
-      }
+      if (type === 'success') setTimeout(() => overlay.remove(), 3000);
     }
   </script>
 </body>
