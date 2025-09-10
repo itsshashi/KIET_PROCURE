@@ -423,8 +423,7 @@ app.post('/submit-inventory', upload.single('invoice'), async (req, res) => {
             supplier_account_name,
             supplier_ifsc_code,
             amount,
-            shift_code,
-            
+            shift_code
         } = req.body;
 
         // Validate required fields
@@ -452,7 +451,6 @@ app.post('/submit-inventory', upload.single('invoice'), async (req, res) => {
             supplier_ifsc_code || null,
             amount ? parseFloat(amount) : null,
             shift_code || null,
-            managementType || null,
             req.session.user.email
         ];
 
