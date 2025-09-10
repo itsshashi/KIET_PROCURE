@@ -1049,13 +1049,13 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       "SELECT * FROM purchase_orders WHERE id = $1",
       [id]
     );
-     
+
     if (orderResult.rows.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
     const order = orderResult.rows[0];
-    
-  
+
+
     // Fetch order items
     const itemsResult = await pool.query(
       "SELECT * FROM purchase_order_items WHERE purchase_order_id = $1",
@@ -1079,7 +1079,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     address: order.supplier_address,
     contact: order.contact  || "N/A",
     gst:order.supplier_gst||"N/A"
-    
+
   },
   poNumber: order.po_number,
   reference_no: order.reference_no,
@@ -1089,7 +1089,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     name: order.ordered_by,
     plant: "Aaryan Tech Park", // fixed or from DB
     email: order.ordered_by_email || "example@mail.com",
-    
+
   },
 
   shipTo: order.shipping_address,
@@ -1097,7 +1097,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   goodsRecipient: "Kiet-ATPLog1",
 
   termsOfPayment: order.terms_of_payment,
-  
+
 
   items: items, // from DB query purchase_order_items
 
@@ -1116,7 +1116,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
 
   signPath: "public/images/signature.png",
   company: { logo: "public/images/page_logo.png" },
-  
+
 };
 
 
@@ -1152,6 +1152,106 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   } catch (err) {
     console.error("❌ Error generating PDF:", err.stack || err);
     res.status(500).json({ error: err.message || "Failed to generate PDF" });
+  }
+});
+
+app.get("/api/invoice/:poNumber", async (req, res) => {
+  try {
+    const { poNumber } = req.params;
+
+    // Fetch order by po_number
+    const orderResult = await pool.query(
+      "SELECT * FROM purchase_orders WHERE purchase_order_number = $1",
+      [poNumber]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    const order = orderResult.rows[0];
+
+    // Fetch order items
+    const itemsResult = await pool.query(
+      "SELECT * FROM purchase_order_items WHERE purchase_order_id = $1",
+      [order.id]
+    );
+    const items = itemsResult.rows.map(row => ({
+      part_no: row.part_no,
+      description: row.description,
+      hsn_code: row.hsn_code,
+      gst: row.gst,
+      quantity: row.quantity,
+      unit: row.unit || "pcs",
+      unit_price: Number(row.unit_price) || 0,
+      discount: row.discount || 0
+    }));
+
+    // Prepare poData object (using same as PO for now)
+    const poData = {
+      supplier: {
+        name: order.supplier_name,
+        address: order.supplier_address,
+        contact: order.contact || "N/A",
+        gst: order.supplier_gst || "N/A"
+      },
+      poNumber: order.purchase_order_number,
+      reference_no: order.reference_no,
+      date: new Date(order.created_at).toLocaleDateString(),
+      requester: {
+        name: order.ordered_by,
+        plant: "Aaryan Tech Park",
+        email: order.ordered_by_email || "example@mail.com",
+      },
+      shipTo: order.shipping_address,
+      invoiceTo: "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+      goodsRecipient: "Kiet-ATPLog1",
+      termsOfPayment: order.terms_of_payment,
+      items: items,
+      amountInWords: "INR Twenty Six Thousand Nine Hundred Four Only",
+      terms: `
+        1. The supplier shall comply with all applicable laws, export regulations, and ethical business practices at all times.
+        2. Any form of bribery, gratification, or involvement of restricted materials is strictly prohibited.
+        3. The goods supplied must not contain iron or steel originating from sanctioned countries.
+        4. All invoices must exactly match the purchase order details and clearly reference the PO number.
+        5. Payments will be made within 45 days from goods receipt or invoice receipt, whichever is applicable.
+        6. Deliveries accepted only Mon–Fri 9:00 AM to 5:00 PM, routed through designated material gates.
+        7. Each delivery must be accompanied by three copies of the invoice.
+        8. Supplier personnel entering premises must wear safety shoes and carry valid ID, license & vehicle docs.
+        9. Buyer reserves the right to reject goods or terminate this PO for non-compliance.
+      `,
+      signPath: "public/images/signature.png",
+      company: { logo: "public/images/page_logo.png" },
+    };
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const fileName = `Invoice_${poNumber}_${timestamp}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // Generate PDF (using PO generator for now)
+    generatePurchaseOrder(poData, filePath);
+
+    // Send PDF as response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Wait a bit for PDF generation to complete, then send file
+    setTimeout(() => {
+      if (fs.existsSync(filePath)) {
+        res.sendFile(filePath, (err) => {
+          if (err) {
+            console.error("Error sending invoice PDF:", err);
+            res.status(500).json({ error: "Failed to send invoice PDF" });
+          }
+        });
+      } else {
+        res.status(500).json({ error: "Invoice PDF generation failed - file not found" });
+      }
+    }, 1000); // Wait 1 second for PDF generation
+
+  } catch (err) {
+    console.error("❌ Error generating invoice PDF:", err.stack || err);
+    res.status(500).json({ error: err.message || "Failed to generate invoice PDF" });
   }
 });
 

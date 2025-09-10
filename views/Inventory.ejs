@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventory Management Dashboard</title>
+  <title>Store Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -234,11 +234,8 @@ body {
         <img src="images/wt_img.png" alt="Company Logo">
       </div>
       <ul class="menu">
-        <li class="menu-item active" data-tab="project-management">
-          <i class="fas fa-project-diagram"></i> Project Management
-        </li>
-        <li class="menu-item" data-tab="inventory-management">
-          <i class="fas fa-boxes"></i> Inventory Management
+        <li class="menu-item active" data-tab="inventory-management">
+          <i class="fas fa-boxes"></i> Store
         </li>
         <li class="menu-item" id="logout-btn">
           <form action="/logout" method="post">
@@ -254,7 +251,7 @@ body {
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
-        <h2>Inventory Management Dashboard</h2>
+        <h2>Store Dashboard</h2>
         <div class="user-info">
           <div class="user-avatar">
             <% const out_fl1 = user ? user.email.slice(0, 2) : 'IN'; %>
@@ -265,72 +262,15 @@ body {
       </div>
 
       <!-- Project Management Tab -->
-      <div class="tab-content active" id="project-management">
-        <div class="tab-header">
-          <h3>Project Management Entry</h3>
-          <p>Enter inventory details for project management</p>
-        </div>
-
-        <form action="/submit-inventory" method="post" enctype="multipart/form-data">
-          <input type="hidden" name="management-type" value="project">
-          <div class="form-group">
-            <label for="order_id_project">Select Purchase Order</label>
-            <select id="order_id_project" name="order_id" class="form-control" required>
-              <option value="">Select an order</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="grn_project">GRN Number</label>
-            <input type="text" id="grn_project" name="grn" class="form-control" placeholder="Enter GRN number" required>
-          </div>
-
-          <div class="form-group">
-            <label for="invoice_project">Upload Invoice</label>
-            <input type="file" id="invoice_project" name="invoice" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
-          </div>
-
-          <!-- Supplier Bank Details Section -->
-          <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
-            <h4 style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 15px;">Supplier Bank Details</h4>
-
-            <div class="form-group">
-              <label for="supplier_account_number_project">Account Number</label>
-              <input type="text" id="supplier_account_number_project" name="supplier_account_number" class="form-control" placeholder="Enter supplier account number">
-            </div>
-
-            <div class="form-group">
-              <label for="supplier_account_name_project">Account Name</label>
-              <input type="text" id="supplier_account_name_project" name="supplier_account_name" class="form-control" placeholder="Enter supplier account name">
-            </div>
-
-            <div class="form-group">
-              <label for="supplier_ifsc_code_project">IFSC Code</label>
-              <input type="text" id="supplier_ifsc_code_project" name="supplier_ifsc_code" class="form-control" placeholder="Enter IFSC code">
-            </div>
-
-            <div class="form-group">
-              <label for="amount_project">Amount</label>
-              <input type="number" id="amount_project" name="amount" class="form-control" placeholder="Enter amount" step="0.01">
-            </div>
-
-            <div class="form-group">
-              <label for="shift_code_project">Shift Code (Optional)</label>
-              <input type="text" id="shift_code_project" name="shift_code" class="form-control" placeholder="Enter shift code">
-            </div>
-          </div>
-
-          <button type="submit" class="btn">
-            <i class="fas fa-paper-plane"></i> Submit Project Entry
-          </button>
-        </form>
+      <!-- Removed project-management tab content as only one tab is needed -->
+      <div class="tab-content" id="project-management" style="display:none;">
       </div>
 
       <!-- Inventory Management Tab -->
-      <div class="tab-content" id="inventory-management">
+      <div class="tab-content active" id="inventory-management">
         <div class="tab-header">
-          <h3>Inventory Management Entry</h3>
-          <p>Enter inventory details for inventory management</p>
+          <h3>Store Entry</h3>
+          <p>Enter inventory details for store</p>
         </div>
 
         <form action="/submit-inventory" method="post" enctype="multipart/form-data">
@@ -383,7 +323,7 @@ body {
           </div>
 
           <button type="submit" class="btn">
-            <i class="fas fa-paper-plane"></i> Submit Inventory Entry
+            <i class="fas fa-paper-plane"></i> Submit Store Entry
           </button>
         </form>
       </div>
@@ -395,17 +335,12 @@ body {
     document.querySelectorAll('.menu-item').forEach(item => {
       item.addEventListener('click', function() {
         if (this.id !== 'logout-btn') {
-          // Remove active class from all tabs and menu items
-          document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-          });
+          // Remove active class from all menu items
           document.querySelectorAll('.menu-item').forEach(menuItem => {
             menuItem.classList.remove('active');
           });
 
-          // Add active class to current tab and menu item
-          document.getElementById(this.dataset.tab).classList.add('active');
-          this.classList.add('active');
+          // Since only one tab, no tab switching needed
         }
       });
     });
@@ -417,7 +352,7 @@ body {
         const orders = await response.json();
 
         // Clear existing options except the first one
-        const selects = ['order_id_project', 'order_id_inventory'];
+        const selects = ['order_id_inventory'];
         selects.forEach(selectId => {
           const select = document.getElementById(selectId);
           // Keep only the first option (placeholder)
@@ -438,7 +373,8 @@ body {
     document.addEventListener('DOMContentLoaded', loadOrders);
 
     // Handle form submission with error handling
-    document.querySelectorAll('form[action="/submit-inventory"]').forEach(form => {
+    const form = document.querySelector('form[action="/submit-inventory"]');
+    if (form) {
       form.addEventListener('submit', async function(e) {
         e.preventDefault(); // Prevent default form submission
 
@@ -518,7 +454,7 @@ body {
           }
         }
       });
-    });
+    };
 
     // Function to show popup messages
     function showPopup(title, message, type) {
@@ -554,7 +490,7 @@ body {
         width: 90%;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         text-align: center;
-        animation: popupFadeIn 0.3s ease-out;
+        animation: fadeIn 0.3s ease-out;
       `;
 
       const icon = document.createElement('div');
@@ -591,7 +527,7 @@ body {
       const closeButton = document.createElement('button');
       closeButton.textContent = 'OK';
       closeButton.style.cssText = `
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        background: ` + (type === 'success' ? '#10b981' : '#ef4444') + `;
         color: white;
         border: none;
         padding: 10px 24px;

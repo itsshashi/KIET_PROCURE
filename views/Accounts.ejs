@@ -114,6 +114,27 @@
       cursor: not-allowed;
     }
 
+    .download-btn {
+      background: #10b981;
+      border: none;
+      padding: 8px 16px;
+      color: white;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-right: 8px;
+    }
+
+    .download-btn:hover {
+      background: #059669;
+    }
+
+    .download-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
     /* Modal Styles */
     .modal {
       display: none;
@@ -570,6 +591,13 @@
         paidBtn.onclick = () => markAsPaid(item);
         actionTd.appendChild(paidBtn);
 
+        // Download Invoice button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.textContent = 'Download Invoice';
+        downloadBtn.onclick = () => downloadInvoice(item.po_number);
+        actionTd.appendChild(downloadBtn);
+
         tr.appendChild(actionTd);
         tbody.appendChild(tr);
       });
@@ -684,7 +712,7 @@
     }
 
     function logout() {
-      fetch('/api/logout', { 
+      fetch('/api/logout', {
         method: 'POST',
         credentials: 'include'
       })
@@ -695,6 +723,25 @@
         console.error('Logout error:', err);
         window.location.href = '/';
       });
+    }
+
+    async function downloadInvoice(poNumber) {
+      try {
+        const response = await fetch(`/api/invoice/${poNumber}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to download invoice');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${poNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading invoice:', error);
+        showError('Failed to download invoice');
+      }
     }
 
     // Fetch account details on page load
