@@ -80,13 +80,24 @@ async function generatePurchaseOrderNumber() {
         [`${prefix}%`]
     );
 
-    if (result.rows.length === 0) return `${prefix}001`;
+    let sequence = 1;
+    if (result.rows.length > 0) {
+        const lastNumber = result.rows[0].purchase_order_number;
+        sequence = parseInt(lastNumber.slice(-3)) + 1;
+    }
 
-    const lastNumber = result.rows[0].purchase_order_number;
-    const sequence = parseInt(lastNumber.slice(-3)) + 1;
-    return `${prefix}${String(sequence).padStart(3, "0")}`;
+    while (true) {
+        const candidate = `${prefix}${String(sequence).padStart(3, "0")}`;
+        const checkResult = await pool.query(
+            `SELECT 1 FROM purchase_orders WHERE purchase_order_number = $1`,
+            [candidate]
+        );
+        if (checkResult.rows.length === 0) {
+            return candidate;
+        }
+        sequence++;
+    }
 }
-
 // =============================
 // MULTER CONFIG
 // =============================
