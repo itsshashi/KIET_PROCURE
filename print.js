@@ -199,18 +199,20 @@ function generatePurchaseOrder(poData, filePath) {
 // ✅ Totals Table (with blank row first)
 {
   table: {
-    widths: ["*", "auto"],
-    body: [
+  widths: ["*", "auto"],
+  body: [
+    [
       
-      [],
-      [{text:"**include with Gst**", alignment: "right" ,margin:[0,0,0,0]}],
-      
-      [
-        { text: "Grand Total", bold: true },
-        { text: grandTotal.toFixed(2), bold: true, alignment: "right" },
-      ],
+      { text: "*include with GST*", margin: [0, 0, 0, 0] }
+      ," "
     ],
-  },
+    [
+      { text: "Grand Total", bold: true },
+      { text: grandTotal.toFixed(2), bold: true, alignment: "right" },
+    ],
+  ],
+},
+
   layout:horizontalLineLayout,
   margin: [0, 10, 0, 15],
   font:"Times"
