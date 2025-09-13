@@ -7,21 +7,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
      :root {
-      --primary: #3b82f6;
+      --primary: #2563eb;
       --primary-dark: #1e40af;
       --secondary: #ef4444;
-      --success: #22c55e;
+      --success: #16a34a;
       --light: #ffffff;
       --dark: #111827;
       --gray: #6b7280;
-      --bg: #f3f4f6;
-      --glass: rgba(255, 255, 255, 0.75);
-      --shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      --bg: #f9fafb;
+      --glass: rgba(255, 255, 255, 0.85);
+      --shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     }
 
     body {
       font-family: "Inter", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #e0f2fe, #fef9c3);
+      background: linear-gradient(135deg, #dbeafe, #fef9c3);
       min-height: 100vh;
       margin: 0;
       color: var(--dark);
@@ -32,7 +32,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 24px;
+      padding: 12px 24px;
       background: var(--primary);
       color: white;
       box-shadow: var(--shadow);
@@ -42,20 +42,20 @@
     }
 
     .header img {
-      height: 150px;
+      height: 80px;
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
     }
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 15px;
+      gap: 14px;
+      font-size: 20px;
     }
 
     .user-avatar {
-      width: 42px;
-      height: 42px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: var(--light);
       color: var(--primary-dark);
@@ -63,19 +63,20 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      font-size: 18px;
       box-shadow: var(--shadow);
     }
 
     .logout-btn {
       background: var(--secondary);
       border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
+      padding: 10px 20px;
+      border-radius: 8px;
       color: #fff;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: 0.25s;
     }
     .logout-btn:hover {
       background: #dc2626;
@@ -84,41 +85,43 @@
 
     /* Container */
     .container {
-      max-width: 900px;
+      max-width: 1400px;
       margin: 40px auto;
-      padding: 0 16px;
+      padding: 0 32px;
     }
 
     h2 {
       text-align: center;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 32px;
       color: var(--primary-dark);
-      text-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     /* Card */
     .card {
       background: var(--glass);
-      border-radius: 16px;
-      padding: 24px;
+      
+      border-radius: 20px;
+      padding: 28px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(12px);
     }
 
     /* Order Cards */
     .order-card {
-      background: var(--light);
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-      transition: all 0.25s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
+  background: var(--light);
+  border-radius: 14px;
+  padding: 28px 32px;   /* increased padding */
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  min-height: 100px;    /* ensure card has more height */
+}
+
     .order-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-3px);
       box-shadow: var(--shadow);
     }
 
@@ -129,14 +132,14 @@
     }
 
     .supplier-name {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary-dark);
-      font-size: 16px;
+      font-size: 30px;
     }
 
     .order-id {
-      font-size: 13px;
-      color: var(--gray);
+      font-size: 25px;
+      color: black;
     }
 
     .toggle-products-btn {
@@ -149,28 +152,29 @@
     }
     .toggle-products-btn:hover {
       color: var(--primary);
-      transform: scale(1.1);
+      transform: scale(1.15);
     }
 
+    /* Product Item */
     .product-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #f9fafb;
+      background: var(--bg);
       border: 1px solid #e5e7eb;
       border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-      font-size: 16px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      font-size: 20px;
     }
 
     /* Checkbox */
     input[type="checkbox"] {
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border: 2px solid #d1d5db;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
       position: relative;
       transition: 0.2s;
@@ -182,7 +186,7 @@
     input[type="checkbox"]:checked:before {
       content: "✓";
       color: white;
-      font-size: 13px;
+      font-size: 14px;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -193,17 +197,17 @@
       background: var(--success);
       border: none;
       color: #fff;
-      padding: 10px 16px;
-      border-radius: 25px;
-      font-size: 14px;
+      padding: 12px 20px;
+      border-radius: 28px;
+      font-size: 18px;
       font-weight: 600;
-      margin-top: 12px;
+      margin-top: 16px;
       cursor: pointer;
       display: none;
-      transition: all 0.3s;
+      transition: all 0.25s;
     }
     .complete-btn:hover {
-      background: #16a34a;
+      background: #15803d;
       transform: scale(1.05);
     }
     .complete-btn:disabled {
@@ -214,14 +218,14 @@
     /* Toast */
     .toast {
       position: fixed;
-      top: 25px;
-      right: 25px;
-      padding: 14px 20px;
+      top: 20px;
+      right: 20px;
+      padding: 16px 22px;
       background: var(--success);
       color: white;
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: var(--shadow);
-      font-size: 15px;
+      font-size: 18px;
       opacity: 0;
       transform: translateX(120%);
       transition: all 0.4s ease;
@@ -242,51 +246,64 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(4px);
       justify-content: center;
       align-items: center;
       z-index: 2000;
     }
     .modal-content {
       background: var(--light);
-      padding: 24px;
-      border-radius: 14px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 80%;
+      padding: 32px 36px;
+      border-radius: 16px;
+      width: 95%;
+      max-width: 900px;
+      max-height: 85%;
       overflow-y: auto;
       box-shadow: var(--shadow);
-      animation: fadeIn 0.35s ease;
+      animation: fadeIn 0.3s ease;
+      position: relative;
     }
     .modal-header {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: bold;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
       color: var(--primary-dark);
     }
-    .modal-actions {
-      text-align: right;
-      margin-top: 12px;
-    }
-    .close-btn, .submit-btn {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-    }
     .close-btn {
-      background: #6b7280;
-      color: #fff;
-      margin-right: 8px;
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 35px;
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+      transition: 0.2s;
     }
-    .close-btn:hover { background: #4b5563; }
-    .submit-btn {
-      background: var(--success);
-      color: #fff;
-    }
-    .submit-btn:hover { background: #16a34a; }
+    .product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.product-table th, .product-table td {
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 20px;
+}
+
+.product-table th {
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.product-table td {
+  background: var(--bg);
+}
+
+    .close-btn:hover { color: #b91c1c; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
@@ -298,12 +315,9 @@
 
   <!-- Header -->
   <div class="header">
-    
-      <img src="images/wt_img.png" alt="company logo" style="margin-left: 10px;">
-    
+    <img src="images/wt_img.png" alt="company logo">
     <div class="user-info">
-      <div class="user-avatar">SO
-      </div>
+      <div class="user-avatar">SO</div>
       <span>Security Officer</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
@@ -311,7 +325,6 @@
 
   <div class="container">
     <h2>Security Verification</h2>
-
     <div class="card">
       <div class="order-list" id="orderList">
         <!-- Orders will be populated here -->
@@ -325,32 +338,25 @@
   </div>
 
   <script>
-    // DOM elements
     const orderList = document.getElementById('orderList');
     const toast = document.getElementById('toast');
-
     let orders = [];
+    
 
-    // Load orders on page load
     document.addEventListener('DOMContentLoaded', loadOrders);
 
-    // Load orders from DB
     async function loadOrders() {
       try {
-        const response = await fetch('/api/orders/search/filter?status=approved', {
-          credentials: 'include'
-        });
+        const response = await fetch('/api/orders/search/filter?status=approved', { credentials: 'include' });
         if (response.ok) {
           const orderIds = await response.json();
-          // Fetch full details for each order
           orders = [];
           for (const order of orderIds) {
-            const detailResponse = await fetch(`/api/orders/${order.id}`, {
-              credentials: 'include'
-            });
+            const detailResponse = await fetch(`/api/orders/${order.id}`, { credentials: 'include' });
             if (detailResponse.ok) {
               const fullOrder = await detailResponse.json();
               orders.push(fullOrder);
+              
             }
           }
           populateOrderList();
@@ -363,169 +369,125 @@
       }
     }
 
-      // Populate order list
-      function populateOrderList() {
-        orderList.innerHTML = '';
-        orders.forEach(order => {
-          const orderCard = document.createElement('div');
-          orderCard.className = 'order-card';
-          orderCard.setAttribute('data-id', order.id);
+    function populateOrderList() {
+      orderList.innerHTML = '';
+      orders.forEach(order => {
+        const orderCard = document.createElement('div');
+        orderCard.className = 'order-card';
+        orderCard.setAttribute('data-id', order.id);
+        
 
-          // Add an icon button to toggle product details visibility
-          const toggleButtonId = `toggle-btn-${order.id}`;
-          const productListId = `product-list-${order.id}`;
+        const toggleButtonId = `toggle-btn-${order.id}`;
+        const modalId = `modal-${order.id}`;
+        const productListId = `product-list-${order.id}`;
 
-          let productHTML = '';
-          if (order.items) {
-            order.items.forEach(item => {
-              productHTML += `
-                <div class="product-item">
-                  <div class="product-detail">${item.description} - Qty: ${item.quantity}</div>
-                  <input type="checkbox" class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}">
-                </div>
-              `;
-            });
-          }
-
-          orderCard.innerHTML = `
-            <div class="order-header">
+        orderCard.innerHTML = `
+          <div class="order-header">
+            <div>
               <div class="supplier-name">${order.supplier}</div>
-              <div class="order-id">${order.order_id}</div>
-              <button id="${toggleButtonId}" class="toggle-products-btn" aria-label="Toggle products">&#x1F4E6;</button>
+              <div class="order-id">${order.po_number}</div>
             </div>
-          `;
+            <button id="${toggleButtonId}" class="toggle-products-btn" aria-label="Toggle products">
+              <i class="fas fa-clipboard-list"></i>
+            </button>
+          </div>
+        `;
 
-          // Create a modal container for preview
-          const modalId = `modal-${order.id}`;
-          const modalHTML = `
-            <div id="${modalId}" class="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-              <div class="modal-content" style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto; position: relative;">
-                <span class="close-btn" style="position: absolute; top: 10px; right: 15px; font-size: 20px; color: red; cursor: pointer;">&times;</span>
-                <h3>Order ${order.id} - Products</h3>
-                <div class="product-list" id="${productListId}">
-                  Loading...
-                </div>
+        const modalHTML = `
+          <div id="${modalId}" class="modal">
+            <div class="modal-content">
+              <button class="close-btn">&times;</button>
+              <h3 class="modal-header">Order ${order.id} - Products</h3>
+              <div class="product-list" id="${productListId}">
+                Loading...
               </div>
             </div>
-          `;
-          orderList.appendChild(orderCard);
-          orderList.insertAdjacentHTML('beforeend', modalHTML);
+          </div>
+        `;
+        orderList.appendChild(orderCard);
+        orderList.insertAdjacentHTML('beforeend', modalHTML);
 
-          orderList.appendChild(orderCard);
+        const toggleBtn = document.getElementById(toggleButtonId);
+        const modal = document.getElementById(modalId);
+        const productListDiv = modal.querySelector('.product-list');
+        const closeBtn = modal.querySelector('.close-btn');
 
-          // Add event listener for toggle button
-          const toggleBtn = document.getElementById(toggleButtonId);
-          const modal = document.getElementById(modalId);
-          const productListDiv = modal.querySelector('.product-list');
-          const completeBtn = modal.querySelector('.complete-btn');
-          const closeBtn = modal.querySelector('.close-btn');
-
-          toggleBtn.addEventListener('click', async () => {
-            modal.style.display = 'flex';
-            if (!productListDiv.hasAttribute('data-loaded')) {
-              try {
-                const response = await fetch(`/api/orders/${order.id}/items`, { credentials: 'include' });
-                if (response.ok) {
-                  const items = await response.json();
-                  let productHTML = '';
-                  items.forEach(item => {
-                    productHTML += `
-                      <div class="product-item">
-                  <div class="product-detail">${item.description} - Qty: ${item.quantity}</div>
-                  <input type="checkbox" class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}">
-                </div>
-              `;
-            });
-                  productListDiv.innerHTML = productHTML + `<button class="complete-btn" data-order-id="${order.id}" disabled style="margin-top: 15px;">Submit</button>`;
-                  const checkboxes = productListDiv.querySelectorAll('.verify-checkbox');
-                  const completeBtn = productListDiv.querySelector('.complete-btn');
-                  checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', () => {
-                      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                      completeBtn.disabled = !allChecked;
-                      completeBtn.style.display = allChecked ? 'block' : 'none';
-                    });
+        toggleBtn.addEventListener('click', async () => {
+          modal.style.display = 'flex';
+          if (!productListDiv.hasAttribute('data-loaded')) {
+            try {
+              const response = await fetch(`/api/orders/${order.id}/items`, { credentials: 'include' });
+              if (response.ok) {
+                const items = await response.json();
+                let productHTML = `
+                  <table class="product-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Verify</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                `;
+                items.forEach(item => {
+                  productHTML += `
+                    <tr>
+                      <td>${item.description}</td>
+                      <td>${item.quantity}</td>
+                      <td><input type="checkbox" class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}"></td>
+                    </tr>
+                  `;
+                });
+                productHTML += `
+                    </tbody>
+                  </table>
+                  <button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>
+                `;
+                productListDiv.innerHTML = productHTML + `<button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>`;
+                const checkboxes = productListDiv.querySelectorAll('.verify-checkbox');
+                const completeBtn = productListDiv.querySelector('.complete-btn');
+                checkboxes.forEach(checkbox => {
+                  checkbox.addEventListener('change', () => {
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    completeBtn.disabled = !allChecked;
+                    completeBtn.style.display = allChecked ? 'block' : 'none';
                   });
-                  completeBtn.addEventListener('click', async () => {
-                    const orderId = completeBtn.getAttribute('data-order-id');
-                    await completeOrder(orderId);
-                  });
-
-            productListDiv.setAttribute('data-loaded', 'true');
-          } else {
-            showToast("Failed to load order items", true);
-          }
-        } catch (error) {
-          console.error('Error loading order items:', error);
-          showToast("Error loading order items", true);
-        }
-      }
-    });
-
-          closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-          });
-
-          // Close modal on outside click
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-              modal.style.display = 'none';
+                });
+                completeBtn.addEventListener('click', async () => {
+                  const orderId = completeBtn.getAttribute('data-order-id');
+                  await completeOrder(orderId);
+                });
+                productListDiv.setAttribute('data-loaded', 'true');
+              } else {
+                showToast("Failed to load order items", true);
+              }
+            } catch (error) {
+              console.error('Error loading order items:', error);
+              showToast("Error loading order items", true);
             }
-          });
+          }
         });
 
-        // Set up checkbox event listeners
-        setupCheckboxes();
-      }
-
-    // Set up checkbox functionality
-    function setupCheckboxes() {
-      const checkboxes = document.querySelectorAll('.verify-checkbox');
-
-      checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-          const orderId = e.target.getAttribute('data-order-id');
-          const orderCard = document.querySelector(`.order-card[data-id="${orderId}"]`);
-          const orderCheckboxes = orderCard.querySelectorAll('.verify-checkbox');
-          const completeBtn = orderCard.querySelector('.complete-btn');
-
-          const allChecked = Array.from(orderCheckboxes).every(cb => cb.checked);
-          completeBtn.disabled = !allChecked;
-          completeBtn.style.display = allChecked ? 'block' : 'none';
+        closeBtn.addEventListener('click', () => {
+          modal.style.display = 'none';
         });
-      });
-
-      // Set up complete button event listeners
-      const completeBtns = document.querySelectorAll('.complete-btn');
-      completeBtns.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const orderId = e.target.getAttribute('data-order-id');
-          await completeOrder(orderId);
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+          }
         });
       });
     }
 
-    // Complete order
     async function completeOrder(orderId) {
       try {
-        // Mark order as received
         const response = await fetch(`/api/orders/${orderId}/receive`, {
           method: 'PUT',
           credentials: 'include'
         });
         if (response.ok) {
-          // Additionally, update all items status to 'received'
-          const itemsResponse = await fetch(`/api/orders/${orderId}/items`, {
-            credentials: 'include'
-          });
-          if (itemsResponse.ok) {
-            const items = await itemsResponse.json();
-            // For each item, update status to 'received' via API if such endpoint exists
-            // Since no endpoint is visible, this might require backend update
-            // For now, assume backend updates all items when order status is updated
-          }
           showToast("Order completed successfully!");
-          // Reload orders to update the list
           loadOrders();
         } else {
           showToast("Failed to complete order", true);
@@ -536,18 +498,14 @@
       }
     }
 
-    // Show toast notification
     function showToast(message, isError = false) {
       toast.querySelector("span").textContent = message;
-
       if (isError) {
         toast.classList.add("error");
       } else {
         toast.classList.remove("error");
       }
-
       toast.classList.add("show");
-
       setTimeout(() => {
         toast.classList.remove("show");
       }, 3000);
@@ -556,7 +514,6 @@
     function logout() {
       showToast("Logged out successfully!");
       setTimeout(() => {
-        // In a real app, this would redirect to login page
         window.location.href = "/";
       }, 1000);
     }
