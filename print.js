@@ -111,75 +111,108 @@ function generatePurchaseOrder(poData, filePath) {
   // 👉 Document definition
   const docDefinition = {
     content: [
+       {
+    text: "PURCHASE ORDER",
+    font: "Times",
+    bold: true,
+    fontSize: 18,
+    alignment: "center",
+    margin: [0, 0, 0, 20] // spacing below headline
+  },
       {
-        columns: [
-          {
-            width: "50%",
-            stack: [
-              { text: "Supplier Address:", font: 'Times', bold: true, margin: [30,40 , 0, 5] },
-              { text: poData.supplier.name, font: 'Times', margin:[30,0 , 0, 5] },
-              { text: poData.supplier.address, font: 'Times', margin:[30,0 , 0, 5]},
-              { text: `Supplier Number: ${poData.supplier.contact}`, font: 'Times', margin:[30,0 , 0, 5] },
-              { text: `GSTIN: ${poData.supplier.gst}`, font: 'Times', margin:[30,0 , 0, 15] },
-              
-              
-            ],
+  table: {
+    widths: ["55%", "45%"],
+    body: [
+      [
+        // LEFT CELL
+        {
+          stack: [
+            { text: "Supplier Address:", font: 'Times', bold: true, margin: [10, 10, 0, 5] },
+            { text: poData.supplier.address, font: 'Times', margin:[10, 0, 0, 5] },
+            { text: `Supplier Number: ${poData.supplier.contact}`, font: 'Times', margin:[10, 0, 0, 5] },
+            { text: `GSTIN: ${poData.supplier.gst}`, font: 'Times', margin:[10, 0, 0, 5] },
+
+            { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
+
+            { text: "Invoice address:", font: 'Times', bold: true, margin:[10, 5, 0, 5] },
+            { text: poData.invoiceTo, font: 'Times', margin:[10, 0, 0, 5] },
+
+            { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
+
+            { text: "Ship-to address:", font: 'Times', bold: true, margin:[10, 5, 0, 5] },
+            { text: poData.shipTo, font: 'Times', margin:[10, 0, 0, 10] }
+          ]
+        },
+
+        // RIGHT CELL
+        {
+          table: {
+            widths: ["40%", "60%"],
+            body: [
+              [
+                {
+                  image: logoBase64,
+                  width: 100,
+                  alignment: "center",
+                  colSpan: 2,
+                  margin: [0, 0, 0, 10],
+                  border: [false, false, false, false]
+                },
+                { text: "", border: [false, false, false, false] }
+              ],
+              [
+                { text: "PO Number", font: "Times", bold: true, alignment: "left" },
+                { text: poData.poNumber, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Date", font: "Times", bold: true, alignment: "left" },
+                { text: poData.date, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Plant", font: "Times", bold: true, alignment: "left" },
+                { text: poData.requester?.plant, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Requester Email", font: "Times", bold: true, alignment: "left" },
+                { text: poData.requester?.name, font: "Times", alignment: "right", fontSize: 12 }
+              ],
+              [
+                { text: "Reference No", font: "Times", bold: true, alignment: "left" },
+                { text: poData.reference_no, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Goods Recipient", font: "Times", bold: true, alignment: "left" },
+                { text: poData.goodsRecipient, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Expected Date", font: "Times", bold: true, alignment: "left" },
+                { text: poData.expected_date, font: "Times", alignment: "right" }
+              ],
+              [
+                { text: "Delivery through", font: "Times", bold: true, alignment: "left" },
+                { text: "Courier/by Hand", font: "Times", alignment: "right" }
+              ]
+            ]
           },
-          {
-            width: "50%",
-            stack: [
-              logoBase64 ? { image: logoBase64, width: 100, alignment: "right" } : {},
-              { canvas: [{ type: "line", x1: 0, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
-              { text: "PURCHASE ORDER", font: 'Times', bold: true, alignment: "right", margin: [0, 6, 0, 5] },
-              { text: `PO Number: ${poData.poNumber}`, font: 'Times', alignment: "right",margin: [0, 6, 0, 5]},
-              { text: `Date: ${poData.date}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
-             
-              { text: `Plant: ${poData.requester?.plant}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
-              { text: `Requester Email: ${poData.requester?.name}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
-              { text: `GSTIN:29AAFCK6528D1ZG`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
-              { text: `reference no : ${poData.reference_no}`, font: 'Times', alignment: "right" ,margin: [0, 6, 0, 5]},
-
-            ],
-          },
-        ],
-      },
-       // Divider line
-{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
-
-// Ship-to
-{
-  text: [
-    { text: "Ship-to-address: ", font: 'Times', bold: true },
-    { text: poData.shipTo, font: 'Times', bold: false }
-  ],
-  lineHeight: 1.3,
-  margin: [0, 5, 0, 5]
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => 'black',
+            vLineColor: () => 'black'
+          }
+        }
+      ]
+    ]
+  },
+  layout: {
+    hLineWidth: () => 1,
+    vLineWidth: () => 1,
+    hLineColor: () => 'black',
+    vLineColor: () => 'black'
+  }
 },
 
-// Divider line
-
-
-// Invoice
-{
-  text: [
-    { text: "Invoice address: ", font: 'Times', bold: true },
-    { text: poData.invoiceTo, font: 'Times', bold: false}
-  ],
-  lineHeight: 1.3,
-  margin: [0, 5, 0, 5]
-},
-
-// Goods Recipient
-{
-  text: [
-    { text: "Goods Recipient: ", font: 'Times', bold: true },
-    { text: poData.goodsRecipient, font: 'Times', bold: false }
-  ],
-  lineHeight: 1.3,
-  margin: [0, 10, 0, 10]
-},
-
-{canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] }
+{canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }] }
 ,
 
       { text: "With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.", font: 'Times', margin: [0, 10, 0, 20] ,lineHeight:1.2},
@@ -193,7 +226,8 @@ function generatePurchaseOrder(poData, filePath) {
     body: itemsTable,
   },
   layout: horizontalLineLayout,
-  font:"Times"
+  font:"Times",
+  fontSize:10
 },
 
 // ✅ Totals Table (with blank row first)
@@ -219,8 +253,14 @@ function generatePurchaseOrder(poData, filePath) {
 },
 
 
-      { text: `Amount in words:${toWordsInstance.convert(grandTotal.toFixed(2))}`, font: 'Times', italics: true },
-{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
+      {
+  text: [
+    { text: "Amount in words: ", font: "Times", italics: true },
+    { text: toWordsInstance.convert(grandTotal.toFixed(2)), font: "Times", italics: true, bold: true }
+  ]
+}
+,
+{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }] },
 
 
 // ✅ Terms BELOW totals
@@ -234,59 +274,104 @@ function generatePurchaseOrder(poData, filePath) {
 },
 
 
-{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 530, y2: 0, lineWidth: 1 }] },
-
+{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }] },
 
 {
-  text: 'Terms & Conditions',
-  style: 'header',
-  margin: [0, 10, 0, 10],
-  bold:false,
+  text: "Terms & Conditions:",
+  bold: true,
+  margin: [0, 20, 0, 4], // space below heading
+  fontSize: 12,
   font:'Times'
 },
 {
-  ol: [
-    { text: 'Acceptance / Modification: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' , 
-      stack: ['Orders are binding only upon written confirmation. Any modifications require mutual agreement./within 48 hrs'] },
-    { text: 'Delivery, Shipment & Packaging: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Supplier must ensure timely delivery, safe shipment, and proper packaging to avoid damages.'] },
-    
-    
-    { text: 'Import / Customs Compliance: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Supplier must comply with applicable import/export and customs regulations.'] },
-    { text: 'Price: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Prices are firm and inclusive of all applicable duties, taxes, and charges unless agreed otherwise.'] },
-    { text: 'Invoicing & Payment: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Invoices must match the purchase order details. Non conforming goods may be rejected'] },
-    { text: 'Inspection: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['All goods are subject to inspection and approval upon delivery. Payment will follow agreed terms'] },
-    
-    { text: 'Changes: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Buyer reserves the right to request reasonable changes in scope, specifications, or delivery.'] },
-    { text: 'Design & Process Changes: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Any design or process modifications by supplier require prior written approval.'] },
-    
-    
-    { text: 'Insurance: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Supplier must maintain adequate insurance coverage for goods and liabilities.'] },
-    { text: 'Confidentiality: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['All shared business or technical information must be kept strictly confidential.'] },
-    { text: 'Audit: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Buyer reserves the right to audit supplier’s compliance with contractual obligations.'] },
-    { text: 'Compliance with Laws & Integrity: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['Supplier must comply with all Quality inspection Standards, regulations, and ethical standards.'] },
-    { text: 'Applicable Law & Forum: ', bold: false, margin: [0, 0, 0, 5], alignment: 'justify' ,
-      stack: ['This contract shall be governed by applicable law, and disputes settled under the agreed jurisdiction.'] },
-     
-    { text: 'Invoicing: All invoices must exactly match the purchase order details, clearly reference the PO number, and be submitted within three days of issuance.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
-    { text: 'Payment Terms: Payments will be made within date mentioned in the Quotation from the date of goods receipt or invoice receipt, whichever is applicable.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
-    { text: 'Delivery Timing & Routing: Deliveries will only be accepted from Monday to Friday between 9:00 AM and 5:00 PM, and must be routed through the designated material gates.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
-    { text: 'Delivery Documentation: Each delivery must be accompanied by three copies of the invoice to ensure proper processing and Quality Check Complete Report.', bold: false, alignment: 'justify', margin: [0, 0, 0, 5] },
-    ],
-  font: 'Roboto',
-  fontSize: 10,
-  lineHeight: 1.3
+  canvas: [
+    {
+      type: "line",
+      x1: 0,
+      y1: 0,
+      x2: 110,   // adjust width as per page size
+      y2: 0,
+      lineWidth: 1
+    }
+  ],
+  margin: [0, 0, 0, 10] // spacing after line
 }
+,
+
+
+{
+  ul: [
+    {
+      text: [
+        { text: "Order & Changes – ", bold: true },
+        "Purchase Orders acknowledgement is mandatory by return mail. After 48 hours, from the PO release, it is considered as acceptance and no further amendment or changes are entertained."
+      ],
+      lineHeight: 1.5,   // tighter spacing within bullet
+      margin: [0, 0, 0, 8] // extra spacing after bullet
+    },
+    {
+      text: [
+        { text: "Delivery & Packaging – ", bold: true },
+        "Supplier must ensure on-time delivery, safe transport, proper packaging and follow designated delivery timings (Mon–Fri, 9:00 AM–5:00 PM)."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Compliance – ", bold: true },
+        "Supplier must follow all the taxable laws, customs regulations, and quality/ethical standards."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Prices & Charges – ", bold: true },
+        "Prices are firm, inclusive of all duties, taxes, and charges unless otherwise agreed."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Invoices & Documentation – ", bold: true },
+        "Invoices must exactly match the PO details and must be submitted along with relevant correspondence documents (3 copies of Invoice + QC report + Compliance report). Failing any of these will lead to Non-acceptance of delivery or payment process."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Inspection & Payment – ", bold: true },
+        "All goods are subject to inspection and approval on each delivery and damages or failures will lead to items returned or Payment on HOLD. Payments will follow as agreed terms (based on quotation and receipt date)."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Modifications & Approvals – ", bold: true },
+        "Any deviation in scope, specification, design, or process changes require prior written communication and approval from buyer, before further execution (Production or Dispatch)."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    },
+    {
+      text: [
+        { text: "Confidentiality – ", bold: true },
+        "Suppliers must keep all shared information confidential, if found any suspicious will lead to legal procedures."
+      ],
+      lineHeight: 1.5,
+      margin: [0, 0, 0, 8]
+    }
+  ],
+  fontSize: 10,
+  alignment: "justify",
+  font: "Times"
+}
+
+,
 
 
       

@@ -266,6 +266,7 @@ app.get('/api/orders/:id', async (req, res) => {
                 ordered_by as requested_by,
                 date_required,
                 COALESCE(total_amount, 0) as total_amount,
+                po_number,
                 status,
                 urgency,
                 notes,
@@ -1263,6 +1264,11 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   poNumber: order.po_number,
   reference_no: order.reference_no,
   date: new Date(order.created_at).toLocaleDateString(),
+  expected_date: order.date_required 
+   ? new Date(order.date_required).toLocaleDateString("en-GB") 
+   : "N/A"
+,
+  delivery_through:order.delevery_by,
 
   requester: {
     name: order.ordered_by,
@@ -1386,7 +1392,7 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
       goodsRecipient: "Kiet-ATPLog1",
       termsOfPayment: order.terms_of_payment,
       items: items,
-      amountInWords: "INR Twenty Six Thousand Nine Hundred Four Only",
+      amountInWords: "N/A",
       terms: `
         1. The supplier shall comply with all applicable laws, export regulations, and ethical business practices at all times.
         2. Any form of bribery, gratification, or involvement of restricted materials is strictly prohibited.
