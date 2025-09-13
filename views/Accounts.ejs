@@ -120,6 +120,10 @@ tr:hover {
 .download-btn { background: #14b8a6; color: white; }
 .download-btn:hover { background: #0d9488; }
 
+.email-btn { background: #fbbf24; color: black; }
+.email-btn:hover { background: #f59e0b; }
+.email-sent { background: #22c55e; color: white; }
+
 /* Modal */
 .modal {
   display: none;
@@ -349,7 +353,11 @@ tr:hover {
         const paidBtn = document.createElement('button');
         paidBtn.className = 'paid-btn';
         paidBtn.textContent = 'Mark as Paid';
-        paidBtn.onclick = () => markAsPaid(item);
+        paidBtn.onclick = () => {
+          if (confirm('Are you sure you want to mark this as paid?')) {
+            markAsPaid(item);
+          }
+        };
         actionTd.appendChild(paidBtn);
 
         // Download Invoice button
@@ -358,6 +366,17 @@ tr:hover {
         downloadBtn.textContent = 'Download Invoice';
         downloadBtn.onclick = () => downloadInvoice(item.po_number);
         actionTd.appendChild(downloadBtn);
+
+        // Send Email button
+        const emailBtn = document.createElement('button');
+        emailBtn.className = 'email-btn';
+        emailBtn.textContent = 'Send Email';
+        emailBtn.onclick = () => {
+          if (confirm('Send email to requested by email?')) {
+            sendEmailRequest(item, emailBtn);
+          }
+        };
+        actionTd.appendChild(emailBtn);
 
         tr.appendChild(actionTd);
         tbody.appendChild(tr);
@@ -489,6 +508,43 @@ tr:hover {
    function downloadInvoice(poNumber) {
   window.location.href = `/api/inventory-invoice/${poNumber}`;
 }
+
+    async function sendEmailRequest(item, button) {
+      if (!item.id) {
+        showError('Order ID not found');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/send-email/${item.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({}) // Add any necessary data
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to send email');
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          button.className = 'email-sent';
+          button.textContent = 'Email Sent';
+          button.disabled = true;
+          showSuccess();
+        } else {
+          throw new Error('Email sending failed');
+        }
+      } catch (error) {
+        console.error('Error sending email:', error);
+        showError(error.message || 'Error sending email');
+      }
+    }
 
     // Fetch account details on page load
     window.onload = fetchAccountDetails;

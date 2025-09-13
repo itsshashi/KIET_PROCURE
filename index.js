@@ -849,11 +849,11 @@ app.get('/api/account-details', async (req, res) => {
     // Order the results by creation date, descending
     query += ' ORDER BY po.created_at DESC';
 
-    
+
 
     const { rows } = await pool.query(query, params);
 
-    
+
 
     if (rows.length === 0) {
       return res.json({ message: 'No payment details found' });
@@ -863,6 +863,45 @@ app.get('/api/account-details', async (req, res) => {
   } catch (err) {
     console.error('❌ Error fetching account details:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/send-email/:id', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+
+  try {
+    const { id } = req.params;
+
+    // Fetch order details
+    const orderResult = await pool.query(
+      'SELECT ordered_by, po_number FROM purchase_orders WHERE id = $1',
+      [id]
+      
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const { ordered_by, po_number ,} = orderResult.rows[0];
+
+    // Send email
+    const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass:'ujcf lhsf yzla dxiy'} });
+    const mailSubject = "Payment Notification - KIET Technologies";
+    const mailBody = `
+      <p>Hello ${ordered_by},</p>
+      <p>Your payment for PO ${po_number} has been processing,Could you Please send Confirmation email to accounts@kietsindia.com.</p>
+      <p>Thank you,<br>The KIET Technologies Team</p>
+    `;
+
+    await transporter.sendMail({ to: ordered_by, from: "acc19105@gmail.com", subject: mailSubject, html: mailBody });
+
+    res.json({ success: true, message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email' });
   }
 });
 
