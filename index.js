@@ -16,10 +16,9 @@ import multer from 'multer';
 import fs from 'fs';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
-import pushNotificationsRouter from './routes/pushNotifications.js';
-import { sendNotification } from './routes/pushNotifications.js';
 
-// Removed push notification imports - using email notifications instead
+
+
 
 // =============================
 // CONFIG
@@ -700,20 +699,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
 
 
-        //notification
-
-        // Send notification to Purchase department
-        try {
-            await sendNotification('Purchase', {
-                title: 'New Order Raised',
-                body: `New order ${purchaseOrderNumber} has been raised by ${orderedBy}`,
-                url: '/purchase'
-            });
-        } catch (notificationError) {
-            console.error('Error sending notification:', notificationError);
-        }
-
-        //--notification
+     
 
         res.json({
             success: true,
@@ -1075,21 +1061,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
 
 
-    //notification
-
-    // Send notification to MD when order is approved
-    if (status === 'purchase') {
-      try {
-        await sendNotification('MD', {
-          title: 'Order Approved',
-          body: `Order ${rows[0].purchase_order_number} has been approved,and needs your attention.`,
-          url: '/md'
-        });
-      } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
-      }
-    }
-    //--notification
+  
 
     res.json({ success: true, order: rows[0] });
   } catch (err) {
