@@ -1052,9 +1052,26 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: "shashankn155555@gmail.com",
-      subject: "Order Status Update - Purchase",
-      text: `Order ${rows[0].purchase_order_number} status updated to PURCHASE.`,
+  to: "shashin1504@gmail.com",
+  subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
+  text: `
+Hello,
+
+The order ${rows[0].purchase_order_number} has been approved in Purchase.com and now requires your attention for final approval.
+
+📌 Order Details:
+- Order Number: ${rows[0].purchase_order_number}
+- Supplier: ${rows[0].supplier_name || "N/A"}
+- Date: ${rows[0].order_date || new Date().toLocaleDateString()}
+- Total Amount: ₹${rows[0].total_amount || "N/A"}
+
+👉 Please complete the final approval here:  
+https://kiets-procure.onrender.com
+
+Best regards,  
+Purchase Team
+  `,
+
     };
 
     try {
@@ -1067,7 +1084,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
 
 
-    
+
     // Only now send response back to frontend
     res.json({ success: true, order: rows[0] });
 
