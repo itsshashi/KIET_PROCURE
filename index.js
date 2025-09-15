@@ -697,9 +697,55 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
         await pool.query("COMMIT");
 
+        // Send email notification to purchase orders team
+        const transporte = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: {
+                user: "acc19105@gmail.com",
+                pass: "sipx jwsb hqrw tbqk",
+            },
+        });
 
+        const mailOptions = {
+            from: "acc19105@gmail.com",
+            to: "shashin1504@gmail.com",
+            subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
+            text: `
+Hello Purchase Team,
 
-     
+A new order has been raised and requires your approval.
+
+📌 Order Details:
+- Order Number: ${purchaseOrderNumber}
+- Supplier: ${supplierName}
+- Requester: ${orderedBy}
+- Date: ${new Date().toLocaleDateString()}
+- Total Amount: ₹${totalAmount}
+
+👉 Please review and approve the order here:
+https://kiets-procure.onrender.com
+
+Best regards,
+Procurement Team
+KIET TECHNOLOGIES PVT LTD,
+            `,
+            attachments: [
+    {
+      filename: "logo.png",          // your image file name
+      path: "public/images/page_logo.png",            // local path to the image
+      cid: "logoImage"               // same cid as in <img src="cid:logoImage">
+    }
+  ]
+        };
+
+        try {
+            const info = await transporte.sendMail(mailOptions);
+            console.log("✅ Email sent to purchase orders:", info.response);
+        } catch (err) {
+            console.error("❌ Email failed:", err);
+        }
 
         res.json({
             success: true,
@@ -1070,7 +1116,15 @@ https://kiets-procure.onrender.com
 
 Best regards,  
 Purchase Team
+KIET TECHNOLOGIES PVT LTD,
   `,
+  attachments: [
+    {
+      filename: "logo.png",          // your image file name
+      path: "public/images/page_logo.png",            // local path to the image
+      cid: "logoImage"               // same cid as in <img src="cid:logoImage">
+    }
+  ]
 
     };
 
