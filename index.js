@@ -632,7 +632,12 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
 
     const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier,termsOfPayment} = req.body;
-    const products = JSON.parse(req.body.products || "[]");
+    let products;
+    try {
+        products = JSON.parse(req.body.products || "[]");
+    } catch (parseErr) {
+        return res.status(400).json({ success: false, error: "Invalid products data" });
+    }
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
 
@@ -700,8 +705,8 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
     } catch (err) {
         await pool.query("ROLLBACK");
-        console.error("❌ Error inserting order:", err);
-        res.status(500).json({ success: false, error: "Failed to insert order" });
+        console.error("❌ Error inserting order:", err.stack || err.message || err);
+        res.status(500).json({ success: false, error: `Failed to insert order: ${err.message || 'Unknown error'}` });
     }
 });
 
