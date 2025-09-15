@@ -102,9 +102,26 @@ function generatePurchaseOrder(poData, filePath) {
   });
 
   const grandTotal = subtotal;
-
+  let formattedAddress = poData.shipTo
+    .split("\n")                 // break into lines
+    .map(line => line.trim())    // trim spaces
+    .filter(line => line)        // remove empty ones
+    .join(" ");  
+                // join with commas
+  let supplierAddress = poData.supplier.address
+    .split("\n")                 // break into lines
+    .map(line => line.trim())    // trim spaces
+    .filter(line => line)        // remove empty ones
+    .join("/n ");  // join with commas
   // 👉 Document definition
   const docDefinition = {
+    watermark: {
+    text: "KIET",   // your watermark text
+    color: "gray",          // watermark color
+    opacity: 0.1,           // 0 = invisible, 1 = solid
+    bold: true,
+    italics: false
+  },
     content: [
       {
         text: "PURCHASE ORDER",
@@ -123,7 +140,7 @@ function generatePurchaseOrder(poData, filePath) {
               {
                 stack: [
                   { text: "Supplier Address:", font: "Times", bold: true, margin: [10, 10, 0, 5] },
-                  { text: poData.supplier.address.trim(), font: "Times", margin: [10, 0, 0, 5] },
+                  { text: supplierAddress, font: "Times", margin: [10, 0, 0, 5] },
                   { text: `Supplier Number: ${poData.supplier.contact}`, font: "Times", margin: [10, 0, 0, 5] },
                   { text: `GSTIN: ${poData.supplier.gst}`, font: "Times", margin: [10, 0, 0, 5] },
 
@@ -135,7 +152,7 @@ function generatePurchaseOrder(poData, filePath) {
                   { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
 
                   { text: "Ship-to address:", font: "Times", bold: true, margin: [10, 5, 0, 5] },
-                  { text: poData.shipTo, font: "Times", margin: [10, 0, 0, 10] },
+                  { text: formattedAddress, font: "Times", margin: [10, 0, 0, 10] },
                 ],
               },
 

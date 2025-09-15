@@ -866,6 +866,12 @@ app.get('/api/account-details', async (req, res) => {
   }
 });
 
+
+
+
+
+//newly added for sending mail in account.ejs
+
 app.post('/api/send-email/:id', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'Not logged in' });
