@@ -1027,17 +1027,56 @@ app.post("/api/orders/:id/quotations", upload.array("quotations"), async (req, r
 
 
 
-// Approve an order (set status to 'pass')
-// Move to Purchase Dept
 app.put("/api/orders/:id/purchase", async (req, res) => {
   const { id } = req.params;
-  const { rows } = await pool.query(
-    "UPDATE purchase_orders SET status='purchase' WHERE id=$1 RETURNING *",
-    [id]
-  );
-  if (!rows.length) return res.status(404).json({ error: "Order not found" });
-  res.json({ success: true, order: rows[0] });
+  try {
+    const { rows } = await pool.query(
+      "UPDATE purchase_orders SET status='purchase' WHERE id=$1 RETURNING *",
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "Order not found" });
+
+    
+    
+    
+    // Setup transporter
+    const transporte = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "acc19105@gmail.com",
+        pass: "sipx jwsb hqrw tbqk",
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: "shashankn155555@gmail.com",
+      subject: "Order Status Update - Purchase",
+      text: `Order ${rows[0].purchase_order_number} status updated to PURCHASE.`,
+    };
+
+    try {
+      const info = await transporte.sendMail(mailOptions);
+      console.log("✅ Email sent:", info.response);
+    } catch (err) {
+      console.error("❌ Email failed:", err);
+    }
+
+
+
+
+    
+    // Only now send response back to frontend
+    res.json({ success: true, order: rows[0] });
+
+  } catch (err) {
+    console.error("❌ Error updating purchase status:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 
 // Approve or Reject order
 
@@ -1278,6 +1317,9 @@ app.get("/api/all-quotations", async (req, res) => {
 app.get("/test", (req, res) => {
   res.send("✅ Test route working");
 });
+
+// Test email functionality
+
 
 
 
@@ -1547,5 +1589,5 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
 
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
 

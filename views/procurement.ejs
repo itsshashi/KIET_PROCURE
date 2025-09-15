@@ -918,7 +918,42 @@
             background: #94a3b8;
         }
         /* ... (all other CSS remains exactly the same) ... */
-        
+
+        /* Loader Styles */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-overlay p {
+            color: white;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
     </style>
 </head>
 <body>
@@ -1212,9 +1247,16 @@
 
             // Form submission handling - UPDATED FOR FILE UPLOAD
             const orderForm = document.getElementById("orderForm");
+            const submitBtn = orderForm.querySelector('button[type="submit"]');
+            const loader = document.getElementById("loader");
 
             orderForm.addEventListener("submit", async function(e) {
                 e.preventDefault();
+
+                // Show loader and disable button
+                loader.style.display = "flex";
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
 
                 const formData = new FormData(orderForm);
                 const products = getProductData();
@@ -1245,6 +1287,11 @@
                 } catch (err) {
                     console.error("❌ Error submitting order:", err);
                     alert("Order submission failed!");
+                } finally {
+                    // Hide loader and enable button
+                    loader.style.display = "none";
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Order';
                 }
             });
         });
@@ -1581,8 +1628,14 @@
     });
 
         // Select an order to update tracking visualization
-        
+
     </script>
+
+    <!-- Loader Overlay -->
+    <div id="loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <p>Submitting Order...</p>
+    </div>
 </body>
 </html>
         
