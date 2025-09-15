@@ -191,7 +191,15 @@ function generatePurchaseOrder(poData, filePath) {
               [
                 { text: "Delivery through", font: "Times", bold: true, alignment: "left" },
                 { text: "Courier/by Hand", font: "Times", alignment: "right" }
+              ],
+                [
+                { text: "Terms of Payment", font: "Times", bold: true, alignment: "left" },
+                { text: poData.termsOfPayment, font: "Times", alignment: "right" }
               ]
+  //             [
+  //   { text: 'Terms of Payment: ', font: 'Times', bold: false },
+  //   { text: poData.termsOfPayment, font: 'Times', bold: true }
+  // ]
             ]
           },
           layout: {
@@ -215,7 +223,7 @@ function generatePurchaseOrder(poData, filePath) {
 {canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }] }
 ,
 
-      { text: "With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.", font: 'Times', margin: [0, 10, 0, 20] ,lineHeight:1.2},
+      { text: "With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.", font: 'Times', margin: [0, 10, 0, 3] ,lineHeight:1.2},
 
    
 
@@ -266,10 +274,7 @@ function generatePurchaseOrder(poData, filePath) {
 // ✅ Terms BELOW totals
 {
 
-  text: [
-    { text: 'Terms of Payment: ', font: 'Times', bold: false },
-    { text: poData.termsOfPayment, font: 'Times', bold: true }
-  ],
+  
   margin: [0, 10, 0, 0]
 },
 
