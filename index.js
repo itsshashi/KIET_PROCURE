@@ -710,7 +710,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
         const mailOptions = {
             from: "acc19105@gmail.com",
-            to: "shashin1504@gmail.com",
+            to: "purchase@kietsindia.com",
             subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
             text: `
 Hello Purchase Team,
@@ -733,8 +733,8 @@ KIET TECHNOLOGIES PVT LTD,
             `,
             attachments: [
     {
-      filename: "logo.png",          // your image file name
-      path: "public/images/page_logo.png",            // local path to the image
+      filename: "lg.jpg",          // your image file name
+      path: "public/images/lg.jpg",            // local path to the image
       cid: "logoImage"               // same cid as in <img src="cid:logoImage">
     }
   ]
@@ -1098,7 +1098,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-  to: "shashin1504@gmail.com",
+  to: "chandrashekaraiah.r@kietsindia.com",
   subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
   text: `
 Hello,
@@ -1108,6 +1108,7 @@ The order ${rows[0].purchase_order_number} has been approved in Purchase.com and
 📌 Order Details:
 - Order Number: ${rows[0].purchase_order_number}
 - Supplier: ${rows[0].supplier_name || "N/A"}
+- Requester: ${rows[0].ordered_by || "N/A"}
 - Date: ${rows[0].order_date || new Date().toLocaleDateString()}
 - Total Amount: ₹${rows[0].total_amount || "N/A"}
 
@@ -1120,8 +1121,8 @@ KIET TECHNOLOGIES PVT LTD,
   `,
   attachments: [
     {
-      filename: "logo.png",          // your image file name
-      path: "public/images/page_logo.png",            // local path to the image
+      filename: "lg.jpg",          // your image file name
+      path: "public/images/lg.jpg",            // local path to the image
       cid: "logoImage"               // same cid as in <img src="cid:logoImage">
     }
   ]
