@@ -1,6 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
 
+
 import dotenv from 'dotenv'
 import express from 'express';
 
@@ -15,6 +16,9 @@ import multer from 'multer';
 import fs from 'fs';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
+
+import pushNotificationsRouter from './routes/pushNotifications.js';
+import { sendNotification } from './routes/pushNotifications.js';
 
 // =============================
 // CONFIG
@@ -692,14 +696,31 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         }
 
         await pool.query("COMMIT");
-        
-        res.json({ 
-            success: true, 
-            message: "✅ Order inserted successfully", 
-            purchaseOrderNumber, 
-            orderedBy, 
+
+
+
+        //notification
+
+        // Send notification to Purchase department
+        try {
+            await sendNotification('Purchase', {
+                title: 'New Order Raised',
+                body: `New order ${purchaseOrderNumber} has been raised by ${orderedBy}`,
+                url: '/purchase'
+            });
+        } catch (notificationError) {
+            console.error('Error sending notification:', notificationError);
+        }
+
+        //--notification
+
+        res.json({
+            success: true,
+            message: "✅ Order inserted successfully",
+            purchaseOrderNumber,
+            orderedBy,
             file: quotationFile,
-            totalAmount 
+            totalAmount
         });
         
 
@@ -1050,6 +1071,24 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: "Order not found" });
 
+
+
+
+    //notification
+
+    // Send notification to MD when order is approved
+    if (status === 'purchase') {
+      try {
+        await sendNotification('MD', {
+          title: 'Order Approved',
+          body: `Order ${rows[0].purchase_order_number} has been approved,and needs your attention.`,
+          url: '/md'
+        });
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+      }
+    }
+    //--notification
 
     res.json({ success: true, order: rows[0] });
   } catch (err) {
