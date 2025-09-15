@@ -16,9 +16,10 @@ import multer from 'multer';
 import fs from 'fs';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
-
 import pushNotificationsRouter from './routes/pushNotifications.js';
 import { sendNotification } from './routes/pushNotifications.js';
+
+// Removed push notification imports - using email notifications instead
 
 // =============================
 // CONFIG
@@ -37,7 +38,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
