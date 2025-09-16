@@ -1098,7 +1098,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-  to: "chandrashekaraiah.r@kietsindia.com",
+  to: "shashin1504@gmail.com",
   subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
   text: `
 Hello,
