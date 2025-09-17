@@ -725,7 +725,7 @@ A new order has been raised and requires your approval.
 - Total Amount: ₹${totalAmount}
 
 👉 Please review and approve the order here:
-https://kiets-procure.onrender.com
+https://kiet-procure.onrender.com
 
 Best regards,
 Procurement Team
@@ -1113,7 +1113,7 @@ The order ${rows[0].purchase_order_number} has been approved in Purchase.com and
 - Total Amount: ₹${rows[0].total_amount || "N/A"}
 
 👉 Please complete the final approval here:  
-https://kiets-procure.onrender.com
+https://kiet-procure.onrender.com
 
 Best regards,  
 Purchase Team
