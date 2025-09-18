@@ -229,7 +229,12 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Product Details</label>
+           <div class="flex justify-between items-center mb-2">
++            <label class="block text-sm font-medium text-gray-700">Product Details</label>
++            <button type="button" onclick="addNewProductRow()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
++              <i class="fas fa-plus"></i>Add Product
++            </button>
++          </div>
           <table class="product-table min-w-full text-sm text-left border border-gray-300 rounded" id="editProductTable">
             <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
               <tr>
@@ -700,19 +705,19 @@
       row.innerHTML = `
         <td class="px-6 py-3 border text-center">${slNo}</td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partno || '' : ''}" placeholder="Part No" >
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partNo || '' : ''}" placeholder="Part No" >
         </td>
         <td class="px-6 py-3 border">
           <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
         </td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsncode || '' : ''}" placeholder="HSN Code">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsnCode || '' : ''}" placeholder="HSN Code">
         </td>
         <td class="px-6 py-3 border">
           <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
         </td>
         <td class="px-6 py-3 border">
-          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitprice || '' : ''}" placeholder="Price" step="0.01">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitPrice || '' : ''}" placeholder="Price" step="0.01">
         </td>
         <td class="px-6 py-3 border">
           <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
@@ -751,6 +756,7 @@
         });
       });
     }
+
 
     function updateEditSlNos() {
       const rows = document.querySelectorAll('#editProductTableBody tr');
@@ -792,6 +798,10 @@
 
       document.getElementById('editGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
     }
+function addNewProductRow() {
+  addEditProductRow(null, null);
+  updateEditSlNos();
+}
 
     async function generatePO(orderId) {
       try {
