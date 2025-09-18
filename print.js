@@ -119,7 +119,7 @@ function generatePurchaseOrder(poData, filePath) {
     return {
       image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
       width: 400,          // scale watermark size
-      opacity: 0.15,        // make it transparent
+      opacity: 0.05,        // make it transparent
       absolutePosition: { x: 100, y: 350 }, // adjust placement
     };
   },
