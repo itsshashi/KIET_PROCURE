@@ -115,12 +115,13 @@ function generatePurchaseOrder(poData, filePath) {
     .join("/n ");  // join with commas
   // 👉 Document definition
   const docDefinition = {
-    watermark: {
-    text: "KIET",   // your watermark text
-    color: "gray",          // watermark color
-    opacity: 0.1,           // 0 = invisible, 1 = solid
-    bold: true,
-    italics: false
+   background: function () {
+    return {
+      image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
+      width: 400,          // scale watermark size
+      opacity: 0.15,        // make it transparent
+      absolutePosition: { x: 100, y: 350 }, // adjust placement
+    };
   },
     content: [
       {
@@ -181,8 +182,8 @@ function generatePurchaseOrder(poData, filePath) {
                       { text: poData.date, font: "Times", alignment: "right" },
                     ],
                     [
-                      { text: "Plant", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.requester?.plant, font: "Times", alignment: "right" },
+                      { text: "Project Code ", font: "Times", bold: true, alignment: "left" },
+                      { text: poData?.projectcode, font: "Times", alignment: "right" },
                     ],
                     [
                       { text: "Requester Name", font: "Times", bold: true, alignment: "left" },
@@ -233,7 +234,7 @@ function generatePurchaseOrder(poData, filePath) {
       {
         text: "With reference to the above, we are pleased to place an order with you for the following items as per the terms mentioned below. Kindly send your acceptance of this purchase order. Any clarification regarding this order will not be entertained after one week of receipt.",
         font: "Times",
-        margin: [0, 10, 0, 2],
+        margin: [0, 15, 0, 10],
         lineHeight: 1.2,
       },
 
@@ -261,7 +262,7 @@ function generatePurchaseOrder(poData, filePath) {
           ],
         },
         layout: horizontalLineLayout,
-        margin: [0, 3, 0,5],
+        margin: [0, 3, 0,10],
         font: "Times",
       },
 

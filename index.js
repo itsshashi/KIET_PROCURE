@@ -312,7 +312,7 @@ app.get('/api/orders/:id/items', async (req, res) => {
         `, [id]);
 
         res.json(rows);
-    } catch (err) {
+      } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -1445,6 +1445,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
    : "N/A"
 ,
   delivery_through:order.delevery_by,
+  projectcode:order.project_code_number,
 
   requester: {
     name: order.ordered_by,
@@ -1476,7 +1477,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   `,
 
   signPath: "public/images/signature.png",
-  company: { logo: "public/images/page_logo.png" },
+  company: { logo: "public/images/lg.jpg" },
 
 };
 
