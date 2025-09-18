@@ -523,9 +523,30 @@
       if (!order) return;
 
       try {
-        // Fetch product items for this order
-        const itemsResponse = await fetch(`${API_URL}/${orderId}/items`);
-        const items = await itemsResponse.json();
+        let items = [];
+
+        // Use products from order if available, else fetch items
+        if (order.products && order.products.length > 0) {
+          items = order.products;
+        } else {
+          // Fetch product items for this order
+          const itemsResponse = await fetch(`${API_URL}/${orderId}/items`);
+          items = await itemsResponse.json();
+        }
+
+        console.log('Order products/items:', items); // Added for debugging keys
+
+        // Debug HSN code values
+        if (items && items.length > 0) {
+          items.forEach((item, index) => {
+            console.log(`Item ${index + 1} HSN values:`, {
+              hsn: item.hsn,
+              hsnCode: item.hsnCode,
+              hsn_code: item.hsn_code,
+              allKeys: Object.keys(item)
+            });
+          });
+        }
 
         // Populate form fields
         document.getElementById('editProjectName').textContent = order.project;
@@ -540,7 +561,7 @@
         // Set single supplier checkbox
         document.getElementById('editSingleSupplier').checked = order.single || false;
 
-        // Populate product table with fetched items
+        // Populate product table with items from order or fetched
         populateEditProductTable(order, items);
 
         // Populate notes display (non-editable)
@@ -577,7 +598,7 @@
         const product = {
           partNo: row.querySelector('.edit-part-no').value,
           description: row.querySelector('.edit-description').value,
-          hsnCode: row.querySelector('.edit-hsn').value,
+          hsnCode: row.querySelector('.edit-hsnCode').value,
           quantity: row.querySelector('.edit-quantity').value,
           unitPrice: row.querySelector('.edit-unit-price').value,
           gst: row.querySelector('.edit-gst').value,
@@ -702,22 +723,24 @@
         slNo = rows.length + 1;
       }
 
+      console.log('Adding product row:', product); // Added for debugging
+
       row.innerHTML = `
         <td class="px-6 py-3 border text-center">${slNo}</td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partNo || '' : ''}" placeholder="Part No" >
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? ( product.partno  || '') : ''}" placeholder="Part No" >
+        </td>
+<td class="px-6 py-3 border">
+  <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description">
+</td>
+        <td class="px-6 py-3 border">
+          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsnCode" value="${product ? (product.hsncode ||product.hsn || product.hsnCode || product.hsn_code || '') : ''}" placeholder="HSN Code">
         </td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity|| '' : ''}" placeholder="Qty" min="1">
         </td>
         <td class="px-6 py-3 border">
-          <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-hsn" value="${product ? product.hsnCode || '' : ''}" placeholder="HSN Code">
-        </td>
-        <td class="px-6 py-3 border">
-          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
-        </td>
-        <td class="px-6 py-3 border">
-          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitPrice || '' : ''}" placeholder="Price" step="0.01">
+          <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? (product.unit_price || product.unitPrice || product.price || product.unitprice|| '') : ''}" placeholder="Price" step="0.01">
         </td>
         <td class="px-6 py-3 border">
           <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
