@@ -1,522 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Security Verification - All Orders</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-     :root {
-      --primary: #2563eb;
-      --primary-dark: #1e40af;
-      --secondary: #ef4444;
-      --success: #16a34a;
-      --light: #ffffff;
-      --dark: #111827;
-      --gray: #6b7280;
-      --bg: #f9fafb;
-      --glass: rgba(255, 255, 255, 0.85);
-      --shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Verification - All Orders</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    body {
-      font-family: "Inter", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #dbeafe, #fef9c3);
-      min-height: 100vh;
-      margin: 0;
-      color: var(--dark);
-    }
+<style>
+  /* ---------------------- Variables ---------------------- */
 
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 24px;
-      background: var(--primary);
-      color: white;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
 
-    .header img {
-      height: 80px;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-size: 20px;
-    }
-
-    .user-avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: var(--light);
-      color: var(--primary-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 18px;
-      box-shadow: var(--shadow);
-    }
-
-    .logout-btn {
-      background: var(--secondary);
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.25s;
-    }
-    .logout-btn:hover {
-      background: #dc2626;
-      transform: scale(1.05);
-    }
-
-    /* Container */
-    .container {
-      max-width: 1400px;
-      margin: 40px auto;
-      padding: 0 32px;
-    }
-
-    h2 {
-      text-align: center;
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 32px;
-      color: var(--primary-dark);
-    }
-
-    /* Card */
-    .card {
-      background: var(--glass);
-      
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-    }
-
-    /* Order Cards */
-    .order-card {
-  background: var(--light);
-  border-radius: 14px;
-  padding: 28px 32px;   /* increased padding */
-  margin-bottom: 20px;
-  border: 1px solid #e5e7eb;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  min-height: 100px;    /* ensure card has more height */
+  input[type="checkbox"] {
+  width: 20px;   /* increase size */
+  height: 20px;
+  transform: scale(1.5);  /* make it 1.5x bigger */
+  cursor: pointer;        /* optional: makes it feel clickable */
 }
 
-    .order-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-    }
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary: #ef4444;
+    --success: #16a34a;
+    --light: #ffffff;
+    --dark: #111827;
+    --gray: #6b7280;
+    --bg: #f3f4f6;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
 
-    .order-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  body {
+    font-family: "Inter", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #dbeafe, #fef9c3);
+    margin: 0;
+    color: var(--dark);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
 
-    .supplier-name {
-      font-weight: 700;
-      color: var(--primary-dark);
-      font-size: 30px;
-    }
+  /* ---------------------- Header ---------------------- */
+  header {
+    background-color: var(--primary);
+    color: var(--light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+  }
 
-    .order-id {
-      font-size: 25px;
-      color: black;
-    }
+  header img {
+    height: 10rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  }
 
-    .toggle-products-btn {
-      background: none;
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      color: var(--gray);
-      transition: 0.2s;
-    }
-    .toggle-products-btn:hover {
-      color: var(--primary);
-      transform: scale(1.15);
-    }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
 
-    /* Product Item */
-    .product-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--bg);
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 14px;
-      font-size: 20px;
-    }
+  .user-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background: var(--light);
+    color: var(--primary-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
 
-    /* Checkbox */
-    input[type="checkbox"] {
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      border: 2px solid #d1d5db;
-      border-radius: 6px;
-      cursor: pointer;
-      position: relative;
-      transition: 0.2s;
-    }
-    input[type="checkbox"]:checked {
-      background: var(--success);
-      border-color: var(--success);
-    }
-    input[type="checkbox"]:checked:before {
-      content: "✓";
-      color: white;
-      font-size: 14px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
+  .logout-btn {
+    background-color: #ef4444;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .logout-btn:hover {
+    background-color: #dc2626;
+  }
 
-    .complete-btn {
-      background: var(--success);
-      border: none;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 28px;
-      font-size: 18px;
-      font-weight: 600;
-      margin-top: 16px;
-      cursor: pointer;
-      display: none;
-      transition: all 0.25s;
-    }
-    .complete-btn:hover {
-      background: #15803d;
-      transform: scale(1.05);
-    }
-    .complete-btn:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
+  /* ---------------------- Container ---------------------- */
+  .container {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 2rem;
+  }
 
-    /* Toast */
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 16px 22px;
-      background: var(--success);
-      color: white;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      font-size: 18px;
-      opacity: 0;
-      transform: translateX(120%);
-      transition: all 0.4s ease;
-      z-index: 1000;
-    }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    .toast.error {
-      background: var(--secondary);
-    }
+  h2 {
+    font-size: 2.25rem;
+    font-weight: bold;
+    text-align: center;
+    color: var(--primary-dark);
+    margin-bottom: 2rem;
+  }
 
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-    .modal-content {
-      background: var(--light);
-      padding: 32px 36px;
-      border-radius: 16px;
-      width: 95%;
-      max-width: 900px;
-      max-height: 85%;
-      overflow-y: auto;
-      box-shadow: var(--shadow);
-      animation: fadeIn 0.3s ease;
-      position: relative;
-    }
-    .modal-header {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: var(--primary-dark);
-    }
-    .close-btn {
-      position: absolute;
-      top: 14px;
-      right: 18px;
-      font-size: 35px;
-      background: none;
-      border: none;
-      color: var(--secondary);
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .product-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 16px;
+  /* ---------------------- Filter Input ---------------------- */
+  .filter-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  #po-filter {
+    width: 100%;
+    max-width: 28rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    outline: none;
+    transition: 0.3s;
+  }
+  #po-filter:focus {
+    box-shadow: 0 0 0 2px var(--primary);
+    border-color: transparent;
+  }
+
+  /* ---------------------- Orders ---------------------- */
+  .orders-container {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  }
+
+  .order-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+  }
+  .order-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .supplier-name {
+    font-weight: 700;
+    font-size: 1.625rem;
+    color: var(--primary-dark);
+  }
+
+  .order-id {
+    font-size: 1.25rem;
+    color: var(--gray);
+  }
+
+  .toggle-products-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--gray);
+    transition: 0.2s;
+  }
+  .toggle-products-btn:hover {
+    color: var(--primary);
+    transform: scale(1.15);
+  }
+
+  /* ---------------------- Modal ---------------------- */
+  .modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  justify-content: center;   /* keeps it centered horizontally */
+  align-items: flex-start;   /* push modal content to the top */
+  z-index: 2000;
+  padding-top: 30px;         /* optional spacing from top */
 }
 
-.product-table th, .product-table td {
-  padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-  font-size: 20px;
-}
 
-.product-table th {
-  background: var(--primary);
-  color: white;
-  font-weight: 600;
-}
+  .modal-content {
+    background: var(--light);
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 95%;
+    max-width: 900px;
+    max-height: 85%;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+  }
 
-.product-table td {
-  background: var(--bg);
-}
+  .modal-header {
+    font-size: 1.625rem;
+    font-weight: bold;
+    margin-bottom: 1.25rem;
+    color: var(--primary-dark);
+  }
 
-    .close-btn:hover { color: #b91c1c; }
+  .close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    font-size: 2rem;
+    background: none;
+    border: none;
+    color: var(--secondary);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .close-btn:hover {
+    color: #b91c1c;
+  }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
+  .product-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1rem;
+  }
+  .product-table th, .product-table td {
+    padding: 1rem 1.25rem;
+    font-size: 1.125rem;
+    text-align: left;
+  }
+  .product-table thead th {
+    background: var(--primary-dark);
+    color: white;
+    font-weight: 600;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+  }
+  .product-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .product-table td {
+    background: var(--bg);
+    border: 1px solid #e5e7eb;
+    border-top: none;
+  }
+
+  /* ---------------------- Complete Button ---------------------- */
+  .complete-btn {
+    background: var(--success);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.75rem;
+    border-radius: 9999px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    display: none;
+    transition: all 0.25s;
+    box-shadow: 0 4px 10px rgba(22,163,74,0.3);
+  }
+  .complete-btn:hover {
+    background: #15803d;
+    transform: translateY(-2px);
+  }
+  .complete-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* ---------------------- Toast ---------------------- */
+  .toast {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    font-size: 1.125rem;
+    opacity: 0;
+    transform: translateX(120%);
+    transition: all 0.4s ease;
+    z-index: 1000;
+    color: white;
+  }
+  .toast.show { opacity: 1; transform: translateX(0); }
+  .toast.error { background: var(--secondary); }
+  .toast.success { background: var(--success); }
+
+  /* ---------------------- Animations ---------------------- */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @media (max-width: 768px) {
+    .supplier-name { font-size: 1.375rem; }
+    .order-id { font-size: 1rem; }
+    .modal-content { padding: 1.25rem; }
+  }
+</style>
 </head>
+
 <body>
+<header>
+  <img src="images/wt_img.png" alt="company logo">
+  <div class="user-info">
+    <div class="user-avatar">SO</div>
+    <span>Security Officer</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
 
-  <!-- Header -->
-  <div class="header">
-    <img src="images/wt_img.png" alt="company logo">
-    <div class="user-info">
-      <div class="user-avatar">SO</div>
-      <span>Security Officer</span>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
+<div class="container">
+  <h2>Security Verification</h2>
+
+  <div class="filter-wrapper">
+    <input type="text" id="po-filter" placeholder="Enter PO number...">
   </div>
 
-  <div class="container">
-    <h2>Security Verification</h2>
-    <div class="card">
-      <div class="order-list" id="orderList">
-        <!-- Orders will be populated here -->
+  <div class="orders-container">
+    <div id="orderList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const orderList = document.getElementById('orderList');
+  const toast = document.getElementById('toast');
+  const poFilterInput = document.getElementById('po-filter');
+  let orders = [];
+
+  document.addEventListener('DOMContentLoaded', loadOrders);
+  poFilterInput.addEventListener('input', populateOrderList);
+
+  async function loadOrders() {
+    try {
+      const response = await fetch('/api/orders/search/filter?status=approved', { credentials: 'include' });
+      if (!response.ok) return showToast("Failed to load orders", true);
+
+      const orderIds = await response.json();
+      orders = [];
+
+      for (const order of orderIds) {
+        const detailResponse = await fetch(`/api/orders/${order.id}`, { credentials: 'include' });
+        if (detailResponse.ok) {
+          orders.push(await detailResponse.json());
+        }
+      }
+      populateOrderList();
+    } catch (error) {
+      console.error(error);
+      showToast("Error loading orders", true);
+    }
+  }
+
+  function populateOrderList() {
+    orderList.innerHTML = '';
+    const filterText = poFilterInput.value.toLowerCase();
+
+    orders.filter(order => order.po_number.toLowerCase().includes(filterText))
+      .forEach(order => createOrderCard(order));
+  }
+
+  function createOrderCard(order) {
+    const orderCard = document.createElement('div');
+    orderCard.className = 'order-card';
+    orderCard.setAttribute('data-id', order.id);
+
+    const toggleButtonId = `toggle-btn-${order.id}`;
+    const modalId = `modal-${order.id}`;
+    const productListId = `product-list-${order.id}`;
+
+    orderCard.innerHTML = `
+      <div class="order-header">
+        <div>
+          <div class="supplier-name">${order.supplier}</div>
+          <div class="order-id">${order.po_number}</div>
+        </div>
+        <button id="${toggleButtonId}" class="toggle-products-btn">
+          <i class="fas fa-clipboard-list"></i>
+        </button>
       </div>
-    </div>
-  </div>
+    `;
 
-  <!-- Toast Notification -->
-  <div class="toast" id="toast">
-    <span>✅ Order completed successfully!</span>
-  </div>
+    const modalHTML = `
+      <div id="${modalId}" class="modal">
+        <div class="modal-content">
+          <button class="close-btn">&times;</button>
+          <h3 class="modal-header">Order ${order.id} - Products</h3>
+          <div class="product-list" id="${productListId}">Loading...</div>
+        </div>
+      </div>
+    `;
 
-  <script>
-    const orderList = document.getElementById('orderList');
-    const toast = document.getElementById('toast');
-    let orders = [];
-    
+    orderList.appendChild(orderCard);
+    orderList.insertAdjacentHTML('beforeend', modalHTML);
 
-    document.addEventListener('DOMContentLoaded', loadOrders);
+    setupModalEvents(order, toggleButtonId, modalId, productListId);
+  }
 
-    async function loadOrders() {
-      try {
-        const response = await fetch('/api/orders/search/filter?status=approved', { credentials: 'include' });
-        if (response.ok) {
-          const orderIds = await response.json();
-          orders = [];
-          for (const order of orderIds) {
-            const detailResponse = await fetch(`/api/orders/${order.id}`, { credentials: 'include' });
-            if (detailResponse.ok) {
-              const fullOrder = await detailResponse.json();
-              orders.push(fullOrder);
-              
-            }
-          }
-          populateOrderList();
-        } else {
-          showToast("Failed to load orders", true);
+  function setupModalEvents(order, toggleBtnId, modalId, productListId) {
+    const toggleBtn = document.getElementById(toggleBtnId);
+    const modal = document.getElementById(modalId);
+    const productListDiv = modal.querySelector('.product-list');
+    const closeBtn = modal.querySelector('.close-btn');
+
+    toggleBtn.addEventListener('click', async () => {
+      modal.style.display = 'flex';
+      if (!productListDiv.dataset.loaded) {
+        try {
+          const res = await fetch(`/api/orders/${order.id}/items`, { credentials: 'include' });
+          if (!res.ok) return showToast("Failed to load order items", true);
+
+          const items = await res.json();
+          let html = `<table class="product-table"><thead>
+            <tr><th>Product</th><th>Quantity</th><th>Verify</th></tr>
+          </thead><tbody>`;
+          items.forEach(item => {
+            html += `<tr>
+              <td>${item.description}</td>
+              <td>${item.quantity}</td>
+              <td><input type="checkbox"  class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}" ></td>
+            </tr>`;
+          });
+          html += `</tbody></table>
+            <button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>`;
+          productListDiv.innerHTML = html;
+
+          const checkboxes = productListDiv.querySelectorAll('.verify-checkbox');
+          const completeBtn = productListDiv.querySelector('.complete-btn');
+
+          checkboxes.forEach(cb => cb.addEventListener('change', () => {
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            completeBtn.disabled = !allChecked;
+            completeBtn.style.display = allChecked ? 'block' : 'none';
+          }));
+
+          completeBtn.addEventListener('click', async () => await completeOrder(order.id));
+          productListDiv.dataset.loaded = 'true';
+        } catch (error) {
+          console.error(error);
+          showToast("Error loading order items", true);
         }
-      } catch (error) {
-        console.error('Error loading orders:', error);
-        showToast("Error loading orders", true);
       }
+    });
+
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+
+  async function completeOrder(orderId) {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/receive`, { method: 'PUT', credentials: 'include' });
+      if (!res.ok) return showToast("Failed to complete order", true);
+
+      showToast("Order completed successfully!");
+      loadOrders();
+    } catch (error) {
+      console.error(error);
+      showToast("Error completing order", true);
     }
+  }
 
-    function populateOrderList() {
-      orderList.innerHTML = '';
-      orders.forEach(order => {
-        const orderCard = document.createElement('div');
-        orderCard.className = 'order-card';
-        orderCard.setAttribute('data-id', order.id);
-        
+  function showToast(message, isError = false) {
+    toast.textContent = message;
+    toast.className = `toast ${isError ? 'error' : 'success'} show`;
+    setTimeout(() => toast.className = 'toast', 3000);
+  }
 
-        const toggleButtonId = `toggle-btn-${order.id}`;
-        const modalId = `modal-${order.id}`;
-        const productListId = `product-list-${order.id}`;
-
-        orderCard.innerHTML = `
-          <div class="order-header">
-            <div>
-              <div class="supplier-name">${order.supplier}</div>
-              <div class="order-id">${order.po_number}</div>
-            </div>
-            <button id="${toggleButtonId}" class="toggle-products-btn" aria-label="Toggle products">
-              <i class="fas fa-clipboard-list"></i>
-            </button>
-          </div>
-        `;
-
-        const modalHTML = `
-          <div id="${modalId}" class="modal">
-            <div class="modal-content">
-              <button class="close-btn">&times;</button>
-              <h3 class="modal-header">Order ${order.id} - Products</h3>
-              <div class="product-list" id="${productListId}">
-                Loading...
-              </div>
-            </div>
-          </div>
-        `;
-        orderList.appendChild(orderCard);
-        orderList.insertAdjacentHTML('beforeend', modalHTML);
-
-        const toggleBtn = document.getElementById(toggleButtonId);
-        const modal = document.getElementById(modalId);
-        const productListDiv = modal.querySelector('.product-list');
-        const closeBtn = modal.querySelector('.close-btn');
-
-        toggleBtn.addEventListener('click', async () => {
-          modal.style.display = 'flex';
-          if (!productListDiv.hasAttribute('data-loaded')) {
-            try {
-              const response = await fetch(`/api/orders/${order.id}/items`, { credentials: 'include' });
-              if (response.ok) {
-                const items = await response.json();
-                let productHTML = `
-                  <table class="product-table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Verify</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                `;
-                items.forEach(item => {
-                  productHTML += `
-                    <tr>
-                      <td>${item.description}</td>
-                      <td>${item.quantity}</td>
-                      <td><input type="checkbox" class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}"></td>
-                    </tr>
-                  `;
-                });
-                productHTML += `
-                    </tbody>
-                  </table>
-                  <button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>
-                `;
-                productListDiv.innerHTML = productHTML + `<button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>`;
-                const checkboxes = productListDiv.querySelectorAll('.verify-checkbox');
-                const completeBtn = productListDiv.querySelector('.complete-btn');
-                checkboxes.forEach(checkbox => {
-                  checkbox.addEventListener('change', () => {
-                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                    completeBtn.disabled = !allChecked;
-                    completeBtn.style.display = allChecked ? 'block' : 'none';
-                  });
-                });
-                completeBtn.addEventListener('click', async () => {
-                  const orderId = completeBtn.getAttribute('data-order-id');
-                  await completeOrder(orderId);
-                });
-                productListDiv.setAttribute('data-loaded', 'true');
-              } else {
-                showToast("Failed to load order items", true);
-              }
-            } catch (error) {
-              console.error('Error loading order items:', error);
-              showToast("Error loading order items", true);
-            }
-          }
-        });
-
-        closeBtn.addEventListener('click', () => {
-          modal.style.display = 'none';
-        });
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            modal.style.display = 'none';
-          }
-        });
-      });
-    }
-
-    async function completeOrder(orderId) {
-      try {
-        const response = await fetch(`/api/orders/${orderId}/receive`, {
-          method: 'PUT',
-          credentials: 'include'
-        });
-        if (response.ok) {
-          showToast("Order completed successfully!");
-          loadOrders();
-        } else {
-          showToast("Failed to complete order", true);
-        }
-      } catch (error) {
-        console.error('Error completing order:', error);
-        showToast("Error completing order", true);
-      }
-    }
-
-    function showToast(message, isError = false) {
-      toast.querySelector("span").textContent = message;
-      if (isError) {
-        toast.classList.add("error");
-      } else {
-        toast.classList.remove("error");
-      }
-      toast.classList.add("show");
-      setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
-    }
-
-    function logout() {
-      showToast("Logged out successfully!");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
-    }
-  </script>
+  function logout() {
+    showToast("Logged out successfully!");
+    setTimeout(() => window.location.href = "/", 1000);
+  }
+</script>
 </body>
 </html>
