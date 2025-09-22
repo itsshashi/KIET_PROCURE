@@ -699,14 +699,17 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
         // Send email notification to purchase orders team
         const transporte = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false, // STARTTLS
             auth: {
-                user: "acc19105@gmail.com",
-                pass: "sipx jwsb hqrw tbqk",
+              user: "No-reply@kietsindia.com",
+              pass: "Kiets@2025$1",
             },
-        });
+            tls: {
+              rejectUnauthorized: false,
+            },
+          });
 
         const mailOptions = {
             from: "acc19105@gmail.com",
@@ -783,19 +786,38 @@ app.post("/forgot-password", async (req, res) => {
 
         await pool.query("UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE email = $3", [token, expiry, email]);
 
-        const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass: 'ujcf lhsf yzla dxiy' } });
-        const resetURL = `https://kiet-procure.onrender.com/reset-password/${token}`;
-        const mailSubject = "Password Reset Request - KIET Technologies";
-        const mailBody = `
-          <p>Hello ${email},</p>
-          <p>We received a request to reset your password for your KIET Technologies account.</p>
-          <p>If you made this request, please click the link below to reset your password:</p>
-          <p><a href="${resetURL}">Reset Password</a></p>
-          <p>This link will expire in 15 minutes for security reasons.</p>
-          <p>If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
-          <p>Thank you,<br>The KIET Technologies Team</p>
-        `;
-        await transporter.sendMail({ to: email, from: "acc19105@gmail.com", subject: mailSubject, html: mailBody });
+      const transporter = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false, // STARTTLS
+            auth: {
+              user: "No-reply@kietsindia.com",
+              pass: "Kiets@2025$1",
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+          });
+
+
+const resetURL = `https://kiet-procure.onrender.com/reset-password/${token}`;
+const mailSubject = "Password Reset Request - KIET Technologies";
+const mailBody = `
+  <p>Hello ${email},</p>
+  <p>We received a request to reset your password for your KIET Technologies account.</p>
+  <p>If you made this request, please click the link below to reset your password:</p>
+  <p><a href="${resetURL}">Reset Password</a></p>
+  <p>This link will expire in 15 minutes for security reasons.</p>
+  <p>If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
+  <p>Thank you,<br>The KIET Technologies Team</p>
+`;
+
+await transporter.sendMail({
+  from: '"KIET Technologies" <no-reply@kietsindia.com>', // display name + Office 365 email
+  to: email,
+  subject: mailSubject,
+  html: mailBody,
+});
 
         res.sendFile(path.join(__dirname, 'public/sucess.html'));
     } catch (err) {
@@ -953,7 +975,19 @@ app.post('/api/send-email/:id', async (req, res) => {
     const { ordered_by, po_number ,} = orderResult.rows[0];
 
     // Send email
-    const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: "acc19105@gmail.com", pass:'ujcf lhsf yzla dxiy'} });
+     const transporte = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false, // STARTTLS
+            auth: {
+              user: "No-reply@kietsindia.com",
+              pass: "Kiets@2025$1",
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+          });
+
     const mailSubject = "Payment Notification - KIET Technologies";
     const mailBody = `
       <p>Hello ${ordered_by},</p>
@@ -961,7 +995,7 @@ app.post('/api/send-email/:id', async (req, res) => {
       <p>Thank you,<br>The KIET Technologies Team</p>
     `;
 
-    await transporter.sendMail({ to: ordered_by, from: "acc19105@gmail.com", subject: mailSubject, html: mailBody });
+    await transporte.sendMail({ to: ordered_by, from: "No-reply@kietsindia.com", subject: mailSubject, html: mailBody });
 
     res.json({ success: true, message: 'Email sent successfully' });
   } catch (error) {
@@ -1087,17 +1121,21 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
     
     // Setup transporter
     const transporte = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "acc19105@gmail.com",
-        pass: "sipx jwsb hqrw tbqk",
-      },
-    });
+                       host: "smtp.office365.com",
+            port: 587,
+            secure: false, // STARTTLS
+            auth: {
+              user: "No-reply@kietsindia.com",
+              pass: "Kiets@2025$1",
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+          });
+
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: "No-reply@kietsindia.com",
   to: "chandrashekaraiah.r@kietsindia.com",
   subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
   text: `
