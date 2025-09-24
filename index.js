@@ -37,14 +37,11 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  host: process.env.DB_HOST || "mydb.xxxxxx.ap-south-1.rds.amazonaws.com",
-  user: process.env.DB_USER || "admin",
-  password: process.env.DB_PASS || "mypassword",
-  database: process.env.DB_NAME || "mydatabase",
-  port: 5432,
-  ssl: false
+  connectionString: "postgresql://kiet_user:D6a3e16dUd4u1q7fF4u7VLONSzNRgWIm@dpg-d2vkdtggjchc73fl7120-a.oregon-postgres.render.com/kiet",
+  ssl: {
+    rejectUnauthorized: false, // needed for Render
+  },
 });
-
 
 
 
