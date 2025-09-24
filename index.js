@@ -37,9 +37,16 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString:process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  host: process.env.DB_HOST || "mydb.xxxxxx.ap-south-1.rds.amazonaws.com",
+  user: process.env.DB_USER || "admin",
+  password: process.env.DB_PASS || "mypassword",
+  database: process.env.DB_NAME || "mydatabase",
+  port: 5432,
+  ssl: false
 });
+
+
+
 
 
 // =============================
@@ -323,13 +330,13 @@ app.put('/api/orders/:id', async (req, res) => {
     try {
 
         const { id } = req.params;
-        const { supplier_name, supplier_gst, supplier_address } = req.body;
+        const { supplier_name, supplier_gst, supplier_address, payment_terms, expected_date } = req.body;
 
         const { rows } = await pool.query(
             `UPDATE purchase_orders SET
-             supplier_name = $1, supplier_gst = $2, supplier_address = $3
-             WHERE id = $4 RETURNING *`,
-            [supplier_name, supplier_gst, supplier_address, id]
+             supplier_name = $1, supplier_gst = $2, supplier_address = $3, terms_of_payment = $4, date_required = $5
+             WHERE id = $6 RETURNING *`,
+            [supplier_name, supplier_gst, supplier_address, payment_terms, expected_date, id]
         );
 
         if (rows.length === 0) {
@@ -631,11 +638,11 @@ app.post('/submit', async (req, res) => {
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
-  
-    
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier,termsOfPayment} = req.body;
+
+
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier, termsOfPayment, service } = req.body;
     let products;
     try {
         products = JSON.parse(req.body.products || "[]");
@@ -647,6 +654,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
     const contact = phone;
     const single = singleSupplier === 'on' ? true : false;
+    const isService = service === 'on' ? true : false;
 
     try {
 
@@ -672,15 +680,18 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         }
 
 
+        // Set initial status based on whether it's a service order
+        const initialStatus = isService ? 'paid' : 'pending';
+
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders
             (project_name, project_code_number, purchase_order_number, supplier_name,
              supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
-             ordered_by, quotation_file, total_amount, reference_no, contact, single,terms_of_payment)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,$17) RETURNING id`,
+             ordered_by, quotation_file, total_amount, reference_no, contact, single, terms_of_payment, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
              supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
-             orderedBy, quotationFile, totalAmount, reference_no, contact, single,termsOfPayment]
+             orderedBy, quotationFile, totalAmount, reference_no, contact, single, termsOfPayment, initialStatus]
         );
 
         const orderId = orderResult.rows[0].id;
