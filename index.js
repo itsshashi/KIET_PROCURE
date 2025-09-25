@@ -37,7 +37,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString: "postgresql://postgres:KIetshashaNK2025@database-1.c7iiekukgmcp.ap-south-1.rds.amazonaws.com:5432/postgres",
+  connectionString: process.env.DB_URL,
   ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
 });
 
@@ -323,20 +323,74 @@ app.put('/api/orders/:id', async (req, res) => {
     try {
 
         const { id } = req.params;
-        const { supplier_name, supplier_gst, supplier_address, payment_terms, expected_date} = req.body;
+       const { supplier_name, supplier_gst, supplier_address, payment_terms, expected_date, status } = req.body;
 
         const { rows } = await pool.query(
             `UPDATE purchase_orders SET
-             supplier_name = $1, supplier_gst = $2, supplier_address = $3, terms_of_payment = $4, date_required = $5
-             WHERE id = $6 RETURNING *`,
-            [supplier_name, supplier_gst, supplier_address, payment_terms, expected_date, id]
+            supplier_name = $1, supplier_gst = $2, supplier_address = $3, terms_of_payment = $4, date_required = $5, status = $6
+            WHERE id = $7 RETURNING *`,
+            [supplier_name, supplier_gst, supplier_address, payment_terms, expected_date, status, id]
         );
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
+// If status is 'purchase', send email to MD about amended PO
+if (status === 'purchase') {
+    const transporte = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false, // STARTTLS
+        auth: {
+            user: "No-reply@kietsindia.com",
+            pass: "Kiets@2025$1",
+        },
+        tls: {
+            rejectUnauthorized: false,
+        },
+    });
 
-        
+    const mailOptions = {
+        from: "No-reply@kietsindia.com",
+        to: "shashank@kietsindia.com",
+        subject: `Action Required: Amended PO Approval Needed for Order ${rows[0].purchase_order_number}`,
+        text: `
+Hello,
+
+The order ${rows[0].purchase_order_number} has been amended and now requires your attention for final approval.
+
+📌 Order Details:
+- Order Number: ${rows[0].purchase_order_number}
+- Supplier: ${rows[0].supplier_name || "N/A"}
+- Requester: ${rows[0].ordered_by || "N/A"}
+- Date: ${rows[0].order_date || new Date().toLocaleDateString()}
+- Total Amount: ₹${rows[0].total_amount || "N/A"}
+
+👉 Please complete the final approval here:
+https://kietprocure.com
+
+Best regards,
+Purchase Team
+KIET TECHNOLOGIES PVT LTD,
+        `,
+        attachments: [
+            {
+                filename: "lg.jpg",
+                path: "public/images/lg.jpg",
+                cid: "logoImage"
+            }
+        ]
+    };
+
+    try {
+        const info = await transporte.sendMail(mailOptions);
+        console.log("✅ Email sent for amended PO:", info.response);
+    } catch (err) {
+        console.error("❌ Email failed for amended PO:", err);
+    }
+}
+
+
         
         res.json(rows[0]);
     } catch (err) {
@@ -719,7 +773,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
         const mailOptions = {
             from: "No-reply@kietsindia.com",
-            to: "shashank@kietsindia.com",
+            to: "purchase@kietsindia.com",
             subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
             text: `
 Hello Purchase Team,
@@ -1142,7 +1196,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
 
     const mailOptions = {
       from: "No-reply@kietsindia.com",
-  to: "shashank@kietsindia.com",
+  to: "chandrashekaraiah.r@kietsindia.com",
   subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
   text: `
 Hello,
