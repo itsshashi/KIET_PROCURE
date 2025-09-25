@@ -602,24 +602,20 @@
       const productRows = document.querySelectorAll('#editProductTableBody tr');
 
       productRows.forEach(row => {
-        const quantity = row.querySelector('.edit-quantity').value.trim();
-        const unitPrice = row.querySelector('.edit-unit-price').value.trim();
+       const product = {
+  partNo: row.querySelector('.edit-part-no').value,
+  description: row.querySelector('.edit-description').value,
+  hsnCode: row.querySelector('.edit-hsnCode').value,
+  quantity: row.querySelector('.edit-quantity').value,
+  unitPrice: row.querySelector('.edit-unit-price').value,
+  gst: row.querySelector('.edit-gst').value,
+  unit: row.querySelector('.edit-unit').value,
+  discount: row.querySelector('.edit-discount').value
+};
 
-        // Only include rows with valid quantity and unit price
-        
-          const product = {
-            partNo: row.querySelector('.edit-part-no').value.trim(),
-            description: row.querySelector('.edit-description').value.trim(),
-            hsnCode: row.querySelector('.edit-hsnCode').value.trim(),
-            quantity: parseFloat(quantity) || 0,
-            unitPrice: parseFloat(unitPrice) || 0,
-            gst: parseFloat(row.querySelector('.edit-gst').value.trim()) || 0,
-            unit: row.querySelector('.edit-unit').value.trim(),
-            discount: parseFloat(row.querySelector('.edit-discount').value.trim()) || 0
-          };
-          products.push(product);
-        }
-      );
+products.push(product);
+
+      });
 
       const formData = {
         supplier_name: document.getElementById('editSupplierName').value,
