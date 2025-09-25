@@ -37,7 +37,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString: process.env.DB_URL,
+  connectionString: "postgresql://postgres:KIetshashaNK2025@database-1.c7iiekukgmcp.ap-south-1.rds.amazonaws.com:5432/postgres",
   ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
 });
 
@@ -718,7 +718,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
           });
 
         const mailOptions = {
-            from: "acc19105@gmail.com",
+            from: "NO-reply@kietsindia.com",
             to: "purchase@kietsindia.com",
             subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
             text: `
@@ -734,7 +734,7 @@ A new order has been raised and requires your approval.
 - Total Amount: ₹${totalAmount}
 
 👉 Please review and approve the order here:
-https://kiet-procure.onrender.com
+https://kietprocure.com
 
 Best regards,
 Procurement Team
@@ -806,7 +806,7 @@ app.post("/forgot-password", async (req, res) => {
           });
 
 
-const resetURL = `https://kiet-procure.onrender.com/reset-password/${token}`;
+const resetURL = `https://kietprocure.com/reset-password/${token}`;
 const mailSubject = "Password Reset Request - KIET Technologies";
 const mailBody = `
   <p>Hello ${email},</p>
