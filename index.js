@@ -37,13 +37,9 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString: "postgresql://kiet_user:D6a3e16dUd4u1q7fF4u7VLONSzNRgWIm@dpg-d2vkdtggjchc73fl7120-a.oregon-postgres.render.com/kiet",
-  ssl: {
-    rejectUnauthorized: false, // needed for Render
-  },
+  connectionString: process.env.DB_URL,
+  ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
 });
-
-
 
 
 // =============================
