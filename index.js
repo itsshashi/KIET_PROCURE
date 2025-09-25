@@ -323,7 +323,7 @@ app.put('/api/orders/:id', async (req, res) => {
     try {
 
         const { id } = req.params;
-        const { supplier_name, supplier_gst, supplier_address, payment_terms, expected_date,  } = req.body;
+        const { supplier_name, supplier_gst, supplier_address, payment_terms, expected_date} = req.body;
         const { rows } = await pool.query(
             `UPDATE purchase_orders SET
              supplier_name = $1, supplier_gst = $2, supplier_address = $3, terms_of_payment = $4, date_required = $5
