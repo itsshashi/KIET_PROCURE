@@ -606,7 +606,7 @@
         const unitPrice = row.querySelector('.edit-unit-price').value.trim();
 
         // Only include rows with valid quantity and unit price
-        if (quantity && unitPrice) {
+        
           const product = {
             partNo: row.querySelector('.edit-part-no').value.trim(),
             description: row.querySelector('.edit-description').value.trim(),
@@ -619,7 +619,7 @@
           };
           products.push(product);
         }
-      });
+      );
 
       const formData = {
         supplier_name: document.getElementById('editSupplierName').value,
