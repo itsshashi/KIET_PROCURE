@@ -296,7 +296,13 @@
   }
   .toast.show { opacity: 1; transform: translateX(0); }
   .toast.error { background: var(--secondary); }
-  .toast.success { background: var(--success); }
+  .toast.success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    padding: 1.5rem 2rem;
+    font-size: 1.25rem;
+    min-width: 300px;
+    box-shadow: 0 10px 30px rgba(22, 163, 74, 0.3);
+  }
 
   /* ---------------------- Animations ---------------------- */
   @keyframes fadeIn {
@@ -465,8 +471,8 @@
     try {
       const res = await fetch(`/api/orders/${orderId}/receive`, { method: 'PUT', credentials: 'include' });
       if (!res.ok) return showToast("Failed to complete order", true);
-
-      showToast("Order completed successfully!");
+      const data = await res.json();
+      showToast(`Order completed successfully! Generated GRN: <strong>${data.genNumber}</strong>`);
       loadOrders();
     } catch (error) {
       console.error(error);
@@ -475,9 +481,9 @@
   }
 
   function showToast(message, isError = false) {
-    toast.textContent = message;
+    toast.innerHTML = `<i class="fas fa-${isError ? 'exclamation-triangle' : 'check-circle'}"></i> ${message}`;
     toast.className = `toast ${isError ? 'error' : 'success'} show`;
-    setTimeout(() => toast.className = 'toast', 3000);
+    setTimeout(() => toast.className = 'toast', 20000);
   }
 
   function logout() {
