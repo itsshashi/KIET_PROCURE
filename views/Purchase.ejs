@@ -841,6 +841,7 @@ function addNewProductRow() {
     async function generatePO(orderId) {
       try {
         const response = await fetch(`${API_URL}/${orderId}/pdf`);
+        console.log('Generate PO response:', response); // Debugging line
         if (!response.ok) throw new Error('Failed to generate PO PDF');
 
         const blob = await response.blob();
