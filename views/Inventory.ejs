@@ -274,7 +274,12 @@
 
           <div class="form-group">
             <label for="grn_store">GRN Number</label>
-            <input type="text" id="grn_store" name="grn" class="form-control" placeholder="Enter GRN number" required>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="grn_store" name="grn" class="form-control" placeholder="Enter GRN number" required>
+              <button type="button" id="generate-grn-btn" class="btn" style="padding: 10px 16px; font-size: 14px; white-space: nowrap;">
+                <i class="fas fa-magic"></i> Generate GRN
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -340,6 +345,30 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadOrders);
+
+    // Handle GRN generation
+    document.getElementById('generate-grn-btn').addEventListener('click', async function() {
+      const orderSelect = document.getElementById('order_id_store');
+      const orderId = orderSelect.value;
+      if (!orderId) {
+        showPopup('Error', 'Please select a purchase order first.', 'error');
+        return;
+      }
+      try {
+        const response = await fetch('/api/generate-grn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId })
+        });
+        if (!response.ok) throw new Error('Failed to generate GRN');
+        const data = await response.json();
+        document.getElementById('grn_store').value = data.grn;
+        showPopup('Success', `GRN generated: ${data.grn}`, 'success');
+      } catch (error) {
+        console.error('Error generating GRN:', error);
+        showPopup('Error', 'Failed to generate GRN. Please try again.', 'error');
+      }
+    });
 
     // Handle form submission with popup
     document.querySelector('form[action="/submit-inventory"]').addEventListener('submit', async function(e) {
