@@ -846,9 +846,9 @@ function addNewProductRow() {
     async function generatePO(orderId) {
       try {
         const order = allOrders.find(o => o.id === orderId);
-        
+
         const response = await fetch(`${API_URL}/${orderId}/pdf`);
-        
+
         if (!response.ok) throw new Error('Failed to generate PO PDF');
 
         const blob = await response.blob();
@@ -860,6 +860,16 @@ function addNewProductRow() {
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+
+        // Update status to 'sent' and send email
+        const sendResponse = await fetch(`${API_URL}/${orderId}/send`, {
+          method: 'PUT'
+        });
+
+        if (!sendResponse.ok) throw new Error('Failed to update status');
+
+        alert('PO generated successfully! Status updated to Sent and email sent to requester.');
+        loadOrders(); // Refresh the orders table
 
       } catch (error) {
         console.error('Error generating PO:', error);

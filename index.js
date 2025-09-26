@@ -1365,12 +1365,72 @@ app.get("/supplier/:name", async (req, res) => {
 // Send PO
 app.put("/api/orders/:id/send", async (req, res) => {
   const { id } = req.params;
-  const { rows } = await pool.query(
-    "UPDATE purchase_orders SET status='sent'WHERE id=$1 RETURNING *",
-    [id]
-  );
-  if (!rows.length) return res.status(404).json({ error: "Order not found" });
-  res.json({ success: true, order: rows[0] });
+  try {
+    const { rows } = await pool.query(
+      "UPDATE purchase_orders SET status='sent' WHERE id=$1 RETURNING *",
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "Order not found" });
+
+    const order = rows[0];
+
+    // Send email notification to requester
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false, // STARTTLS
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: "Kiets@2025$1",
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    const mailOptions = {
+      from: "No-reply@kietsindia.com",
+      to: order.ordered_by,
+      subject: `Purchase Order Sent - Order ${order.purchase_order_number}`,
+      text: `
+Hello ${order.ordered_by},
+
+Your purchase order has been processed and sent to the supplier.
+
+📌 Order Details:
+- Order Number: ${order.purchase_order_number}
+- Project: ${order.project_name}
+- Supplier: ${order.supplier_name}
+- Total Amount: ₹${order.total_amount}
+- Status: Sent
+
+The PO PDF has been generated and sent to the supplier. Please contact the purchase team if you have any questions.
+
+Best regards,
+Purchase Team
+KIET TECHNOLOGIES PVT LTD,
+      `,
+      attachments: [
+        {
+          filename: "lg.jpg",
+          path: "public/images/lg.jpg",
+          cid: "logoImage"
+        }
+      ]
+    };
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log("✅ Email sent to requester:", info.response);
+    } catch (err) {
+      console.error("❌ Email failed:", err);
+    }
+
+    res.json({ success: true, order: order });
+  } catch (err) {
+    console.error("❌ Error sending PO:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Mark as Received
