@@ -216,6 +216,7 @@ app.get('/api/orders', async (req, res) => {
                 notes,
                 quotation_file,
                 single,
+                terms_of_payment as payment_terms,
                 created_at
             FROM purchase_orders
             ORDER BY created_at DESC
@@ -273,6 +274,7 @@ app.get('/api/orders/:id', async (req, res) => {
                 po_number,
                 status,
                 urgency,
+                terms_of_payment as payment_terms,
                 notes,
                 quotation_file,
                 created_at
@@ -890,11 +892,6 @@ app.post("/reset-password/:token", async (req, res) => {
 
 
 
-
-
-
-
-
 app.get('/api/account-details', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -1157,7 +1154,7 @@ The order ${rows[0].purchase_order_number} has been approved in Purchase.com and
 - Total Amount: ₹${rows[0].total_amount || "N/A"}
 
 👉 Please complete the final approval here:  
-https://kiet-procure.onrender.com
+https://kietprocure.com
 
 Best regards,  
 Purchase Team
@@ -1227,17 +1224,6 @@ KIET TECHNOLOGIES PVT LTD,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //suggestion
 app.get("/supplier/:name", async (req, res) => {
   try {
@@ -1259,22 +1245,6 @@ app.get("/supplier/:name", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1461,6 +1431,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       "SELECT * FROM purchase_order_items WHERE purchase_order_id = $1",
       [id]
     );
+    
     const items = itemsResult.rows.map(row => ({
       part_no: row.part_no,
       description: row.description,
@@ -1481,7 +1452,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     gst:order.supplier_gst||"N/A"
 
   },
-  poNumber: order.purchase_order_number || order.po_number || 'UNKNOWN',
+  poNumber: order.po_number|| 'UNKNOWN',
   reference_no: order.reference_no,
   date: new Date(order.created_at).toLocaleDateString(),
   expected_date: order.date_required 

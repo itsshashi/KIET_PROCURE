@@ -563,7 +563,12 @@
         document.getElementById('editSupplierGst').value = order.supplier_gst || '';
         document.getElementById('editSupplierAddress').value = order.supplier_address || '';
         document.getElementById('editPaymentTerms').value = order.payment_terms || '';
-        document.getElementById('editExpectedDate').value = order.date_required || '';
+        let expectedDate = '';
+        if (order.date_required) {
+          const date = new Date(order.date_required);
+          expectedDate = date.toISOString().split('T')[0];
+        }
+        document.getElementById('editExpectedDate').value = expectedDate;
 
         // Set single supplier checkbox
         document.getElementById('editSingleSupplier').checked = order.single || false;
