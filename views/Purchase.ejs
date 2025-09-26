@@ -850,7 +850,7 @@ function addNewProductRow() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PO_${order.orderId}.pdf`;
+        a.download = `PO_${order.id}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
