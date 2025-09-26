@@ -33,8 +33,10 @@
     .status-approved { background: #d1fae5; color: #065f46; }
     .status-purchase { background: #dbeafe; color: #1e40af; }
     .status-sent { background: #e0e7ff; color: #3730a3; }
-    .status-received { background: #f0fdf4; color: #166534; }
+    .status-received { background: #ecfdf5; color: #047857; }
     .status-rejected { background: #fee2e2; color: #b91c1c; }
+    .status-inventory_processed { background: #ccfbf1; color: #0f766e; }
+    .status-paid { background: #e9d5ff; color: #7c3aed; }
     .blink {
       animation: blink 1s infinite;
     }
@@ -449,7 +451,7 @@
 </button>
 
    
-              <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${order.status === 'approved' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'} text-white rounded text-sm transition flex items-center justify-center" ${order.status !== 'approved' ? 'disabled' : ''}>
+              <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${(order.status === 'pending' || order.status === 'purchase') ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded text-sm transition flex items-center justify-center" ${(order.status === 'pending' || order.status === 'purchase') ? 'disabled' : ''}>
                 <i class="fas fa-file-invoice mr-1"></i>P O
               </button>
             </div>
