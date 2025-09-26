@@ -841,6 +841,7 @@ function addNewProductRow() {
     async function generatePO(orderId) {
       try {
         const order = allOrders.find(o => o.id === orderId);
+        console.log('Generating PO for order:', order); // Debugging line
         const response = await fetch(`${API_URL}/${orderId}/pdf`);
         console.log('Generate PO response:', response); // Debugging line
         if (!response.ok) throw new Error('Failed to generate PO PDF');
@@ -849,7 +850,7 @@ function addNewProductRow() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PO_${order.po_number}.pdf`;
+        a.download = `PO_${order.orderId}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
