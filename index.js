@@ -76,10 +76,10 @@ async function generatePurchaseOrderNumber() {
     const prefix = `PR${year}${month}`;
 
     const result = await pool.query(
-        `SELECT purchase_order_number 
-         FROM purchase_orders 
-         WHERE purchase_order_number LIKE $1 
-         ORDER BY purchase_order_number DESC 
+        `SELECT purchase_order_number
+         FROM purchase_orders
+         WHERE purchase_order_number LIKE $1
+         ORDER BY purchase_order_number DESC
          LIMIT 1`,
         [`${prefix}%`]
     );
@@ -94,6 +94,76 @@ async function generatePurchaseOrderNumber() {
         const candidate = `${prefix}${String(sequence).padStart(3, "0")}`;
         const checkResult = await pool.query(
             `SELECT 1 FROM purchase_orders WHERE purchase_order_number = $1`,
+            [candidate]
+        );
+        if (checkResult.rows.length === 0) {
+            return candidate;
+        }
+        sequence++;
+    }
+}
+
+async function generateGenNumber() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const prefix = `GEN${year}${month}${day}`;
+
+    const result = await pool.query(
+        `SELECT gen_number
+         FROM grn_gen_entries
+         WHERE gen_number LIKE $1
+         ORDER BY gen_number DESC
+         LIMIT 1`,
+        [`${prefix}%`]
+    );
+
+    let sequence = 1;
+    if (result.rows.length > 0) {
+        const lastNumber = result.rows[0].gen_number;
+        sequence = parseInt(lastNumber.slice(-3)) + 1;
+    }
+
+    while (true) {
+        const candidate = `${prefix}${String(sequence).padStart(3, "0")}`;
+        const checkResult = await pool.query(
+            `SELECT 1 FROM grn_gen_entries WHERE gen_number = $1`,
+            [candidate]
+        );
+        if (checkResult.rows.length === 0) {
+            return candidate;
+        }
+        sequence++;
+    }
+}
+
+async function generateGrnNumber() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const prefix = `GRN${year}${month}${day}`;
+
+    const result = await pool.query(
+        `SELECT grn_number
+         FROM grn_gen_entries
+         WHERE grn_number LIKE $1
+         ORDER BY grn_number DESC
+         LIMIT 1`,
+        [`${prefix}%`]
+    );
+
+    let sequence = 1;
+    if (result.rows.length > 0) {
+        const lastNumber = result.rows[0].grn_number;
+        sequence = parseInt(lastNumber.slice(-3)) + 1;
+    }
+
+    while (true) {
+        const candidate = `${prefix}${String(sequence).padStart(3, "0")}`;
+        const checkResult = await pool.query(
+            `SELECT 1 FROM grn_gen_entries WHERE grn_number = $1`,
             [candidate]
         );
         if (checkResult.rows.length === 0) {
@@ -174,26 +244,57 @@ app.get('/api/inventory-invoice/:poNumber', async (req, res) => {
 
 
 
+// API route to generate GRN number
+app.post('/api/generate-grn', async (req, res) => {
+    try {
+        const { order_id } = req.body;
+        if (!order_id) {
+            return res.status(400).json({ error: 'order_id is required' });
+        }
 
+        const orderId = parseInt(order_id);
+        if (isNaN(orderId)) {
+            return res.status(400).json({ error: 'Invalid order_id' });
+        }
 
+        // Get supplier name for the order
+        const orderResult = await pool.query(
+            'SELECT supplier_name FROM purchase_orders WHERE id = $1',
+            [orderId]
+        );
+        if (orderResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        const supplierName = orderResult.rows[0].supplier_name;
 
+        // Check if entry already exists for this order in grn_gen_entries
+        const existingResult = await pool.query(
+            'SELECT grn_number FROM grn_gen_entries WHERE purchase_order_id = $1',
+            [orderId]
+        );
 
+        let grn;
+        if (existingResult.rows.length > 0 && existingResult.rows[0].grn_number) {
+            grn = existingResult.rows[0].grn_number;
+        } else {
+            // Generate new unique GRN
+            grn = await generateGrnNumber();
 
+            // Insert or update grn_gen_entries with the generated GRN
+            await pool.query(
+                `INSERT INTO grn_gen_entries (purchase_order_id, grn_number, supplier_name)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT (purchase_order_id) DO UPDATE SET grn_number = $2, supplier_name = $3`,
+                [orderId, grn, supplierName]
+            );
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        res.json({ grn });
+    } catch (err) {
+        console.error('Error generating GRN:', err);
+        res.status(500).json({ error: 'Failed to generate GRN' });
+    }
+});
 
 // Get all orders for the orders management interface
 app.get('/api/orders', async (req, res) => {
@@ -509,9 +610,9 @@ app.get('/api/inventory-orders', async (req, res) => {
 
 // POST route to handle inventory form submission from Inventory.ejs
 app.post('/submit-inventory', upload.single('invoice'), async (req, res) => {
-    if (!req.session.user) {
-        return res.status(401).json({ success: false, error: 'Not authenticated' });
-    }
+    // if (!req.session.user) {
+    //     return res.status(401).json({ success: false, error: 'Not authenticated' });
+    // }
 
     try {
         const {
@@ -559,6 +660,17 @@ app.post('/submit-inventory', upload.single('invoice'), async (req, res) => {
             "UPDATE purchase_orders SET status = 'inventory_processed' WHERE id = $1",
             [order_id]
         );
+
+        // Update grn_gen_entries with grn_number
+        try {
+            await pool.query(
+                `UPDATE grn_gen_entries SET grn_number = $1 WHERE purchase_order_id = $2`,
+                [grn, order_id]
+            );
+        } catch (err) {
+            console.error('Error updating grn_gen_entries:', err);
+            // Continue, as inventory entry succeeded
+        }
 
         res.json({ success: true, message: 'Inventory entry submitted successfully', entry: rows[0] });
     } catch (error) {
@@ -1265,11 +1377,27 @@ app.put("/api/orders/:id/send", async (req, res) => {
 app.put("/api/orders/:id/receive", async (req, res) => {
   const { id } = req.params;
   const { rows } = await pool.query(
-    "UPDATE purchase_orders SET status='received' WHERE id=$1 RETURNING *",
+    "UPDATE purchase_orders SET status='received' WHERE id=$1 RETURNING supplier_name",
     [id]
   );
   if (!rows.length) return res.status(404).json({ error: "Order not found" });
-  res.json({ success: true, order: rows[0] });
+
+  const supplierName = rows[0].supplier_name;
+
+  // Generate gen_number and insert into grn_gen_entries
+  const genNumber = await generateGenNumber();
+  try {
+    await pool.query(
+      `INSERT INTO grn_gen_entries (purchase_order_id, gen_number, grn_number, supplier_name)
+       VALUES ($1, $2, NULL, $3)`,
+      [id, genNumber, supplierName]
+    );
+  } catch (err) {
+    console.error('Error inserting into grn_gen_entries:', err);
+    // Continue, as order update succeeded
+  }
+
+  res.json({ success: true, order: rows[0], genNumber });
 });
 
 
