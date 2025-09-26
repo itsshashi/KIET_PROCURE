@@ -1469,7 +1469,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       quantity: row.quantity,
       unit: row.unit || "pcs",
       unit_price: Number(row.unit_price) || 0,
-      discount:row.discount || 'fail'
+      discount:row.discount || 0
     }));
 
     // 2️⃣ Prepare poData object
@@ -1481,7 +1481,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     gst:order.supplier_gst||"N/A"
 
   },
-  poNumber: order.po_number,
+  poNumber: order.purchase_order_number || order.po_number || 'UNKNOWN',
   reference_no: order.reference_no,
   date: new Date(order.created_at).toLocaleDateString(),
   expected_date: order.date_required 
@@ -1522,6 +1522,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
 
   signPath: "public/images/signature.png",
   company: { logo: "public/images/lg.jpg" },
+  line: 'public/images/line.png',
 
 };
 
