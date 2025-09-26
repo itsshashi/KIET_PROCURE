@@ -123,6 +123,15 @@ function generatePurchaseOrder(poData, filePath) {
       absolutePosition: { x: 100, y: 350 }, // adjust placement
     };
   },
+   background: [
+    {
+      image:poData.line,   // path or base64 of your gradient image
+      width: 5,                // thickness of the strip
+      height: 842,             // A4 page height in pt (adjust if needed)
+      absolutePosition: { x: 590, y: 0 } // right edge (595pt is A4 width)
+    }
+  ],
+
     content: [
       {
         text: "PURCHASE ORDER",
@@ -393,6 +402,34 @@ function generatePurchaseOrder(poData, filePath) {
         alignment: "center",
       },
     ],
+    footer: {
+  stack: [
+    {
+      canvas: [
+        { type: 'line', x1: 0, y1: 0, x2: 520, y2: 0, lineWidth: 1 }
+      ],
+      margin: [0, 0, 0, 6]
+    },
+    {
+      columns: [
+        {
+          text: `Generated on: ${new Date().toLocaleString()}`,
+          alignment: 'left',
+          fontSize: 7,
+          font: 'Times'
+        }
+      ],
+      margin: [0, 0, 0, 4]
+    },
+    {
+      text: `KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111`,
+      alignment: 'left',
+      fontSize: 6,
+      font: 'Times'
+    }
+  ],
+  margin: [40, 10, 0, 10]
+}
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);

@@ -1627,6 +1627,7 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
       `,
       signPath: "public/images/signature.png",
       company: { logo: "public/images/page_logo.png" },
+      line:'public/images/line.png'
     };
 
     // Generate unique filename
