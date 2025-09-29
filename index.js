@@ -861,50 +861,37 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     console.log("Transaction committed");
 
     // 🔹 Send email (keep your existing code)
-     const transporte = nodemailer.createTransport({
-            host: "smtp.office365.com",
-            port: 587,
-            secure: false, // STARTTLS
-            auth: {
-              user: "No-reply@kietsindia.com",
-              pass: "Kiets@2025$1",
-            },
-            tls: {
-              rejectUnauthorized: false,
-            },
-          });
+    try {
+      const transporte = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: "Kiets@2025$1",
+        },
+        tls: { rejectUnauthorized: false }
+      });
 
-        const mailOptions = {
-            from: "NO-reply@kietsindia.com",
-            to: "shashank@kietsindia.com",
-            subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
-            text: `
-Hello Purchase Team,
+      const mailOptions = {
+        from: "NO-reply@kietsindia.com",
+        to: "shashank@kietsindia.com",
+        subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
+        text: `New order ${purchaseOrderNumber} created by ${orderedBy}, total ₹${totalAmount}`,
+        attachments: [
+          {
+            filename: "lg.jpg",
+            path: "public/images/lg.jpg",
+            cid: "logoImage"
+          }
+        ]
+      };
 
-A new order has been raised and requires your approval.
-
-📌 Order Details:
-- Order Number: ${purchaseOrderNumber}
-- Supplier: ${supplierName}
-- Requester: ${orderedBy}
-- Date: ${new Date().toLocaleDateString()}
-- Total Amount: ₹${totalAmount}
-
-👉 Please review and approve the order here:
-https://kietprocure.com
-
-Best regards,
-Procurement Team
-KIET TECHNOLOGIES PVT LTD,
-            `,
-            attachments: [
-    {
-      filename: "lg.jpg",          // your image file name
-      path: "public/images/lg.jpg",            // local path to the image
-      cid: "logoImage"               // same cid as in <img src="cid:logoImage">
+      await transporte.sendMail(mailOptions);
+      console.log("✅ Email sent");
+    } catch (err) {
+      console.error("❌ Email failed:", err);
     }
-  ]
-        };
 
     // 🔹 Success JSON
     return res.json({
