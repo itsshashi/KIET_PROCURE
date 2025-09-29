@@ -868,14 +868,14 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1"
+          pass: "Kiets@2025$1",
         },
         tls: { rejectUnauthorized: false }
       });
 
       const mailOptions = {
         from: "NO-reply@kietsindia.com",
-        to: "purchase@kietsindia.com",
+        to: "shashank@kietsindia.com",
         subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
         text: `New order ${purchaseOrderNumber} created by ${orderedBy}, total ₹${totalAmount}`,
         attachments: [
