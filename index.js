@@ -876,7 +876,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
         const mailOptions = {
             from: "NO-reply@kietsindia.com",
-            to: "purchase@kietsindia.com",
+            to: "shashank@kietsindia.com",
             subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
             text: `
 Hello Purchase Team,
