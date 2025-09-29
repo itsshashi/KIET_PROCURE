@@ -751,7 +751,7 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
 
 
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier, termsOfPayment} = req.body;
+    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier,termsOfPayment} = req.body;
     let products;
     try {
         products = JSON.parse(req.body.products || "[]");
@@ -763,7 +763,6 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
     const contact = phone;
     const single = singleSupplier === 'on' ? true : false;
-
 
     try {
 
@@ -789,18 +788,15 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
         }
 
 
-        // Set initial status based on whether it's a service order
-        
-
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders
             (project_name, project_code_number, purchase_order_number, supplier_name,
              supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
-             ordered_by, quotation_file, total_amount, reference_no, contact, single, terms_of_payment)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
+             ordered_by, quotation_file, total_amount, reference_no, contact, single,terms_of_payment)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,$17) RETURNING id`,
             [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
              supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
-             orderedBy, quotationFile, totalAmount, reference_no, contact, single, termsOfPayment]
+             orderedBy, quotationFile, totalAmount, reference_no, contact, single,termsOfPayment]
         );
 
         const orderId = orderResult.rows[0].id;
@@ -814,7 +810,6 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
                  parseFloat(p.unitPrice), parseFloat(p.gst), projectName,parseFloat(p.discount),p.unit]
             );
         }
-
         await pool.query("COMMIT");
 
         // Send email notification to purchase orders team
