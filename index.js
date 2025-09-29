@@ -745,153 +745,183 @@ app.post('/submit', async (req, res) => {
 
 // Order Raise
 // Order Raise
-app.post("/order_raise", upload.single("quotation"), async (req, res) => {
-    console.log("Starting order_raise request");
-    if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
-
-    const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier, termsOfPayment} = req.body;
-    let products;
-    try {
-        products = JSON.parse(req.body.products || "[]");
-        console.log("Products parsed:", products.length);
-    } catch (parseErr) {
-        return res.status(400).json({ success: false, error: "Invalid products data" });
+// Safe wrapper for multer
+const safeUpload = (req, res, next) => {
+  upload.single("quotation")(req, res, (err) => {
+    if (err) {
+      console.error("❌ Multer Error:", err);
+      return res.status(400).json({
+        success: false,
+        error: "File upload failed: " + err.message
+      });
     }
-    const orderedBy = req.session.user.email;
-    const quotationFile = req.file ? [req.file.filename] : [];
-    console.log("Quotation file:", quotationFile);
+    next();
+  });
+};
 
-    const contact = phone;
-    const single = singleSupplier === 'on' ? true : false;
+app.post("/order_raise", safeUpload, async (req, res) => {
+  console.log("Starting order_raise request");
 
-    try {
-        console.log("About to begin transaction");
-        await pool.query("BEGIN");
-        console.log("Transaction begun");
+  // 🔹 Session check
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      error: "Not authenticated"
+    });
+  }
 
-        const purchaseOrderNumber = await generatePurchaseOrderNumber();
-        console.log("PO number generated:", purchaseOrderNumber);
+  const {
+    projectName,
+    projectCodeNumber,
+    supplierName,
+    supplierGst,
+    supplierAddress,
+    shippingAddress,
+    urgency,
+    dateRequired,
+    notes,
+    reference_no,
+    phone,
+    singleSupplier,
+    termsOfPayment
+  } = req.body;
 
-        let totalAmount = 0;
-        for (let p of products) {
-            const unitPrice = parseFloat(p.unitPrice);
-             const discount=parseFloat(p.discount);
-            const quantity = parseInt(p.quantity);
-            const gst = parseFloat(p.gst);
+  let products;
+  try {
+    products = JSON.parse(req.body.products || "[]");
+    console.log("Products parsed:", products.length);
+  } catch (parseErr) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid products data"
+    });
+  }
 
-            // Calculate item total with GST
-            const itemTotal = quantity * unitPrice;
-            const discounted= itemTotal-discount;
-            const gstAmount = discounted * (gst / 100);
+  const orderedBy = req.session.user.email;
+  const quotationFile = req.file ? [req.file.filename] : [];
+  console.log("Quotation file:", quotationFile);
 
-            totalAmount +=discounted+ gstAmount;
-        }
-        console.log("Total calculated:", totalAmount);
+  const contact = phone;
+  const single = singleSupplier === "on";
 
-        console.log("About to insert order");
-        const orderResult = await pool.query(
-            `INSERT INTO purchase_orders
-            (project_name, project_code_number, purchase_order_number, supplier_name,
-             supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
-             ordered_by, quotation_file, total_amount, reference_no, contact, single, terms_of_payment)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
-            [projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
-             supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
-             orderedBy, quotationFile, totalAmount, reference_no, contact, single, termsOfPayment]
-        );
-        console.log("Order inserted");
+  try {
+    console.log("About to begin transaction");
+    await pool.query("BEGIN");
 
-        const orderId = orderResult.rows[0].id;
-        console.log("Order ID:", orderId);
+    const purchaseOrderNumber = await generatePurchaseOrderNumber();
+    console.log("PO number generated:", purchaseOrderNumber);
 
-        console.log("About to insert items");
-        for (let p of products) {
-            await pool.query(
-                `INSERT INTO purchase_order_items
-                (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name,discount,unit)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10)`,
-                [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity),
-                 parseFloat(p.unitPrice), parseFloat(p.gst), projectName,parseFloat(p.discount),p.unit]
-            );
-        }
-        console.log("Items inserted");
+    let totalAmount = 0;
+    for (let p of products) {
+      const unitPrice = parseFloat(p.unitPrice);
+      const discount = parseFloat(p.discount);
+      const quantity = parseInt(p.quantity);
+      const gst = parseFloat(p.gst);
 
-        console.log("About to commit transaction");
-        await pool.query("COMMIT");
-        console.log("Transaction committed");
+      const itemTotal = quantity * unitPrice;
+      const discounted = itemTotal - discount;
+      const gstAmount = discounted * (gst / 100);
 
-        // Send email notification to purchase orders team
-        console.log("About to send email");
-        const transporte = nodemailer.createTransport({
-            host: "smtp.office365.com",
-            port: 587,
-            secure: false, // STARTTLS
-            auth: {
-              user: "No-reply@kietsindia.com",
-              pass: "Kiets@2025$1",
-            },
-            tls: {
-              rejectUnauthorized: false,
-            },
-          });
-
-        const mailOptions = {
-            from: "NO-reply@kietsindia.com",
-            to: "purchase@kietsindia.com",
-            subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
-            text: `
-Hello Purchase Team,
-
-A new order has been raised and requires your approval.
-
-📌 Order Details:
-- Order Number: ${purchaseOrderNumber}
-- Supplier: ${supplierName}
-- Requester: ${orderedBy}
-- Date: ${new Date().toLocaleDateString()}
-- Total Amount: ₹${totalAmount}
-
-👉 Please review and approve the order here:
-https://kietprocure.com
-
-Best regards,
-Procurement Team
-KIET TECHNOLOGIES PVT LTD,
-            `,
-            attachments: [
-    {
-      filename: "lg.jpg",          // your image file name
-      path: "public/images/lg.jpg",            // local path to the image
-      cid: "logoImage"               // same cid as in <img src="cid:logoImage">
+      totalAmount += discounted + gstAmount;
     }
-  ]
-        };
+    console.log("Total calculated:", totalAmount);
 
-        try {
-            const info = await transporte.sendMail(mailOptions);
-            console.log("✅ Email sent to purchase orders:", info.response);
-        } catch (err) {
-            console.error("❌ Email failed:", err);
-        }
+    console.log("About to insert order");
+    const orderResult = await pool.query(
+      `INSERT INTO purchase_orders
+        (project_name, project_code_number, purchase_order_number, supplier_name,
+         supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
+         ordered_by, quotation_file, total_amount, reference_no, contact, single, terms_of_payment)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id`,
+      [
+        projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
+        supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
+        orderedBy, quotationFile, totalAmount, reference_no, contact, single, termsOfPayment
+      ]
+    );
+    console.log("Order inserted");
 
-        console.log("About to send success response");
-        res.json({
-            success: true,
-            message: "✅ Order inserted successfully",
-            purchaseOrderNumber,
-            orderedBy,
-            file: quotationFile,
-            totalAmount
-        });
+    const orderId = orderResult.rows[0].id;
 
+    console.log("About to insert items");
+    for (let p of products) {
+      await pool.query(
+        `INSERT INTO purchase_order_items
+          (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name, discount, unit)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [
+          orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity),
+          parseFloat(p.unitPrice), parseFloat(p.gst), projectName,
+          parseFloat(p.discount), p.unit
+        ]
+      );
+    }
 
+    await pool.query("COMMIT");
+    console.log("Transaction committed");
+
+    // 🔹 Send email (keep your existing code)
+    try {
+      const transporte = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: "Kiets@2025$1"
+        },
+        tls: { rejectUnauthorized: false }
+      });
+
+      const mailOptions = {
+        from: "NO-reply@kietsindia.com",
+        to: "purchase@kietsindia.com",
+        subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
+        text: `New order ${purchaseOrderNumber} created by ${orderedBy}, total ₹${totalAmount}`,
+        attachments: [
+          {
+            filename: "lg.jpg",
+            path: "public/images/lg.jpg",
+            cid: "logoImage"
+          }
+        ]
+      };
+
+      await transporte.sendMail(mailOptions);
+      console.log("✅ Email sent");
     } catch (err) {
-        console.log("Error occurred, rolling back");
-        await pool.query("ROLLBACK");
-        console.error("❌ Error inserting order:", err.stack || err.message || err);
-        res.status(500).json({ success: false, error: `Failed to insert order: ${err.message || 'Unknown error'}` });
+      console.error("❌ Email failed:", err);
     }
+
+    // 🔹 Success JSON
+    return res.json({
+      success: true,
+      message: "✅ Order inserted successfully",
+      purchaseOrderNumber,
+      orderedBy,
+      file: quotationFile,
+      totalAmount
+    });
+
+  } catch (err) {
+    await pool.query("ROLLBACK");
+    console.error("❌ Error inserting order:", err);
+    return res.status(500).json({
+      success: false,
+      error: `Failed to insert order: ${err.message || "Unknown error"}`
+    });
+  }
 });
+
+// 🔹 Global error handler (keeps JSON output always)
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error Handler:", err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ success: false, error: err.message || "Internal Server Error" });
+});
+
 
 // Logout
 app.post('/logout', (req, res) => {
