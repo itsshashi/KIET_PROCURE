@@ -38,7 +38,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 const pool = new Pool({
   connectionString: "postgresql://postgres:KIetshashaNK2025@database-1.c7iiekukgmcp.ap-south-1.rds.amazonaws.com:5432/postgres",
-   // this will bypass self-signed cert errors
+  ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
 });
 
 
