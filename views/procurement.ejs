@@ -1217,6 +1217,11 @@
                 const res = await fetch("/status");
                 if (!res.ok) throw new Error("Failed to fetch orders");
 
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned non-JSON response");
+                }
+
                 orders = await res.json();
                 renderStatusCards();
                 updateOrderTracking();
@@ -1268,6 +1273,11 @@
                         body: formData
                     });
 
+                    const contentType = res.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Server returned non-JSON response");
+                    }
+
                     const result = await res.json();
 
                     if (result.success) {
@@ -1286,7 +1296,7 @@
                     }
                 } catch (err) {
                     console.error("❌ Error submitting order:", err);
-                    alert("Order submission failed!");
+                    alert("Order submission failed! Server returned invalid response.");
                 } finally {
                     // Hide loader and enable button
                     loader.style.display = "none";
