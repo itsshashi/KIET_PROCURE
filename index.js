@@ -746,37 +746,37 @@ app.post('/submit', async (req, res) => {
 // Order Raise
 // Order Raise
 app.post("/order_raise", upload.single("quotation"), async (req, res) => {
+    console.log("Starting order_raise request");
     if (!req.session.user) return res.status(401).json({ success: false, error: "Not authenticated" });
-
-
-
 
     const { projectName, projectCodeNumber, supplierName, supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes, reference_no, phone, singleSupplier, termsOfPayment} = req.body;
     let products;
     try {
         products = JSON.parse(req.body.products || "[]");
+        console.log("Products parsed:", products.length);
     } catch (parseErr) {
         return res.status(400).json({ success: false, error: "Invalid products data" });
     }
     const orderedBy = req.session.user.email;
     const quotationFile = req.file ? [req.file.filename] : [];
+    console.log("Quotation file:", quotationFile);
 
     const contact = phone;
     const single = singleSupplier === 'on' ? true : false;
 
-
     try {
-
+        console.log("About to begin transaction");
         await pool.query("BEGIN");
+        console.log("Transaction begun");
+
         const purchaseOrderNumber = await generatePurchaseOrderNumber();
+        console.log("PO number generated:", purchaseOrderNumber);
 
         let totalAmount = 0;
         for (let p of products) {
             const unitPrice = parseFloat(p.unitPrice);
              const discount=parseFloat(p.discount);
             const quantity = parseInt(p.quantity);
-
-
             const gst = parseFloat(p.gst);
 
             // Calculate item total with GST
@@ -786,11 +786,9 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
 
             totalAmount +=discounted+ gstAmount;
         }
+        console.log("Total calculated:", totalAmount);
 
-
-        // Set initial status based on whether it's a service order
-        
-
+        console.log("About to insert order");
         const orderResult = await pool.query(
             `INSERT INTO purchase_orders
             (project_name, project_code_number, purchase_order_number, supplier_name,
@@ -801,22 +799,29 @@ app.post("/order_raise", upload.single("quotation"), async (req, res) => {
              supplierGst, supplierAddress, shippingAddress, urgency, dateRequired, notes,
              orderedBy, quotationFile, totalAmount, reference_no, contact, single, termsOfPayment]
         );
+        console.log("Order inserted");
 
         const orderId = orderResult.rows[0].id;
+        console.log("Order ID:", orderId);
 
+        console.log("About to insert items");
         for (let p of products) {
             await pool.query(
                 `INSERT INTO purchase_order_items
                 (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name,discount,unit)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10)`,
-                [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity), 
+                [orderId, p.partNo, p.description, p.hsn, parseInt(p.quantity),
                  parseFloat(p.unitPrice), parseFloat(p.gst), projectName,parseFloat(p.discount),p.unit]
             );
         }
+        console.log("Items inserted");
 
+        console.log("About to commit transaction");
         await pool.query("COMMIT");
+        console.log("Transaction committed");
 
         // Send email notification to purchase orders team
+        console.log("About to send email");
         const transporte = nodemailer.createTransport({
             host: "smtp.office365.com",
             port: 587,
@@ -869,6 +874,7 @@ KIET TECHNOLOGIES PVT LTD,
             console.error("❌ Email failed:", err);
         }
 
+        console.log("About to send success response");
         res.json({
             success: true,
             message: "✅ Order inserted successfully",
@@ -877,9 +883,10 @@ KIET TECHNOLOGIES PVT LTD,
             file: quotationFile,
             totalAmount
         });
-        
+
 
     } catch (err) {
+        console.log("Error occurred, rolling back");
         await pool.query("ROLLBACK");
         console.error("❌ Error inserting order:", err.stack || err.message || err);
         res.status(500).json({ success: false, error: `Failed to insert order: ${err.message || 'Unknown error'}` });
