@@ -141,7 +141,7 @@ function generatePurchaseOrder(poData, filePath) {
       },
       {
         table: {
-          widths: ["55%", "45%"],
+          widths: ["45%", "55%"],
           body: [
             [
               // LEFT CELL
@@ -203,6 +203,10 @@ function generatePurchaseOrder(poData, filePath) {
                     [
                       { text: "Goods Recipient", font: "Times", bold: true, alignment: "left" },
                       { text: poData.goodsRecipient, font: "Times", alignment: "right" },
+                    ],
+                    [
+                      { text: "GSTIN", font: "Times", bold: true, alignment: "left" },
+                      { text: "29AAFCK6528DIZG", font: "Times", alignment: "right" },
                     ],
                     [
                       { text: "Expected Date", font: "Times", bold: true, alignment: "left" },
