@@ -156,6 +156,9 @@ function generatePurchaseOrder(poData, filePath) {
 
                   { text: "Invoice address:", font: "Times", bold: true, margin: [10, 5, 0, 5] },
                   { text: poData.invoiceTo, font: "Times", margin: [10, 0, 0, 5] },
+                  { text: 'GSTIN :29AAFCK6528DIZG ', font: "Times", margin: [10, 0, 0, 5] },
+                  { text: 'CIN: U29253KA2014PTC076845', font: "Times", margin: [10, 0, 0, 5] },
+                  
 
                   { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
 
@@ -204,10 +207,7 @@ function generatePurchaseOrder(poData, filePath) {
                       { text: "Goods Recipient", font: "Times", bold: true, alignment: "left" },
                       { text: poData.goodsRecipient, font: "Times", alignment: "right" },
                     ],
-                    [
-                      { text: "GSTIN", font: "Times", bold: true, alignment: "left" },
-                      { text: "29AAFCK6528DIZG", font: "Times", alignment: "right" },
-                    ],
+                   
                     [
                       { text: "Expected Date", font: "Times", bold: true, alignment: "left" },
                       { text: poData.expected_date, font: "Times", alignment: "right" },
