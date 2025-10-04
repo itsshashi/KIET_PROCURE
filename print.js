@@ -141,7 +141,7 @@ function generatePurchaseOrder(poData, filePath) {
       },
       {
         table: {
-          widths: ["45%", "55%"],
+          widths: ["55%", "45%"],
           body: [
             [
               // LEFT CELL
