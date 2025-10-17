@@ -303,7 +303,12 @@
     <div class="bg-white rounded-lg shadow-xl w-5/6 max-w-5xl p-4 max-h-[95vh]">
       <div class="flex justify-between items-center border-b pb-2 mb-4">
         <h2 class="text-lg font-semibold" id="previewTitle">Quotation Preview</h2>
-        <button onclick="closePreview()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+        <div class="flex items-center gap-2">
+          <a id="downloadLink" class="text-blue-500 hover:text-blue-700 text-xl" title="Download" download>
+            <i class="fas fa-download"></i>
+          </a>
+          <button onclick="closePreview()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+        </div>
       </div>
       <iframe id="quotationIframe" class="w-full h-[600px] border rounded" frameborder="0"></iframe>
     </div>
@@ -518,12 +523,14 @@
     function previewQuotation(fileName) {
       document.getElementById('previewTitle').textContent = `Preview: ${fileName}`;
       document.getElementById('quotationIframe').src = `/uploads/${fileName}`;
+      document.getElementById('downloadLink').href = `/uploads/${fileName}`;
       document.getElementById('quotationPreviewModal').classList.remove('hidden');
     }
 
     function closePreview() {
       document.getElementById('quotationPreviewModal').classList.add('hidden');
       document.getElementById('quotationIframe').src = '';
+      document.getElementById('downloadLink').href = '';
     }
 
     // Edit Order
