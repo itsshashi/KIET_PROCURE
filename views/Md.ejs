@@ -6,22 +6,193 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    body {
+        background-color: #f8fafc;
+        color: #334155;
+        line-height: 1.6;
+        max-width: 100%;
+    }
+
     .container {
-      max-width: 1920px;
-      margin:auto;
+        display: flex;
+        flex-wrap: wrap; /* allows sidebar & content to stack */
+        min-height: 100vh;
+        width: 100%;
+        overflow-x: hidden; /* avoid horizontal scroll */
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 0;
+        box-shadow: 0 0 25px rgba(44, 62, 80, 0.2);
+        position: relative;
+        overflow: hidden;
+        z-index: 10;
+        flex-shrink: 0;
+    }
+
+    .sidebar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        z-index: -1;
+    }
+
+    .logo {
+        padding: 25px 25px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: center;
+        background: rgba(44, 62, 80, 0.3);
+    }
+
+    .logo img {
+        max-width: 220px;
+        height: auto;
+        border-radius: 8px;
+        
+    }
+
+    .menu {
+        list-style: none;
+        padding: 0 15px;
+    }
+
+    .menu-heading {
+        padding: 16px 20px 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 15px;
+    }
+
+    .menu-item {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .menu-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: all 0.5s ease;
+    }
+
+    .menu-item:hover::before {
+        left: 100%;
+    }
+
+    .menu-item:hover, .menu-item.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
+    }
+
+    .menu-item i {
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        background: #f8fafc;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #0e1829, #1d4ed8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      position: relative;
-      overflow: scroll;
+      padding: 8px 16px;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .user-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        padding: 0;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+    }
+    @media (min-width: 1536px) {
+        .container {
+            max-width: 1850px !important;
+        }
     }
     .container::before {
       content: '';
@@ -33,49 +204,6 @@
       background: linear-gradient(90deg, #e5e7ef, #764ba2);
     }
     h1 { margin: 0; color: #2c3e50; font-size: 28px; font-weight: 600; }
-
-    /* Header with logo + user info */
-    .header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  padding: 15px 25px;
-  border-bottom: 2px solid #eee; 
-  background: #fdfdfd;
-  border-radius: 12px 12px 0 0;
-}
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-
-
-.logo-section h1 {
-  font-size: 22px;
-  margin: 0;
-  color: #9da6b0;
-}
-
-.user-info { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  font-size: 15px; 
-  font-weight: 500; 
-  color: #2c3e50;
-  background: #f1f3f6;
-  padding: 8px 14px;
-  border-radius: 20px;
-}
-
-.user-info i { 
-  font-size: 28px; 
-  color: #667eea;
-}
-
 
     table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
     table th, table td { border: 1px solid #e5e5e5; padding: 10px; text-align: center; }
@@ -225,22 +353,38 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header with Logo + User -->
-    <div class="header">
-      <div class="logo-section">
-        <img src="images/page_logo.png" alt="Company Logo" width="200px" height="100px">
-        <h1 style="color: black;font-weight:700">Purchase Orders (Final Approval)</h1>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <img src="images/page_logo.jpg" alt="Company Logo">
       </div>
-      <div class="user-info">
-        <i class="fas fa-user-circle"></i>
-        <span id="username">MD (Admin)</span>
-         <form action="/logout" method="POST">
-        <button id="logoutButton" style="margin-left: 15px; padding: 6px 12px; background-color: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">
-          Logout
-        </button>
-        </form>
-      </div>
+      <ul class="menu">
+        <li class="menu-heading">Purchase Orders</li>
+        <li class="menu-item active" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals</li>
+        <li class="menu-item" data-tab="all"><i class="fas fa-list"></i> All Orders</li>
+        <li class="menu-item" data-tab="rejected"><i class="fas fa-times"></i> Rejected Orders</li>
+        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotations</li>
+        <li class="menu-heading">QUOTATION</li>
+        <li class="menu-item" data-tab="approve"><i class="fas fa-check"></i> Approve Quotation</li>
+
+        <li><a href="/vk" style="display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 16px 20px; transition: all 0.3s ease; border-radius: 12px; margin-bottom: 8px; font-weight: 500; position: relative; overflow: hidden; color: white; text-decoration: none;"><i class="fas fa-plus"></i> New VK_QUOTATION</a></li>
+        <li class="menu-item logout">
+          <form action="/logout" method="POST">
+            <button type="submit"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </form>
+        </li>
+      </ul>
     </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h2>Purchase Orders (Final Approval)</h2>
+        <div class="user-info">
+          <div class="user-avatar">MD</div>
+          <span id="username">MD (Admin)</span>
+        </div>
+      </div>
 
     <!-- Summary Cards -->
     <div class="summary-cards" id="summaryCards">
@@ -280,6 +424,7 @@
       <button class="tab-button" onclick="switchTab('all')">All Orders</button>
       <button class="tab-button" onclick="switchTab('rejected')">Rejected Orders</button>
       <button class="tab-button" onclick="switchTab('quotations')">All Quotations</button>
+      <button class="tab-button" onclick="switchTab('approve')">Approve Quotation</button>
     </div>
 
     <!-- All Orders Table -->
@@ -368,6 +513,28 @@
       </table>
       <!-- Pagination -->
       <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Approve Quotation Table -->
+    <div id="approveTab" class="tab-content">
+      <table id="approveTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('purchase_order_number')">Order ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('project_name')">Project <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('supplier_name')">Supplier <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('date_required')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="approveBody"></tbody>
+      </table>
+      <!-- Pagination -->
+      <div class="pagination" id="approvePagination"></div>
     </div>
   </div>
 
@@ -489,6 +656,15 @@
       loadSuppliers();
       loadSummaryCounts();
       switchTab('pending');
+
+      // Add event listeners for sidebar menu items
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+          if (!this.classList.contains('logout')) {
+            switchTab(this.dataset.tab);
+          }
+        });
+      });
     });
 
     // Load suppliers for filter dropdown
@@ -546,6 +722,7 @@
       document.getElementById('pendingTab').style.display = tab === 'pending' ? 'block' : 'none';
       document.getElementById('allTab').style.display = tab === 'all' ? 'block' : 'none';
       document.getElementById('quotationsTab').style.display = tab === 'quotations' ? 'block' : 'none';
+      document.getElementById('approveTab').style.display = tab === 'approve' ? 'block' : 'none';
       // Add rejectedTab div for rejected orders
       let rejectedTab = document.getElementById('rejectedTab');
       if (!rejectedTab) {
@@ -553,7 +730,7 @@
         rejectedTab.id = 'rejectedTab';
         rejectedTab.className = 'tab-content';
         rejectedTab.innerHTML = `
-          <table id="rejectedOrdersTable">
+          <table id="rejectedOrdersTable" style="width: calc(100% + 60px); margin-left: -30px;">
             <thead>
               <tr>
                 <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
@@ -572,7 +749,7 @@
             <tbody id="rejectedOrdersBody"></tbody>
           </table>
         `;
-        document.querySelector('.container').appendChild(rejectedTab);
+        document.querySelector('.main-content').appendChild(rejectedTab);
       }
       document.getElementById('rejectedTab').style.display = tab === 'rejected' ? 'block' : 'none';
 
@@ -583,6 +760,8 @@
         loadAllOrders();
       } else if (tab === 'rejected') {
         loadRejectedOrders();
+      } else if (tab === 'approve') {
+        loadApproveQuotations();
       } else {
         loadAllQuotations();
       }
@@ -1354,7 +1533,7 @@ function calculateEditTotal() {
 
   </script>
 </body>
-</html>jhdu
+</html>
 
 
 
