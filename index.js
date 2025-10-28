@@ -1378,10 +1378,62 @@ KIET TECHNOLOGIES PVT LTD,
 
     if (!rows.length) return res.status(404).json({ error: "Order not found" });
 
+    const order = rows[0];
 
+    // Send email if status is approved
+    if (status === 'approved') {
+      const transporte = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false, // STARTTLS
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: "Kiets@2025$1",
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
 
+      const mailOptions = {
+        from: "No-reply@kietsindia.com",
+        to: "purchase@kietsindia.com",
+        subject: `Order Approved: ${order.purchase_order_number}`,
+        text: `
+Hello Purchase Team,
 
-  
+The order ${order.purchase_order_number} has been approved by MD.
+
+📌 Order Details:
+- Order Number: ${order.purchase_order_number}
+- Project: ${order.project_name}
+- Supplier: ${order.supplier_name}
+- Requester: ${order.ordered_by}
+- Total Amount: ₹${order.total_amount}
+- Status: Approved
+
+Please proceed with the next steps.
+
+Best regards,
+MD Approval System
+KIET TECHNOLOGIES PVT LTD,
+        `,
+        attachments: [
+          {
+            filename: "lg.jpg",
+            path: "public/images/lg.jpg",
+            cid: "logoImage"
+          }
+        ]
+      };
+
+      try {
+        const info = await transporte.sendMail(mailOptions);
+        console.log("✅ Email sent to purchase@kietsindia.com:", info.response);
+      } catch (err) {
+        console.error("❌ Email failed:", err);
+      }
+    }
 
     res.json({ success: true, order: rows[0] });
   } catch (err) {
