@@ -38,6 +38,13 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const qtUploadsDir = path.join(__dirname, "qt_uploads");
+// Ensure qt_uploads folder exists
+if (!fs.existsSync(qtUploadsDir)) {
+    fs.mkdirSync(qtUploadsDir, { recursive: true });
+}
+
+
 const pool = new Pool({
   connectionString: "postgresql://postgres:abzyxwvu12345@database-1.c7iiekukgmcp.ap-south-1.rds.amazonaws.com:5432/postgres",
   ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
@@ -2009,7 +2016,7 @@ app.post('/generate-quotation', upload.array('attachments[]'), (req, res) => {
     // Prepare data for PDF (adapted for quotation)
     const poData = {
         company: {
-            logo: './public/images/page_logo.jpg', // Adjust path if needed
+            logo: path.join(__dirname, 'public', 'images', 'page_logo.jpg'),
             name: formData.companyName || '',
             email: formData.companyEmail || '',
             gst: formData.companyGST || '',
@@ -2038,9 +2045,10 @@ app.post('/generate-quotation', upload.array('attachments[]'), (req, res) => {
         items: items,
         attachments: attachments,
         currency: formData.currency || '',
-        line: './public/images/line.png', // Adjust path
-        signPath: './public/images/signature.png' // Adjust path
+        line: path.join(__dirname, 'public', 'images', 'line.png'),
+        signPath: path.join(__dirname, 'public', 'images', 'signature.png')
     };
+
 
 if (quotationType === 'VK') {
     const normalizeArray = val => Array.isArray(val) ? val : (val !== undefined ? [val] : []);
@@ -2112,7 +2120,8 @@ if (quotationType === 'VK') {
 
 
     const sanitizedNumber = (formData.quotationNumber || 'temp').replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `./qt_uploads/quotation_${sanitizedNumber}.pdf`;
+    const filePath = path.join(qtUploadsDir, `quotation_${sanitizedNumber}.pdf`);
+
 
     try {
         if (quotationType == 'VK') {
