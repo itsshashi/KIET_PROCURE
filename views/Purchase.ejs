@@ -130,12 +130,14 @@
               <th class="px-2 py-3">Supplier</th>
               <th class="px-2 py-3">Requested By</th>
               <th class="px-2 py-3">Date Required</th>
+              <th class="px-2 py-3">Created At</th>
               <th class="px-2 py-3">Amount</th>
               <th class="px-2 py-3">Status</th>
               <th class="px-2 py-3">Quotations</th>
               <th class="px-2 py-3">Actions</th>
             </tr>
           </thead>
+
           <tbody id="ordersTable" class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
@@ -158,11 +160,13 @@
               <th class="px-2 py-3">Supplier</th>
               <th class="px-2 py-3">Requested By</th>
               <th class="px-2 py-3">Date Required</th>
+              <th class="px-2 py-3">Created At</th>
               <th class="px-2 py-3">Amount</th>
               <th class="px-2 py-3">Quotations</th>
               <th class="px-2 py-3">Actions</th>
             </tr>
           </thead>
+
           <tbody id="pendingOrdersTable" class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
@@ -410,7 +414,8 @@
       tbody.innerHTML = "";
 
       if (filteredOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-gray-500">No orders found matching your criteria.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No orders found matching your criteria.</td></tr>';
+
         return;
       }
 
@@ -429,6 +434,7 @@
           <td class="px-2 py-3">${order.supplier}</td>
           <td class="px-2 py-3">${order.requested_by}</td>
           <td class="px-2 py-3">${formatDate(order.date_required)}</td>
+          <td class="px-2 py-3">${formatDate(order.created_at)}</td>
           <td class="px-2 py-3 font-semibold">₹${order.total_amount.toLocaleString()}</td>
           <td class="px-2 py-3">
             <span class="${statusBadgeClass}">${capitalizeFirst(order.status)}</span>
@@ -445,23 +451,24 @@
               <button onclick="viewQuotations(${order.id})" class="w-20 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition flex items-center justify-center">
                 <i class="fas fa-eye mr-1"></i>View
               </button>
-   <button 
-  onclick="editOrder(${order.id})" 
-  id="editBtn-${order.id}" 
-  class="w-20 px-3 py-1 
-         ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} 
+   <button
+  onclick="editOrder(${order.id})"
+  id="editBtn-${order.id}"
+  class="w-20 px-3 py-1
+         ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
          text-white rounded text-sm transition flex items-center justify-center"
 >
   <i class="fas fa-edit mr-1"></i>Edit
 </button>
 
-   
+
               <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${(order.status === 'pending' || order.status === 'purchase') ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded text-sm transition flex items-center justify-center" ${(order.status === 'pending' || order.status === 'purchase') ? 'disabled' : ''}>
                 <i class="fas fa-file-invoice mr-1"></i>P O
               </button>
             </div>
           </td>
         `;
+
 
         tbody.appendChild(tr);
       });
@@ -924,7 +931,8 @@ function addNewProductRow() {
       const pendingOrders = allOrders.filter(order => order.status === 'pending');
 
       if (pendingOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500">No pending orders for approval.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">No pending orders for approval.</td></tr>';
+
         return;
       }
 
@@ -940,6 +948,7 @@ function addNewProductRow() {
           <td class="px-2 py-3">${order.supplier}</td>
           <td class="px-2 py-3">${order.requested_by}</td>
           <td class="px-2 py-3">${formatDate(order.date_required)}</td>
+          <td class="px-2 py-3">${formatDate(order.created_at)}</td>
           <td class="px-2 py-3 font-semibold">₹${order.total_amount.toLocaleString()}</td>
           <td class="px-2 py-3">
             <div class="flex items-center gap-2">
@@ -958,6 +967,7 @@ function addNewProductRow() {
             </div>
           </td>
         `;
+
 
         tbody.appendChild(tr);
       });
