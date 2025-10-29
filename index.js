@@ -16,6 +16,8 @@ import multer from 'multer';
 import fs from 'fs';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
+import generateQuotation from './trade.js';
+import generateVKQuotation from './vk.js';
 
 
 
@@ -1929,6 +1931,7 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
     res.status(500).json({ error: err.message || "Failed to generate invoice PDF" });
   }
 });
+
 
 
 
