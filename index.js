@@ -1058,10 +1058,6 @@ app.post("/reset-password/:token", async (req, res) => {
   }
 });
 
-
-
-
-
 app.get('/api/account-details', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -1940,6 +1936,204 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
 
 
 
+app.post('/generate-quotation', upload.array('attachments[]'), (req, res) => {
+    const formData = req.body || {};
+    console.log('Form Data Received:', formData);
+
+    const quotationType = formData.quotationType || 'Trade'; // Default to Trade if not specified
+
+    // Normalize form data to arrays with null checks
+    const itemDescriptions = (formData && formData['itemDescription[]']) || (formData && formData.itemDescription) || [];
+    let itemQuantities, itemPrices, itemGSTs, itemDiscounts, itemPartNos, itemHSNs, itemUnits;
+
+    if (quotationType === 'VK') {
+        itemQuantities = (formData && formData['qtyInput[]']) || [];
+        itemPrices = (formData && formData['priceInput[]']) || [];
+        itemGSTs = [];
+        itemDiscounts = [];
+        itemPartNos = [];
+        itemHSNs = [];
+        itemUnits = [];
+    } else {
+        itemQuantities = (formData && formData['itemQuantity[]']) || (formData && formData.itemQuantity) || [];
+        itemPrices = (formData && formData['itemPrice[]']) || (formData && formData.itemPrice) || [];
+        itemGSTs = (formData && formData['itemGST[]']) || (formData && formData.itemGST) || [];
+        itemDiscounts = (formData && formData['itemDiscount[]']) || (formData && formData.itemDiscount) || [];
+        itemPartNos = (formData && formData['itemPartNo[]']) || (formData && formData.itemPartNo) || [];
+        itemHSNs = (formData && formData['itemHSN[]']) || (formData && formData.itemHSN) || [];
+        itemUnits = (formData && formData['itemUnit[]']) || (formData && formData.itemUnit) || [];
+    }
+
+    // Calculate totals
+    let subtotal = 0;
+    const items = [];
+    itemDescriptions.forEach((desc, index) => {
+        const quantity = parseFloat(itemQuantities[index]) || 0;
+        const price = parseFloat(itemPrices[index]) || 0;
+        const gst = parseFloat(itemGSTs[index]) || 18;
+        const discount = parseFloat(itemDiscounts[index]) || 0;
+        subtotal += quantity * price;
+
+        items.push({
+            part_no: itemPartNos[index] || '',
+            description: desc,
+            hsn_code: itemHSNs[index] || '',
+            gst: gst,
+            quantity: quantity,
+            unit: itemUnits[index] || 'Nos',
+            unit_price: price,
+            discount: discount
+        });
+    });
+
+    const taxRate = parseFloat(formData.taxRate) || 0;
+    const discountRate = parseFloat(formData.discountRate) || 0;
+
+    const taxAmount = subtotal * (taxRate / 100);
+    const discountAmount = subtotal * (discountRate / 100);
+    const total = subtotal + taxAmount - discountAmount;
+
+    // Handle attachments
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+        const attachmentNotes = Array.isArray(formData.attachmentNotes) ? formData.attachmentNotes : [formData.attachmentNotes || ''];
+        req.files.forEach((file, index) => {
+            attachments.push({
+                filename: file.originalname,
+                path: file.path,
+                notes: attachmentNotes[index] || ''
+            });
+        });
+    }
+
+    // Prepare data for PDF (adapted for quotation)
+    const poData = {
+        company: {
+            logo: './public/images/page_logo.jpg', // Adjust path if needed
+            name: formData.companyName || '',
+            email: formData.companyEmail || '',
+            gst: formData.companyGST || '',
+            address: formData.companyAddress || ''
+        },
+        supplier: {
+            address: formData.clientAddress || '',
+            contact: formData.clientPhone || '',
+            gst: formData.clientGST || '', // Assuming GST is provided,
+            total: total.toFixed(2),
+            duration:formData.deliveryDuration || ''
+        },
+        clientEmail: formData.clientEmail || '',
+        shipTo: formData.clientAddress || '',
+        invoiceTo: formData.clientAddress || '',
+        poNumber: formData.quotationNumber || '',
+        date: formData.quotationDate || '',
+        projectcode: formData.projectCode || '',
+        requester: {
+            name: formData.clientName || ''
+        },
+        reference_no: formData.referenceNo || '',
+        goodsRecipient: formData.goodsRecipient || '',
+        expected_date: formData.validUntil || '',
+        termsOfPayment: formData.paymentTerms || '',
+        items: items,
+        attachments: attachments,
+        currency: formData.currency || '',
+        line: './public/images/line.png', // Adjust path
+        signPath: './public/images/signature.png' // Adjust path
+    };
+
+if (quotationType === 'VK') {
+    const normalizeArray = val => Array.isArray(val) ? val : (val !== undefined ? [val] : []);
+
+    // Correct keys based on actual form data
+    const itemDescriptions = normalizeArray(formData.itemDescription);
+    const priceInputs = normalizeArray(formData.priceInput);
+    const qtyInputs = normalizeArray(formData.qtyInput);
+
+    const kietCosts = itemDescriptions.map((desc, index) => ({
+        description: desc || '',
+        cost: parseFloat(priceInputs[index]) || 0,
+        qty: parseFloat(qtyInputs[index]) || 0,
+        totalValue: ((parseFloat(priceInputs[index]) || 0) * (parseFloat(qtyInputs[index]) || 0)).toFixed(2)
+    }));
+    
+
+    // Calculate total for user inputs
+    const kietTotal = kietCosts.reduce((sum, item) => sum + parseFloat(item.totalValue), 0);
+
+    // Add total row
+    kietCosts.push({
+        description: `Total costs in ${formData.currency} (qty of 1 No.)`,
+        cost: kietTotal,
+        qty: 1,
+        totalValue: kietTotal.toFixed(2)
+    });
+
+            // Add additional fixed rows
+            kietCosts.push({
+                description: 'Export packaging charges included',
+                cost: priceInputs[4] || '2650',
+                qty: '',
+                totalValue: priceInputs[4] || '2650'
+            });
+            kietCosts.push({
+                description: 'Bigger box setup',
+                cost: priceInputs[5] || '',
+                qty: '',
+                totalValue: priceInputs[5] || ''
+            });
+
+    poData.kietCosts = kietCosts;
+    console.log("kier: ",priceInputs);
+
+    const pvQty = normalizeArray(formData.pvQty);
+    const pvFamilyName = normalizeArray(formData.pvFamilyName);
+    const pvRevNo = normalizeArray(formData.pvRevNo);
+    const pvCoaxialPin = normalizeArray(formData.pvCoaxialPin);
+    const pvSokCard = normalizeArray(formData.pvSokCard);
+    const pvSokQty = normalizeArray(formData.pvSokQty);
+    const pvRate = normalizeArray(formData.pvRate);
+
+    const pvAdaptors = pvQty.map((qty, index) => ({
+        qty: parseFloat(qty) || 0,
+        familyName: pvFamilyName[index] || '',
+        revNo: pvRevNo[index] || '',
+        coaxialPin: pvCoaxialPin[index] || '',
+        sokCard: pvSokCard[index] || '',
+        sokQty: parseFloat(pvSokQty[index]) || 0,
+        rate: parseFloat(pvRate[index]) || 0
+    }));
+
+    poData.pvAdaptors = pvAdaptors;
+    // console.log('PV Adaptors:', pvAdaptors);
+    // console.log('price inputs:',priceInputs);
+    console.log('kiet costs:',kietCosts);
+}
+
+
+    const sanitizedNumber = (formData.quotationNumber || 'temp').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `./qt_uploads/quotation_${sanitizedNumber}.pdf`;
+
+    try {
+        if (quotationType == 'VK') {
+            generateVKQuotation(poData, filePath);
+        } else {
+            generateQuotation(poData, filePath);
+        }
+        // Wait for PDF generation to complete before downloading
+        setTimeout(() => {
+            res.download(filePath, `quotation_${sanitizedNumber}.pdf`, (err) => {
+                if (err) {
+                    console.error('Error downloading PDF:', err);
+                    res.status(500).send('Error generating PDF');
+                }
+            });
+        }, 1000); // 1 second delay
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).send('Error generating quotation PDF');
+    }
+});
 
 
 
@@ -1977,6 +2171,5 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 3000; // use Render's PORT if available
+const PORT = process.env.PORT || 80; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
-
