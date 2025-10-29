@@ -5,6 +5,8 @@
   <title>Purchase Orders Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <style>
     .quotation-list {
       max-height: 300px;
@@ -257,6 +259,18 @@
           <tbody id="costCalculationTable" class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
+
+      <!-- Total Cost Summary -->
+      <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold">Total Cost: ₹<span id="totalCost">0.00</span></h3>
+          <button onclick="exportToExcel()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+            <i class="fas fa-download mr-2"></i>Export to Excel
+          </button>
+        </div>
+      </div>
+
+
     </div>
 
   </div>
@@ -1159,8 +1173,11 @@ function addNewProductRow() {
       const tbody = document.getElementById("costCalculationTable");
       tbody.innerHTML = "";
 
+      let totalCost = 0;
+
       if (orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No orders found for the entered project code.</td></tr>';
+        document.getElementById('totalCost').textContent = '0.00';
         return;
       }
 
@@ -1172,6 +1189,9 @@ function addNewProductRow() {
 
         // Properly convert single field to boolean
         const isSingleSupplier = order.single === true || order.single === 'true' || order.single === 1;
+
+        totalCost += parseFloat(order.total_amount) || 0;
+
 
         tr.innerHTML = `
           <td class="px-2 py-3 font-medium">${order.order_id}</td>
@@ -1208,9 +1228,59 @@ function addNewProductRow() {
 
         tbody.appendChild(tr);
       });
+
+      document.getElementById('totalCost').textContent = totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
     }
 
+    // Export to Excel
+    function exportToExcel() {
+      const table = document.getElementById('costCalculationTable');
+      const rows = table.querySelectorAll('tbody tr');
+      const totalCostText = document.getElementById('totalCost').textContent;
+      const totalCostValue = parseFloat(totalCostText.replace(/,/g, '')) || 0;
+
+      if (rows.length === 0 || rows[0].cells[0].textContent === 'No orders found for the entered project code.') {
+        alert('No data to export.');
+        return;
+      }
+
+      const data = [];
+
+      // Add header row
+      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Amount', 'Status', 'Quotations'];
+      data.push(headers);
+
+      // Add data rows
+      rows.forEach(row => {
+        const rowData = [];
+        for (let i = 0; i < row.cells.length - 1; i++) { // Exclude Actions column
+          rowData.push(row.cells[i].textContent.trim());
+        }
+        data.push(rowData);
+      });
+
+      // Add total cost row
+      data.push(['', '', '', '', '', '', '', '', '', 'Total Cost: ₹' + totalCostValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })]);
+
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+
+      // Auto-size columns
+      const colWidths = headers.map(header => ({ wch: Math.max(header.length, 10) }));
+      ws['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Cost Calculation');
+
+      // Download file
+      XLSX.writeFile(wb, 'Cost_Calculation.xlsx');
+    }
+
+
   </script>
+
 
 </body>
 </html>
