@@ -791,7 +791,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
   let products;
   try {
     products = JSON.parse(req.body.products || "[]");
-    console.log("Products parsed:", products.length);
+    // console.log("Products parsed:", products.length);
   } catch (parseErr) {
     return res.status(400).json({
       success: false,
@@ -801,7 +801,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
   const orderedBy = req.session.user.email;
   const quotationFile = req.file ? [req.file.filename] : [];
-  console.log("Quotation file:", quotationFile);
+  // console.log("Quotation file:", quotationFile);
 
   const contact = phone;
   const single = singleSupplier === "on";
@@ -1938,7 +1938,7 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
 
 app.post('/generate-quotation', upload.array('attachments[]'), (req, res) => {
     const formData = req.body || {};
-    console.log('Form Data Received:', formData);
+    // console.log('Form Data Received:', formData);
 
     const quotationType = formData.quotationType || 'Trade'; // Default to Trade if not specified
 
@@ -2084,7 +2084,7 @@ if (quotationType === 'VK') {
             });
 
     poData.kietCosts = kietCosts;
-    console.log("kier: ",priceInputs);
+    // console.log("kier: ",priceInputs);
 
     const pvQty = normalizeArray(formData.pvQty);
     const pvFamilyName = normalizeArray(formData.pvFamilyName);
@@ -2107,7 +2107,7 @@ if (quotationType === 'VK') {
     poData.pvAdaptors = pvAdaptors;
     // console.log('PV Adaptors:', pvAdaptors);
     // console.log('price inputs:',priceInputs);
-    console.log('kiet costs:',kietCosts);
+    // console.log('kiet costs:',kietCosts);
 }
 
 
@@ -2171,5 +2171,5 @@ if (quotationType === 'VK') {
 
 
 
-const PORT = process.env.PORT || 80; // use Render's PORT if available
+const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
