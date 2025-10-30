@@ -157,7 +157,7 @@ function generatePurchaseOrder(poData, filePath) {
 
                   { text: "Invoice address:", font: "Times", bold: true, margin: [10, 5, 0, 5] },
                   { text: poData.invoiceTo, font: "Times", margin: [10, 0, 0, 5] },
-                  { text: 'GSTIN :29AAFCK6528DIZG ', font: "Times", margin: [10, 0, 0, 5] },
+                  { text: 'GSTIN :29AAFCK6528D1ZG ', font: "Times", margin: [10, 0, 0, 5] },
                   { text: 'CIN: U29253KA2014PTC076845', font: "Times", margin: [10, 0, 0, 5] },
                   
 
