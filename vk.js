@@ -271,7 +271,9 @@ function generateVKQuotation(poData, filePath) {
             stack: [
               { text: 'KIET TECHNOLOGIES PRIVATE LIMITED ', font: "Times", bold: true, fontSize: 9, margin: [0, 0, 0, 5] },
               { text: "CIN: U29253KA2014PTC076845 ", font: "Times", bold: true, fontSize: 7, margin: [0, 0, 0, 5] },
-              { text: "GSTIN: 29AAFCK6528DIZG  ", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
+              { text: "GSTIN: 29AAFCK6528D1ZG  ", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
+              { text: "Email : chandrashekaraiah.r@kietsindia.com", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
+              { text: "Contact : +91 96208 75552  ", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
             ],
             margin: [210, -10, 0, 10],
           }
