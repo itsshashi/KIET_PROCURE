@@ -1229,6 +1229,9 @@ function addNewProductRow() {
         tbody.appendChild(tr);
       });
 
+      // Apply 18% reduction to total cost
+      totalCost = totalCost * 0.82;
+
       document.getElementById('totalCost').textContent = totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     }
