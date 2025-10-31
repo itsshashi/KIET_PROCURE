@@ -18,6 +18,7 @@
     gap: 20px;
     margin-bottom: 20px;
 }
+
     .form-col {
     flex: 1;
 }
@@ -155,10 +156,12 @@
         display: flex;
         flex-wrap: wrap; /* allows sidebar & content to stack */
         min-height: 100vh;
-        width: 100%;
-        overflow-x: hidden; /* avoid horizontal scroll */
+        min-width: 100vw;
+        
+        overflow-x:scroll; /* allow horizontal scroll if needed, but prefer full width */
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
     }
 
     /* Sidebar Styles */
@@ -264,6 +267,20 @@ select {
         display: flex;
         justify-content: center;
         background: rgba(44, 62, 80, 0.3);
+        position: relative;
+    }
+
+    .sidebar-close {
+      display: none;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
     }
 
     .logo img {
@@ -345,6 +362,22 @@ select {
       border-bottom: 1px solid #e2e8f0;
     }
 
+    .header-logo {
+      height: 60px;
+      width: auto;
+      margin-right: 15px;
+    }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 30px;
+      color: #2c3e50;
+      cursor: pointer;
+      padding: 10px;
+    }
+
     .header h2 {
       font-size: 28px;
       font-weight: 700;
@@ -385,19 +418,256 @@ select {
       }
 
       .sidebar {
-        width: 100%;
+        min-width: 50%;
         padding: 0;
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100%;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+
+      .sidebar.show {
+        left: 0;
+      }
+
+      .hamburger {
+        display: block;
+      }
+
+      .sidebar-close {
+        display: block;
       }
 
       .main-content {
         padding: 20px;
       }
     }
+
+    /* iPhone responsive styles */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+        width: 100%;
+
+      }
+
+      .sidebar {
+        min-width: 100%;
+        height: auto;
+        position: relative;
+      }
+
+      .main-content {
+        padding: 10px;
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px 10px;
+      }
+
+      .header h2 {
+        font-size: 24px;
+      }
+
+      .user-info {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+
+      .summary-cards {
+        flex-direction: column;
+        gap: 15px;
+        padding: 0 10px;
+      }
+
+      .card {
+        min-width: unset;
+        width: 100%;
+        padding: 15px;
+      }
+
+      .tabs {
+        padding: 0 10px;
+      }
+
+      .tab-button {
+        padding: 8px 12px;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .filters {
+        padding: 10px;
+        margin-bottom: 15px;
+      }
+
+      .filter-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .filter-row input,
+      .filter-row select {
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .filter-row button {
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      /* Table responsive */
+      table {
+        font-size: 12px;
+        width: 100%;
+        min-width: 600px;
+      }
+
+      table th,
+      table td {
+        padding: 8px 4px;
+        white-space: nowrap;
+      }
+
+      .actions {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .actions button {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-width: unset;
+      }
+
+      /* Modal responsive */
+      .modal-content {
+        width: 95%;
+        height: 95%;
+        margin: 2.5% auto;
+        padding: 15px;
+      }
+
+      /* Edit modal responsive */
+      #editModal,
+      #editQuotationModal {
+        padding: 10px;
+      }
+
+      #editModal .bg-white,
+      #editQuotationModal .bg-white {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 15px;
+        max-height: 95vh;
+        overflow-y: auto;
+      }
+
+      /* Form responsive */
+      .form-row {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .form-col {
+        width: 100%;
+      }
+
+      .grid.grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr;
+      }
+
+      /* Table in modal responsive */
+      #editProductTable,
+      #editQuotationTable {
+        font-size: 12px;
+        overflow-x: auto;
+      }
+
+      #editProductTable th,
+      #editProductTable td,
+      #editQuotationTable th,
+      #editQuotationTable td {
+        padding: 6px 4px;
+        min-width: 80px;
+      }
+
+      /* Button responsive */
+      .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .btn-small {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      /* Attachment responsive */
+      .attachment-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .max-w-32 {
+        max-width: 80px;
+        max-height: 80px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-content {
+        padding: 5px;
+      }
+
+      .header h2 {
+        font-size: 20px;
+      }
+
+      .card h3 {
+        font-size: 24px;
+      }
+
+      .modal-content {
+        width: 98%;
+        height: 98%;
+        margin: 1% auto;
+        padding: 10px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      table th,
+      table td {
+        padding: 4px 2px;
+      }
+
+      .actions button {
+        padding: 2px 4px;
+        font-size: 9px;
+      }
+    }
     @media (min-width: 1536px) {
         .container {
-            max-width: 1850px !important;
-        }
-    }
+            max-width: 1800px; ;            
+    }}
     .container::before {
       content: '';
       position: absolute;
@@ -556,11 +826,14 @@ select {
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class=" container">
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="logo">
         <img src="images/page_logo.jpg" alt="Company Logo">
+        <button class="sidebar-close" onclick="toggleSidebar()">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
       <ul class="menu">
         <li class="menu-heading">Purchase Orders</li>
@@ -584,7 +857,13 @@ select {
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
-        <h2>Purchase Orders (Final Approval)</h2>
+        <div style="display: flex; align-items: center;">
+          <button class="hamburger" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+          </button>
+          <img src="images/page_logo.jpg" alt="Company Logo" class="header-logo">
+          <h2>Purchase Orders (Final Approval)</h2>
+        </div>
         <div class="user-info">
           <div class="user-avatar">MD</div>
           <span id="username">MD (Admin)</span>
@@ -728,9 +1007,9 @@ select {
         <thead>
           <tr>
             <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
-            <th onclick="sortTable('purchase_order_number')">Order ID <i class="fas fa-sort"></i></th>
-            <th onclick="sortTable('project_name')">Project <i class="fas fa-sort"></i></th>
-            <th onclick="sortTable('supplier_name')">Supplier <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('purchase_order_number')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('project_name')">Quotation Type <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('supplier_name')">Client <i class="fas fa-sort"></i></th>
             <th>Quotation Raiser</th>
             <th onclick="sortTable('date_required')">Date <i class="fas fa-sort"></i></th>
             <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
@@ -746,9 +1025,9 @@ select {
 
     <!-- New Order Tab -->
     <div id="newOrderTab" class="tab-content">
-      <div class="container" style=" width: 100%;
-    margin: 0;
-    padding: 0 50px;">
+      <div class="!w-full container" style=" width: 100%;
+   margin: 0;
+   padding: 0;">
         <header style="background: linear-gradient(135deg, #3498db, #2980b9);
         width: 100%;
     color: white;
@@ -768,7 +1047,10 @@ select {
         <div class="form-container" style="background: white;
     padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); ">
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 100%;
+    margin: 0;">
           <form id="quotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
             <!-- Quotation Information Section -->
             <div class="form-section" style=" margin-bottom: 30px;
@@ -1329,6 +1611,115 @@ select {
     </div>
   </div>
 
+  <!-- Edit Quotation Modal -->
+  <div id="editQuotationModal" class="hidden fixed inset-0 bg-transparent flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-20/22 max-w-7xl p-6 max-h-[98vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">✏️ Edit Quotation Details</h2>
+        <button onclick="closeEditQuotation()" class="text-red-500 hover:text-red-700 text-2xl font-bold">&times;</button>
+      </div>
+
+
+      <form id="editQuotationForm" class="space-y-4">
+        <div class="bg-gray-50 p-4 rounded-lg border">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2" id="editQuotationProjectName">Project Name</h3>
+          <p class="text-sm text-gray-600" id="editQuotationProjectCode">Project Code</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border mb-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Client Company Details</h3>
+          <div class="grid grid-cols-1 gap-3">
+            <p class="text-sm text-gray-700"><strong>Name:</strong> <span id="editQuotationClientCompanyName">${order.company_name || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Address:</strong> <span id="editQuotationClientCompanyAddress">${order.company_address || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>GST:</strong> <span id="editQuotationClientCompanyGst">${order.company_gst || ''}</span></p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border mb-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Quotation Details</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <p class="text-sm text-gray-700"><strong>Quotation Type:</strong> <span id="editQuotationType">${order.quotation_type || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Quotation Date:</strong> <span id="editQuotationDate">${order.quotation_date ? new Date(order.quotation_date).toLocaleDateString() : ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Reference No:</strong> <span id="editReferenceNo">${order.reference_no || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Valid Until:</strong> <span id="editValidUntil">${order.valid_until ? new Date(order.valid_until).toLocaleDateString() : ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Currency:</strong> <span id="editCurrency">${order.currency || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Payment Terms:</strong> <span id="editPaymentTerms">${order.payment_terms || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Delivery Duration:</strong> <span id="editDeliveryDuration">${order.delivery_duration || ''}</span></p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border mb-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Client Information</h3>
+          <div class="grid grid-cols-1 gap-3">
+            <p class="text-sm text-gray-700"><strong>Client Name:</strong> <span id="editQuotationClientName">${order.client_name || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Client Email:</strong> <span id="editQuotationClientEmail">${order.client_email || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Client Phone:</strong> <span id="editQuotationClientPhone">${order.client_phone || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Client Company:</strong> <span id="editQuotationClientCompany">${order.client_company || ''}</span></p>
+            <p class="text-sm text-gray-700"><strong>Client Address:</strong> <span id="editQuotationClientAddress">${order.client_address || ''}</span></p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border mb-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Additional Rates</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <p class="text-sm text-gray-700"><strong>Tax Rate:</strong> <span id="editTaxRate">${order.tax_rate || ''}%</span></p>
+            <p class="text-sm text-gray-700"><strong>Discount Rate:</strong> <span id="editDiscountRate">${order.discount_rate || ''}%</span></p>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-700"><strong>Total Amount:</strong> <span id="editQuotationTotalAmount">${order.total_amount || ''}</span></p>
+        </div>
+
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quotation Items</label>
+          <table class="product-table min-w-full text-sm text-left border border-gray-300 rounded" id="editQuotationTable">
+            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+              <tr>
+                <th class="px-6 py-3 border">SL No</th>
+                <th class="px-6 py-3 border">Part No</th>
+                <th class="px-6 py-3 border">Description</th>
+                <th class="px-6 py-3 border">HSN Code</th>
+                <th class="px-6 py-3 border">Quantity</th>
+                <th class="px-6 py-3 border">Unit Price (₹)</th>
+                <th class="px-6 py-3 border">GST %</th>
+                <th class="px-6 py-3 border">Unit</th>
+                <th class="px-6 py-3 border">Discount</th>
+                <th class="px-6 py-3 border">Total (₹)</th>
+                <th class="px-6 py-3 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="editQuotationTableBody">
+              <!-- Rows will be dynamically populated -->
+            </tbody>
+            <tfoot id="editQuotationTableFooter" class="bg-gray-100">
+              <tr>
+                <td colspan="10" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
+                <td class="px-4 py-2 border font-bold text-lg" id="editQuotationGrandTotal">₹0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+
+        <!-- Attachments Display -->
+        <div class="mt-6 p-4 border border-gray-300 rounded bg-gray-50">
+          <label class="block text-sm font-medium text-gray-700 mb-3">Attachments</label>
+          <div id="editQuotationAttachmentsDisplay" class="space-y-2"></div>
+        </div>
+
+
+        <div class="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onclick="closeEditQuotation()" class="px-4 py-2 bg-gray-400 rounded text-white hover:bg-gray-500">Cancel</button>
+          <button type="submit" class="px-6 py-2 bg-blue-600 rounded text-white hover:bg-blue-700">
+            <i class="fas fa-save mr-2"></i>Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     let currentTab = 'pending';
     let currentPage = 1;
@@ -1349,10 +1740,20 @@ select {
         item.addEventListener('click', function() {
           if (!this.classList.contains('logout')) {
             switchTab(this.dataset.tab);
+            // Close sidebar on mobile after selecting a tab
+            if (window.innerWidth <= 992) {
+              toggleSidebar();
+            }
           }
         });
       });
     });
+
+    // Toggle sidebar visibility on mobile
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('show');
+    }
 
     // Load suppliers for filter dropdown
     async function loadSuppliers() {
@@ -1695,6 +2096,121 @@ select {
       }
     }
 
+    // Load quotations for approval
+    async function loadApproveQuotations() {
+      try {
+        const res = await fetch('/api/pending-quotations');
+        const allOrders = await res.json();
+        console.log('All Orders for Approval:', allOrders);
+
+        // Filter orders that have quotation files and are pending approval
+        let quotations = allOrders.filter(order =>
+          
+          (order.status == 'pending' || order.status === 'enquired')
+        );
+        console.log('Filtered Quotations for Approval:', quotations);
+
+        // Apply search filter
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+          quotations = quotations.filter(order =>
+            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
+            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        // Apply supplier filter
+        const supplierFilter = document.getElementById('supplierFilter').value;
+        if (supplierFilter !== 'All Suppliers') {
+          quotations = quotations.filter(order => order.supplier_name === supplierFilter || order.supplier === supplierFilter);
+        }
+
+        // Apply status filter
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== 'All Statuses') {
+          quotations = quotations.filter(order => order.status === statusFilter.toLowerCase());
+        }
+
+        // Apply date filters
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (dateFrom) {
+          quotations = quotations.filter(order => new Date(order.date_required) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+          quotations = quotations.filter(order => new Date(order.date_required) <= new Date(dateTo));
+        }
+
+        renderApproveQuotations(quotations, 'approveBody');
+
+        // Render pagination for approve tab
+        const totalItems = quotations.length;
+        const totalPages = Math.ceil(totalItems / 10);
+        const startIndex = (currentPage - 1) * 10;
+        const endIndex = startIndex + 10;
+        const paginatedQuotations = quotations.slice(startIndex, endIndex);
+
+        renderApproveQuotations(paginatedQuotations, 'approveBody');
+
+        const paginationDiv = document.getElementById('approvePagination');
+        paginationDiv.innerHTML = '';
+
+        if (totalPages > 1) {
+          paginationDiv.innerHTML += `<button onclick="changePageApprove(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`;
+
+          for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+            paginationDiv.innerHTML += `<button onclick="changePageApprove(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+          }
+
+          paginationDiv.innerHTML += `<button onclick="changePageApprove(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+        }
+      } catch (err) {
+        console.error('Failed to load approve quotations:', err);
+        document.getElementById('approveBody').innerHTML = '<tr><td colspan="9">Failed to load quotations for approval</td></tr>';
+      }
+    }
+
+    // Change page for approve tab
+    function changePageApprove(page) {
+      currentPage = page;
+      loadApproveQuotations();
+    }
+
+    // Render approve quotations table
+    function renderApproveQuotations(quotations, tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = "";
+
+      quotations.forEach(quotation => {
+        const row = `
+          <tr>
+            <td>${quotation.id}</td>
+            <td>${quotation.client_company}</td>
+            <td>${quotation.client_quotation_type}</td>
+            <td>${quotation.client_name}</td>
+            <td>${quotation.created_by|| 'N/A'}</td>
+            <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
+            <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+            <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+            <td class="actions">
+              <button class="view" onclick="editQuotation(${quotation.id})">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="approve" onclick="updateStatus(${quotation.id}, 'approved')">
+                <i class="fas fa-check"></i> Approve
+              </button>
+              <button class="reject" onclick="updateStatus(${quotation.id}, 'rejected')">
+                <i class="fas fa-times"></i> Reject
+              </button>
+            </td>
+          </tr>
+        `;
+        
+        tbody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+
     // View all quotations for an order
     async function viewAllQuotations(orderId) {
       try {
@@ -1949,7 +2465,7 @@ async function editOrder(orderId) {
 
   try {
     // Fetch order details
-    const orderResponse = await fetch(`${API_URL}/${orderId}`);
+    const orderResponse = await fetch(`/api/quotations/${orderId}/items`);
     if (!orderResponse.ok) throw new Error('Failed to fetch order details');
     const order = await orderResponse.json();
 
@@ -1963,6 +2479,8 @@ async function editOrder(orderId) {
     document.getElementById('editSupplierName').value = order.supplier_name || order.supplier || '';
     document.getElementById('editSupplierGst').value = order.supplier_gst || '';
     document.getElementById('editSupplierAddress').value = order.supplier_address || '';
+    document.getElementById('editClientName').value = order.client_name || '';
+    document.getElementById('editTotalAmount').value = order.total_amount || '';
 
     // Populate date required display
     document.getElementById('dateRequiredValue').textContent = formatDate(order.date_required);
@@ -1988,6 +2506,9 @@ async function editOrder(orderId) {
   }
 }
 
+// View client name and table function
+
+
 // Helper function to format date
 function formatDate(dateString) {
   if (!dateString) return '';
@@ -2003,6 +2524,78 @@ function closeEditModal() {
 function closeEdit() {
   closeEditModal();
 }
+
+function closeEditQuotation() {
+  document.getElementById('editQuotationModal').classList.add('hidden');
+  document.getElementById('editQuotationForm').reset();
+}
+
+// Handle Edit Quotation Form Submission
+document.getElementById('editQuotationForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  // Collect quotation items
+  const items = [];
+  const itemRows = document.querySelectorAll('#editQuotationTableBody tr');
+
+  itemRows.forEach(row => {
+    const item = {
+      partNo: row.querySelector('.edit-quotation-part-no').value,
+      description: row.querySelector('.edit-quotation-description').value,
+      hsn: row.querySelector('.edit-quotation-hsn').value,
+      quantity: row.querySelector('.edit-quotation-quantity').value,
+      unitPrice: row.querySelector('.edit-quotation-unit-price').value,
+      gst: row.querySelector('.edit-quotation-gst').value,
+      unit: row.querySelector('.edit-quotation-unit').value,
+      discount: row.querySelector('.edit-quotation-discount').value,
+      total: row.querySelector('.edit-quotation-total').value
+    };
+    items.push(item);
+  });
+
+  const formData = {
+    items: items
+  };
+
+  try {
+    // Update quotation items
+    const response = await fetch(`/api/quotations/${currentEditId}/items`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) throw new Error('Failed to update quotation');
+
+    // Handle file uploads if any
+    const files = document.getElementById('newQuotationFileForEdit').files;
+    if (files.length > 0) {
+      const fileFormData = new FormData();
+      for (let file of files) {
+        fileFormData.append('quotations', file);
+      }
+
+      const fileResponse = await fetch(`/api/quotations/${currentEditId}/attachments`, {
+        method: 'POST',
+        body: fileFormData
+      });
+
+      if (!fileResponse.ok) {
+        console.warn('File upload failed, but quotation details were updated');
+      }
+    }
+
+    alert('Quotation updated successfully! ✅');
+    closeEditQuotation();
+    loadApproveQuotations(); // Reload the current tab data
+
+  } catch (error) {
+    console.error('Error updating quotation:', error);
+    alert('Failed to update quotation. Please try again.');
+  }
+});
 
 // Handle Edit Form Submission
 document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
@@ -2098,6 +2691,22 @@ function populateEditProductTable(order, items = []) {
   }
 
   calculateEditTotal();
+}
+
+// Quotation table functions for edit quotation modal
+function populateEditQuotationTable(order, items = []) {
+  const tbody = document.getElementById('editQuotationTableBody');
+  tbody.innerHTML = '';
+
+  if (items && items.length > 0) {
+    items.forEach((product, index) => {
+      addEditQuotationRow(product, index + 1);
+    });
+  } else {
+    addEditQuotationRow(null, 1);
+  }
+
+  calculateEditQuotationTotal();
 }
 
 function addEditProductRow(product = null, slNo = null) {
@@ -2196,6 +2805,104 @@ function calculateEditTotal() {
   });
 
   document.getElementById('editGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+}
+
+function addEditQuotationRow(product = null, slNo = null) {
+  const tbody = document.getElementById('editQuotationTableBody');
+  const row = document.createElement('tr');
+
+  if (!slNo) {
+    const rows = tbody.querySelectorAll('tr');
+    slNo = rows.length + 1;
+  }
+
+  row.innerHTML = `
+    <td class="px-6 py-3 border text-center">${slNo}</td>
+    <td class="px-6 py-3 border">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-part-no" value="${product ? product.partno || '' : ''}" placeholder="Part No">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-hsn" value="${product ? product.hsncode || '' : ''}" placeholder="HSN Code">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-unit-price" value="${product ? product.unitprice || '' : ''}" placeholder="Price" step="0.01">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-unit" value="${product ? product.unit || '' : ''}" placeholder="Unit">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-discount" value="${product ? product.discount || '' : ''}" placeholder="Discount" step="0.01">
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-total" value="${product ? product.total || '' : ''}" placeholder="Total" readonly>
+    </td>
+    <td class="px-6 py-3 border text-center">
+      <button type="button" class="text-red-500 hover:text-red-700 delete-edit-quotation-row" title="Delete Row">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+
+  tbody.appendChild(row);
+
+  calculateEditQuotationRowTotal(row);
+
+  // Add event listeners
+  row.querySelector('.delete-edit-quotation-row').addEventListener('click', function() {
+    row.remove();
+    updateEditQuotationSlNos();
+    calculateEditQuotationTotal();
+  });
+
+  row.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() {
+      calculateEditQuotationRowTotal(row);
+      calculateEditQuotationTotal();
+    });
+  });
+}
+
+function updateEditQuotationSlNos() {
+  const rows = document.querySelectorAll('#editQuotationTableBody tr');
+  rows.forEach((row, index) => {
+    row.cells[0].textContent = index + 1;
+  });
+}
+
+function calculateEditQuotationRowTotal(row) {
+  const quantity = parseFloat(row.querySelector('.edit-quotation-quantity').value) || 0;
+  const unitPrice = parseFloat(row.querySelector('.edit-quotation-unit-price').value) || 0;
+  const gst = parseFloat(row.querySelector('.edit-quotation-gst').value) || 0;
+  const discount = parseFloat(row.querySelector('.edit-quotation-discount').value) || 0;
+
+  const subtotal = quantity * unitPrice;
+  const discountAmount = discount;
+  const discountedSubtotal = subtotal - discountAmount;
+  const gstAmount = discountedSubtotal * (gst / 100);
+  const total = discountedSubtotal + gstAmount;
+
+  row.querySelector('.edit-quotation-total').value = total.toFixed(2);
+}
+
+function calculateEditQuotationTotal() {
+  const rows = document.querySelectorAll('#editQuotationTableBody tr');
+  let grandTotal = 0;
+
+  rows.forEach(row => {
+    const total = parseFloat(row.querySelector('.edit-quotation-total').value) || 0;
+    grandTotal += total;
+  });
+
+  document.getElementById('editQuotationGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
 }
 
 
@@ -3273,6 +3980,212 @@ async function editOrder(orderId) {
   } catch (error) {
     console.error('Error fetching order details:', error);
     alert('Failed to load order details. Please try again.');
+  }
+}
+
+// Edit quotation function
+async function editQuotation(orderId) {
+  currentEditId = orderId;
+
+  try {
+    // Fetch quotation details
+    const orderResponse = await fetch(`/api/quotations/${orderId}/details`);
+    if (!orderResponse.ok) throw new Error('Failed to fetch quotation details');
+    const order = await orderResponse.json();
+    console.log('Quotation details:', order);
+
+    // Fetch product items for this quotation
+    const itemsResponse = await fetch(`/api/quotations/${orderId}/items`);
+    const items = itemsResponse.ok ? await itemsResponse.json() : [];
+
+    // Fetch attachments for this quotation
+    const attachmentsResponse = await fetch(`/api/quotations/${orderId}/attachments`);
+    const attachments = attachmentsResponse.ok ? await attachmentsResponse.json() : [];
+    console.log('Quotation attachments:', attachments);
+
+    // Populate form fields
+    document.getElementById('editQuotationProjectName').textContent = order.project_name || order.project || '';
+    document.getElementById('editQuotationProjectCode').textContent = order.projectcodenumber || '';
+    document.getElementById('editQuotationClientCompanyName').textContent = order.companyname || '';
+    document.getElementById('editQuotationClientCompanyAddress').textContent = order.companyaddress || '';
+    document.getElementById('editQuotationClientCompanyGst').textContent = order.companygst || '';
+    document.getElementById('editQuotationType').textContent = order.quotationtype || '';
+    document.getElementById('editQuotationDate').textContent = order.quotationdate ? new Date(order.quotation_date).toLocaleDateString() : '';
+    document.getElementById('editReferenceNo').textContent = order.referenceno || '';
+    document.getElementById('editValidUntil').textContent = order.valid_until ? new Date(order.valid_until).toLocaleDateString() : '';
+    document.getElementById('editCurrency').textContent = order.currency || '';
+    document.getElementById('editPaymentTerms').textContent = order.paymentterms || '';
+    document.getElementById('editDeliveryDuration').textContent = order.deliveryduration || '';
+    document.getElementById('editQuotationClientName').textContent = order.clientname || '';
+    document.getElementById('editQuotationClientEmail').textContent = order.clientemail || '';
+    document.getElementById('editQuotationClientPhone').textContent = order.clientphone || '';
+    document.getElementById('editQuotationClientCompany').textContent = order.clientcompany || '';
+    document.getElementById('editQuotationClientAddress').textContent = order.clientaddress || '';
+    document.getElementById('editTaxRate').textContent = order.taxrate || '';
+    document.getElementById('editDiscountRate').textContent = order.discountrate || '';
+    document.getElementById('editQuotationTotalAmount').textContent = order.totalamount || '';
+
+    // Populate quotation table with fetched items
+    populateEditQuotationTable(order, items);
+
+
+    // Display attachments with preview
+    function renderAttachmentPreview(attachment) {
+      const fileExtension = attachment.original_name?.split('.').pop()?.toLowerCase() || '';
+      const fileUrl = `/uploads/quotations/${attachment.file_name}`;
+      const openFile = `onclick="window.open('${fileUrl}', '_blank')"`;
+
+      const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension);
+      const isPdf = fileExtension === 'pdf';
+
+      let previewHtml = '';
+      if (isImage) {
+        previewHtml = `<img src="${fileUrl}" alt="${attachment.original_name}" title="${attachment.original_name}" class="max-w-32 max-h-32 object-cover rounded border cursor-pointer" ${openFile}>`;
+      } else if (isPdf) {
+        previewHtml = `<iframe src="${fileUrl}" class="w-32 h-32 border rounded cursor-pointer" ${openFile}></iframe>`;
+      } else {
+        previewHtml = `<div class="w-32 h-32 border rounded bg-gray-100 flex items-center justify-center cursor-pointer" ${openFile}>
+          <i class="fas fa-file text-2xl text-gray-500"></i>
+        </div>`;
+      }
+
+      const sizeKb = attachment.file_size ? (attachment.file_size / 1024).toFixed(1) : 'N/A';
+      const notes = attachment.notes || '';
+
+      return `
+        <div class="attachment-item flex items-center gap-3 p-3 bg-white rounded border">
+          ${previewHtml}
+          <div class="flex-1">
+            <a href="${fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">${attachment.original_name}</a>
+            <div class="text-sm text-gray-500">${notes}</div>
+            <div class="text-xs text-gray-400">Size: ${sizeKb} KB</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function displayAttachments(attachments, containerId = 'editQuotationAttachmentsDisplay') {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      if (attachments && attachments.length > 0) {
+        const html = attachments.map(renderAttachmentPreview).join('');
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div class="text-gray-500 italic">No attachments available.</div>';
+      }
+    }
+    displayAttachments(attachments);
+
+    document.getElementById('editQuotationModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error fetching quotation details:', error);
+    alert('Failed to load quotation details. Please try again.');
+  }
+}
+
+// Edit quotation function
+async function editQuotation(orderId) {
+  currentEditId = orderId;
+
+  try {
+    // Fetch quotation details
+    const orderResponse = await fetch(`/api/quotations/${orderId}/details`);
+    if (!orderResponse.ok) throw new Error('Failed to fetch quotation details');
+    const order = await orderResponse.json();
+    console.log('Quotation details:', order);
+
+    // Fetch product items for this quotation
+    const itemsResponse = await fetch(`/api/quotations/${orderId}/items`);
+    const items = itemsResponse.ok ? await itemsResponse.json() : [];
+
+    // Fetch attachments for this quotation
+    const attachmentsResponse = await fetch(`/api/quotations/${orderId}/attachments`);
+    const attachments = attachmentsResponse.ok ? await attachmentsResponse.json() : [];
+    console.log('Quotation attachments:', attachments);
+
+    // Populate form fields
+    document.getElementById('editQuotationProjectName').textContent = order.project_name || order.project || '';
+    document.getElementById('editQuotationProjectCode').textContent = order.projectcodenumber || '';
+    document.getElementById('editQuotationClientCompanyName').textContent = order.companyname || '';
+    document.getElementById('editQuotationClientCompanyAddress').textContent = order.companyaddress || '';
+    document.getElementById('editQuotationClientCompanyGst').textContent = order.companygst || '';
+    document.getElementById('editQuotationType').textContent = order.quotationtype || '';
+    document.getElementById('editQuotationDate').textContent = order.quotationdate ? new Date(order.quotation_date).toLocaleDateString() : '';
+    document.getElementById('editReferenceNo').textContent = order.referenceno || '';
+    document.getElementById('editValidUntil').textContent = order.valid_until ? new Date(order.valid_until).toLocaleDateString() : '';
+    document.getElementById('editCurrency').textContent = order.currency || '';
+    document.getElementById('editPaymentTerms').textContent = order.paymentterms || '';
+    document.getElementById('editDeliveryDuration').textContent = order.deliveryduration || '';
+    document.getElementById('editQuotationClientName').textContent = order.clientname || '';
+    document.getElementById('editQuotationClientEmail').textContent = order.clientemail || '';
+    document.getElementById('editQuotationClientPhone').textContent = order.clientphone || '';
+    document.getElementById('editQuotationClientCompany').textContent = order.clientcompany || '';
+    document.getElementById('editQuotationClientAddress').textContent = order.clientaddress || '';
+    document.getElementById('editTaxRate').textContent = order.taxrate || '';
+    document.getElementById('editDiscountRate').textContent = order.discountrate || '';
+    document.getElementById('editQuotationTotalAmount').textContent = order.totalamount || '';
+
+
+
+    // Populate quotation table with fetched items
+    populateEditQuotationTable(order, items);
+
+    // Populate notes display (non-editable)
+ 
+
+    // Display attachments with preview
+   function renderAttachmentPreview(attachment) {
+  const fileExtension = attachment.original_name?.split('.').pop()?.toLowerCase() || '';
+  const fileUrl = `/uploads/quotations/${attachment.file_name}`;
+  const openFile = `onclick="window.open('${fileUrl}', '_blank')"`;
+
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension);
+  const isPdf = fileExtension === 'pdf';
+
+  let previewHtml = '';
+  if (isImage) {
+    previewHtml = `<img src="${fileUrl}" alt="${attachment.original_name}" title="${attachment.original_name}" class="max-w-32 max-h-32 object-cover rounded border cursor-pointer" ${openFile}>`;
+  } else if (isPdf) {
+    previewHtml = `<iframe src="${fileUrl}" class="w-32 h-32 border rounded cursor-pointer" ${openFile}></iframe>`;
+  } else {
+    previewHtml = `<div class="w-32 h-32 border rounded bg-gray-100 flex items-center justify-center cursor-pointer" ${openFile}>
+      <i class="fas fa-file text-2xl text-gray-500"></i>
+    </div>`;
+  }
+
+  const sizeKb = attachment.file_size ? (attachment.file_size / 1024).toFixed(1) : 'N/A';
+  const notes = attachment.notes || '';
+
+  return `
+    <div class="attachment-item flex items-center gap-3 p-3 bg-white rounded border">
+      ${previewHtml}
+      <div class="flex-1">
+        <a href="${fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">${attachment.original_name}</a>
+        <div class="text-sm text-gray-500">${notes}</div>
+        <div class="text-xs text-gray-400">Size: ${sizeKb} KB</div>
+      </div>
+    </div>
+  `;
+}
+
+function displayAttachments(attachments, containerId = 'editQuotationAttachmentsDisplay') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (attachments && attachments.length > 0) {
+    const html = attachments.map(renderAttachmentPreview).join('');
+    container.innerHTML = html;
+  } else {
+    container.innerHTML = '<div class="text-gray-500 italic">No attachments available.</div>';
+  }
+}
+    displayAttachments(attachments);
+
+    document.getElementById('editQuotationModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error fetching quotation details:', error);
+    alert('Failed to load quotation details. Please try again.');
   }
 }
 
