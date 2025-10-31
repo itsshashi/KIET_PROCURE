@@ -22,6 +22,8 @@ import generateVKQuotation from './vk.js';
 
 
 
+
+
 // =============================
 // CONFIG
 // =============================
@@ -76,9 +78,13 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static('public'));
 app.set("view engine", "ejs");
 
+// Use quotation routes
+
+
 // =============================
 // HELPERS
 // =============================
+
 async function generatePurchaseOrderNumber() {
     const year = new Date().getFullYear();
     const month = String(new Date().getMonth() + 1).padStart(2, "0");
@@ -192,6 +198,9 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
+
+
+
 
 // =============================
 // API ROUTES FOR ORDERS MANAGEMENT
@@ -752,8 +761,6 @@ app.post('/submit', async (req, res) => {
 });
 
 
-// Order Raise
-// Order Raise
 // Safe wrapper for multer
 const safeUpload = (req, res, next) => {
   upload.single("quotation")(req, res, (err) => {
@@ -767,6 +774,7 @@ const safeUpload = (req, res, next) => {
     next();
   });
 };
+
 
 app.post("/order_raise", safeUpload, async (req, res) => {
   console.log("Starting order_raise request");
@@ -2150,7 +2158,37 @@ if (quotationType === 'VK') {
 
 
 
+const quotationStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, 'uploads', 'quotations');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
 
+const quotationUpload = multer({
+    storage: quotationStorage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /pdf|doc|docx|jpg|jpeg|png|txt/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Invalid file type'));
+        }
+    }
+});
 
 
 
@@ -2172,6 +2210,794 @@ if (quotationType === 'VK') {
 
 
 // purchaseOrder.js
+
+// Get approved quotations for procurement users
+app.get("/approved-quotations", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  try {
+    // Fetch approved quotations created by the logged-in user
+    const result = await pool.query(
+      `SELECT
+        id,
+        quotation_number as quotationNumber,
+        client_name as clientName,
+        company_name as companyName,
+        quotation_date as quotationDate,
+        COALESCE(valid_until::text, 'N/A') as validUntil,
+        COALESCE(currency, 'INR') as currency,
+        COALESCE(payment_terms, 'N/A') as paymentTerms,
+        COALESCE(delivery_duration, 'N/A') as deliveryDuration,
+        COALESCE(total_amount, 0) as totalAmount,
+        status,
+        created_at
+      FROM quotations
+      WHERE status = 'approved' AND created_by = $1
+      ORDER BY created_at DESC`,
+      [req.session.user.email]
+    );
+
+    res.json(result.rows);
+    console.log("✅ Fetched approved quotations for procurement:", result.rows);
+  } catch (err) {
+    console.error("❌ Error fetching approved quotations:", err);
+    res.status(500).json({ error: "Failed to fetch approved quotations" });
+  }
+});
+
+// Download quotation PDF
+app.get("/download-quotation/:id", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  try {
+    const { id } = req.params;
+
+    // Verify the quotation belongs to the user and is approved
+    const quotationResult = await pool.query(
+      "SELECT quotation_number, created_by FROM quotations WHERE id = $1 AND status = 'approved'",
+      [id]
+    );
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).json({ error: "Quotation not found or not approved" });
+    }
+
+    const quotation = quotationResult.rows[0];
+
+    // Check if user owns this quotation
+    if (quotation.created_by !== req.session.user.email) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Look for the PDF file in qt_uploads directory
+    const fileName = `quotation_${quotation.quotation_number}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Quotation PDF not found" });
+    }
+
+    // Send the file for download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.sendFile(filePath);
+
+  } catch (err) {
+    console.error("❌ Error downloading quotation:", err);
+    res.status(500).json({ error: "Failed to download quotation" });
+  }
+});
+
+// purchaseOrder.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get('/api/generate-quotation-number', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT generate_quotation_number() as quotation_number');
+        const quotationNumber = result.rows[0].quotation_number;
+        client.release();
+
+        res.json({ quotationNumber });
+    } catch (error) {
+        console.error('Error generating quotation number:', error);
+        res.status(500).json({ error: 'Failed to generate quotation number' });
+    }
+});
+
+// Save quotation API
+app.post('/api/save-quotation', quotationUpload.array('attachments[]'), async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // Extract form data
+        const {
+            quotationType,
+            quotationNumber,
+            quotationDate,
+            referenceNo,
+            validUntil,
+            currency,
+            paymentTerms,
+            deliveryDuration,
+            companyName,
+            companyEmail,
+            companyGST,
+            companyAddress,
+            clientName,
+            clientEmail,
+            clientPhone,
+            clientCompany,
+            clientAddress,
+            taxRate,
+            discountRate,
+            notes,
+            items
+        } = req.body;
+
+        // Parse items JSON
+        const itemsData = JSON.parse(items);
+
+        // Insert quotation
+        const quotationQuery = `
+            INSERT INTO quotations (
+                quotation_type, quotation_number, quotation_date, reference_no,
+                valid_until, currency, payment_terms, delivery_duration,
+                company_name, company_email, company_gst, company_address,
+                client_name, client_email, client_phone, client_company, client_address,
+                tax_rate, discount_rate, total_amount, notes, status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+            RETURNING id
+        `;
+
+        const quotationValues = [
+            quotationType, quotationNumber, quotationDate, referenceNo,
+            validUntil, currency, paymentTerms, deliveryDuration,
+            companyName, companyEmail, companyGST, companyAddress,
+            clientName, clientEmail, clientPhone, clientCompany, clientAddress,
+            parseFloat(taxRate) || 18, parseFloat(discountRate) || 0, totalAmount, notes, 'draft'
+        ];
+
+
+        const quotationResult = await client.query(quotationQuery, quotationValues);
+        const quotationId = quotationResult.rows[0].id;
+
+        // Insert items
+        for (const item of itemsData) {
+            const itemQuery = `
+                INSERT INTO quotation_items (
+                    quotation_id, part_no, description, hsn_code, gst_rate,
+                    quantity, unit, unit_price, discount, total_amount
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `;
+
+            const itemValues = [
+                quotationId,
+                item.partNo,
+                item.description,
+                item.hsn,
+                item.gst,
+                item.quantity,
+                item.unit,
+                item.unitPrice,
+                item.discount,
+                item.total
+            ];
+
+            await client.query(itemQuery, itemValues);
+        }
+
+        // Insert attachments
+        if (req.files && req.files.length > 0) {
+            const attachmentNotes = req.body.attachmentNotes || [];
+
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const attachmentQuery = `
+                    INSERT INTO quotation_attachments (
+                        quotation_id, file_name, original_name, file_path,
+                        file_size, mime_type, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `;
+
+                const attachmentValues = [
+                    quotationId,
+                    file.filename,
+                    file.originalname,
+                    file.path,
+                    file.size,
+                    file.mimetype,
+                    attachmentNotes[i] || ''
+                ];
+
+                await client.query(attachmentQuery, attachmentValues);
+            }
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            message: 'Quotation saved successfully',
+            quotationNumber: quotationNumber,
+            quotationId: quotationId
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error saving quotation:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save quotation',
+            details: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
+// Generate quotation PDF
+app.post('/generate-quotation', quotationUpload.array('attachments[]'), async (req, res) => {
+    try {
+        // First save the quotation
+        const saveResponse = await fetch(`${req.protocol}://${req.get('host')}/api/save-quotation`, {
+            method: 'POST',
+            body: req.body,
+            headers: req.headers
+        });
+
+        if (!saveResponse.ok) {
+            throw new Error('Failed to save quotation before generating PDF');
+        }
+
+        const saveResult = await saveResponse.json();
+
+        // Prepare data for PDF generation
+        const poData = {
+            poNumber: req.body.quotationNumber,
+            date: req.body.quotationDate,
+            expected_date: req.body.validUntil,
+            termsOfPayment: req.body.paymentTerms,
+            currency: req.body.currency,
+            company: {
+                name: req.body.companyName || 'KIET TECHNOLOGIES PRIVATE LIMITED',
+                email: req.body.companyEmail || 'info@kiet.com',
+                gst: req.body.companyGST || '29AAFCK6528DIZG',
+                address: req.body.companyAddress || '51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111',
+                logo: './public/images/page_logo.jpg'
+            },
+            supplier: {
+                name: req.body.clientName,
+                address: req.body.clientAddress,
+                duration: req.body.deliveryDuration
+            },
+            shipTo: req.body.clientAddress,
+            reference_no: req.body.referenceNo,
+            requester: {
+                name: req.body.clientName
+            },
+            items: JSON.parse(req.body.items || '[]'),
+            line: './public/images/line.png',
+            signPath: './public/images/signature.png'
+        };
+
+        // Generate PDF
+        const fileName = `quotation_${req.body.quotationNumber}_${Date.now()}.pdf`;
+        const filePath = path.join('uploads', 'quotations', fileName);
+
+        generateQuotation(poData, filePath);
+
+        // Send file for download
+        res.download(filePath, fileName, (err) => {
+            if (err) {
+                console.error('Error downloading file:', err);
+            }
+            // Optionally delete file after download
+            setTimeout(() => {
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error('Error deleting temp file:', err);
+                });
+            }, 60000); // Delete after 1 minute
+        });
+
+    } catch (error) {
+        console.error('Error generating quotation:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate quotation PDF'
+        });
+    }
+});
+
+// Get pending quotations for MD approval
+app.get('/api/pending-quotations', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT
+                q.*,
+                COALESCE(SUM(qi.total_amount), 0) as total_amount,
+                COUNT(qi.id) as item_count
+            FROM quotations q
+            LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+            WHERE q.status = 'pending'
+            GROUP BY q.id
+            ORDER BY q.created_at DESC
+        `);
+
+        client.release();
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching pending quotations:', error);
+        res.status(500).json({ error: 'Failed to fetch pending quotations' });
+    }
+});
+
+// Get quotation attachments
+app.get('/api/quotations/:id/attachments', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT
+                id,
+                file_name,
+                original_name,
+                file_path,
+                file_size,
+                mime_type,
+                notes,
+                uploaded_at
+            FROM quotation_attachments
+            WHERE quotation_id = $1
+            ORDER BY uploaded_at DESC
+        `, [id]);
+
+        client.release();
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching quotation attachments:', error);
+        res.status(500).json({ error: 'Failed to fetch quotation attachments' });
+    }
+});
+
+// Get quotation items
+app.get('/api/quotations/:id/items', async (req, res) => {
+    try {
+        console.log('Fetching items for quotation ID:', req.params);
+        const { id } = req.params;
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT
+                id,
+                part_no,
+                description,
+                hsn_code,
+                gst_rate,
+                quantity,
+                unit,
+                unit_price,
+                discount,
+                total_amount
+            FROM quotation_items
+            WHERE quotation_id = $1
+            ORDER BY id
+        `, [id]);
+
+        client.release();
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching quotation items:', error);
+        res.status(500).json({ error: 'Failed to fetch quotation items' });
+    }
+});
+
+// Get complete quotation details by ID
+app.get('/api/quotations/:id/details', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const client = await pool.connect();
+
+        // Get quotation main details
+        const quotationResult = await client.query(`
+            SELECT
+                id,
+                quotation_type as quotationType,
+                quotation_number as quotationNumber,
+                quotation_date as quotationDate,
+                reference_no as referenceNo,
+                valid_until as validUntil,
+                currency,
+                payment_terms as paymentTerms,
+                delivery_duration as deliveryDuration,
+                company_name as companyName,
+                company_email as companyEmail,
+                company_gst as companyGST,
+                company_address as companyAddress,
+                client_name as clientName,
+                client_email as clientEmail,
+                client_phone as clientPhone,
+                client_company as clientCompany,
+                client_address as clientAddress,
+                tax_rate as taxRate,
+                discount_rate as discountRate,
+                total_amount as totalAmount,
+                notes,
+                status,
+                created_at,
+                updated_at
+            FROM quotations
+            WHERE id = $1
+        `, [id]);
+
+        if (quotationResult.rows.length === 0) {
+            client.release();
+            return res.status(404).json({ error: 'Quotation not found' });
+        }
+
+        const quotation = quotationResult.rows[0];
+
+        // Get quotation items
+        const itemsResult = await client.query(`
+            SELECT
+                id,
+                part_no as partNo,
+                description,
+                hsn_code as hsnCode,
+                gst_rate as gst,
+                quantity,
+                unit,
+                unit_price as unitPrice,
+                discount,
+                total_amount as total
+            FROM quotation_items
+            WHERE quotation_id = $1
+            ORDER BY id
+        `, [id]);
+
+        // Get quotation attachments
+        const attachmentsResult = await client.query(`
+            SELECT
+                id,
+                file_name,
+                original_name,
+                file_path,
+                file_size,
+                mime_type,
+                notes,
+                uploaded_at
+            FROM quotation_attachments
+            WHERE quotation_id = $1
+            ORDER BY uploaded_at DESC
+        `, [id]);
+
+        client.release();
+
+        // Combine all data
+        const quotationDetails = {
+            ...quotation,
+            items: itemsResult.rows,
+            attachments: attachmentsResult.rows
+        };
+
+        res.json(quotationDetails);
+    } catch (error) {
+        console.error('Error fetching quotation details:', error);
+        res.status(500).json({ error: 'Failed to fetch quotation details' });
+    }
+});
+
+// Get approved quotations
+app.get('/approved-quotations', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT
+                q.*,
+                COALESCE(SUM(qi.total_amount), 0) as total_amount,
+                COUNT(qi.id) as item_count
+            FROM quotations q
+            LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+            WHERE q.status = 'approved'
+            GROUP BY q.id
+            ORDER BY q.created_at DESC
+        `);
+
+        client.release();
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching approved quotations:', error);
+        res.status(500).json({ error: 'Failed to fetch approved quotations' });
+    }
+});
+
+// Approve quotation
+app.put('/api/quotations/:id/approve', async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const quotationId = req.params.id;
+
+        // Update quotation status
+        await client.query(
+            'UPDATE quotations SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            ['approved', quotationId]
+        );
+
+        // Log approval action (you might want to create an audit log table)
+        console.log(`Quotation ${quotationId} approved by MD`);
+
+        await client.query('COMMIT');
+
+        res.json({ success: true, message: 'Quotation approved successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error approving quotation:', error);
+        res.status(500).json({ error: 'Failed to approve quotation' });
+    } finally {
+        client.release();
+    }
+});
+
+// Download quotation PDF
+
+
+// Reject quotation
+app.put('/api/quotations/:id/reject', async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const quotationId = req.params.id;
+        const { reason } = req.body;
+
+        // Update quotation status and add rejection reason
+        await client.query(
+            'UPDATE quotations SET status = $1, notes = CONCAT(COALESCE(notes, \'\'), \'\\n\\nRejected: \', $2), updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+            ['rejected', reason, quotationId]
+        );
+
+        // Log rejection action
+        console.log(`Quotation ${quotationId} rejected by MD. Reason: ${reason}`);
+
+        await client.query('COMMIT');
+
+        res.json({ success: true, message: 'Quotation rejected successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error rejecting quotation:', error);
+        res.status(500).json({ error: 'Failed to reject quotation' });
+    } finally {
+        client.release();
+    }
+});
+
+// Preview quotation
+
+
+// Send quotation approval request
+app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'), async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // Generate unique quotation number
+        const quotationNumberResult = await client.query('SELECT generate_quotation_number() as quotation_number');
+        const quotationNumber = quotationNumberResult.rows[0].quotation_number;
+
+        // Extract form data
+        const {
+            quotationType,
+            quotationDate,
+            referenceNo,
+            validUntil,
+            currency,
+            paymentTerms,
+            deliveryDuration,
+            companyName,
+            companyEmail,
+            companyGST,
+            companyAddress,
+            clientName,
+            clientEmail,
+            clientPhone,
+            clientCompany,
+            clientAddress,
+            taxRate,
+            discountRate,
+            notes,
+            items
+        } = req.body;
+
+        // Parse items JSON
+        const itemsData = JSON.parse(items);
+
+        // Calculate total amount
+        let totalAmount = 0;
+        for (const item of itemsData) {
+            totalAmount += parseFloat(item.total) || 0;
+        }
+
+        // Insert quotation with pending approval status
+
+        const quotationQuery = `
+            INSERT INTO quotations (
+                quotation_type, quotation_number, quotation_date, reference_no,
+                valid_until, currency, payment_terms, delivery_duration,
+                company_name, company_email, company_gst, company_address,
+                client_name, client_email, client_phone, client_company, client_address,
+                tax_rate, discount_rate, total_amount, notes, status, created_by
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            RETURNING id
+        `;
+
+        const quotationValues = [
+            quotationType, quotationNumber, quotationDate, referenceNo,
+            validUntil, currency, paymentTerms, deliveryDuration,
+            companyName, companyEmail, companyGST, companyAddress,
+            clientName, clientEmail, clientPhone, clientCompany, clientAddress,
+            parseFloat(taxRate) || 18, parseFloat(discountRate) || 0, totalAmount, notes, 'pending',
+            req.session.user ? req.session.user.email : null
+        ];
+
+
+        const quotationResult = await client.query(quotationQuery, quotationValues);
+        const quotationId = quotationResult.rows[0].id;
+
+        // Insert items
+        for (const item of itemsData) {
+            const itemQuery = `
+                INSERT INTO quotation_items (
+                    quotation_id, part_no, description, hsn_code, gst_rate,
+                    quantity, unit, unit_price, discount, total_amount
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `;
+
+            const itemValues = [
+                quotationId,
+                item.partNo,
+                item.description,
+                item.hsn,
+                item.gst,
+                item.quantity,
+                item.unit,
+                item.unitPrice,
+                item.discount,
+                item.total
+            ];
+
+            await client.query(itemQuery, itemValues);
+        }
+
+        // Insert attachments
+        if (req.files && req.files.length > 0) {
+            const attachmentNotes = req.body.attachmentNotes || [];
+
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const attachmentQuery = `
+                    INSERT INTO quotation_attachments (
+                        quotation_id, file_name, original_name, file_path,
+                        file_size, mime_type, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `;
+
+                const attachmentValues = [
+                    quotationId,
+                    file.filename,
+                    file.originalname,
+                    file.path,
+                    file.size,
+                    file.mimetype,
+                    attachmentNotes[i] || ''
+                ];
+
+                await client.query(attachmentQuery, attachmentValues);
+            }
+        }
+
+        await client.query('COMMIT');
+
+        // Send email notification to MD
+        const transporter = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: "No-reply@kietsindia.com",
+                pass: "Kiets@2025$1",
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const mailOptions = {
+            from: "No-reply@kietsindia.com",
+            to: "md@kietsindia.com", // MD email
+            subject: `Quotation Approval Required: ${quotationNumber}`,
+            text: `
+Hello MD,
+
+A new quotation has been submitted and requires your approval.
+
+📋 Quotation Details:
+- Quotation Number: ${quotationNumber}
+- Type: ${quotationType}
+- Client: ${clientName}
+- Submitted by: ${req.session.user ? req.session.user.email : 'Unknown'}
+- Date: ${quotationDate}
+
+Please review and approve the quotation through the MD dashboard.
+
+Best regards,
+Quotation System
+KIET TECHNOLOGIES PVT LTD
+            `,
+            attachments: [
+                {
+                    filename: "lg.jpg",
+                    path: "public/images/lg.jpg",
+                    cid: "logoImage"
+                }
+            ]
+        };
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log("✅ Approval request email sent to MD:", info.response);
+        } catch (err) {
+            console.error("❌ Email failed:", err);
+        }
+
+        res.json({
+            success: true,
+            message: 'Quotation approval request sent successfully',
+            quotationNumber: quotationNumber,
+            quotationId: quotationId
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error sending quotation approval:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send quotation approval request',
+            details: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
+
+
+
+
+
+
+
 
 
 
