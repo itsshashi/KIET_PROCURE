@@ -250,7 +250,9 @@
               <th class="px-2 py-3">Requested By</th>
               <th class="px-2 py-3">Date Required</th>
               <th class="px-2 py-3">Created At</th>
-              <th class="px-2 py-3">Amount</th>
+              <th class="px-2 py-3">Amount(without GST)</th>
+              <th class="px-2 py-3">GST Amount</th>
+              <th class="px-2 py-3">Amount (with GST)</th>
               <th class="px-2 py-3">Status</th>
               <th class="px-2 py-3">Quotations</th>
               <th class="px-2 py-3">Actions</th>
@@ -1201,7 +1203,9 @@ function addNewProductRow() {
           <td class="px-2 py-3">${order.requested_by}</td>
           <td class="px-2 py-3">${formatDate(order.date_required)}</td>
           <td class="px-2 py-3">${formatDate(order.created_at)}</td>
-          <td class="px-2 py-3 font-semibold">₹${order.total_amount.toLocaleString()}</td>
+          <td class="px-2 py-3 font-semibold">₹${((order.total_amount.toLocaleString())/1.18).toLocaleString()}</td>
+          <td class="px-2 py-3 font-semibold">₹${((order.total_amount)/1.18*0.18).toLocaleString()}</td>
+          <td class="px-2 py-3 font-semibold">₹${(order.total_amount*1).toLocaleString()}</td>
           <td class="px-2 py-3">
             <span class="${statusBadgeClass}">${capitalizeFirst(order.status)}</span>
           </td>
