@@ -1234,7 +1234,7 @@ function addNewProductRow() {
       });
 
       // Apply 18% reduction to total cost
-      totalCost = totalCost * 0.82;
+      totalCost = totalCost /1.18;
 
       document.getElementById('totalCost').textContent = totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -1255,7 +1255,7 @@ function addNewProductRow() {
       const data = [];
 
       // Add header row
-      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Amount', 'Status', 'Quotations'];
+      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Base Amount','GST','Total', 'Status', 'Quotations'];
       data.push(headers);
 
       // Add data rows
@@ -1268,7 +1268,7 @@ function addNewProductRow() {
       });
 
       // Add total cost row
-      data.push(['', '', '', '', '', '', '', '', '', 'Total Cost: ₹' + totalCostValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })]);
+      data.push(['', '', '', '', '', '', '', '', '', 'Total Cost(no GST): ₹' + totalCostValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })]);
 
 
       // Create workbook and worksheet
