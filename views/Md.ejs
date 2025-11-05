@@ -840,9 +840,10 @@ select {
         <li class="menu-item active" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals</li>
         <li class="menu-item" data-tab="all"><i class="fas fa-list"></i> All Orders</li>
         <li class="menu-item" data-tab="rejected"><i class="fas fa-times"></i> Rejected Orders</li>
-        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotations</li>
-        <li class="menu-heading">Create</li>
+        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotation(PO)</li>
+        <li class="menu-heading">Quotation approvals</li>
         <li class="menu-item" data-tab="approve"><i class="fas fa-check"></i> Approve Quotation</li>
+        <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check-circle"></i> VK Quotation Approval</li>
         <li class="menu-item" data-tab="new-order"><i class="fas fa-plus"></i> New Quotation(VK)</li>
 
         
@@ -909,6 +910,7 @@ select {
       <button class="tab-button" onclick="switchTab('rejected')">Rejected Orders</button>
       <button class="tab-button" onclick="switchTab('quotations')">All Quotations</button>
       <button class="tab-button" onclick="switchTab('approve')">Approve Quotation</button>
+      <button class="tab-button" onclick="switchTab('vk-approve')">VK Quotation Approval</button>
       <button class="tab-button" onclick="switchTab('new-order')">New Order</button>
     </div>
 
@@ -1021,6 +1023,28 @@ select {
       </table>
       <!-- Pagination -->
       <div class="pagination" id="approvePagination"></div>
+    </div>
+
+    <!-- VK Approve Quotation Table -->
+    <div id="vkApproveTab" class="tab-content">
+      <table id="vkApproveTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_number')">Quotation Number <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('quotation_date')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="vkApproveBody"></tbody>
+      </table>
+      <!-- Pagination -->
+      <div class="pagination" id="vkApprovePagination"></div>
     </div>
 
     <!-- New Order Tab -->
@@ -1811,6 +1835,7 @@ select {
       document.getElementById('allTab').style.display = tab === 'all' ? 'block' : 'none';
       document.getElementById('quotationsTab').style.display = tab === 'quotations' ? 'block' : 'none';
       document.getElementById('approveTab').style.display = tab === 'approve' ? 'block' : 'none';
+      document.getElementById('vkApproveTab').style.display = tab === 'vk-approve' ? 'block' : 'none';
       document.getElementById('newOrderTab').style.display = tab === 'new-order' ? 'block' : 'none';
 
       // Add rejectedTab div for rejected orders
@@ -1852,6 +1877,8 @@ select {
         loadRejectedOrders();
       } else if (tab === 'approve') {
         loadApproveQuotations();
+      } else if (tab === 'vk-approve') {
+        loadVKApproveQuotations();
       } else {
         loadAllQuotations();
       }
@@ -2141,7 +2168,7 @@ select {
         if (dateTo) {
           quotations = quotations.filter(order => new Date(order.date_required) <= new Date(dateTo));
         }
-
+       
         renderApproveQuotations(quotations, 'approveBody');
 
         // Render pagination for approve tab
@@ -2175,19 +2202,48 @@ select {
     function changePageApprove(page) {
       currentPage = page;
       loadApproveQuotations();
+      
+    }
+
+    //render the vk approve quotations table
+    async function loadVKApproveQuotations() {
+      try {
+        const res = await fetch('/api/pending-vk_quotations');
+        const allOrders = await res.json();
+        console.log('All Orders for VK Approval:', allOrders);
+        let vk_quotations = allOrders.filter(order =>
+          (order.status == 'pending' || order.status === 'enquired')
+        );
+
+        // Apply search filter
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+          vk_quotations = vk_quotations.filter(order =>
+            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
+            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        renderApproveQuotations(vk_quotations, 'vkApproveBody');
+      } catch (err) {
+        console.error('Failed to load VK approve quotations:', err);
+        document.getElementById('vkApproveBody').innerHTML = '<tr><td colspan="9">Failed to load VK quotations for approval</td></tr>';
+      }
     }
 
     // Render approve quotations table
     function renderApproveQuotations(quotations, tbodyId) {
       const tbody = document.getElementById(tbodyId);
       tbody.innerHTML = "";
+      
 
       quotations.forEach(quotation => {
         const row = `
           <tr>
             <td>${quotation.id}</td>
-            <td>${quotation.client_company}</td>
-            <td>${quotation.client_quotation_type}</td>
+            <td>${quotation.company_name}</td>
+            <td>${quotation.quotation_type}</td>
             <td>${quotation.client_name}</td>
             <td>${quotation.created_by|| 'N/A'}</td>
             <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
@@ -2197,10 +2253,10 @@ select {
               <button class="view" onclick="editQuotation(${quotation.id})">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button class="approve" onclick="updateStatus(${quotation.id}, 'approved')">
+              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved')">
                 <i class="fas fa-check"></i> Approve
               </button>
-              <button class="reject" onclick="updateStatus(${quotation.id}, 'rejected')">
+              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected')">
                 <i class="fas fa-times"></i> Reject
               </button>
             </td>
@@ -2209,6 +2265,7 @@ select {
         
         tbody.insertAdjacentHTML("beforeend", row);
       });
+      
     }
 
     // View all quotations for an order
@@ -2411,53 +2468,90 @@ select {
       document.getElementById("pdfFrame").src = "";
     }
 
-    // Update status
+    // Update status for orders
     async function updateStatus(id, status) {
-  console.log(`🔄 Frontend: Function called with id=${id}, status=${status}`);
+   console.log(`🔄 Frontend: Function called with id=${id}, status=${status}`);
+
+   try {
+     console.log(`🔄 Frontend: Sending request to /api/orders/${id}/status`);
+     const res = await fetch(`/api/orders/${id}/status`, {
+       method: "PUT",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ status })
+     });
+
+     console.log(`🔄 Frontend: Response received, status: ${res.status}`);
+
+     if (res.ok) {
+       const data = await res.json();
+       console.log(`✅ Frontend: Update successful`, data);
+
+       alert(`✅ Order ${id} ${status} successfully!`);
+       loadSummaryCounts();
+
+       // 🔥 Handle tab reloads properly
+       if (status === "rejected") {
+         // Refresh rejected tab so the order moves there
+         loadRejectedOrders();
+
+         // Also refresh pending so it disappears
+         if (currentTab === "pending") {
+           loadPurchaseOrders();
+         }
+       } else if (status === "approved") {
+         if (currentTab === "pending") loadPurchaseOrders();
+         else if (currentTab === "all") loadAllOrders();
+       } else {
+         if (currentTab === "all") loadAllOrders();
+         else if (currentTab === "quotations") loadAllQuotations();
+       }
+     } else {
+       const err = await res.json();
+       console.log(`❌ Frontend: Update failed`, err);
+       alert(`❌ Failed: ${err.error || 'Unknown error'}`);
+     }
+   } catch (error) {
+     console.error(`❌ Frontend: Network error`, error);
+     alert(`❌ Network error: ${error.message}`);
+   }
+}  // End of updateStatus function
+
+// Update quotation status
+async function updateQuotationStatus(id, status) {
+  console.log(`🔄 Frontend: Updating quotation status for id=${id}, status=${status}`);
 
   try {
-    console.log(`🔄 Frontend: Sending request to /api/orders/${id}/status`);
-    const res = await fetch(`/api/orders/${id}/status`, {
+    const endpoint = status === 'approved' ? `/api/quotations/${id}/approve` : `/api/quotations/${id}/reject`;
+    console.log(`🔄 Frontend: Sending request to ${endpoint}`);
+
+    const res = await fetch(endpoint, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status })
+      body: status === 'rejected' ? JSON.stringify({ reason: 'Rejected by MD' }) : JSON.stringify({})
     });
 
     console.log(`🔄 Frontend: Response received, status: ${res.status}`);
 
     if (res.ok) {
       const data = await res.json();
-      console.log(`✅ Frontend: Update successful`, data);
+      console.log(`✅ Frontend: Quotation update successful`, data);
 
-      alert(`✅ Order ${id} ${status} successfully!`);
-      loadSummaryCounts();
+      alert(`✅ Quotation ${id} ${status} successfully!`);
 
-      // 🔥 Handle tab reloads properly
-      if (status === "rejected") {
-        // Refresh rejected tab so the order moves there
-        loadRejectedOrders();
-
-        // Also refresh pending so it disappears
-        if (currentTab === "pending") {
-          loadPurchaseOrders();
-        }
-      } else if (status === "approved") {
-        if (currentTab === "pending") loadPurchaseOrders();
-        else if (currentTab === "all") loadAllOrders();
-      } else {
-        if (currentTab === "all") loadAllOrders();
-        else if (currentTab === "quotations") loadAllQuotations();
+      // Reload the approve quotations tab
+      if (currentTab === "approve") {
+        loadApproveQuotations();
       }
     } else {
       const err = await res.json();
-      console.log(`❌ Frontend: Update failed`, err);
+      console.log(`❌ Frontend: Quotation update failed`, err);
       alert(`❌ Failed: ${err.error || 'Unknown error'}`);
     }
   } catch (error) {
     console.error(`❌ Frontend: Network error`, error);
     alert(`❌ Network error: ${error.message}`);
   }
-}  // End of updateStatus function
+}
 
 // Edit order function
 async function editOrder(orderId) {
@@ -3046,7 +3140,7 @@ function calculateEditQuotationTotal() {
         if (qty >= 1201 && qty <= 1300) return 9;
         if (qty >= 1301 && qty <= 1400) return 10;
         if (qty >= 1401 && qty <= 1500) return 11;
-        return 2; // default
+        return 12; // default
       }
 
       function updateClassOptions() {
@@ -3890,7 +3984,7 @@ function calculateEditQuotationTotal() {
       document.getElementById("pdfFrame").src = "";
     }
 
-    // Update status
+    // Update status for orders
     async function updateStatus(id, status) {
   console.log(`🔄 Frontend: Function called with id=${id}, status=${status}`);
 
@@ -3930,6 +4024,43 @@ function calculateEditQuotationTotal() {
     } else {
       const err = await res.json();
       console.log(`❌ Frontend: Update failed`, err);
+      alert(`❌ Failed: ${err.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error(`❌ Frontend: Network error`, error);
+    alert(`❌ Network error: ${error.message}`);
+  }
+}
+
+    // Update quotation status
+    async function updateQuotationStatus(id, status) {
+  console.log(`🔄 Frontend: Quotation function called with id=${id}, status=${status}`);
+
+  try {
+    const endpoint = status === 'approved' ? `/api/quotations/${id}/approve` : `/api/quotations/${id}/reject`;
+    console.log(`🔄 Frontend: Sending request to ${endpoint}`);
+
+    const res = await fetch(endpoint, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: status === 'rejected' ? JSON.stringify({ reason: 'Rejected by MD' }) : JSON.stringify({})
+    });
+
+    console.log(`🔄 Frontend: Response received, status: ${res.status}`);
+
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`✅ Frontend: Quotation update successful`, data);
+
+      alert(`✅ Quotation ${id} ${status} successfully!`);
+
+      // Reload the approve quotations tab
+      if (currentTab === "approve") {
+        loadApproveQuotations();
+      }
+    } else {
+      const err = await res.json();
+      console.log(`❌ Frontend: Quotation update failed`, err);
       alert(`❌ Failed: ${err.error || 'Unknown error'}`);
     }
   } catch (error) {
