@@ -2059,71 +2059,12 @@ app.post('/generate-quotation', upload.array('attachments[]'), (req, res) => {
 
 
 if (quotationType === 'VK') {
-    const normalizeArray = val => Array.isArray(val) ? val : (val !== undefined ? [val] : []);
-
-    // Correct keys based on actual form data
-    const itemDescriptions = normalizeArray(formData.itemDescription);
-    const priceInputs = normalizeArray(formData.priceInput);
-    const qtyInputs = normalizeArray(formData.qtyInput);
-
-    const kietCosts = itemDescriptions.map((desc, index) => ({
-        description: desc || '',
-        cost: parseFloat(priceInputs[index]) || 0,
-        qty: parseFloat(qtyInputs[index]) || 0,
-        totalValue: ((parseFloat(priceInputs[index]) || 0) * (parseFloat(qtyInputs[index]) || 0)).toFixed(2)
-    }));
-    
-
-    // Calculate total for user inputs
-    const kietTotal = kietCosts.reduce((sum, item) => sum + parseFloat(item.totalValue), 0);
-
-    // Add total row
-    kietCosts.push({
-        description: `Total costs in ${formData.currency} (qty of 1 No.)`,
-        cost: kietTotal,
-        qty: 1,
-        totalValue: kietTotal.toFixed(2)
-    });
-
-            // Add additional fixed rows
-            kietCosts.push({
-                description: 'Export packaging charges included',
-                cost: priceInputs[4] || '2650',
-                qty: '',
-                totalValue: priceInputs[4] || '2650'
-            });
-            kietCosts.push({
-                description: 'Bigger box setup',
-                cost: priceInputs[5] || '',
-                qty: '',
-                totalValue: priceInputs[5] || ''
-            });
+    // Handle VK-specific data from the form
+    const kietCosts = formData.kietCosts ? JSON.parse(formData.kietCosts) : [];
+    const pvAdaptors = formData.pvAdaptors ? JSON.parse(formData.pvAdaptors) : [];
 
     poData.kietCosts = kietCosts;
-    // console.log("kier: ",priceInputs);
-
-    const pvQty = normalizeArray(formData.pvQty);
-    const pvFamilyName = normalizeArray(formData.pvFamilyName);
-    const pvRevNo = normalizeArray(formData.pvRevNo);
-    const pvCoaxialPin = normalizeArray(formData.pvCoaxialPin);
-    const pvSokCard = normalizeArray(formData.pvSokCard);
-    const pvSokQty = normalizeArray(formData.pvSokQty);
-    const pvRate = normalizeArray(formData.pvRate);
-
-    const pvAdaptors = pvQty.map((qty, index) => ({
-        qty: parseFloat(qty) || 0,
-        familyName: pvFamilyName[index] || '',
-        revNo: pvRevNo[index] || '',
-        coaxialPin: pvCoaxialPin[index] || '',
-        sokCard: pvSokCard[index] || '',
-        sokQty: parseFloat(pvSokQty[index]) || 0,
-        rate: parseFloat(pvRate[index]) || 0
-    }));
-
     poData.pvAdaptors = pvAdaptors;
-    // console.log('PV Adaptors:', pvAdaptors);
-    // console.log('price inputs:',priceInputs);
-    // console.log('kiet costs:',kietCosts);
 }
 
 
@@ -2218,77 +2159,231 @@ app.get("/approved-quotations", async (req, res) => {
   }
 
   try {
-    // Fetch approved quotations created by the logged-in user
-    const result = await pool.query(
+    // Fetch approved regular quotations created by the logged-in user
+    const regularResult = await pool.query(
       `SELECT
-        id,
-        quotation_number as quotationNumber,
-        client_name as clientName,
-        company_name as companyName,
-        quotation_date as quotationDate,
-        COALESCE(valid_until::text, 'N/A') as validUntil,
-        COALESCE(currency, 'INR') as currency,
-        COALESCE(payment_terms, 'N/A') as paymentTerms,
-        COALESCE(delivery_duration, 'N/A') as deliveryDuration,
-        COALESCE(total_amount, 0) as totalAmount,
-        status,
-        created_at
-      FROM quotations
-      WHERE status = 'approved' AND created_by = $1
-      ORDER BY created_at DESC`,
+        q.id,
+        q.quotation_number as quotationnumber,
+        q.client_name as clientname,
+        q.company_name as companyname,
+        COALESCE(q.quotation_date::text, 'N/A' ) as quotationdate,
+        COALESCE(q.valid_until::text, 'N/A') as validuntil,
+        COALESCE(q.currency, 'INR') as currency,
+        COALESCE(q.payment_terms, 'N/A') as paymentterms,
+        COALESCE(q.delivery_duration, 'N/A') as deliveryduration,
+        COALESCE(SUM(qi.total_amount), 0) as totalamount,
+        q.status,
+        q.created_at,
+        'regular' as quotation_type
+      FROM quotations q
+      LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+      WHERE q.status = 'approved' AND q.created_by = $1
+      GROUP BY q.id
+      ORDER BY q.created_at DESC`,
       [req.session.user.email]
     );
 
-    res.json(result.rows);
-    console.log("✅ Fetched approved quotations for procurement:", result.rows);
+    // Fetch approved VK quotations created by the logged-in user
+    const vkResult = await pool.query(
+      `SELECT
+        vq.id,
+        vq.quotation_number as quotationnumber,
+        vq.client_name as clientname,
+        vq.company_name as companyname,
+        vq.quotation_date as quotationdate,
+        COALESCE(vq.valid_until::text, 'N/A') as validuntil,
+        COALESCE(vq.currency, 'INR') as currency,
+        COALESCE(vq.payment_terms, 'N/A') as paymentterms,
+        COALESCE(vq.delivery_duration, 'N/A') as deliveryduration,
+        COALESCE(vq.total_amount, 0) as totalamount,
+        vq.status,
+        vq.created_at,
+        'vk' as quotation_type
+      FROM vk_quotations vq
+      WHERE vq.status = 'approved' AND vq.created_by = $1
+      ORDER BY vq.created_at DESC`,
+      [req.session.user.email]
+    );
+
+    // Combine results
+    const allQuotations = [...regularResult.rows, ...vkResult.rows];
+    console.log('vk quotations',vkResult.rows);
+    res.json(allQuotations);
+    console.log("✅ Fetched approved quotations for procurement:", allQuotations);
   } catch (err) {
     console.error("❌ Error fetching approved quotations:", err);
     res.status(500).json({ error: "Failed to fetch approved quotations" });
   }
 });
 
-// Download quotation PDF
+// Download quotation PDF - Fresh and working version
 app.get("/download-quotation/:id", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
-
   try {
     const { id } = req.params;
+    console.log(`📥 Starting download for quotation ID: ${id}`);
 
-    // Verify the quotation belongs to the user and is approved
-    const quotationResult = await pool.query(
-      "SELECT quotation_number, created_by FROM quotations WHERE id = $1 AND status = 'approved'",
-      [id]
-    );
+    // First, try to find the quotation in regular quotations table
+    let quotationResult = await pool.query(`
+      SELECT id, quotation_number, quotation_type, quotation_date, valid_until,
+             payment_terms, currency, company_name, company_email, company_gst,
+             company_address, client_name, client_email, client_address,
+             delivery_duration, reference_no, status, kiet_costs, pv_adaptors
+      FROM quotations
+      WHERE id = $1
+    `, [id]);
+
+    let quotationType = 'regular';
+    let quotation = null;
 
     if (quotationResult.rows.length === 0) {
-      return res.status(404).json({ error: "Quotation not found or not approved" });
+      // If not found in regular quotations, try VK quotations
+      quotationResult = await pool.query(`
+        SELECT id, quotation_number, quotation_type, quotation_date, valid_until,
+               payment_terms, currency, company_name, company_email, company_gst,
+               company_address, client_name, client_email, client_address,
+               delivery_duration, reference_no, status, kiet_costs, pv_adaptors
+        FROM vk_quotations
+        WHERE id = $1
+      `, [id]);
+
+      if (quotationResult.rows.length === 0) {
+        console.error(`❌ Quotation not found: ${id}`);
+        return res.status(404).json({ error: 'Quotation not found' });
+      }
+
+      quotationType = 'vk';
     }
 
-    const quotation = quotationResult.rows[0];
+    quotation = quotationResult.rows[0];
+    console.log(`✅ Found quotation: ${quotation.quotation_number} (type: ${quotationType})`);
 
-    // Check if user owns this quotation
-    if (quotation.created_by !== req.session.user.email) {
-      return res.status(403).json({ error: "Access denied" });
+    // Fetch quotation items from appropriate table
+    const itemsTable = quotationType === 'vk' ? 'vk_quotation_items' : 'quotation_items';
+    const itemsResult = await pool.query(`
+      SELECT part_no, description, hsn_code, gst_rate, quantity,
+             unit, unit_price, discount, total_amount
+      FROM ${itemsTable}
+      WHERE quotation_id = $1
+      ORDER BY id
+    `, [id]);
+
+    const items = itemsResult.rows.map(row => ({
+      part_no: row.part_no || '',
+      description: row.description || '',
+      hsn_code: row.hsn_code || '',
+      gst: parseFloat(row.gst_rate) || 18,
+      quantity: parseFloat(row.quantity) || 0,
+      unit: row.unit || 'Nos',
+      unit_price: parseFloat(row.unit_price) || 0,
+      discount: parseFloat(row.discount) || 0,
+      total: parseFloat(row.total_amount) || 0
+    }));
+
+    console.log(`📋 Processing ${items.length} items`);
+
+    // Prepare PDF data
+    const poData = {
+        poNumber: quotation.quotation_number,
+        date: quotation.quotation_date,
+        expected_date: quotation.valid_until,
+        termsOfPayment: quotation.payment_terms || '',
+        currency: quotation.currency || 'INR',
+        company: {
+            name: quotation.company_name || 'KIET TECHNOLOGIES PRIVATE LIMITED',
+            email: quotation.company_email || 'info@kiet.com',
+            gst: quotation.company_gst || '29AAFCK6528DIZG',
+            address: quotation.company_address || '51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111',
+            logo: path.join(__dirname, 'public', 'images', 'page_logo.jpg')
+        },
+        supplier: {
+            name: quotation.client_name,
+            address: quotation.client_address || '',
+            duration: quotation.delivery_duration || ''
+        },
+        shipTo: quotation.client_address || '',
+        reference_no: quotation.reference_no || '',
+        requester: {
+            name: quotation.client_name
+        },
+        items: items,
+        line: path.join(__dirname, 'public', 'images', 'line.png'),
+        signPath: path.join(__dirname, 'public', 'images', 'signature.png')
+    };
+
+    // Add VK-specific data if quotation type is VK
+    if (quotation.quotation_type === 'VK') {
+        // Parse VK-specific data from database
+        try {
+            if (quotation.kiet_costs) {
+                poData.kietCosts = JSON.parse(quotation.kiet_costs);
+            }
+            if (quotation.pv_adaptors) {
+                poData.pvAdaptors = JSON.parse(quotation.pv_adaptors);
+            }
+        } catch (vkError) {
+            console.error('Error parsing VK data:', vkError);
+        }
     }
 
-    // Look for the PDF file in qt_uploads directory
-    const fileName = `quotation_${quotation.quotation_number}.pdf`;
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedNumber = quotation.quotation_number.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `quotation_${sanitizedNumber}_${timestamp}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "Quotation PDF not found" });
+    console.log(`🔄 Generating PDF...`);
+
+    // Generate PDF
+    if (quotation.quotation_type === 'VK') {
+      generateVKQuotation(poData, filePath);
+    } else {
+      generateQuotation(poData, filePath);
     }
 
-    // Send the file for download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.sendFile(filePath);
+    // Wait for file generation
+    await new Promise((resolve, reject) => {
+      const checkFile = () => {
+        if (fs.existsSync(filePath)) {
+          const stats = fs.statSync(filePath);
+          if (stats.size > 0) {
+            console.log(`✅ PDF ready, size: ${stats.size} bytes`);
+            resolve();
+          } else {
+            setTimeout(checkFile, 500);
+          }
+        } else {
+          setTimeout(checkFile, 500);
+        }
+      };
 
-  } catch (err) {
-    console.error("❌ Error downloading quotation:", err);
-    res.status(500).json({ error: "Failed to download quotation" });
+      setTimeout(checkFile, 1000);
+      setTimeout(() => reject(new Error('PDF generation timeout')), 15000);
+    });
+
+    // Send file
+    console.log(`📤 Sending file for download`);
+    res.download(filePath, `quotation_${quotation.quotation_number}.pdf`, (err) => {
+      if (err) {
+        console.error('❌ Download error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Download failed' });
+        }
+      } else {
+        console.log('✅ Download successful');
+        // Cleanup after 5 minutes
+        setTimeout(() => {
+          fs.unlink(filePath, (err) => {
+            if (err) console.error('⚠️ Cleanup error:', err);
+          });
+        }, 300000);
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Download error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Download failed', details: error.message });
+    }
   }
 });
 
@@ -2378,9 +2473,14 @@ app.post('/api/save-quotation', quotationUpload.array('attachments[]'), async (r
 
         const quotationResult = await client.query(quotationQuery, quotationValues);
         const quotationId = quotationResult.rows[0].id;
+        console.log('Quotation inserted with ID:', quotationId);
 
         // Insert items
-        for (const item of itemsData) {
+        console.log('Inserting items...');
+        for (let i = 0; i < itemsData.length; i++) {
+            const item = itemsData[i];
+            console.log(`Inserting item ${i + 1}:`, item);
+
             const itemQuery = `
                 INSERT INTO quotation_items (
                     quotation_id, part_no, description, hsn_code, gst_rate,
@@ -2390,26 +2490,31 @@ app.post('/api/save-quotation', quotationUpload.array('attachments[]'), async (r
 
             const itemValues = [
                 quotationId,
-                item.partNo,
-                item.description,
-                item.hsn,
-                item.gst,
-                item.quantity,
-                item.unit,
-                item.unitPrice,
-                item.discount,
-                item.total
+                item.partNo || '',
+                item.description || '',
+                item.hsn || '',
+                parseFloat(item.gst) || 18,
+                parseFloat(item.quantity) || 0,
+                item.unit || 'Nos',
+                parseFloat(item.unitPrice) || 0,
+                parseFloat(item.discount) || 0,
+                parseFloat(item.total) || 0
             ];
 
             await client.query(itemQuery, itemValues);
         }
+        console.log('All items inserted successfully');
 
         // Insert attachments
+        console.log('Processing attachments...');
         if (req.files && req.files.length > 0) {
+            console.log(`Found ${req.files.length} attachments`);
             const attachmentNotes = req.body.attachmentNotes || [];
 
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
+                console.log(`Processing attachment ${i + 1}:`, file.originalname);
+
                 const attachmentQuery = `
                     INSERT INTO quotation_attachments (
                         quotation_id, file_name, original_name, file_path,
@@ -2429,6 +2534,9 @@ app.post('/api/save-quotation', quotationUpload.array('attachments[]'), async (r
 
                 await client.query(attachmentQuery, attachmentValues);
             }
+            console.log('All attachments inserted');
+        } else {
+            console.log('No attachments to process');
         }
 
         await client.query('COMMIT');
@@ -2455,8 +2563,8 @@ app.post('/api/save-quotation', quotationUpload.array('attachments[]'), async (r
 
 // Generate quotation PDF
 app.post('/generate-quotation', quotationUpload.array('attachments[]'), async (req, res) => {
+  console.log('Generate Quotation Request Body:', req.body);
     try {
-        // First save the quotation
         const saveResponse = await fetch(`${req.protocol}://${req.get('host')}/api/save-quotation`, {
             method: 'POST',
             body: req.body,
@@ -2469,7 +2577,6 @@ app.post('/generate-quotation', quotationUpload.array('attachments[]'), async (r
 
         const saveResult = await saveResponse.json();
 
-        // Prepare data for PDF generation
         const poData = {
             poNumber: req.body.quotationNumber,
             date: req.body.quotationDate,
@@ -2498,23 +2605,20 @@ app.post('/generate-quotation', quotationUpload.array('attachments[]'), async (r
             signPath: './public/images/signature.png'
         };
 
-        // Generate PDF
         const fileName = `quotation_${req.body.quotationNumber}_${Date.now()}.pdf`;
         const filePath = path.join('uploads', 'quotations', fileName);
 
         generateQuotation(poData, filePath);
 
-        // Send file for download
         res.download(filePath, fileName, (err) => {
             if (err) {
                 console.error('Error downloading file:', err);
             }
-            // Optionally delete file after download
             setTimeout(() => {
                 fs.unlink(filePath, (err) => {
                     if (err) console.error('Error deleting temp file:', err);
                 });
-            }, 60000); // Delete after 1 minute
+            }, 60000);
         });
 
     } catch (error) {
@@ -2525,16 +2629,48 @@ app.post('/generate-quotation', quotationUpload.array('attachments[]'), async (r
         });
     }
 });
+  //get pending vk quotations for md approval
+app.get('/api/pending-vk_quotations', async (req, res) => { 
+    try { 
+        const client = await pool.connect();
+        const vkResult = await client.query(`
+              SELECT
+                  vq.*,
+                  COALESCE(SUM(vqi.total_amount), 0) as total_amount,
+                  COUNT(vqi.id) as item_count,
+                  'vk' as quotation_source
+              FROM vk_quotations vq
+              LEFT JOIN vk_quotation_items vqi ON vq.id = vqi.quotation_id
+              WHERE vq.status = 'pending'
+              GROUP BY vq.id
+              ORDER BY vq.created_at DESC
+          `);
+          client.release();
+        res.json(vkResult.rows);
+        console.log('Fetched pending VK quotations for MD approval:', vkResult.rows);
+    } catch (error) {
+        console.error('Error fetching pending VK quotations:', error);
+        res.status(500).json({ error: 'Failed to fetch pending VK quotations' });
+    }
+  });
+        
+
+
+
+
 
 // Get pending quotations for MD approval
 app.get('/api/pending-quotations', async (req, res) => {
     try {
         const client = await pool.connect();
-        const result = await client.query(`
+
+        // Get regular quotations
+        const regularResult = await client.query(`
             SELECT
                 q.*,
                 COALESCE(SUM(qi.total_amount), 0) as total_amount,
-                COUNT(qi.id) as item_count
+                COUNT(qi.id) as item_count,
+                'regular' as quotation_source
             FROM quotations q
             LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
             WHERE q.status = 'pending'
@@ -2542,11 +2678,33 @@ app.get('/api/pending-quotations', async (req, res) => {
             ORDER BY q.created_at DESC
         `);
 
+        // Get VK quotations
+       
+
+        // Combine results
+        const allQuotations = regularResult.rows;
+
         client.release();
-        res.json(result.rows);
+        res.json(allQuotations);
+        console.log('Fetched pending quotations for MD approval:', allQuotations);
     } catch (error) {
         console.error('Error fetching pending quotations:', error);
         res.status(500).json({ error: 'Failed to fetch pending quotations' });
+    }
+});
+
+// Generate VK quotation number API
+app.get('/api/generate-vk-quotation-number', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT generate_vk_quotation_number() as quotation_number');
+        const quotationNumber = result.rows[0].quotation_number;
+        client.release();
+
+        res.json({ quotationNumber });
+    } catch (error) {
+        console.error('Error generating VK quotation number:', error);
+        res.status(500).json({ error: 'Failed to generate VK quotation number' });
     }
 });
 
@@ -2613,7 +2771,21 @@ app.get('/api/quotations/:id/items', async (req, res) => {
 app.get('/api/quotations/:id/details', async (req, res) => {
     try {
         const { id } = req.params;
+        const { source } = req.query; // 'regular' or 'vk'
         const client = await pool.connect();
+
+        let quotationsTable, itemsTable, attachmentsTable;
+
+        // Determine which tables to query based on source
+        if (source === 'vk') {
+            quotationsTable = 'vk_quotations';
+            itemsTable = 'vk_quotation_items';
+            attachmentsTable = 'vk_quotation_attachments';
+        } else {
+            quotationsTable = 'quotations';
+            itemsTable = 'quotation_items';
+            attachmentsTable = 'quotation_attachments';
+        }
 
         // Get quotation main details
         const quotationResult = await client.query(`
@@ -2642,8 +2814,10 @@ app.get('/api/quotations/:id/details', async (req, res) => {
                 notes,
                 status,
                 created_at,
-                updated_at
-            FROM quotations
+                updated_at,
+                kiet_costs,
+                pv_adaptors
+            FROM ${quotationsTable}
             WHERE id = $1
         `, [id]);
 
@@ -2667,7 +2841,7 @@ app.get('/api/quotations/:id/details', async (req, res) => {
                 unit_price as unitPrice,
                 discount,
                 total_amount as total
-            FROM quotation_items
+            FROM ${itemsTable}
             WHERE quotation_id = $1
             ORDER BY id
         `, [id]);
@@ -2683,7 +2857,7 @@ app.get('/api/quotations/:id/details', async (req, res) => {
                 mime_type,
                 notes,
                 uploaded_at
-            FROM quotation_attachments
+            FROM ${attachmentsTable}
             WHERE quotation_id = $1
             ORDER BY uploaded_at DESC
         `, [id]);
@@ -2694,7 +2868,8 @@ app.get('/api/quotations/:id/details', async (req, res) => {
         const quotationDetails = {
             ...quotation,
             items: itemsResult.rows,
-            attachments: attachmentsResult.rows
+            attachments: attachmentsResult.rows,
+            quotation_source: source || 'regular'
         };
 
         res.json(quotationDetails);
@@ -2705,28 +2880,28 @@ app.get('/api/quotations/:id/details', async (req, res) => {
 });
 
 // Get approved quotations
-app.get('/approved-quotations', async (req, res) => {
-    try {
-        const client = await pool.connect();
-        const result = await client.query(`
-            SELECT
-                q.*,
-                COALESCE(SUM(qi.total_amount), 0) as total_amount,
-                COUNT(qi.id) as item_count
-            FROM quotations q
-            LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
-            WHERE q.status = 'approved'
-            GROUP BY q.id
-            ORDER BY q.created_at DESC
-        `);
+// app.get('/approved-quotations', async (req, res) => {
+//     try {
+//         const client = await pool.connect();
+//         const result = await client.query(`
+//             SELECT
+//                 q.*,
+//                 COALESCE(SUM(qi.total_amount), 0) as total_amount,
+//                 COUNT(qi.id) as item_count
+//             FROM quotations q
+//             LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+//             WHERE q.status = 'approved'
+//             GROUP BY q.id
+//             ORDER BY q.created_at DESC
+//         `);
 
-        client.release();
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Error fetching approved quotations:', error);
-        res.status(500).json({ error: 'Failed to fetch approved quotations' });
-    }
-});
+//         client.release();
+//         res.json(result.rows);
+//     } catch (error) {
+//         console.error('Error fetching approved quotations:', error);
+//         res.status(500).json({ error: 'Failed to fetch approved quotations' });
+//     }
+// });
 
 // Approve quotation
 app.put('/api/quotations/:id/approve', async (req, res) => {
@@ -2736,15 +2911,117 @@ app.put('/api/quotations/:id/approve', async (req, res) => {
         await client.query('BEGIN');
 
         const quotationId = req.params.id;
+        const { quotation_source } = req.body;
+        console.log('sdfgh',req.body) // 'regular' or 'vk'
+
+        let quotationResult, itemsResult, quotation, itemsTable, quotationsTable;
+
+        // Determine which table to query based on quotation source
+        if (quotation_source === 'vk') {
+            quotationsTable = 'vk_quotations';
+            itemsTable = 'vk_quotation_items';
+        } else {
+            quotationsTable = 'quotations';
+            itemsTable = 'quotation_items';
+        }
+
+        // Get quotation details for PDF generation
+        quotationResult = await client.query(`
+            SELECT * FROM ${quotationsTable} WHERE id = $1
+        `, [quotationId]);
+
+        if (quotationResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Quotation not found' });
+        }
+
+        quotation = quotationResult.rows[0];
+
+        // Get quotation items
+        itemsResult = await client.query(`
+            SELECT * FROM ${itemsTable} WHERE quotation_id = $1 ORDER BY id
+        `, [quotationId]);
 
         // Update quotation status
         await client.query(
-            'UPDATE quotations SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
             ['approved', quotationId]
         );
 
-        // Log approval action (you might want to create an audit log table)
-        console.log(`Quotation ${quotationId} approved by MD`);
+        // Prepare data for PDF generation
+        const poData = {
+            poNumber: quotation.quotation_number,
+            date: quotation.quotation_date,
+            expected_date: quotation.valid_until,
+            termsOfPayment: quotation.payment_terms,
+            currency: quotation.currency,
+            company: {
+                name: quotation.company_name || 'KIET TECHNOLOGIES PRIVATE LIMITED',
+                email: quotation.company_email || 'info@kiet.com',
+                gst: quotation.company_gst || '29AAFCK6528DIZG',
+                address: quotation.company_address || '51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111',
+                logo: path.join(__dirname, 'public', 'images', 'page_logo.jpg')
+            },
+            supplier: {
+                name: quotation.client_name,
+                address: quotation.client_address,
+                duration: quotation.delivery_duration
+            },
+            shipTo: quotation.client_address,
+            reference_no: quotation.reference_no,
+            requester: {
+                name: quotation.client_name
+            },
+            items: itemsResult.rows.map(row => ({
+                part_no: row.part_no,
+                description: row.description,
+                hsn_code: row.hsn_code,
+                gst: row.gst_rate,
+                quantity: row.quantity,
+                unit: row.unit,
+                unit_price: row.unit_price,
+                discount: row.discount,
+                total: row.total_amount
+            })),
+            line: path.join(__dirname, 'public', 'images', 'line.png'),
+            signPath: path.join(__dirname, 'public', 'images', 'signature.png')
+        };
+
+        // Add VK-specific data if quotation type is VK
+        if (quotation.quotation_type === 'VK') {
+            // Fetch VK-specific data from database
+            try {
+                const vkDataResult = await client.query(`
+                    SELECT kiet_costs, pv_adaptors FROM ${quotationsTable} WHERE id = $1
+                `, [quotation.id]);
+
+                if (vkDataResult.rows.length > 0) {
+                    if (vkDataResult.rows[0].kiet_costs) {
+                        poData.kietCosts = JSON.parse(vkDataResult.rows[0].kiet_costs);
+                    }
+                    if (vkDataResult.rows[0].pv_adaptors) {
+                        poData.pvAdaptors = JSON.parse(vkDataResult.rows[0].pv_adaptors);
+                    }
+                }
+            } catch (vkError) {
+                console.error('Error fetching VK data:', vkError);
+            }
+        }
+
+        // Generate and save PDF
+        const sanitizedNumber = quotation.quotation_number.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `quotation_${sanitizedNumber}.pdf`;
+        const filePath = path.join(qtUploadsDir, fileName);
+
+        // Use the appropriate generator based on quotation type
+        if (quotation.quotation_type === 'VK') {
+            generateVKQuotation(poData, filePath);
+        } else {
+            generateQuotation(poData, filePath);
+        }
+
+        // Log approval action
+        console.log(`Quotation ${quotationId} approved by MD and PDF generated`);
 
         await client.query('COMMIT');
 
@@ -2769,11 +3046,14 @@ app.put('/api/quotations/:id/reject', async (req, res) => {
         await client.query('BEGIN');
 
         const quotationId = req.params.id;
-        const { reason } = req.body;
+        const { reason, quotation_source } = req.body;
+
+        // Determine which table to update based on quotation source
+        const quotationsTable = quotation_source === 'vk' ? 'vk_quotations' : 'quotations';
 
         // Update quotation status and add rejection reason
         await client.query(
-            'UPDATE quotations SET status = $1, notes = CONCAT(COALESCE(notes, \'\'), \'\\n\\nRejected: \', $2), updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+            `UPDATE ${quotationsTable} SET status = $1, notes = CONCAT(COALESCE(notes, ''), '\\n\\nRejected: ', $2), updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
             ['rejected', reason, quotationId]
         );
 
@@ -2792,11 +3072,204 @@ app.put('/api/quotations/:id/reject', async (req, res) => {
     }
 });
 
-// Preview quotation
 
+// Send VK quotation approval request (separate API for VK quotations)
+app.post('/api/send-vk-quotation-approval', quotationUpload.array('attachments[]'), async (req, res) => {
+    console.log('🔄 Starting send-vk-quotation-approval request');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Files received:', req.files ? req.files.length : 0);
 
-// Send quotation approval request
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // Generate unique VK quotation number
+        const quotationNumber = await client.query('SELECT generate_vk_quotation_number() as quotation_number');
+        const quotationNumberValue = quotationNumber.rows[0].quotation_number;
+        console.log('Generated VK quotation number:', quotationNumber);
+
+        // Extract form data
+        const {
+            quotationDate,
+            referenceno,
+            validUntil,
+            currency,
+            paymentTerms,
+            deliveryDuration,
+            companyName,
+            companyEmail,
+            companyGST,
+            companyAddress,
+            
+            
+            clientName,
+            clientEmail,
+            clientPhone,
+            notes
+        } = req.body;
+
+        console.log('VK Form data extracted:', req.body);
+
+        // Parse PV adaptors data (this is the main data for VK quotations)
+        const pvAdaptors = req.body.pvAdaptors ? JSON.parse(req.body.pvAdaptors) : [];
+        const kietCosts = req.body.kietCosts ? JSON.parse(req.body.kietCosts) : [];
+
+        console.log('PV Adaptors data:', pvAdaptors.length, 'adaptors');
+        console.log('KIET Costs data:', kietCosts.length, 'cost items');
+
+        // Calculate total amount from PV adaptors
+        let totalAmount = 0;
+        pvAdaptors.forEach(adaptor => {
+            const qty = parseFloat(adaptor.qty) || 0;
+            const rate = parseFloat(adaptor.rate) || 0;
+            totalAmount += qty * rate;
+        });
+        console.log('Calculated total amount from PV adaptors:', totalAmount);
+
+        // Insert VK quotation with pending approval status
+        const quotationQuery = `
+            INSERT INTO vk_quotations (
+                quotation_type, quotation_number, quotation_date, reference_no,
+                valid_until, currency, payment_terms, delivery_duration,
+                company_name, company_email, company_gst, company_address,
+                client_name, client_email, client_phone,
+                total_amount, notes, status, created_by, kiet_costs, pv_adaptors
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+            RETURNING id
+        `;
+
+        // Set default valid_until to 30 days from now if not provided
+        const defaultValidUntil = validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const quotationValues = [
+            'VK', quotationNumberValue, quotationDate || new Date().toISOString().split('T')[0], referenceno || null,
+            defaultValidUntil, currency || 'INR', paymentTerms || null, deliveryDuration || null,
+            companyName || null, companyEmail || null, companyGST || null, companyAddress || null,
+            clientName || null, clientEmail || null, clientPhone || null,
+            totalAmount, notes || null, 'pending',
+            req.session.user ? req.session.user.email : null,
+            JSON.stringify(kietCosts), JSON.stringify(pvAdaptors)
+        ];
+        console.log('Inserting VK quotation with values:', quotationValues);
+
+        const quotationResult = await client.query(quotationQuery, quotationValues);
+        const quotationId = quotationResult.rows[0].id;
+        console.log('VK quotation inserted with ID:', quotationId);
+
+        // Insert attachments
+        if (req.files && req.files.length > 0) {
+            const attachmentNotes = req.body.attachmentNotes || [];
+
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const attachmentQuery = `
+                    INSERT INTO vk_quotation_attachments (
+                        quotation_id, file_name, original_name, file_path,
+                        file_size, mime_type, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `;
+
+                const attachmentValues = [
+                    quotationId,
+                    file.filename,
+                    file.originalname,
+                    file.path,
+                    file.size,
+                    file.mimetype,
+                    attachmentNotes[i] || ''
+                ];
+
+                await client.query(attachmentQuery, attachmentValues);
+            }
+            console.log('VK quotation attachments inserted');
+        }
+
+        await client.query('COMMIT');
+        console.log('VK quotation transaction committed successfully');
+
+        // Send email notification to MD
+        console.log('Sending email notification to MD for VK quotation...');
+        const transporter = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: "No-reply@kietsindia.com",
+                pass: "Kiets@2025$1",
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const mailOptions = {
+            from: "No-reply@kietsindia.com",
+            to: "shashank@kietsindia.com", // MD email
+            subject: `VK Quotation Approval Required: ${quotationNumber}`,
+            text: `
+Hello MD,
+
+A new VK quotation has been submitted and requires your approval.
+
+📋 VK Quotation Details:
+- Quotation Number: ${quotationNumberValue}
+- Type: VK
+- Client: ${clientName}
+- Submitted by: ${req.session.user ? req.session.user.email : 'Unknown'}
+- Date: ${quotationDate}
+- PV Adaptors: ${pvAdaptors.length} items
+
+Please review and approve the VK quotation through the MD dashboard.
+
+Best regards,
+VK Quotation System
+KIET TECHNOLOGIES PVT LTD
+            `,
+            attachments: [
+                {
+                    filename: "lg.jpg",
+                    path: "public/images/lg.jpg",
+                    cid: "logoImage"
+                }
+            ]
+        };
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log("✅ VK approval request email sent to MD:", info.response);
+        } catch (err) {
+            console.error("❌ Email failed:", err);
+        }
+
+        console.log('✅ VK quotation approval request completed successfully');
+        res.json({
+            success: true,
+            message: 'VK quotation approval request sent successfully',
+            quotationNumber: quotationNumberValue,
+            quotationId: quotationId
+        });
+
+    } catch (error) {
+        console.error('❌ Error in send-vk-quotation-approval:', error);
+        console.error('Error stack:', error.stack);
+        await client.query('ROLLBACK');
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send VK quotation approval request',
+            details: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
+// Send quotation approval request (for regular quotations)
 app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'), async (req, res) => {
+    console.log('🔄 Starting send-quotation-approval request');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Files received:', req.files ? req.files.length : 0);
+
     const client = await pool.connect();
 
     try {
@@ -2805,6 +3278,7 @@ app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'),
         // Generate unique quotation number
         const quotationNumberResult = await client.query('SELECT generate_quotation_number() as quotation_number');
         const quotationNumber = quotationNumberResult.rows[0].quotation_number;
+        console.log('Generated quotation number:', quotationNumber);
 
         // Extract form data
         const {
@@ -2830,17 +3304,46 @@ app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'),
             items
         } = req.body;
 
+        console.log('Form data extracted:', { quotationType, quotationDate, clientName, items: items ? 'present' : 'missing' });
+
         // Parse items JSON
-        const itemsData = JSON.parse(items);
+        console.log('Raw items data:', items);
+        console.log('Type of items:', typeof items);
+        let itemsData;
+        try {
+            if (typeof items === 'string') {
+                itemsData = JSON.parse(items);
+            } else if (Array.isArray(items)) {
+                // If items is already an array, use it directly
+                itemsData = items;
+            } else {
+                console.error('Items is undefined or not a valid type for regular quotation');
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid items data format',
+                    details: 'Items field is missing or invalid'
+                });
+            }
+            console.log('Parsed items data:', itemsData.length, 'items');
+        } catch (parseError) {
+            console.error('Error parsing items JSON:', parseError);
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid items data format',
+                details: parseError.message
+            });
+        }
 
         // Calculate total amount
         let totalAmount = 0;
         for (const item of itemsData) {
             totalAmount += parseFloat(item.total) || 0;
         }
+        console.log('Calculated total amount:', totalAmount);
 
         // Insert quotation with pending approval status
-
         const quotationQuery = `
             INSERT INTO quotations (
                 quotation_type, quotation_number, quotation_date, reference_no,
@@ -2860,7 +3363,6 @@ app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'),
             parseFloat(taxRate) || 18, parseFloat(discountRate) || 0, totalAmount, notes, 'pending',
             req.session.user ? req.session.user.email : null
         ];
-
 
         const quotationResult = await client.query(quotationQuery, quotationValues);
         const quotationId = quotationResult.rows[0].id;
@@ -2918,8 +3420,10 @@ app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'),
         }
 
         await client.query('COMMIT');
+        console.log('Transaction committed successfully');
 
         // Send email notification to MD
+        console.log('Sending email notification to MD...');
         const transporter = nodemailer.createTransport({
             host: "smtp.office365.com",
             port: 587,
@@ -2935,7 +3439,7 @@ app.post('/api/send-quotation-approval', quotationUpload.array('attachments[]'),
 
         const mailOptions = {
             from: "No-reply@kietsindia.com",
-            to: "md@kietsindia.com", // MD email
+            to: "shashank@kietsindia.com", // MD email
             subject: `Quotation Approval Required: ${quotationNumber}`,
             text: `
 Hello MD,
@@ -2971,6 +3475,7 @@ KIET TECHNOLOGIES PVT LTD
             console.error("❌ Email failed:", err);
         }
 
+        console.log('✅ Quotation approval request completed successfully');
         res.json({
             success: true,
             message: 'Quotation approval request sent successfully',
@@ -2979,11 +3484,214 @@ KIET TECHNOLOGIES PVT LTD
         });
 
     } catch (error) {
+        console.error('❌ Error in send-quotation-approval:', error);
+        console.error('Error stack:', error.stack);
         await client.query('ROLLBACK');
-        console.error('Error sending quotation approval:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to send quotation approval request',
+            details: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
+// Send VK quotation approval request (separate API for VK quotations)
+app.post('/api/send-vk-quotation-approval', quotationUpload.array('attachments[]'), async (req, res) => {
+    console.log('🔄 Starting send-vk-quotation-approval request');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Files received:', req.files ? req.files.length : 0);
+
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // Generate unique VK quotation number
+        const now = new Date();
+        const year = now.getFullYear();
+
+        // Get the next sequence number for VK quotations
+        const seqResult = await client.query(
+            `INSERT INTO quotation_sequence (year, current_sequence)
+             VALUES ($1, 1)
+             ON CONFLICT (year) DO UPDATE SET current_sequence = quotation_sequence.current_sequence + 1
+             RETURNING current_sequence`,
+            [year]
+        );
+        const nextSeq = seqResult.rows[0].current_sequence;
+
+        console.log('Generated VK quotation number:', quotationNumberValue);
+
+        // Extract form data
+        const {
+            quotationDate,
+            referenceNo,
+            validUntil,
+            currency,
+            paymentTerms,
+            deliveryDuration,
+            companyName,
+            companyEmail,
+            companyGST,
+            companyAddress,
+            
+            
+            clientName,
+            clientEmail,
+            clientPhone,
+          
+            notes
+        } = req.body;
+
+        console.log('VK Form data extracted:', { quotationDate, clientName });
+
+        // Parse PV adaptors data (this is the main data for VK quotations)
+        const pvAdaptors = req.body.pvAdaptors ? JSON.parse(req.body.pvAdaptors) : [];
+        const kietCosts = req.body.kietCosts ? JSON.parse(req.body.kietCosts) : [];
+
+        console.log('PV Adaptors data:', pvAdaptors.length, 'adaptors');
+        console.log('KIET Costs data:', kietCosts.length, 'cost items');
+
+        // Calculate total amount from PV adaptors
+        let totalAmount = 0;
+        pvAdaptors.forEach(adaptor => {
+            const qty = parseFloat(adaptor.qty) || 0;
+            const rate = parseFloat(adaptor.rate) || 0;
+            totalAmount += qty * rate;
+        });
+        console.log('Calculated total amount from PV adaptors:', totalAmount);
+
+        // Insert VK quotation with pending approval status
+        const quotationQuery = `
+            INSERT INTO vk_quotations (
+                quotation_type, quotation_number, quotation_date, reference_no,
+                valid_until, currency, payment_terms, delivery_duration,
+                company_name, company_email, company_gst, company_address, company_phone, company_website,
+                client_name, client_email, client_phone, client_company, client_designation, client_address,
+                total_amount, notes, status, created_by, kiet_costs, pv_adaptors
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+            RETURNING id
+        `;
+
+        // Set default valid_until to 30 days from now if not provided
+        const defaultValidUntil = validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const quotationValues = [
+            'VK', quotationNumber, quotationDate || new Date().toISOString().split('T')[0], referenceNo || null,
+            defaultValidUntil, currency || 'INR', paymentTerms || null, deliveryDuration || null,
+            companyName || null, companyEmail || null, companyGST || null, companyAddress || null, 
+            clientName || null, clientEmail || null, clientPhone || null,
+            totalAmount, notes || null, 'pending',
+            req.session.user ? req.session.user.email : null,
+            JSON.stringify(kietCosts), JSON.stringify(pvAdaptors)
+        ];
+
+        const quotationResult = await client.query(quotationQuery, quotationValues);
+        const quotationId = quotationResult.rows[0].id;
+        console.log('VK quotation inserted with ID:', quotationId);
+
+        // Insert attachments
+        if (req.files && req.files.length > 0) {
+            const attachmentNotes = req.body.attachmentNotes || [];
+
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                const attachmentQuery = `
+                    INSERT INTO vk_quotation_attachments (
+                        quotation_id, file_name, original_name, file_path,
+                        file_size, mime_type, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `;
+
+                const attachmentValues = [
+                    quotationId,
+                    file.filename,
+                    file.originalname,
+                    file.path,
+                    file.size,
+                    file.mimetype,
+                    attachmentNotes[i] || ''
+                ];
+
+                await client.query(attachmentQuery, attachmentValues);
+            }
+            console.log('VK quotation attachments inserted');
+        }
+
+        await client.query('COMMIT');
+        console.log('VK quotation transaction committed successfully');
+
+        // Send email notification to MD
+        console.log('Sending email notification to MD for VK quotation...');
+        const transporter = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: "No-reply@kietsindia.com",
+                pass: "Kiets@2025$1",
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const mailOptions = {
+            from: "No-reply@kietsindia.com",
+            to: "shashank@kietsindia.com", // MD email
+            subject: `VK Quotation Approval Required: ${quotationNumber}`,
+            text: `
+Hello MD,
+
+A new VK quotation has been submitted and requires your approval.
+
+📋 VK Quotation Details:
+- Quotation Number: ${quotationNumber}
+- Type: VK
+- Client: ${clientName}
+- Submitted by: ${req.session.user ? req.session.user.email : 'Unknown'}
+- Date: ${quotationDate}
+- PV Adaptors: ${pvAdaptors.length} items
+
+Please review and approve the VK quotation through the MD dashboard.
+
+Best regards,
+VK Quotation System
+KIET TECHNOLOGIES PVT LTD
+            `,
+            attachments: [
+                {
+                    filename: "lg.jpg",
+                    path: "public/images/lg.jpg",
+                    cid: "logoImage"
+                }
+            ]
+        };
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log("✅ VK approval request email sent to MD:", info.response);
+        } catch (err) {
+            console.error("❌ Email failed:", err);
+        }
+
+        console.log('✅ VK quotation approval request completed successfully');
+        res.json({
+            success: true,
+            message: 'VK quotation approval request sent successfully',
+            quotationNumber: quotationNumber,
+            quotationId: quotationId
+        });
+
+    } catch (error) {
+        console.error('❌ Error in send-vk-quotation-approval:', error);
+        console.error('Error stack:', error.stack);
+        await client.query('ROLLBACK');
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send VK quotation approval request',
             details: error.message
         });
     } finally {
