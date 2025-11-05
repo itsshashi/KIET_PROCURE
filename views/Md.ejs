@@ -2253,10 +2253,10 @@ select {
               <button class="view" onclick="editQuotation(${quotation.id})">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved')">
+              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'vk')">
                 <i class="fas fa-check"></i> Approve
               </button>
-              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected')">
+              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'vk')">
                 <i class="fas fa-times"></i> Reject
               </button>
             </td>
@@ -2517,40 +2517,46 @@ select {
 }  // End of updateStatus function
 
 // Update quotation status
-async function updateQuotationStatus(id, status) {
-  console.log(`🔄 Frontend: Updating quotation status for id=${id}, status=${status}`);
+async function updateQuotationStatus(id, status, quotationSource = null) {
+console.log(`🔄 Frontend: Updating quotation status for id=${id}, status=${status}, source=${quotationSource}`);
 
-  try {
-    const endpoint = status === 'approved' ? `/api/quotations/${id}/approve` : `/api/quotations/${id}/reject`;
-    console.log(`🔄 Frontend: Sending request to ${endpoint}`);
+try {
+const endpoint = status === 'approved' ? `/api/quotations/${id}/approve` : `/api/quotations/${id}/reject`;
+console.log(`🔄 Frontend: Sending request to ${endpoint}`);
 
-    const res = await fetch(endpoint, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: status === 'rejected' ? JSON.stringify({ reason: 'Rejected by MD' }) : JSON.stringify({})
-    });
+const body = status === 'rejected'
+  ? JSON.stringify({ reason: 'Rejected by MD', quotation_source: quotationSource })
+  : JSON.stringify({ quotation_source: quotationSource });
 
-    console.log(`🔄 Frontend: Response received, status: ${res.status}`);
+const res = await fetch(endpoint, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: body
+});
 
-    if (res.ok) {
-      const data = await res.json();
-      console.log(`✅ Frontend: Quotation update successful`, data);
+console.log(`🔄 Frontend: Response received, status: ${res.status}`);
 
-      alert(`✅ Quotation ${id} ${status} successfully!`);
+if (res.ok) {
+  const data = await res.json();
+  console.log(`✅ Frontend: Quotation update successful`, data);
 
-      // Reload the approve quotations tab
-      if (currentTab === "approve") {
-        loadApproveQuotations();
-      }
-    } else {
-      const err = await res.json();
-      console.log(`❌ Frontend: Quotation update failed`, err);
-      alert(`❌ Failed: ${err.error || 'Unknown error'}`);
-    }
-  } catch (error) {
-    console.error(`❌ Frontend: Network error`, error);
-    alert(`❌ Network error: ${error.message}`);
+  alert(`✅ Quotation ${id} ${status} successfully!`);
+
+  // Reload the appropriate tab
+  if (currentTab === "approve") {
+    loadApproveQuotations();
+  } else if (currentTab === "vk-approve") {
+    loadVKApproveQuotations();
   }
+} else {
+  const err = await res.json();
+  console.log(`❌ Frontend: Quotation update failed`, err);
+  alert(`❌ Failed: ${err.error || 'Unknown error'}`);
+}
+} catch (error) {
+console.error(`❌ Frontend: Network error`, error);
+alert(`❌ Network error: ${error.message}`);
+}
 }
 
 // Edit order function
@@ -4032,42 +4038,6 @@ function calculateEditQuotationTotal() {
   }
 }
 
-    // Update quotation status
-    async function updateQuotationStatus(id, status) {
-  console.log(`🔄 Frontend: Quotation function called with id=${id}, status=${status}`);
-
-  try {
-    const endpoint = status === 'approved' ? `/api/quotations/${id}/approve` : `/api/quotations/${id}/reject`;
-    console.log(`🔄 Frontend: Sending request to ${endpoint}`);
-
-    const res = await fetch(endpoint, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: status === 'rejected' ? JSON.stringify({ reason: 'Rejected by MD' }) : JSON.stringify({})
-    });
-
-    console.log(`🔄 Frontend: Response received, status: ${res.status}`);
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log(`✅ Frontend: Quotation update successful`, data);
-
-      alert(`✅ Quotation ${id} ${status} successfully!`);
-
-      // Reload the approve quotations tab
-      if (currentTab === "approve") {
-        loadApproveQuotations();
-      }
-    } else {
-      const err = await res.json();
-      console.log(`❌ Frontend: Quotation update failed`, err);
-      alert(`❌ Failed: ${err.error || 'Unknown error'}`);
-    }
-  } catch (error) {
-    console.error(`❌ Frontend: Network error`, error);
-    alert(`❌ Network error: ${error.message}`);
-  }
-}
 
 // Edit order function
 async function editOrder(orderId) {
