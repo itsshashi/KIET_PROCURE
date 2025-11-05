@@ -1767,7 +1767,7 @@
                         <div class="form-actions">
                             
                             
-                            <button type="button" class="btn btn-warning" id="sendApprovalRequest" style="background-color: #ffc107; color: #1268be;">Send Approval Request</button>
+<button type="button" id="sendApprovalRequest">Send Approval Request</button>
                             
                         </div>
                     </form>
@@ -3443,14 +3443,7 @@
             });
     
 
-        // Preview button functionality
-        const previewQuotationBtn = document.getElementById('previewQuotation');
-        previewQuotationBtn.addEventListener('click', function() {
-            const form = document.getElementById('vkQuotationForm');
-            form.action = '/preview';
-            form.enctype = '';
-            form.submit();
-        });
+        
 
         // Send Approval Request button functionality
         const sendApprovalRequestBtn = document.getElementById('sendApprovalRequest');
