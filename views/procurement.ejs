@@ -2252,24 +2252,42 @@
                                 </thead>
                                 <tbody>
                                     <% const vkItems = [
-                                        { description: "Standard Housing", cost: 135459.52, qty: 1, value: 135459.52 },
-                                        { description: "Hypertek parts and pins (Wiring class-2)", cost: 2.86, qty: 350, value: 100418.42, hasClass: true },
-                                        { description: "SOK 10150", cost: 10000.00, qty: 1, value: 10000.00 },
-                                        { description: "Koaxial-Stift-Radial", cost: 4770.00, qty: 1, value: 4770.00 },
+                                        { description: "Standard Housing", cost: 135459.00, qty: 1, value: 135459.52 },
+                                        { description: "Hypertek parts and pins (Wiring class-2)", cost: 17.14, qty: 350, value: 6000.00, hasClass: true },
+                                        { description: "SOK 10150", cost: 10600, qty: 1, value: 10600 },
+                                        { description: "Koaxial-Stift-Radial", cost:4770, qty: 1, value: 4770.00 },
                                     ]; %>
 
                                     <% vkItems.forEach((item, index) => { %>
                                         <tr>
-                                            <td>
-                                                <% if (item.description.includes('SOK')) { %>
-                                                    <input type="text" name="itemDescription[]" value="<%= item.description %>" class="item-description-input" id="vk-sok-description-input">
-                                                <% } else if (item.description.includes('Hypertek')) { %>
-                                                    <input type="text" name="itemDescription[]" value="<%= item.description %>" class="item-description-input" id="vk-hypertek-description-input">
-                                                <% } else { %>
-                                                    <%= item.description %>
-                                                    <input type="hidden" name="itemDescription[]" value="<%= item.description %>">
-                                                <% } %>
-                                            </td>
+                                           <td>
+    <% 
+    // ✅ Always include itemDescription[] even for editable rows
+    if (item.description.toLowerCase().includes('sok'))
+ { 
+    %>
+        <input type="text" name="itemDescription[]" 
+               value="<%= item.description%>" 
+               class="item-description-input" 
+               id="vk-sok-description-input" 
+               placeholder="Enter SOK description">
+    <% 
+    } else if (item.description.includes('Hypertek')) { 
+    %>
+        <input type="text" name="itemDescription[]" 
+               value="<%= item.description %>" 
+               class="item-description-input" 
+               id="vk-hypertek-description-input" 
+               placeholder="Enter Hypertek details">
+    <% 
+    } else { 
+    %>
+        <%= item.description %>
+        <input type="hidden" name="itemDescription[]" value="<%= item.description %>">
+    <% } %>
+    <%  %>
+</td>
+
                                             <td>
                                                 <% if (item.hasClass) { %>
                                                     <select class="class-select" data-index="<%= index %>">
@@ -2298,7 +2316,7 @@
 
                                     <tr class="total-row">
                                         <td colspan="3"><strong>Total costs in INR (qty of 1 No.)</strong></td>
-                                        <td><span class="currency-symbol">₹</span> <span id="vk-total-costs">246,647.94</span></td>
+                                        <td><span class="currency-symbol">₹</span> <span id="vk-total-costs">15900.00</span></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Export packaging charges included</strong></td>
@@ -2354,12 +2372,13 @@
                         <div class="form-actions">
                             <button type="button" class="btn btn-warning" id="vkSendApprovalRequest" style="background-color: #ffc107; color: #212529;">Send Approval Request</button>
                         </div>
-                        </div>
+                        
 
 
                         
                         
                     </form>
+                    </div>
               
             <!-- Approved Quotation Tab -->
             <div class="tab-content" id="approved-quotation">
@@ -3515,15 +3534,21 @@
             });
 
             const kietCosts = [];
-            document.querySelectorAll('#vk .kiet-table tbody tr:not(.total-row)').forEach(row => {
-                const cost = {
-                    description: row.cells[0].textContent.trim(),
-                    cost: parseFloat(row.querySelector('input[name="priceInput[]"]').value) || 0,
-                    qty: parseFloat(row.querySelector('input[name="qtyInput[]"]').value) || 0,
-                    value: parseFloat(row.querySelector('.value-display').textContent) || 0
-                };
-                kietCosts.push(cost);
-            });
+                document.querySelectorAll('#vk .kiet-table tbody tr').forEach((row, index) => {
+                    if (index < 4) { // First 4 rows are the main items
+                        const description = row.querySelector('td:first-child').textContent.trim();
+                        const cost = parseFloat(row.querySelector('input[name="priceInput[]"]').value) || 0;
+                        const qty = parseFloat(row.querySelector('input[name="qtyInput[]"]').value) || 0;
+                        const totalValue = cost * qty;
+
+                        kietCosts.push({
+                            description: description,
+                            cost: cost,
+                            qty: qty,
+                            totalValue: totalValue
+                        });
+                    }
+                });
 
             formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
             formData.append('kietCosts', JSON.stringify(kietCosts));
@@ -3961,7 +3986,7 @@
                 }
                 closePvFamilyModal();
             }
-
+            
             // Event listeners for family name inputs within VK tab
             document.addEventListener('click', function(e) {
                 if (e.target.classList.contains('pv-family-input') && e.target.closest('#vk')) {
@@ -4034,15 +4059,17 @@
             }
 
             function updateTotalCosts() {
-                const allValueDisplays = document.querySelectorAll('#vk .value-display');
+                const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
                 let total = 0;
-                allValueDisplays.forEach(display => {
-                    if (display.closest('tr').classList.contains('total-row')) return;
-                    total += parseFloat(display.textContent) || 0;
-                });
+                for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                    const display = rows[i].querySelector('.value-display');
+                    if (display) {
+                        total += parseFloat(display.textContent) || 0;
+                    }
+                }
                 vkTotalCostsDisplay.textContent = total.toFixed(2);
             }
-            console.log(vkClassSelects);
+            console.log('sdfghsdf',vkClassSelects);
             console.log(vkQtyInputs);
 
             function updateClassCost(select) {
@@ -4454,9 +4481,25 @@
                 const kietCosts = [];
                 document.querySelectorAll('#vk .kiet-table tbody tr').forEach(row => {
                     if (!row.classList.contains('total-row')) {
+                        const descriptionCell = row.cells[0];
+                        let description = descriptionCell.textContent.trim();
+                        const input = descriptionCell.querySelector('input[name="itemDescription[]"]');
+                        if (input) {
+                            description = input.value;
+                        }
+                        let cost = '0';
+                        const qtyInput = row.querySelector('.qty-input');
+                        if (qtyInput) {
+                            cost = qtyInput.getAttribute('data-cost') || '0';
+                        } else {
+                            const priceInput = row.querySelector('.price-input');
+                            if (priceInput) {
+                                cost = priceInput.value;
+                            }
+                        }
                         const costItem = {
-                            description: row.cells[0].textContent.trim(),
-                            cost: row.querySelector('.price-input') ? row.querySelector('.price-input').value : '0',
+                            description: description,
+                            cost: cost,
                             qty: row.querySelector('.qty-input') ? row.querySelector('.qty-input').value : '1',
                             totalValue: row.querySelector('.value-display') ? row.querySelector('.value-display').textContent : '0'
                         };
@@ -4503,6 +4546,214 @@
             if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
                 initializeVKForm();
                 vkTab.setAttribute('data-initialized', 'true');
+            }
+        }
+
+        // VK KIET Table Dynamic Calculation Functions
+        function updateValue(input, valueDisplay) {
+            const cost = parseFloat(input.getAttribute('data-cost'));
+            const qty = parseFloat(input.value) || 0;
+            const value = cost * qty;
+            valueDisplay.textContent = value.toFixed(2);
+            return value;
+        }
+
+        function updateTotalCosts() {
+            const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
+            let total = 0;
+            for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                const display = rows[i].querySelector('.value-display');
+                if (display) {
+                    total += parseFloat(display.textContent) || 0;
+                }
+            }
+            const totalCostsDisplay = document.getElementById('vk-total-costs');
+            if (totalCostsDisplay) {
+                totalCostsDisplay.textContent = total.toFixed(2);
+            }
+        }
+
+        function updateClassCost(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
+            const index = select.getAttribute('data-index');
+            const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
+            const valueDisplay = document.querySelector(`#vk .value-display[data-index="${index}"]`);
+            const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
+
+            qtyInput.setAttribute('data-cost', newCost);
+            if (priceInputHidden) {
+                priceInputHidden.value = newCost.toFixed(2);
+            }
+            updateValue(qtyInput, valueDisplay);
+            updateTotalCosts();
+        }
+
+        function getClassFromQty(qty) {
+            if (qty >= 1 && qty <= 300) return 1;
+            if (qty >= 301 && qty <= 500) return 2;
+            if (qty >= 501 && qty <= 600) return 3;
+            if (qty >= 601 && qty <= 700) return 4;
+            if (qty >= 701 && qty <= 800) return 5;
+            if (qty >= 801 && qty <= 900) return 6;
+            if (qty >= 901 && qty <= 1100) return 7;
+            if (qty >= 1101 && qty <= 1200) return 8;
+            if (qty >= 1201 && qty <= 1300) return 9;
+            if (qty >= 1301 && qty <= 1400) return 10;
+            if (qty >= 1401 && qty <= 1500) return 11;
+            return 12;
+        }
+
+        function updateClassOptions() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            if (!classSelect) return;
+
+            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            let totalPvQty = 0;
+            pvQtyInputs.forEach(input => {
+                totalPvQty += parseFloat(input.value) || 0;
+            });
+
+            let prices;
+            if (totalPvQty > 2) {
+                prices = qtyAbove2Prices;
+            } else if (totalPvQty == 2) {
+                prices = qty2Prices;
+            } else {
+                prices = originalPrices;
+            }
+
+            classSelect.innerHTML = '';
+
+            prices.forEach(price => {
+                const option = document.createElement('option');
+                option.value = price.class;
+                option.setAttribute('data-cost', price.cost);
+                option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
+                classSelect.appendChild(option);
+            });
+
+            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+            const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
+            const selectedClass = getClassFromQty(hypertekQty);
+
+            if (prices.some(price => price.class == selectedClass)) {
+                classSelect.value = selectedClass;
+            } else {
+                classSelect.value = '2';
+            }
+
+            updateClassCost(classSelect);
+            updateHypertekDescription();
+        }
+
+        function updatePvRates() {
+            const totalCostsDisplay = document.getElementById('vk-total-costs');
+            const totalCosts = parseFloat(totalCostsDisplay ? totalCostsDisplay.textContent : '0') || 0;
+            const exportValue = parseFloat(document.querySelector('#vk .price-input[data-index="export"]').closest('tr').querySelector('.value-display').textContent) || 0;
+            const boxValue = parseFloat(document.querySelector('#vk .price-input[data-index="box"]').closest('tr').querySelector('.value-display').textContent) || 0;
+            const totalRate = totalCosts + exportValue + boxValue;
+
+            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            let totalPvQty = 0;
+            pvQtyInputs.forEach(input => {
+                totalPvQty += parseFloat(input.value) || 0;
+            });
+            const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
+            const pvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
+            pvRateInputs.forEach(input => {
+                input.value = unitRate.toFixed(2);
+                const qtyInput = input.closest('tr').querySelector('.pv-adaptor-qty-input');
+                const valueDisplay = input.closest('tr').querySelector('.pv-value-display');
+                updatePvValue(qtyInput, input, valueDisplay);
+            });
+        }
+
+        function updatePvValue(qtyInput, rateInput, valueDisplay) {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            const value = qty * rate;
+            valueDisplay.textContent = value.toFixed(2);
+            updatePvTotal();
+        }
+
+        function updatePvTotal() {
+            const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
+            let total = 0;
+            pvValueDisplays.forEach(display => {
+                total += parseFloat(display.textContent) || 0;
+            });
+            const pvTotalAmount = document.getElementById('vk-pv-total-amount');
+            if (pvTotalAmount) {
+                pvTotalAmount.textContent = total.toFixed(2);
+            }
+        }
+
+        function addPvRow() {
+            const vkPvTableBody = document.getElementById('vkPvTableBody');
+            if (!vkPvTableBody) return;
+
+            const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
+            const newRow = document.createElement('tr');
+            newRow.className = 'pv-row';
+            newRow.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
+                <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
+                <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
+                <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
+                <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
+                <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
+                <td><div style="display: flex; align-items: center;"><span class="currency-symbol">${currencySymbol}</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
+                <td><span class="currency-symbol">${currencySymbol}</span> <span class="pv-value-display">0.00</span></td>
+            `;
+            vkPvTableBody.appendChild(newRow);
+
+            const newQtyInput = newRow.querySelector('.pv-qty-input');
+            const newRateInput = newRow.querySelector('.pv-rate-input');
+            const newValueDisplay = newRow.querySelector('.pv-value-display');
+            const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
+
+            newQtyInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+            });
+
+            newRateInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+            });
+
+            newPvAdaptorQtyInput.addEventListener('input', function() {
+                updateClassOptions();
+            });
+
+            updateClassOptions();
+            updatePvRates();
+        }
+
+        function updateSokDescription() {
+            const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
+            const sokDescriptionInput = document.getElementById('vk-sok-description-input');
+            if (!sokDescriptionInput) return;
+
+            let sokValue = '';
+            sokCardInputs.forEach(input => {
+                if (input.value.trim()) {
+                    sokValue = input.value.trim();
+                }
+            });
+            if (sokValue) {
+                sokDescriptionInput.value = `SOK ${sokValue}`;
+            } else {
+                sokDescriptionInput.value = 'SOK 10150';
+            }
+        }
+
+        function updateHypertekDescription() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
+            if (classSelect && hypertekDescriptionInput) {
+                const selectedClass = classSelect.value;
+                hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
             }
         }
 
