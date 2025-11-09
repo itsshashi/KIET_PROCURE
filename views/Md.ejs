@@ -5305,7 +5305,7 @@ const modal = new bootstrap.Modal(document.getElementById('editModal'));
   async function loadCostOrders() {
     try {
       console.log("Fetching cost orders...");
-      const res = await fetch('http://localhost:3000/api/orders');
+      const res = await fetch('/api/orders');
       if (!res.ok) throw new Error('Failed to fetch orders.');
 
       window.allCostOrders = await res.json();
