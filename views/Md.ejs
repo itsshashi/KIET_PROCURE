@@ -1284,7 +1284,7 @@ select {
               </div>
             </div>
 
-            <!-- VK Specific Section -->
+          <!-- VK Specific Section -->
             <div class="form-section " style="margin-bottom: 30px;
     padding-bottom: 20px;
     border-bottom: 1px solid #eee;">
@@ -1298,9 +1298,10 @@ select {
                     <th>Price Agreement Costs</th>
                     <th>Total Qty</th>
                     <th id="totalValueHeader">Total Value in INR</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="kietTableBody">
                   <% const items = [
                     { description: "Standard Housing", cost: 135459.52, qty: 1, value: 135459.52 },
                     { description: "Hypertek parts and pins (Wiring class-2)", cost: 2.86, qty: 35000, value: 100418.42, hasClass: true },
@@ -1309,7 +1310,7 @@ select {
                   ]; %>
 
                   <% items.forEach((item, index) => { %>
-                    <tr>
+                    <tr class="kiet-row">
                       <td>
                         <% if (item.description.includes('SOK')) { %>
                           <input style="width: 100%;
@@ -1364,6 +1365,11 @@ select {
     font-size: 16px;
     transition: border 0.3s;" id="numb" type="number" step="1" value="<%= item.qty %>" data-cost="<%= item.cost %>" data-index="<%= index %>" class="qty-input" name="qtyInput[]"></td>
                       <td><span class="currency-symbol">₹</span> <span class="value-display"><%= item.value.toFixed(2) %></span></td>
+                      <td class="text-center">
+                        <button type="button" class="delete-kiet-row btn btn-danger btn-small" title="Delete Row">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
                     </tr>
                   <% }); %>
 
@@ -1653,9 +1659,18 @@ select {
         <div class="bg-gray-50 p-4 rounded-lg border mb-4">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Client Company Details</h3>
           <div class="grid grid-cols-1 gap-3">
-            <p class="text-sm text-gray-700"><strong>Name:</strong> <span id="editQuotationClientCompanyName">${order.company_name || ''}</span></p>
-            <p class="text-sm text-gray-700"><strong>Address:</strong> <span id="editQuotationClientCompanyAddress">${order.company_address || ''}</span></p>
-            <p class="text-sm text-gray-700"><strong>GST:</strong> <span id="editQuotationClientCompanyGst">${order.company_gst || ''}</span></p>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <input type="text" id="editQuotationClientCompanyName" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Company Address</label>
+              <textarea id="editQuotationClientCompanyAddress" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Company GST</label>
+              <input type="text" id="editQuotationClientCompanyGst" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+            </div>
           </div>
         </div>
 
@@ -1678,8 +1693,7 @@ select {
             <p class="text-sm text-gray-700"><strong>Client Name:</strong> <span id="editQuotationClientName">${order.client_name || ''}</span></p>
             <p class="text-sm text-gray-700"><strong>Client Email:</strong> <span id="editQuotationClientEmail">${order.client_email || ''}</span></p>
             <p class="text-sm text-gray-700"><strong>Client Phone:</strong> <span id="editQuotationClientPhone">${order.client_phone || ''}</span></p>
-            <p class="text-sm text-gray-700"><strong>Client Company:</strong> <span id="editQuotationClientCompany">${order.client_company || ''}</span></p>
-            <p class="text-sm text-gray-700"><strong>Client Address:</strong> <span id="editQuotationClientAddress">${order.client_address || ''}</span></p>
+            
           </div>
         </div>
 
@@ -1696,39 +1710,88 @@ select {
         </div>
 
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Quotation Items</label>
-          <table class="product-table min-w-full text-sm text-left border border-gray-300 rounded" id="editQuotationTable">
+        <!-- KIET Cost Calculations Section (only for VK quotations) -->
+        <div id="editKietSection" style="display: none;">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">KIET Cost Calculations</h3>
+          <p class="text-sm text-gray-600 mb-4">As per Price Agreement - Document No: <strong>con_GPAG_PU14_54808</strong></p>
+
+          <table class="kiet-table min-w-full text-sm text-left border border-gray-300 rounded" id="editKietTable">
             <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
               <tr>
-                <th class="px-6 py-3 border">SL No</th>
-                <th class="px-6 py-3 border">Part No</th>
-                <th class="px-6 py-3 border">Description</th>
-                <th class="px-6 py-3 border">HSN Code</th>
-                <th class="px-6 py-3 border">Quantity</th>
-                <th class="px-6 py-3 border">Unit Price (₹)</th>
-                <th class="px-6 py-3 border">GST %</th>
-                <th class="px-6 py-3 border">Unit</th>
-                <th class="px-6 py-3 border">Discount</th>
-                <th class="px-6 py-3 border">Total (₹)</th>
+                <th class="px-6 py-3 border">Item Description</th>
+                <th class="px-6 py-3 border">Price Agreement Costs</th>
+                <th class="px-6 py-3 border">Total Qty</th>
+                <th class="px-6 py-3 border">Total Value in INR</th>
                 <th class="px-6 py-3 border">Actions</th>
               </tr>
             </thead>
-            <tbody id="editQuotationTableBody">
-              <!-- Rows will be dynamically populated -->
+            <tbody id="editKietTableBody">
+              <!-- KIET rows will be dynamically populated -->
             </tbody>
-            <tfoot id="editQuotationTableFooter" class="bg-gray-100">
-              <tr>
-                <td colspan="10" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
-                <td class="px-4 py-2 border font-bold text-lg" id="editQuotationGrandTotal">₹0.00</td>
-              </tr>
-            </tfoot>
           </table>
+
         </div>
+        <div id="editPvAdaptors" style="display: none;">
+           <h3 class="text-lg font-semibold text-gray-800 mb-3">PV Wiring Adaptor Details</h3>
+          <hr>
+
+          <table class="kiet-table min-w-full text-sm text-left border border-gray-300 rounded" id="editKietTable">
+            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+              <tr>
+                <th class="px-6 py-3 border">FAMILY NAME</th>
+                <th class="px-6 py-3 border">REV NO</th>
+                <th class="px-6 py-3 border">SOK CARD</th>
+                <th class="px-6 py-3 border">SOK QTY</th>
+                <th class="px-6 py-3 border">COAXIAL PIN</th>
+                <th class="px-6 py-3 border">Qty</th>
+                <th class="px-6 py-3 border">RATE</th>
+              </tr>
+            </thead>
+            <tbody id="editPvAdaptorsTable">
+              <!-- KIET rows will be dynamically populated -->
+            </tbody>
+          </table>
+
+
+
+
+
+
+        </div>
+
+        <div id="items_table">
+           <label class="block text-sm font-medium text-gray-700 mb-1">Quotation Items</label>
+           <table class="product-table min-w-full text-sm text-left border border-gray-300 rounded" id="editQuotationTable">
+             <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+               <tr>
+                 <th class="px-6 py-3 border">SL No</th>
+                 <th class="px-6 py-3 border">Part No</th>
+                 <th class="px-6 py-3 border">Description</th>
+                 <th class="px-6 py-3 border">HSN Code</th>
+                 <th class="px-6 py-3 border">Quantity</th>
+                 <th class="px-6 py-3 border">Unit Price (₹)</th>
+                 <th class="px-6 py-3 border">GST %</th>
+                 <th class="px-6 py-3 border">Unit</th>
+                 <th class="px-6 py-3 border">Discount</th>
+                 <th class="px-6 py-3 border">Total (₹)</th>
+                 <th class="px-6 py-3 border">Actions</th>
+               </tr>
+             </thead>
+             <tbody id="editQuotationTableBody">
+               <!-- Rows will be dynamically populated -->
+             </tbody>
+             <tfoot id="editQuotationTableFooter" class="bg-gray-100">
+               <tr>
+                 <td colspan="10" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
+                 <td class="px-4 py-2 border font-bold text-lg" id="editQuotationGrandTotal">₹0.00</td>
+               </tr>
+             </tfoot>
+           </table>
+         </div>
 
 
         <!-- Attachments Display -->
-        <div class="mt-6 p-4 border border-gray-300 rounded bg-gray-50">
+        <div class="mt-6 p-4 border border-gray-300 rounded bg-gray-50" style="display: none;">
           <label class="block text-sm font-medium text-gray-700 mb-3">Attachments</label>
           <div id="editQuotationAttachmentsDisplay" class="space-y-2"></div>
         </div>
@@ -2250,7 +2313,7 @@ select {
             <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
             <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
             <td class="actions">
-              <button class="view" onclick="editQuotation(${quotation.id})">
+              <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
                 <i class="fas fa-edit"></i> Edit
               </button>
               <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'vk')">
@@ -3003,6 +3066,130 @@ function calculateEditQuotationTotal() {
   });
 
   document.getElementById('editQuotationGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+}
+
+// KIET table functions for edit quotation modal
+function populateEditKietTable(kietItems = []) {
+  const tbody = document.getElementById('editKietTableBody');
+  tbody.innerHTML = '';
+
+  if (kietItems && kietItems.length > 0) {
+    kietItems.forEach((item, index) => {
+      addEditKietRow(item, index + 1);
+    });
+  } else {
+    // Add default KIET rows if no items
+    const defaultItems = [
+      { description: "Standard Housing", cost: 135459.52, qty: 1, value: 135459.52 },
+      { description: "Hypertek parts and pins (Wiring class-2)", cost: 213.33, qty: 35000, value: 7466550.00 },
+      { description: "SOK 10150", cost: 10000.00, qty: 1, value: 10000.00 },
+      { description: "Koaxial-Stift-Radial", cost: 4770.00, qty: 1, value: 4770.00 }
+    ];
+    defaultItems.forEach((item) => {
+      addEditKietRow(item);
+    });
+  }
+}
+
+
+
+function populateEditPvAdaptor(pv_adaptors=[]) {
+  const tbody = document.getElementById('editPvAdaptorsTable');
+  tbody.innerHTML = '';
+
+  if (pv_adaptors && pv_adaptors.length > 0) {
+    pv_adaptors.forEach((item) => {
+      addEditPvRow(item );
+      console.log('itemsssssss',item);
+    });
+  } else {
+    // Add default KIET rows if no items
+    alert('your pv adaptor details is not communicatable');
+  }
+} 
+
+
+
+
+
+
+function addEditPvRow(item = null) {
+  const tbody = document.getElementById('editPvAdaptorsTable');
+  if (!tbody) {
+    console.error("❌ PV Adaptors table body not found (#editPvAdaptorsTable)");
+    return;
+  }
+
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td class="px-6 py-3 border">${item?.familyName || ''}</td>
+    <td class="px-6 py-3 border">${item?.revNo || ''}</td>
+    <td class="px-6 py-3 border">${item?.sokCard || ''}</td>
+    <td class="px-6 py-3 border">${item?.sokQty || ''}</td>
+    <td class="px-6 py-3 border">${item?.coaxialPin || ''}</td>
+     <td class="px-6 py-3 border">${item?.qty || ''}</td>
+    <td class="px-6 py-3 border">${item?.rate || ''}</td>
+   
+
+  `;
+  tbody.appendChild(row);
+}
+
+
+function addEditKietRow(item = null, slNo = null) {
+  const tbody = document.getElementById('editKietTableBody');
+  const row = document.createElement('tr');
+
+  if (!slNo) {
+    const rows = tbody.querySelectorAll('tr');
+    slNo = rows.length + 1;
+  }
+  
+  row.innerHTML = `
+    <td class="px-6 py-3 border">
+      ${item ? item.description || '' : ''}
+    </td>
+    <td class="px-6 py-3 border">
+      
+      <div class="flex items-center">
+        <span class="currency-symbol">₹</span>
+        <input type="number" step="0.01" class="w-full border border-gray-300 p-1 text-sm edit-kiet-cost" value="${item ? item.cost || '' : ''}" placeholder="Cost">
+      </div>
+    </td>
+    <td class="px-6 py-3 border">
+      <input type="number" step="1" class="w-full border border-gray-300 p-1 text-sm edit-kiet-qty" value="${item ? item.qty || '' : ''}" placeholder="Qty">
+    </td>
+    <td class="px-6 py-3 border">
+      <span class="currency-symbol">₹</span>
+      <span class="edit-kiet-value">${item ? item.value || '0.00' : '0.00'}</span>
+    </td>
+    <td class="px-6 py-3 border text-center">
+      <button type="button" class="text-red-500 hover:text-red-700 delete-edit-kiet-row" title="Delete Row">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+
+  tbody.appendChild(row);
+  calculateEditKietRowValue(row);
+
+  // Add event listeners
+  row.querySelector('.delete-edit-kiet-row').addEventListener('click', function() {
+    row.remove();
+  });
+
+  row.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() {
+      calculateEditKietRowValue(row);
+    });
+  });
+}
+
+function calculateEditKietRowValue(row) {
+  const cost = parseFloat(row.querySelector('.edit-kiet-cost').value) || 0;
+  const qty = parseFloat(row.querySelector('.edit-kiet-qty').value) || 0;
+  const value = cost * qty;
+  row.querySelector('.edit-kiet-value').textContent = value.toFixed(2);
 }
 
 
@@ -4083,52 +4270,108 @@ async function editOrder(orderId) {
     alert('Failed to load order details. Please try again.');
   }
 }
-
 // Edit quotation function
-async function editQuotation(orderId) {
+async function editQuotation(orderId, type) {
   currentEditId = orderId;
+  let typ=encodeURIComponent(type)
+  console.log("sdfghj",type);
+  
+  
+  
 
   try {
+    
     // Fetch quotation details
-    const orderResponse = await fetch(`/api/quotations/${orderId}/details`);
+    const orderResponse = await fetch(`/api/quotations/${orderId}/details/${type}`);
     if (!orderResponse.ok) throw new Error('Failed to fetch quotation details');
     const order = await orderResponse.json();
     console.log('Quotation details:', order);
+    let src=true;
 
     // Fetch product items for this quotation
     const itemsResponse = await fetch(`/api/quotations/${orderId}/items`);
     const items = itemsResponse.ok ? await itemsResponse.json() : [];
+    if (type=="Trade & Services"){
+    document.getElementById("items_table").style.display='block';
+    document.getElementById("editPvAdaptors").style.display="none";
+    
+    
+    
+    
+    
+    console.log("Boolean ",src)
 
     // Fetch attachments for this quotation
     const attachmentsResponse = await fetch(`/api/quotations/${orderId}/attachments`);
     const attachments = attachmentsResponse.ok ? await attachmentsResponse.json() : [];
     console.log('Quotation attachments:', attachments);
+    
+    }
+    console.log("fghjkfhgjkgfvhjkgfhbj",order.created_at ? new Date(order.quotation_date).toLocaleDateString() : '');
 
     // Populate form fields
-    document.getElementById('editQuotationProjectName').textContent = order.project_name || order.project || '';
-    document.getElementById('editQuotationProjectCode').textContent = order.projectcodenumber || '';
-    document.getElementById('editQuotationClientCompanyName').textContent = order.companyname || '';
+    document.getElementById('editQuotationProjectName').textContent = order.quotationnumber || order.project || '';
+    document.getElementById('editQuotationProjectCode').textContent = order.quotationnumber || '';
+    document.getElementById('editQuotationClientCompanyName').value= order.companyname || '';
     document.getElementById('editQuotationClientCompanyAddress').textContent = order.companyaddress || '';
-    document.getElementById('editQuotationClientCompanyGst').textContent = order.companygst || '';
+    document.getElementById('editQuotationClientCompanyGst').value = order.companygst || '';
     document.getElementById('editQuotationType').textContent = order.quotationtype || '';
-    document.getElementById('editQuotationDate').textContent = order.quotationdate ? new Date(order.quotation_date).toLocaleDateString() : '';
+    document.getElementById('editQuotationDate').textContent = order.created_at ? new Date(order.created_at).toLocaleDateString() : '';
     document.getElementById('editReferenceNo').textContent = order.referenceno || '';
-    document.getElementById('editValidUntil').textContent = order.valid_until ? new Date(order.valid_until).toLocaleDateString() : '';
+    document.getElementById('editValidUntil').textContent = order.validuntil ? new Date(order.validuntil).toLocaleDateString() : '';
     document.getElementById('editCurrency').textContent = order.currency || '';
     document.getElementById('editPaymentTerms').textContent = order.paymentterms || '';
     document.getElementById('editDeliveryDuration').textContent = order.deliveryduration || '';
     document.getElementById('editQuotationClientName').textContent = order.clientname || '';
     document.getElementById('editQuotationClientEmail').textContent = order.clientemail || '';
     document.getElementById('editQuotationClientPhone').textContent = order.clientphone || '';
-    document.getElementById('editQuotationClientCompany').textContent = order.clientcompany || '';
-    document.getElementById('editQuotationClientAddress').textContent = order.clientaddress || '';
-    document.getElementById('editTaxRate').textContent = order.taxrate || '';
-    document.getElementById('editDiscountRate').textContent = order.discountrate || '';
+    
+    document.getElementById('editTaxRate').textContent = order.taxrate || 'N/A';
+    document.getElementById('editDiscountRate').textContent = order.discountrate || 'N/A';
     document.getElementById('editQuotationTotalAmount').textContent = order.totalamount || '';
 
     // Populate quotation table with fetched items
     populateEditQuotationTable(order, items);
 
+    // Check if VK quotation and show KIET section
+    
+    const kietSection = document.getElementById('editKietSection');
+    if (order.quotationtype === 'VK') {
+    
+    
+    const pv_adaptors = document.getElementById('editPvAdaptors');
+
+
+      src=true;
+      kietSection.style.display = 'block';
+      pv_adaptors.style.display = "block";
+      document.getElementById("items_table").style.display='none';
+      // Parse KIET costs from the quotation details
+      let kietItems = [];
+      let pvAdaptor =[];
+      if (order.kiet_costs) {
+        try {
+          kietItems = typeof order.kiet_costs === 'string' ? JSON.parse(order.kiet_costs) : order.kiet_costs;
+          pvAdaptor = typeof order.pv_adaptors ==='string' ? JSON.parse(order.pv_adaptors):order.pv_adaptors;
+          console.log("pv adaptors items are",pvAdaptor)
+          
+        } catch (e) {
+          console.error('Error parsing KIET costs:', e);
+          kietItems = [];
+        }
+      }
+      populateEditKietTable(kietItems);
+      populateEditPvAdaptor(pvAdaptor);
+      
+      
+    } else {
+      kietSection.style.display = 'none';
+    }
+    console.log('fghjgybhunjmtgbhnjmkbghnjm: src state',src)
+    if (src==false){
+    document.getElementById("items_table");
+    console.log('')
+    
 
     // Display attachments with preview
     function renderAttachmentPreview(attachment) {
@@ -4177,111 +4420,8 @@ async function editQuotation(orderId) {
       }
     }
     displayAttachments(attachments);
-
-    document.getElementById('editQuotationModal').classList.remove('hidden');
-  } catch (error) {
-    console.error('Error fetching quotation details:', error);
-    alert('Failed to load quotation details. Please try again.');
   }
-}
-
-// Edit quotation function
-async function editQuotation(orderId) {
-  currentEditId = orderId;
-
-  try {
-    // Fetch quotation details
-    const orderResponse = await fetch(`/api/quotations/${orderId}/details`);
-    if (!orderResponse.ok) throw new Error('Failed to fetch quotation details');
-    const order = await orderResponse.json();
-    console.log('Quotation details:', order);
-
-    // Fetch product items for this quotation
-    const itemsResponse = await fetch(`/api/quotations/${orderId}/items`);
-    const items = itemsResponse.ok ? await itemsResponse.json() : [];
-
-    // Fetch attachments for this quotation
-    const attachmentsResponse = await fetch(`/api/quotations/${orderId}/attachments`);
-    const attachments = attachmentsResponse.ok ? await attachmentsResponse.json() : [];
-    console.log('Quotation attachments:', attachments);
-
-    // Populate form fields
-    document.getElementById('editQuotationProjectName').textContent = order.project_name || order.project || '';
-    document.getElementById('editQuotationProjectCode').textContent = order.projectcodenumber || '';
-    document.getElementById('editQuotationClientCompanyName').textContent = order.companyname || '';
-    document.getElementById('editQuotationClientCompanyAddress').textContent = order.companyaddress || '';
-    document.getElementById('editQuotationClientCompanyGst').textContent = order.companygst || '';
-    document.getElementById('editQuotationType').textContent = order.quotationtype || '';
-    document.getElementById('editQuotationDate').textContent = order.quotationdate ? new Date(order.quotation_date).toLocaleDateString() : '';
-    document.getElementById('editReferenceNo').textContent = order.referenceno || '';
-    document.getElementById('editValidUntil').textContent = order.valid_until ? new Date(order.valid_until).toLocaleDateString() : '';
-    document.getElementById('editCurrency').textContent = order.currency || '';
-    document.getElementById('editPaymentTerms').textContent = order.paymentterms || '';
-    document.getElementById('editDeliveryDuration').textContent = order.deliveryduration || '';
-    document.getElementById('editQuotationClientName').textContent = order.clientname || '';
-    document.getElementById('editQuotationClientEmail').textContent = order.clientemail || '';
-    document.getElementById('editQuotationClientPhone').textContent = order.clientphone || '';
-    document.getElementById('editQuotationClientCompany').textContent = order.clientcompany || '';
-    document.getElementById('editQuotationClientAddress').textContent = order.clientaddress || '';
-    document.getElementById('editTaxRate').textContent = order.taxrate || '';
-    document.getElementById('editDiscountRate').textContent = order.discountrate || '';
-    document.getElementById('editQuotationTotalAmount').textContent = order.totalamount || '';
-
-
-
-    // Populate quotation table with fetched items
-    populateEditQuotationTable(order, items);
-
-    // Populate notes display (non-editable)
  
-
-    // Display attachments with preview
-   function renderAttachmentPreview(attachment) {
-  const fileExtension = attachment.original_name?.split('.').pop()?.toLowerCase() || '';
-  const fileUrl = `/uploads/quotations/${attachment.file_name}`;
-  const openFile = `onclick="window.open('${fileUrl}', '_blank')"`;
-
-  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension);
-  const isPdf = fileExtension === 'pdf';
-
-  let previewHtml = '';
-  if (isImage) {
-    previewHtml = `<img src="${fileUrl}" alt="${attachment.original_name}" title="${attachment.original_name}" class="max-w-32 max-h-32 object-cover rounded border cursor-pointer" ${openFile}>`;
-  } else if (isPdf) {
-    previewHtml = `<iframe src="${fileUrl}" class="w-32 h-32 border rounded cursor-pointer" ${openFile}></iframe>`;
-  } else {
-    previewHtml = `<div class="w-32 h-32 border rounded bg-gray-100 flex items-center justify-center cursor-pointer" ${openFile}>
-      <i class="fas fa-file text-2xl text-gray-500"></i>
-    </div>`;
-  }
-
-  const sizeKb = attachment.file_size ? (attachment.file_size / 1024).toFixed(1) : 'N/A';
-  const notes = attachment.notes || '';
-
-  return `
-    <div class="attachment-item flex items-center gap-3 p-3 bg-white rounded border">
-      ${previewHtml}
-      <div class="flex-1">
-        <a href="${fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">${attachment.original_name}</a>
-        <div class="text-sm text-gray-500">${notes}</div>
-        <div class="text-xs text-gray-400">Size: ${sizeKb} KB</div>
-      </div>
-    </div>
-  `;
-}
-
-function displayAttachments(attachments, containerId = 'editQuotationAttachmentsDisplay') {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  if (attachments && attachments.length > 0) {
-    const html = attachments.map(renderAttachmentPreview).join('');
-    container.innerHTML = html;
-  } else {
-    container.innerHTML = '<div class="text-gray-500 italic">No attachments available.</div>';
-  }
-}
-    displayAttachments(attachments);
 
     document.getElementById('editQuotationModal').classList.remove('hidden');
   } catch (error) {
@@ -4521,6 +4661,64 @@ function calculateEditTotal() {
     alert("Something went wrong");
   }
 }
+
+
+//shows edit modal and fills data from md table
+const modal = new bootstrap.Modal(document.getElementById('editModal'));
+  const editButtons = document.querySelectorAll('.edit-btn');
+  const saveBtn = document.getElementById('saveBtn');
+
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+
+      // Fetch data for that ID
+      const res = await fetch(`/quotations/${id}`);
+      const data = await res.json();
+
+      // Fill modal inputs
+      document.getElementById('quotationId').value = data.id;
+      document.getElementById('quotation_number').value = data.quotation_number;
+      document.getElementById('company_name').value = data.company_name;
+      document.getElementById('total_amount').value = data.total_amount;
+      document.getElementById('status').value = data.status;
+
+      modal.show();
+    });
+  });
+
+  // Save changes
+  saveBtn.addEventListener('click', async () => {
+    const id = document.getElementById('quotationId').value;
+    const body = {
+      quotation_number: document.getElementById('quotation_number').value,
+      company_name: document.getElementById('company_name').value,
+      total_amount: document.getElementById('total_amount').value,
+      status: document.getElementById('status').value
+    };
+
+    const res = await fetch(`/quotations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      // Update row in table instantly
+      const row = document.getElementById(`row-${id}`);
+      row.querySelector('.qnum').innerText = result.quotation.quotation_number;
+      row.querySelector('.company').innerText = result.quotation.company_name;
+      row.querySelector('.total').innerText = result.quotation.total_amount;
+      row.querySelector('.status').innerText = result.quotation.status;
+
+      modal.hide();
+    } else {
+      alert("Failed to update quotation");
+    }
+  });
+
 
   </script>
 </body>
