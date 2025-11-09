@@ -17,6 +17,7 @@ import cors from "cors";
 import bcrypt from "bcrypt";
 import generateQuotation from "./trade.js";
 import generateVKQuotation from "./vk.js";
+import { query } from "express-validator";
 
 // =============================
 // CONFIG
@@ -2848,28 +2849,89 @@ app.get("/api/quotations/:id/items", async (req, res) => {
 });
 
 // Get complete quotation details by ID
-app.get("/api/quotations/:id/details", async (req, res) => {
+app.get("/api/quotations/:id/details/:type", async (req, res) => {
+  console.log("FULL URL:", req.originalUrl);
+  console.log("QUERY:", req.query);
+  console.log("PARAMS:", req.params);
+
+  console.log(" sourceeee", req.query);
   try {
     const { id } = req.params;
-    const { source } = req.query; // 'regular' or 'vk'
+    const source = req.params["type"];
+    console.log("souceeee", source); // 'regular' or 'vk'
+
     const client = await pool.connect();
 
-    let quotationsTable, itemsTable, attachmentsTable;
+    let quotationsTable, vkitems, itemsTable, attachmentsTable;
 
     // Determine which tables to query based on source
-    if (source === "vk") {
+    if (source === "VK") {
       quotationsTable = "vk_quotations";
-      itemsTable = "vk_quotation_items";
-      attachmentsTable = "vk_quotation_attachments";
+
+      const quotationResult = await client.query(
+        `
+            SELECT
+                id,
+                quotation_type as quotationType,
+                quotation_number as quotationNumber,
+                quotation_date as quotationDate,
+                reference_no as referenceNo,
+                valid_until as validUntil,
+                currency,
+                payment_terms as paymentTerms,
+                delivery_duration as deliveryDuration,
+                company_name as companyName,
+                company_email as companyEmail,
+                company_gst as companyGST,
+                company_address as companyAddress,
+                client_name as clientName,
+                client_email as clientEmail,
+                client_phone as clientPhone,
+                
+                
+                total_amount as totalAmount,
+                notes,
+                status,
+                created_at,
+                updated_at,
+                kiet_costs,
+                pv_adaptors
+            FROM ${quotationsTable}
+            WHERE id = $1
+        `,
+        [id]
+      );
+      console.log(
+        "ghjkvbnvbhjkvhbhjguhbjdsiuchbjdeshubjdshcxbjn dsxhbjn dxh",
+        JSON.stringify(quotationResult.rows[0])
+      );
+      const alli = await client.query(
+        `SELECT * FROM vk_quotations WHERE id =$1`,
+        [id]
+      );
+      console.log("all rows   lll", alli.rows[0]["pv_adaptors"]);
+      if (quotationResult.rows.length === 0) {
+        client.release();
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+
+      const quotation = quotationResult.rows[0];
+
+      client.release();
+
+      const quotationDetails = {
+        ...quotation,
+        items: quotationResult.rows,
+        quotation_source: source || "regular",
+      };
+
+      res.json(quotationDetails);
     } else {
       quotationsTable = "quotations";
       itemsTable = "quotation_items";
       attachmentsTable = "quotation_attachments";
-    }
-
-    // Get quotation main details
-    const quotationResult = await client.query(
-      `
+      const quotationResult = await client.query(
+        `
             SELECT
                 id,
                 quotation_type as quotationType,
@@ -2895,25 +2957,15 @@ app.get("/api/quotations/:id/details", async (req, res) => {
                 notes,
                 status,
                 created_at,
-                updated_at,
-                kiet_costs,
-                pv_adaptors
-            FROM ${quotationsTable}
+                updated_at
+                
+            FROM "quotations"
             WHERE id = $1
         `,
-      [id]
-    );
-
-    if (quotationResult.rows.length === 0) {
-      client.release();
-      return res.status(404).json({ error: "Quotation not found" });
-    }
-
-    const quotation = quotationResult.rows[0];
-
-    // Get quotation items
-    const itemsResult = await client.query(
-      `
+        [id]
+      );
+      const itemsResult = await client.query(
+        `
             SELECT
                 id,
                 part_no as partNo,
@@ -2929,12 +2981,12 @@ app.get("/api/quotations/:id/details", async (req, res) => {
             WHERE quotation_id = $1
             ORDER BY id
         `,
-      [id]
-    );
+        [id]
+      );
 
-    // Get quotation attachments
-    const attachmentsResult = await client.query(
-      `
+      // Get quotation attachments
+      const attachmentsResult = await client.query(
+        `
             SELECT
                 id,
                 file_name,
@@ -2948,20 +3000,25 @@ app.get("/api/quotations/:id/details", async (req, res) => {
             WHERE quotation_id = $1
             ORDER BY uploaded_at DESC
         `,
-      [id]
-    );
+        [id]
+      );
+      const quotation = quotationResult.rows[0];
+      client.release();
 
-    client.release();
+      // Combine all data
+      const quotationDetails = {
+        ...quotation,
+        items: itemsResult.rows,
+        attachments: attachmentsResult.rows,
+        quotation_source: source || "regular",
+      };
 
-    // Combine all data
-    const quotationDetails = {
-      ...quotation,
-      items: itemsResult.rows,
-      attachments: attachmentsResult.rows,
-      quotation_source: source || "regular",
-    };
+      res.json(quotationDetails);
+    }
 
-    res.json(quotationDetails);
+    // Get quotation main details
+
+    // Get quotation items
   } catch (error) {
     console.error("Error fetching quotation details:", error);
     res.status(500).json({ error: "Failed to fetch quotation details" });
