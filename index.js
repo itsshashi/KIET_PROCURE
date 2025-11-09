@@ -3946,5 +3946,191 @@ KIET TECHNOLOGIES PVT LTD
   }
 );
 
+// info added to database and generate the quotation for md created by md
+
+app.post("/md/trade_generation", upload.none(), async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Generate new quotation number
+    const quotationNumberResult = await client.query(
+      "SELECT generate_quotation_number() AS quotation_number"
+    );
+    const quotationNumber = quotationNumberResult.rows[0].quotation_number;
+    console.log("Generated quotation number:", quotationNumber);
+
+    // Extract fields from form
+    const {
+      quotationType,
+      quotationDate,
+      referenceNo,
+      validUntil,
+      currency,
+      paymentTerms,
+      deliveryDuration,
+      companyName,
+      companyEmail,
+      companyGST,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      clientCompany,
+      clientAddress,
+      taxRate,
+      discountRate,
+      notes,
+    } = req.body;
+
+    // Log received data for debugging
+    console.log("Form data extracted:", {
+      quotationType,
+      quotationDate,
+      clientName,
+      hasItems: req.body.itemPartNo ? true : false,
+    });
+
+    // Validate minimal fields
+    if (!quotationDate || !clientName) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+        details: "quotationDate or clientName missing",
+      });
+    }
+
+    // ✅ Construct items array from parallel arrays
+    let itemsData = [];
+    if (req.body.itemPartNo && Array.isArray(req.body.itemPartNo)) {
+      const count = req.body.itemPartNo.length;
+      for (let i = 0; i < count; i++) {
+        itemsData.push({
+          partNo: req.body.itemPartNo[i],
+          description: req.body.itemDescription[i],
+          hsn: req.body.itemHSN[i],
+          gst: parseFloat(req.body.itemGST[i]) || 0,
+          quantity: parseFloat(req.body.itemQuantity[i]) || 0,
+          unit: req.body.itemUnit[i],
+          unitPrice: parseFloat(req.body.itemPrice[i]) || 0,
+          discount: parseFloat(req.body.itemDiscount[i]) || 0,
+          total: parseFloat(req.body.itemTotal[i]) || 0,
+        });
+      }
+    } else {
+      console.error("Item arrays missing from form data");
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        success: false,
+        error: "Invalid items data format",
+        details: "Expected itemPartNo[] and other arrays in the form data",
+      });
+    }
+
+    console.log("Constructed items data:", itemsData.length, "items");
+    console.table(itemsData); // Prints a nice table in console
+
+    // ✅ Calculate total amount
+    const totalAmount = itemsData.reduce(
+      (sum, item) => sum + (parseFloat(item.total) || 0),
+      0
+    );
+    console.log("Calculated total amount:", totalAmount);
+
+    // ✅ Insert quotation
+    const quotationQuery = `
+      INSERT INTO quotations (
+        quotation_type, quotation_number, quotation_date, reference_no,
+        valid_until, currency, payment_terms, delivery_duration,
+        company_name, company_email, company_gst, company_address,
+        client_name, client_email, client_phone, client_company, client_address,
+        tax_rate, discount_rate, total_amount, notes, status, created_by
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15, $16, $17, $18,
+        $19, $20, $21, $22, $23
+      )
+      RETURNING id
+    `;
+
+    const quotationValues = [
+      quotationType || "Trade", // default if missing
+      quotationNumber,
+      quotationDate,
+      referenceNo,
+      validUntil,
+      currency,
+      paymentTerms,
+      deliveryDuration,
+      companyName,
+      companyEmail,
+      companyGST,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      clientCompany,
+      clientAddress,
+      parseFloat(taxRate) || 18,
+      parseFloat(discountRate) || 0,
+      totalAmount,
+      notes,
+      "approved",
+      req.session?.user?.email || null,
+    ];
+
+    const quotationResult = await client.query(quotationQuery, quotationValues);
+    const quotationId = quotationResult.rows[0].id;
+
+    // ✅ Insert quotation items
+    const itemQuery = `
+      INSERT INTO quotation_items (
+        quotation_id, part_no, description, hsn_code, gst_rate,
+        quantity, unit, unit_price, discount, total_amount
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `;
+
+    for (const item of itemsData) {
+      const itemValues = [
+        quotationId,
+        item.partNo,
+        item.description,
+        item.hsn,
+        item.gst,
+        item.quantity,
+        item.unit,
+        item.unitPrice,
+        item.discount,
+        item.total,
+      ];
+      await client.query(itemQuery, itemValues);
+    }
+
+    // ✅ Commit transaction
+    await client.query("COMMIT");
+
+    // ✅ Send success response
+    res.status(201).json({
+      success: true,
+      message: "Quotation created successfully",
+      quotationId,
+      quotationNumber,
+      totalItems: itemsData.length,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ Error generating quotation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate quotation",
+      details: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
