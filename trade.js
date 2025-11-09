@@ -103,16 +103,19 @@ function generateQuotation(poData, filePath) {
 
   const grandTotal = subtotal;
   let formattedAddress = poData.shipTo
-    .split("\n")                 // break into lines
-    .map(line => line.trim())    // trim spaces
-    .filter(line => line)        // remove empty ones
-    .join(" ");
-                // join with commas
+    ? poData.shipTo
+        .split("\n")                 // break into lines
+        .map(line => line.trim())    // trim spaces
+        .filter(line => line)        // remove empty ones
+        .join(" ")
+    : "";  // join with commas
   let supplierAddress = poData.supplier.address
-    .split("\n")                 // break into lines
-    .map(line => line.trim())    // trim spaces
-    .filter(line => line)        // remove empty ones
-    .join("\n");  // join with newlines
+    ? poData.supplier.address
+        .split("\n")                 // break into lines
+        .map(line => line.trim())    // trim spaces
+        .filter(line => line)        // remove empty ones
+        .join("\n")
+    : "";  // join with newlines
   // 👉 Document definition
   const docDefinition = {
   header: function(currentPage, pageCount) {
@@ -129,18 +132,18 @@ function generateQuotation(poData, filePath) {
     };
   },
   background: [
-    {
+    ...(getBase64Image("./public/images/lg.jpg") ? [{
       image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
       width: 400,          // scale watermark size
       opacity: 0.08,        // make it transparent
       absolutePosition: { x: 100, y: 350 }, // adjust placement
-    },
-    {
+    }] : []),
+    ...(getBase64Image(poData.line) ? [{
       image: getBase64Image(poData.line),   // base64 of your gradient image
       width: 5,                // thickness of the strip
       height: 842,             // A4 page height in pt (adjust if needed)
       absolutePosition: { x: 590, y: 0 } // right edge (595pt is A4 width)
-    }
+    }] : [])
   ],
 
     content: [
@@ -152,16 +155,81 @@ function generateQuotation(poData, filePath) {
         alignment: "center",
         margin: [0, 0, 0, 20],
       },
-      logoBase64 ? {
-        image: logoBase64,
-        width: 100,
-        alignment: "left",
-        margin: [0, -30, 0, 10],
-      } : { text: " " },
-      { text: 'KIET TECHNOLOGIES PRIVATE LIMITED ' ,font: "Times", bold: true, fontSize: 9, margin: [3, 0, 0, 5] } ,
-      { text: "CIN:  U29253KA2014PTC076845 ", font: "Times", bold: true, margin: [3, 0, 0, 5] ,fontSize: 7 },
-      { text: "GSTIN: 29AAFCK6528DIZG  ", font: "Times", bold: true, margin: [3, 0, 0, 5],fontSize:7 },
+     {
+        columns: [
+  {
+    stack: [
+      logoBase64
+        ? {
+            image: logoBase64,
+            width: 120,
+            margin: [0, -30, 0, 10],
+          }
+        : { text: "" },
       {
+        text: "KIET TECHNOLOGIES PRIVATE LIMITED",
+        font: "Times",
+        bold: true,
+        fontSize: 10,
+        margin: [0, 0, 0, 5],
+      },
+      {
+        text: "CIN: U29253KA2014PTC076845",
+        font: "Times",
+        bold: true,
+        fontSize:10,
+        margin: [0, 0, 0, 5],
+      },
+      {
+        text: "GSTIN: 29AAFCK6528DIZG",
+        font: "Times",
+        bold: true,
+        fontSize: 10,
+        margin: [0, 0, 0, 5],
+      },
+    ],
+  },
+  {
+    stack: [
+      {
+        text: "CONTACT DETAILS",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 25, 0, 5],
+        decoration: "underline",
+        alignment:'right'
+      },
+      {
+        text: "CHANDRASHEKARAIAH R",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment:'right'
+      },
+      {
+        text: "Phone : +91 9620875552",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment:'right'
+      },
+      {
+        text: "E-mail : chandrashekaraiah.r@kietsindia.com",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment:'right'
+      },
+    ],
+  },
+]
+
+        
+      },{
         table: {
           widths: ["55%", "45%"],
           body: [

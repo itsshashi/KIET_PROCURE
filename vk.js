@@ -33,7 +33,6 @@ const fonts = {
 
 const printer = new PdfPrinter(fonts);
 
-// Layout = horizontal lines only
 const horizontalLineLayout = {
   hLineWidth: () => 1,
   vLineWidth: () => 1,
@@ -47,10 +46,14 @@ function getBase64Image(filePath) {
 
 function getCurrencySymbol(currency) {
   switch (currency) {
-    case 'INR': return 'Rs.';
-    case 'USD': return '$';
-    case 'EUR': return '€';
-    default: return 'Rs.';
+    case "INR":
+      return "Rs.";
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    default:
+      return "Rs.";
   }
 }
 
@@ -58,134 +61,64 @@ function generateVKQuotation(poData, filePath) {
   const logoBase64 = getBase64Image(poData.company.logo);
   const signBase64 = getBase64Image(poData.signPath);
 
-  // Build the items table
-  
- 
+  const currencySymbol = getCurrencySymbol(poData.currency);
 
-   
-
-  // Calculate total KIET cost
-  let totalKiet = 0;
-  if (poData.kietCosts && poData.kietCosts.length > 0) {
-    const totalItem = poData.kietCosts.find(item => item.description.includes('Total costs'));
-    if (totalItem) totalKiet = parseFloat(totalItem.totalValue);
-  } else {
-    totalKiet = 246647.94;
-  }
-
-  // Build KIET Cost Calculations table
+  // 🔹 Dynamically build KIET Cost Calculations table
   const kietCostsTable = [
     [
-      { text: "Item Description", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Price Agreement Costs", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Qty", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: `Total Value in ${poData.currency}`, bold: true, fillColor: '#3498db', color: 'white' },
+      { text: "Item Description", bold: true, fillColor: "#3498db", color: "white" },
+      { text: "Price Agreement Costs", bold: true, fillColor: "#3498db", color: "white" },
+      { text: "Qty", bold: true, fillColor: "#3498db", color: "white" },
+      { text: `Total Value in ${poData.currency}`, bold: true, fillColor: "#3498db", color: "white" },
     ],
   ];
 
-  const currencySymbol = getCurrencySymbol(poData.currency);
+  let totalKiet = 0;
 
-  // Use dynamic data from poData.kietCosts if available, else fallback to hardcoded
   if (poData.kietCosts && poData.kietCosts.length > 0) {
-    poData.kietCosts.forEach((item, index) => {
-      if (item.description.includes('Total costs')) {
-        // Total row with colSpan
-        kietCostsTable.push([
-          { text: item.description, bold: true, colSpan: 3 },
-          {},
-          "",
-          { text: currencySymbol + item.totalValue, bold: true },
-        ]);
-      } else if (item.description.includes('Export packaging') || item.description.includes('Bigger box')) {
-        // Export and box rows with colSpan
-        kietCostsTable.push([
-          { text: item.description, colSpan: 3 },
-          {},
-          "",
-          currencySymbol + item.totalValue,
-        ]);
-      } else {
-        // Regular item rows
-        kietCostsTable.push([
-          item.description,
-          currencySymbol + parseFloat(item.cost).toFixed(2),
-          item.qty.toString(),
-          currencySymbol + item.totalValue,
-        ]);
-      }
+    poData.kietCosts.forEach((item) => {
+      const description = item.description && item.description.trim() !== "" ? item.description : "-";
+      const cost = parseFloat(item.cost || 0);
+      const qty = parseFloat(item.qty || 0);
+      const total = parseFloat(item.totalValue || 0);
+      totalKiet += total;
+
+      kietCostsTable.push([
+        description,
+        `${currencySymbol}${cost.toFixed(2)}`,
+        qty.toString(),
+        `${currencySymbol}${total.toFixed(2)}`,
+      ]);
     });
+
+    // Add Total Row
+    kietCostsTable.push([
+      { text: `Total KIET Cost (${poData.currency})`, bold: true, colSpan: 3 },
+      {},
+      "",
+      { text: `${currencySymbol}${totalKiet.toFixed(2)}`, bold: true },
+    ]);
   } else {
-    // Fallback hardcoded values
-    // Standard Housing
     kietCostsTable.push([
-      "Standard Housing",
-      currencySymbol + "135459.52",
-      "1",
-      currencySymbol + "135459.52",
-    ]);
-
-    // Hypertek parts and pins
-    kietCostsTable.push([
-      "Hypertek parts and pins (Wiring class-2)",
-      currencySymbol + "2.86",
-      "35000",
-      currencySymbol + "100418.42",
-    ]);
-
-    // SOK 10150
-    kietCostsTable.push([
-      "SOK 10150",
-      currencySymbol + "10000.00",
-      "1",
-      currencySymbol + "10000.00",
-    ]);
-
-    // Koaxial-Stift-Radial
-    kietCostsTable.push([
-      "Koaxial-Stift-Radial",
-      currencySymbol + "4770.00",
-      "1",
-      currencySymbol + "4770.00",
-    ]);
-
-    // Total row
-    kietCostsTable.push([
-      { text: `Total costs in ${poData.currency} (qty of 1 No.)`, bold: true, colSpan: 3 },
+      { text: "No KIET Cost Calculations available", colSpan: 4, alignment: "center" },
       {},
-      "",
-      { text: currencySymbol + "246647.94", bold: true },
-    ]);
-
-    // Export packaging charges included
-    kietCostsTable.push([
-     { text: "Export Packaging Charges", colSpan: 3 },
       {},
-      "",
-      currencySymbol + "2650.00",
-    ]);
-
-    // Bigger box setup
-    kietCostsTable.push([
-      { text: "Bigger box setup", colSpan: 3 },
       {},
-      "",
-      currencySymbol + "0.00",
     ]);
   }
 
-  // Build PV Wiring Adaptor Details table
+  // 🔹 Build PV Wiring Adaptor Details Table
   const pvAdaptorsTable = [
     [
-      { text: "Sl No", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5,margin: [0, 10, 0, 0],textAlign: 'center' },
-      { text: "PV Wiring Adaptor Family Name", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5 ,margin: [0, 10, 0, 10],textAlign: 'center' },
-      { text: "Rev NO.", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5,margin: [0, 10, 0, 0],textAlign: 'center' },
-      { text: "Coaxial Pin", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5,margin: [0, 10, 0, 0],textAlign: 'center' },
-      
-      { text: "SOK", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5,margin: [0, 10, 0, 0] ,textAlign: 'center' },
-      { text: `Rate/Unit in ${poData.currency}`, bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5 ,margin: [0, 10, 0, 0],textAlign: 'center' },
-      { text: "Qty.", bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5 ,margin: [0, 10, 0, 0],textAlign: 'center' },
-      { text: `Total Amount ${poData.currency}`, bold: true, fillColor: '#3498db', color: 'white', fontSize: 8.5,margin: [0, 10, 0, 0] ,textAlign: 'center' },
-    ]
+      { text: "Sl No", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: "PV Wiring Adaptor Family Name", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: "Rev NO.", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: "Coaxial Pin", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: "SOK", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: `Rate/Unit in ${poData.currency}`, bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: "Qty.", bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+      { text: `Total Amount ${poData.currency}`, bold: true, fillColor: "#3498db", color: "white", fontSize: 8.5 },
+    ],
   ];
 
   let pvTotal = 0;
@@ -198,23 +131,44 @@ function generateVKQuotation(poData, filePath) {
 
       pvAdaptorsTable.push([
         i + 1,
-        
-        item.familyName || "",
-        item.revNo || "",
-        item.coaxialPin || "",
-        
-        parseFloat(item.sokQty || 0),
-        currencySymbol + rate.toFixed(2),
+        item.familyName || "-",
+        item.revNo || "-",
+        item.coaxialPin || "-",
+        item.sokCard || "-",
+        `${currencySymbol}${rate.toFixed(2)}`,
         qty,
-        currencySymbol + total.toFixed(2),
+        `${currencySymbol}${total.toFixed(2)}`,
       ]);
     });
+
+    // Add Total Row for PV Wiring
+    pvAdaptorsTable.push([
+      { text: `Total PV Wiring Amount (${poData.currency})`, bold: true, colSpan: 7 },
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      { text: `${currencySymbol}${pvTotal.toFixed(2)}`, bold: true },
+    ]);
+  } else {
+    pvAdaptorsTable.push([
+      { text: "No PV Wiring Adaptors available", colSpan: 8, alignment: "center" },
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+    ]);
   }
 
-  // Set grand total to the total amount from PV Wiring Adaptor Details
-  const grandTotal = pvTotal;
+  // 🔹 Grand Total = PV + KIET
+  const grandTotal = pvTotal + totalKiet;
 
-  // Document definition
+  // 🧾 PDF Definition
   const docDefinition = {
     header: function(currentPage, pageCount) {
       return {
@@ -262,22 +216,78 @@ function generateVKQuotation(poData, filePath) {
       },
       {
         columns: [
-          logoBase64 ? {
+  {
+    stack: [
+      logoBase64
+        ? {
             image: logoBase64,
             width: 120,
             margin: [0, -30, 0, 10],
-          } : { text: "" },
-          {
-            stack: [
-              { text: 'KIET TECHNOLOGIES PRIVATE LIMITED ', font: "Times", bold: true, fontSize: 9, margin: [0, 0, 0, 5] },
-              { text: "CIN: U29253KA2014PTC076845 ", font: "Times", bold: true, fontSize: 7, margin: [0, 0, 0, 5] },
-              { text: "GSTIN: 29AAFCK6528D1ZG  ", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
-              { text: "Email : chandrashekaraiah.r@kietsindia.com", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
-              { text: "Contact : +91 96208 75552  ", font: "Times", bold: true, fontSize:7, margin: [0, 0, 0, 5] },
-            ],
-            margin: [210, -10, 0, 10],
           }
-        ]
+        : { text: "" },
+      {
+        text: "KIET TECHNOLOGIES PRIVATE LIMITED",
+        font: "Times",
+        bold: true,
+        fontSize: 10,
+        margin: [0, 0, 0, 5],
+      },
+      {
+        text: "CIN: U29253KA2014PTC076845",
+        font: "Times",
+        bold: true,
+        fontSize:10,
+        margin: [0, 0, 0, 5],
+      },
+      {
+        text: "GSTIN: 29AAFCK6528DIZG",
+        font: "Times",
+        bold: true,
+        fontSize: 10,
+        margin: [0, 0, 0, 5],
+      },
+    ],
+  },
+  {
+    stack: [
+      {
+        text: "CONTACT DETAILS",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 10, 0, 5],
+        decoration: "underline",
+        alignment: "right",
+      },
+      {
+        text: "CHANDRASHEKARAIAH R",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment: "right",
+      },
+      {
+        text: "Phone : +91 9620875552",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment: "right",
+      },
+      {
+        text: "Email : chandrashekaraiah.r@kietsindia.com",
+        font: "Times",
+        bold: true,
+        fontSize: 11,
+        margin: [35, 0, 0, 5],
+        alignment: "right",
+      },
+    ],
+  },
+]
+
+        
       },
 
       {
@@ -552,5 +562,4 @@ function generateVKQuotation(poData, filePath) {
   pdfDoc.pipe(fs.createWriteStream(filePath));
   pdfDoc.end();
 }
-
 export default generateVKQuotation;

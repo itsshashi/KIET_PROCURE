@@ -1,11 +1,7 @@
-# TODO: Add Invoice Download Button to Accounts.ejs
+# Fix total_amount Column Error
 
-- [ ] Add CSS styles for the download button (.download-btn)
-- [ ] Add the Download Invoice button in the Action column of the table
-- [ ] Add the downloadInvoice function to handle the download
-
-# COMPLETED: Fixed Edit Order Functionality in Purchase.ejs
-
-- [x] Fixed destructuring error in PUT /api/orders/:id route in index.js
-- [x] Tested API endpoint successfully - order updates work correctly
-- [x] Frontend API_URL set to localhost for testing (change to production when deploying)
+## Tasks
+- [x] Add total_amount column to quotations table in schema
+- [x] Update quotation_routes.js to calculate and store total_amount
+- [x] Run database migration to add the column
+- [x] Test the fix
