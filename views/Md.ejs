@@ -912,6 +912,8 @@ select {
       <button class="tab-button" onclick="switchTab('approve')">Approve Quotation</button>
       <button class="tab-button" onclick="switchTab('vk-approve')">VK Quotation Approval</button>
       <button class="tab-button" onclick="switchTab('new-order')">New Order</button>
+      <button class="tab-button" onclick="switchTab('new-trade')">New Trade</button>
+
     </div>
 
 
@@ -1046,6 +1048,489 @@ select {
       <!-- Pagination -->
       <div class="pagination" id="vkApprovePagination"></div>
     </div>
+
+
+
+    <!-- new trade order creation and approval in md.ejs -->
+
+    <div id="new_trade" class="tab-content">
+      <form id="quotationForm" method="POST" action="/md/trade_generation" enctype="multipart/form-data">
+      <div class="form-section">
+                        <h2 class="section-title">Quotation Information</h2>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="quotationType">TRADE AND SERVICES</label>
+                                    <input type="text" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+" value="TRADE & SERVICES" readonly>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="quotationNumber" class="required">Quotation Number</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="quotationNumber" name="quotationNumber" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;
+                                        
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                        <button type="button" id="generateQuotationNumber" class="btn btn-secondary btn-small">Generate</button>
+                                    </div>
+                                    <div class="error-message" id="quotationNumberError">Please enter a valid quotation number</div>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="quotationDate" class="required">Quotation Date</label>
+                                    <input type="date" id="quotationDate" name="quotationDate" required style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                    <div class="error-message" id="quotationDateError">Please select a valid date</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="referenceNo">Reference Number</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="referenceNo" name="referenceNo" readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;
+                                        
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                        <button type="button" id="generateReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <!-- Empty column for balance -->
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="validUntil" class="required">Valid Until</label>
+                                    <input type="date" id="validUntil" name="validUntil" required style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                    <div class="error-message" id="validUntilError">Please select a valid date</div>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="currency" class="required">Currency</label>
+                                   <select id="currency" name="currency" required
+  style="
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    font-size: 1rem;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23333%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276,9 12,15 18,9%27/%3e%3c/svg%3e');
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+  ">
+  <option value="" disabled selected>Select Currency</option>
+  <option value="INR">INR</option>
+  <option value="USD">USD</option>
+  <option value="EUR">EUR</option>
+  <option value="GBP">GBP</option>
+</select>
+
+                                    <div class="error-message" id="currencyError">Please select a currency</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="paymentTerms">Payment Terms</label>
+                                    <input type="text" id="paymentTerms" name="paymentTerms" placeholder="e.g., 50% advance, 50% on delivery" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="deliveryDuration">Delivery Duration</label>
+                                    <input type="text" id="deliveryDuration" name="deliveryDuration" placeholder="e.g., 2-4 weeks" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Client Information</h2>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <h3 style="font-size: 1.1rem; color: #2c3e50; margin-bottom: 15px;">Company Details</h3>
+                                <div class="form-group">
+                                    <label for="companyName">Company Name</label>
+                                    <input type="text" id="companyName" name="companyName" placeholder="Your company name" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyEmail">Company Email</label>
+                                    <input type="email" id="companyEmail" name="companyEmail" placeholder="company@example.com" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyGST">Company GST</label>
+                                    <input type="text" id="companyGST" name="companyGST" placeholder="GST number" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyAddress">Company Address</label>
+                                    <textarea id="companyAddress" name="companyAddress" rows="3" placeholder="Full company address" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <h3 style="font-size: 1.1rem; color: #2c3e50; margin-bottom: 15px;">Client Info</h3>
+                                <div class="form-group">
+                                    <label for="clientName" class="required">Client Name</label>
+                                    <input type="text" id="clientName" name="clientName" required placeholder="Full name of the client" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                    <div class="error-message" id="clientNameError">Please enter client name</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEmail" class="required">Client Email</label>
+                                    <input type="email" id="clientEmail" name="clientEmail" required placeholder="client@example.com" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                    <div class="error-message" id="clientEmailError">Please enter a valid email address</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientPhone">Client Phone</label>
+                                    <input type="tel" id="clientPhone" name="clientPhone" placeholder="+91 9876543210" style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+">
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Items & Services</h2>
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Part No</th>
+                                    <th>Description</th>
+                                    <th>HSN Code</th>
+                                    <th>GST (%)</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th>Unit Price</th>
+                                    <th>Discount (%)</th>
+                                    <th>Total Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <tr class="item-row">
+                                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
+                                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
+                                    <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
+                                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
+                                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
+                                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
+                                    <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
+                                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
+                                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8" style="text-align: right; font-weight: bold; padding-right: 10px;">Grand Total:</td>
+                                    <td><input type="number" step="0.01" id="grandTotal" readonly style="background-color: #f0f0f0; font-weight: bold; width: 100%;"></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <button type="button" id="addItem" class="btn btn-secondary">Add Item</button>
+                    </div>
+                    <!-- Summary Section -->
+                    
+
+          
+
+
+
+
+
+<button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm">
+  <i class="fas fa-file-invoice-dollar me-2"></i> Generate Quotation
+</button>
+
+
+</form>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+            // Generate Quotation Number
+            const generateQuotationNumberBtn = document.getElementById('generateQuotationNumber');
+            const quotationNumberInput = document.getElementById('quotationNumber');
+
+            generateQuotationNumberBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/generate-quotation-number');
+                    if (response.ok) {
+                        const data = await response.json();
+                        quotationNumberInput.value = data.quotationNumber;
+                    } else {
+                        // Fallback to client-side generation
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                        const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                        quotationNumberInput.value = quotationNumber;
+                    }
+                } catch (error) {
+                    console.error('Error generating quotation number:', error);
+                    // Fallback to client-side generation
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                    quotationNumberInput.value = quotationNumber;
+                }
+            });
+
+
+          const addItemBtn = document.getElementById('addItem');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+
+            addItemBtn.addEventListener('click', function() {
+                const newRow = document.createElement('tr');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
+                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
+                    <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
+                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
+                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
+                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
+                    <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
+                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
+                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+                `;
+                itemsTableBody.appendChild(newRow);
+                attachCalculationListeners(newRow);
+            });
+
+            // Remove Item functionality
+            itemsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-item')) {
+                    e.target.closest('tr').remove();
+                    calculateGrandTotal();
+                }
+            });
+
+            // Function to attach calculation listeners to a row
+            function attachCalculationListeners(row) {
+                const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
+                const priceInput = row.querySelector('input[name="itemPrice[]"]');
+                const discountInput = row.querySelector('input[name="itemDiscount[]"]');
+                const gstInput = row.querySelector('input[name="itemGST[]"]');
+                const totalInput = row.querySelector('input[name="itemTotal[]"]');
+
+                function calculateRowTotal() {
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    const discount = parseFloat(discountInput.value) || 0;
+                    const gst = parseFloat(gstInput.value) || 0;
+
+                    const subtotal = quantity * price;
+                    const discountAmount = subtotal * (discount / 100);
+                    const afterDiscount = subtotal - discountAmount;
+                    const gstAmount = afterDiscount * (gst / 100);
+                    const total = afterDiscount + gstAmount;
+
+                    totalInput.value = total.toFixed(2);
+                    calculateGrandTotal();
+                }
+
+                quantityInput.addEventListener('input', calculateRowTotal);
+                priceInput.addEventListener('input', calculateRowTotal);
+                discountInput.addEventListener('input', calculateRowTotal);
+                gstInput.addEventListener('input', calculateRowTotal);
+            }
+
+            // Attach listeners to existing rows
+            document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
+
+            // Function to calculate grand total
+            function calculateGrandTotal() {
+                const totalInputs = document.querySelectorAll('input[name="itemTotal[]"]');
+                let grandTotal = 0;
+                totalInputs.forEach(input => {
+                    grandTotal += parseFloat(input.value) || 0;
+                });
+                document.getElementById('grandTotal').value = grandTotal.toFixed(2);
+            }
+
+            // Initialize async function and call it immediately
+           
+            const quotationForm = document.getElementById('quotationForm');
+
+quotationForm.addEventListener('submit', async function (e) {
+  e.preventDefault(); // stop normal form submission
+
+  try {
+    const formData = new FormData(quotationForm);
+
+    // Send to backend
+    const response = await fetch('/generate-quotation', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Failed to generate quotation');
+
+    // Convert response to file (PDF)
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Quotation_${formData.get('quotationNumber')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    console.log('✅ Quotation PDF downloaded successfully.');
+  } catch (error) {
+    console.error('❌ Error generating quotation:', error);
+    alert('Failed to generate quotation. Please try again.');
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          });
+
+</script>
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- New Order Tab -->
     <div id="newOrderTab" class="tab-content">
@@ -1900,6 +2385,7 @@ select {
       document.getElementById('approveTab').style.display = tab === 'approve' ? 'block' : 'none';
       document.getElementById('vkApproveTab').style.display = tab === 'vk-approve' ? 'block' : 'none';
       document.getElementById('newOrderTab').style.display = tab === 'new-order' ? 'block' : 'none';
+      document.getElementById('new_trade').style.display = tab === 'new-trade' ? 'block' : 'none';
 
       // Add rejectedTab div for rejected orders
       let rejectedTab = document.getElementById('rejectedTab');
@@ -4718,6 +5204,12 @@ const modal = new bootstrap.Modal(document.getElementById('editModal'));
       alert("Failed to update quotation");
     }
   });
+  
+  
+
+
+
+
 
 
   </script>
