@@ -18,6 +18,7 @@ import bcrypt from "bcrypt";
 import generateQuotation from "./trade.js";
 import generateVKQuotation from "./vk.js";
 import { query } from "express-validator";
+import { sendNotification } from "./routes/pushNotifications.js";
 
 // =============================
 // CONFIG
@@ -3465,6 +3466,25 @@ KIET TECHNOLOGIES PVT LTD
         console.error("❌ Email failed:", err);
       }
 
+      // Send push notification to MD
+      try {
+        await sendNotification("MD", {
+          title: "New VK Quotation Approval Required",
+          body: `VK Quotation ${quotationNumberValue} from ${clientName} requires your approval`,
+          icon: "/images/page_logo.png",
+          data: {
+            type: "vk_quotation_approval",
+            quotationId: quotationId,
+            quotationNumber: quotationNumberValue,
+          },
+        });
+        console.log(
+          "✅ Push notification sent to MD for VK quotation approval"
+        );
+      } catch (pushErr) {
+        console.error("❌ Push notification failed:", pushErr);
+      }
+
       console.log("✅ VK quotation approval request completed successfully");
       res.json({
         success: true,
@@ -3728,6 +3748,23 @@ KIET TECHNOLOGIES PVT LTD
         console.log("✅ Approval request email sent to MD:", info.response);
       } catch (err) {
         console.error("❌ Email failed:", err);
+      }
+
+      // Send push notification to MD
+      try {
+        await sendNotification("MD", {
+          title: "New Quotation Approval Required",
+          body: `Quotation ${quotationNumber} from ${clientName} requires your approval`,
+          icon: "/images/page_logo.png",
+          data: {
+            type: "quotation_approval",
+            quotationId: quotationId,
+            quotationNumber: quotationNumber,
+          },
+        });
+        console.log("✅ Push notification sent to MD for quotation approval");
+      } catch (pushErr) {
+        console.error("❌ Push notification failed:", pushErr);
       }
 
       console.log("✅ Quotation approval request completed successfully");
