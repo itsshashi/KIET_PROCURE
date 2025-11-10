@@ -418,7 +418,7 @@
   </div>
 
   <script>
-    const API_URL = "https://kietprocure.com/api/orders";
+    const API_URL = "http://localhost:3000/api/orders";
     let currentEditId = null;
     let allOrders = [];
     let filteredOrders = [];
@@ -552,7 +552,7 @@
           <td class="px-2 py-3">
             <div class="flex gap-2">
               <button onclick="viewQuotations(${order.id})" class="w-20 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition flex items-center justify-center">
-                <i class="fas fa-eye mr-1"></i>View
+                <i class="fas fa-eye mr-1"></i>
               </button>
    <button
   onclick="editOrder(${order.id})"
@@ -561,12 +561,12 @@
          ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
          text-white rounded text-sm transition flex items-center justify-center"
 >
-  <i class="fas fa-edit mr-1"></i>Edit
+  <i class="fas fa-edit mr-1"></i>
 </button>
 
 
               <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${(order.status === 'pending' || order.status === 'purchase') ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded text-sm transition flex items-center justify-center" ${(order.status === 'pending' || order.status === 'purchase') ? 'disabled' : ''}>
-                <i class="fas fa-file-invoice mr-1"></i>P O
+                <i class="fas fa-file-invoice mr-1"></i>
               </button>
             </div>
           </td>
@@ -821,6 +821,30 @@ products.push(product);
       } catch (error) {
         console.error('Error approving order:', error);
         alert('Failed to approve order. Please try again.');
+      }
+    }
+
+    // Reject Order
+    async function rejectOrder(orderId) {
+      if (!confirm('Are you sure you want to reject this order?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/${orderId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: 'rejected' })
+        });
+
+        if (!response.ok) throw new Error('Failed to reject order');
+
+        alert('Order rejected successfully! ❌');
+        loadOrders();
+
+      } catch (error) {
+        console.error('Error rejecting order:', error);
+        alert('Failed to reject order. Please try again.');
       }
     }
 
@@ -1086,6 +1110,9 @@ function addNewProductRow() {
               <button onclick="approveOrder(${order.id})" class="w-24 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition flex items-center justify-center">
                 <i class="fas fa-check mr-1"></i>Approve
               </button>
+              <button onclick="rejectOrder(${order.id})" class="w-24 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition flex items-center justify-center">
+                <i class="fas fa-times mr-1"></i>Reject
+              </button>
             </div>
           </td>
         `;
@@ -1218,13 +1245,13 @@ function addNewProductRow() {
           <td class="px-2 py-3">
             <div class="flex gap-2">
               <button onclick="viewQuotations(${order.id})" class="w-20 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition flex items-center justify-center">
-                <i class="fas fa-eye mr-1"></i>View
+                <i class="fas fa-eye mr-1"></i>
               </button>
               <button onclick="editOrder(${order.id})" class="w-20 px-3 py-1 ${isSingleSupplier ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded text-sm transition flex items-center justify-center">
-                <i class="fas fa-edit mr-1"></i>Edit
+                <i class="fas fa-edit mr-1"></i>
               </button>
               <button onclick="generatePO(${order.id})" class="w-20 px-3 py-1 ${(order.status === 'pending' || order.status === 'purchase') ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded text-sm transition flex items-center justify-center" ${(order.status === 'pending' || order.status === 'purchase') ? 'disabled' : ''}>
-                <i class="fas fa-file-invoice mr-1"></i>P O
+                <i class="fas fa-file-invoice mr-1"></i>
               </button>
             </div>
           </td>

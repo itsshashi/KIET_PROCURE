@@ -331,12 +331,12 @@ app.get("/api/company", async (req, res) => {
 
 // Get all orders for the orders management interface
 app.get("/api/orders", async (req, res) => {
-  const referer = req.get("referer") || "";
+  // const referer = req.get("referer") || "";
 
-  // Allow only requests from your domain
-  if (!referer.startsWith("https://kietprocure.com")) {
-    return res.status(403).json({ error: "Access denied" });
-  }
+  // // Allow only requests from your domain
+  // if (!referer.startsWith("https://localhost:3000")) {
+  //   return res.status(403).json({ error: "Access denied" });
+  // }
 
   try {
     const { rows } = await pool.query(`
