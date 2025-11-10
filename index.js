@@ -301,6 +301,34 @@ app.post("/api/generate-grn", async (req, res) => {
   }
 });
 
+// server.js
+app.get("/api/company", async (req, res) => {
+  const name = req.query.name;
+
+  if (!name) {
+    return res.status(400).json({ error: "Missing 'name' query parameter" });
+  }
+
+  try {
+    // Return ALL matches instead of LIMIT 1
+    const query = `
+      SELECT id, company_name, company_email, company_address
+      FROM quotations
+      WHERE company_name ILIKE $1;
+    `;
+    const result = await pool.query(query, [`%${name}%`]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "No matches found" });
+    }
+
+    res.json(result.rows); // send all matches as an array
+  } catch (error) {
+    console.error("❌ Database Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // Get all orders for the orders management interface
 app.get("/api/orders", async (req, res) => {
   const referer = req.get("referer") || "";

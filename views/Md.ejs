@@ -1312,6 +1312,22 @@ select {
     font-size: 16px;
     transition: border 0.3s;
 "></textarea>
+<select id="addressList" disabled style="
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23333\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'/%3e%3c/svg%3e');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 40px;
+  border: 1px solid #f80d0d;
+  border-radius: 4px;
+">
+
+
+      <option value="">-- No addresses yet --</option>
+    </select>
                                 </div>
                             </div>
                             <div class="form-col">
@@ -1560,6 +1576,98 @@ quotationForm.addEventListener('submit', async function (e) {
   }
 });
 
+// Get all form elements
+  
+const company_name = document.getElementById("companyName");
+    const company_email = document.getElementById("companyEmail");
+    const company_gst = document.getElementById("companyGST");
+    const company_address = document.getElementById("companyAddress");
+    const client_name = document.getElementById("clientName");
+    const client_email = document.getElementById("clientEmail");
+    const client_phone = document.getElementById("clientPhone");
+    const addressList = document.getElementById("addressList");
+
+    company_name.addEventListener("input", async function () {
+      const name = this.value.trim();
+
+      resetFields();
+
+      if (name.length < 2) return;
+
+      try {
+        const response = await fetch(`/api/company?name=${encodeURIComponent(name)}`);
+        if (!response.ok) throw new Error("Not found");
+
+        const data = await response.json();
+
+        // Fill dropdown with database results
+        if (Array.isArray(data) && data.length > 0) {
+          addressList.disabled = false;
+          addressList.innerHTML = `<option value="">-- Select Address --</option>`;
+
+          data.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = JSON.stringify(item);
+            option.textContent = `${item.company_address} (${item.company_email})`;
+            addressList.appendChild(option);
+          });
+
+          // Add "Add New Address" option
+          const newOption = document.createElement("option");
+          newOption.value = "add-new";
+          newOption.textContent = "📝 Add New Address";
+          addressList.appendChild(newOption);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    });
+
+    // When user selects an address
+    addressList.addEventListener("change", function () {
+      const value = this.value;
+
+      if (value === "add-new") {
+        // Show textarea for manual entry
+        company_address.value = "";
+        company_address.style.display = "block";
+        company_email.readOnly = false;
+        company_gst.readOnly = false;
+        company_email.value = "";
+        company_gst.value = "";
+        client_name.value = "";
+        client_email.value = "";
+        client_phone.value = "";
+        return;
+      }
+
+      company_address.style.display = "none";
+
+      const selected = value ? JSON.parse(value) : null;
+      if (selected) fillCompanyDetails(selected);
+    });
+
+    function fillCompanyDetails(selected) {
+      company_email.value = selected.company_email || "";
+      company_gst.value = selected.company_gst || "";
+      company_address.value = selected.company_address || "";
+      client_name.value = selected.client_name || "";
+      client_email.value = selected.client_email || "";
+      client_phone.value = selected.client_phone || "";
+      company_address.style.display = "block"; // Show textarea when filled
+    }
+
+    function resetFields() {
+      company_email.value = "";
+      company_gst.value = "";
+      company_address.value = "";
+      client_name.value = "";
+      client_email.value = "";
+      client_phone.value = "";
+      company_address.style.display = "none";
+      addressList.innerHTML = "";
+      addressList.disabled = true;
+    }
 
 
 
@@ -5472,6 +5580,11 @@ function exportToExcel() {
       // Download file
       XLSX.writeFile(wb, 'Cost_Calculation.xlsx');
     }
+
+
+    
+  
+
 
   
   
