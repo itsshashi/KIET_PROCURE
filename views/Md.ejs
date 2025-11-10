@@ -1579,95 +1579,116 @@ quotationForm.addEventListener('submit', async function (e) {
 // Get all form elements
   
 const company_name = document.getElementById("companyName");
-    const company_email = document.getElementById("companyEmail");
-    const company_gst = document.getElementById("companyGST");
-    const company_address = document.getElementById("companyAddress");
-    const client_name = document.getElementById("clientName");
-    const client_email = document.getElementById("clientEmail");
-    const client_phone = document.getElementById("clientPhone");
-    const addressList = document.getElementById("addressList");
+const company_email = document.getElementById("companyEmail");
+const company_gst = document.getElementById("companyGST");
+const company_address = document.getElementById("companyAddress"); // textarea
+const client_name = document.getElementById("clientName");
+const client_email = document.getElementById("clientEmail");
+const client_phone = document.getElementById("clientPhone");
+const addressList = document.getElementById("addressList");
 
-    company_name.addEventListener("input", async function () {
-      const name = this.value.trim();
+company_name.addEventListener("input", async function () {
+  const name = this.value.trim();
+  resetFields();
 
-      resetFields();
+  // always keep address visible for manual input
+  company_address.style.display = "block";
 
-      if (name.length < 2) return;
+  if (name.length < 2) return;
 
-      try {
-        const response = await fetch(`/api/company?name=${encodeURIComponent(name)}`);
-        if (!response.ok) throw new Error("Not found");
+  try {
+    const response = await fetch(`/api/company?name=${encodeURIComponent(name)}`);
+    if (!response.ok) throw new Error("Not found");
 
-        const data = await response.json();
+    const data = await response.json();
 
-        // Fill dropdown with database results
-        if (Array.isArray(data) && data.length > 0) {
-          addressList.disabled = false;
-          addressList.innerHTML = `<option value="">-- Select Address --</option>`;
+    // ✅ Populate dropdown with DB results if found
+    if (Array.isArray(data) && data.length > 0) {
+      addressList.disabled = false;
+      addressList.style.display = "block";
+      addressList.innerHTML = `<option value="">-- Select Address --</option>`;
 
-          data.forEach((item) => {
-            const option = document.createElement("option");
-            option.value = JSON.stringify(item);
-            option.textContent = `${item.company_address} (${item.company_email})`;
-            addressList.appendChild(option);
-          });
+      data.forEach((item) => {
+        const option = document.createElement("option");
+        option.value = JSON.stringify(item);
+        option.textContent = `${item.company_address} (${item.company_email})`;
+        addressList.appendChild(option);
+      });
 
-          // Add "Add New Address" option
-          const newOption = document.createElement("option");
-          newOption.value = "add-new";
-          newOption.textContent = "📝 Add New Address";
-          addressList.appendChild(newOption);
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    });
-
-    // When user selects an address
-    addressList.addEventListener("change", function () {
-      const value = this.value;
-
-      if (value === "add-new") {
-        // Show textarea for manual entry
-        company_address.value = "";
-        company_address.style.display = "block";
-        company_email.readOnly = false;
-        company_gst.readOnly = false;
-        company_email.value = "";
-        company_gst.value = "";
-        client_name.value = "";
-        client_email.value = "";
-        client_phone.value = "";
-        return;
-      }
-
-      company_address.style.display = "none";
-
-      const selected = value ? JSON.parse(value) : null;
-      if (selected) fillCompanyDetails(selected);
-    });
-
-    function fillCompanyDetails(selected) {
-      company_email.value = selected.company_email || "";
-      company_gst.value = selected.company_gst || "";
-      company_address.value = selected.company_address || "";
-      client_name.value = selected.client_name || "";
-      client_email.value = selected.client_email || "";
-      client_phone.value = selected.client_phone || "";
-      company_address.style.display = "block"; // Show textarea when filled
-    }
-
-    function resetFields() {
-      company_email.value = "";
-      company_gst.value = "";
-      company_address.value = "";
-      client_name.value = "";
-      client_email.value = "";
-      client_phone.value = "";
-      company_address.style.display = "none";
+      // Optional: add new address choice
+      const newOption = document.createElement("option");
+      newOption.value = "add-new";
+      newOption.textContent = "📝 Add New Address";
+      addressList.appendChild(newOption);
+    } else {
+      // ✅ No match found — show empty editable fields
       addressList.innerHTML = "";
-      addressList.disabled = true;
+      addressList.style.display = "none";
+      company_email.readOnly = false;
+      company_gst.readOnly = false;
+      client_name.readOnly = false;
+      client_email.readOnly = false;
+      client_phone.readOnly = false;
     }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    addressList.style.display = "none";
+  }
+});
+
+// When user selects an address
+addressList.addEventListener("change", function () {
+  const value = this.value;
+
+  if (value === "add-new") {
+    // Allow manual entry for new company
+    company_email.value = "";
+    company_gst.value = "";
+    company_address.value = "";
+    client_name.value = "";
+    client_email.value = "";
+    client_phone.value = "";
+
+    company_email.readOnly = false;
+    company_gst.readOnly = false;
+    client_name.readOnly = false;
+    client_email.readOnly = false;
+    client_phone.readOnly = false;
+
+    return;
+  }
+
+  const selected = value ? JSON.parse(value) : null;
+  if (selected) fillCompanyDetails(selected);
+});
+
+function fillCompanyDetails(selected) {
+  company_email.value = selected.company_email || "";
+  company_gst.value = selected.company_gst || "";
+  company_address.value = selected.company_address || "";
+  client_name.value = selected.client_name || "";
+  client_email.value = selected.client_email || "";
+  client_phone.value = selected.client_phone || "";
+
+  // lock autofilled fields
+  company_email.readOnly = true;
+  company_gst.readOnly = true;
+  client_name.readOnly = true;
+  client_email.readOnly = true;
+  client_phone.readOnly = true;
+}
+
+function resetFields() {
+  company_email.value = "";
+  company_gst.value = "";
+  company_address.value = "";
+  client_name.value = "";
+  client_email.value = "";
+  client_phone.value = "";
+  addressList.innerHTML = "";
+  addressList.disabled = true;
+  addressList.style.display = "none";
+}
 
 
 
