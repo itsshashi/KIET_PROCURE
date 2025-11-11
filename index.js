@@ -2017,160 +2017,386 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
   }
 });
 
-app.post("/generate-quotation", upload.array("attachments[]"), (req, res) => {
-  const formData = req.body || {};
-  // console.log('Form Data Received:', formData);
+app.post(
+  "/generate-quotation",
+  upload.array("attachments[]"),
+  async (req, res) => {
+    const formData = req.body || {};
+    // console.log('Form Data Received:', formData);
 
-  const quotationType = formData.quotationType || "Trade"; // Default to Trade if not specified
+    const quotationType = formData.quotationType || "Trade"; // Default to Trade if not specified
 
-  // Normalize form data to arrays with null checks
-  const itemDescriptions =
-    (formData && formData["itemDescription[]"]) ||
-    (formData && formData.itemDescription) ||
-    [];
-  let itemQuantities, itemPrices, itemPartNos, itemHSNs, itemUnits;
-
-  if (quotationType === "VK") {
-    itemQuantities = (formData && formData["qtyInput[]"]) || [];
-    itemPrices = (formData && formData["priceInput[]"]) || [];
-    itemGSTs = [];
-    itemDiscounts = [];
-    itemPartNos = [];
-    itemHSNs = [];
-    itemUnits = [];
-  } else {
-    itemQuantities =
-      (formData && formData["itemQuantity[]"]) ||
-      (formData && formData.itemQuantity) ||
+    // Normalize form data to arrays with null checks
+    const itemDescriptions =
+      (formData && formData["itemDescription[]"]) ||
+      (formData && formData.itemDescription) ||
       [];
-    itemPrices =
-      (formData && formData["itemPrice[]"]) ||
-      (formData && formData.itemPrice) ||
-      [];
+    let itemQuantities, itemPrices, itemPartNos, itemHSNs, itemUnits;
 
-    itemPartNos =
-      (formData && formData["itemPartNo[]"]) ||
-      (formData && formData.itemPartNo) ||
-      [];
-    itemHSNs =
-      (formData && formData["itemHSN[]"]) ||
-      (formData && formData.itemHSN) ||
-      [];
-    itemUnits =
-      (formData && formData["itemUnit[]"]) ||
-      (formData && formData.itemUnit) ||
-      [];
-  }
+    if (quotationType !== "VK") {
+      itemQuantities =
+        (formData && formData["itemQuantity[]"]) ||
+        (formData && formData.itemQuantity) ||
+        [];
+      itemPrices =
+        (formData && formData["itemPrice[]"]) ||
+        (formData && formData.itemPrice) ||
+        [];
 
-  // Calculate totals
-  let subtotal = 0;
-  const items = [];
-  itemDescriptions.forEach((desc, index) => {
-    const quantity = parseFloat(itemQuantities[index]) || 0;
-    const price = parseFloat(itemPrices[index]) || 0;
+      itemPartNos =
+        (formData && formData["itemPartNo[]"]) ||
+        (formData && formData.itemPartNo) ||
+        [];
+      itemHSNs =
+        (formData && formData["itemHSN[]"]) ||
+        (formData && formData.itemHSN) ||
+        [];
+      itemUnits =
+        (formData && formData["itemUnit[]"]) ||
+        (formData && formData.itemUnit) ||
+        [];
 
-    subtotal += quantity * price;
+      // Calculate totals
+      let subtotal = 0;
+      const items = [];
+      itemDescriptions.forEach((desc, index) => {
+        const quantity = parseFloat(itemQuantities[index]) || 0;
+        const price = parseFloat(itemPrices[index]) || 0;
 
-    items.push({
-      part_no: itemPartNos[index] || "",
-      description: desc,
-      hsn_code: itemHSNs[index] || "",
-      quantity: quantity,
-      unit: itemUnits[index] || "Nos",
-      unit_price: price,
-    });
-  });
+        subtotal += quantity * price;
 
-  const total = subtotal;
-
-  // Handle attachments
-  const attachments = [];
-  if (req.files && req.files.length > 0) {
-    const attachmentNotes = Array.isArray(formData.attachmentNotes)
-      ? formData.attachmentNotes
-      : [formData.attachmentNotes || ""];
-    req.files.forEach((file, index) => {
-      attachments.push({
-        filename: file.originalname,
-        path: file.path,
-        notes: attachmentNotes[index] || "",
+        items.push({
+          part_no: itemPartNos[index] || "",
+          description: desc,
+          hsn_code: itemHSNs[index] || "",
+          quantity: quantity,
+          unit: itemUnits[index] || "Nos",
+          unit_price: price,
+        });
       });
-    });
-  }
 
-  // Prepare data for PDF (adapted for quotation)
-  const poData = {
-    company: {
-      logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
-      name: formData.companyName || "",
-      email: formData.companyEmail || "",
-      gst: formData.companyGST || "",
-      address: formData.companyAddress || "",
-    },
-    supplier: {
-      address: formData.clientAddress || "",
-      contact: formData.clientPhone || "",
-      gst: formData.clientGST || "", // Assuming GST is provided,
-      total: total.toFixed(2),
-      duration: formData.deliveryDuration || "",
-    },
-    clientEmail: formData.clientEmail || "",
-    shipTo: formData.clientAddress || "",
-    invoiceTo: formData.clientAddress || "",
-    poNumber: formData.quotationNumber || "",
-    date: formData.quotationDate || "",
-    projectcode: formData.projectCode || "",
-    requester: {
-      name: formData.clientName || "",
-    },
-    reference_no: formData.referenceNo || "",
-    goodsRecipient: formData.goodsRecipient || "",
-    expected_date: formData.validUntil || "",
-    termsOfPayment: formData.paymentTerms || "",
-    items: items,
-    attachments: attachments,
-    currency: formData.currency || "",
-    line: path.join(__dirname, "public", "images", "line.png"),
-    signPath: path.join(__dirname, "public", "images", "signature.png"),
-  };
+      const total = subtotal;
 
-  if (quotationType === "VK") {
-    // Handle VK-specific data from the form
-    const kietCosts = formData.kietCosts ? JSON.parse(formData.kietCosts) : [];
-    const pvAdaptors = formData.pvAdaptors
-      ? JSON.parse(formData.pvAdaptors)
-      : [];
+      // Handle attachments
+      // const attachments = [];
+      // if (req.files && req.files.length > 0) {
+      //   const attachmentNotes = Array.isArray(formData.attachmentNotes)
+      //     ? formData.attachmentNotes
+      //     : [formData.attachmentNotes || ""];
+      //   req.files.forEach((file, index) => {
+      //     attachments.push({
+      //       filename: file.originalname,
+      //       path: file.path,
+      //       notes: attachmentNotes[index] || "",
+      //     });
+      //   });
+      // }
 
-    poData.kietCosts = kietCosts;
-    poData.pvAdaptors = pvAdaptors;
-  }
+      // Prepare data for PDF (adapted for quotation)
+      const poData = {
+        company: {
+          logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
+          name: formData.companyName || "",
+          email: formData.companyEmail || "",
+          gst: formData.companyGST || "",
+          address: formData.companyAddress || "",
+        },
+        supplier: {
+          address: formData.clientAddress || "",
+          contact: formData.clientPhone || "",
+          // Assuming GST is provided,
+          total: total.toFixed(2),
+          duration: formData.deliveryDuration || "",
+        },
+        clientEmail: formData.clientEmail || "",
+        shipTo: formData.clientAddress || "",
+        invoiceTo: formData.clientAddress || "",
+        poNumber: formData.quotationNumber || "",
+        date: formData.quotationDate || "",
+        projectcode: formData.projectCode || "",
+        requester: {
+          name: formData.clientName || "",
+        },
+        reference_no: formData.referenceNo || "",
+        goodsRecipient: formData.goodsRecipient || "",
+        expected_date: formData.validUntil || "",
+        termsOfPayment: formData.paymentTerms || "",
+        items: items,
 
-  const sanitizedNumber = (formData.quotationNumber || "temp").replace(
-    /[^a-zA-Z0-9.-]/g,
-    "_"
-  );
-  const filePath = path.join(qtUploadsDir, `quotation_${sanitizedNumber}.pdf`);
+        currency: formData.currency || "",
+        line: path.join(__dirname, "public", "images", "line.png"),
+        signPath: path.join(__dirname, "public", "images", "signature.png"),
+      };
+      const sanitizedNumber = (formData.quotationNumber || "temp").replace(
+        /[^a-zA-Z0-9.-]/g,
+        "_"
+      );
+      const filePath = path.join(
+        qtUploadsDir,
+        `quotation_${sanitizedNumber}.pdf`
+      );
 
-  try {
-    if (quotationType == "VK") {
-      generateVKQuotation(poData, filePath);
-    } else {
       generateQuotation(poData, filePath);
-    }
-    // Wait for PDF generation to complete before downloading
-    setTimeout(() => {
-      res.download(filePath, `quotation_${sanitizedNumber}.pdf`, (err) => {
-        if (err) {
-          console.error("Error downloading PDF:", err);
-          res.status(500).send("Error generating PDF");
+      setTimeout(() => {
+        res.download(filePath, `quotation_${sanitizedNumber}.pdf`, (err) => {
+          if (err) {
+            console.error("Error downloading PDF:", err);
+            res.status(500).send("Error generating PDF");
+          }
+        });
+      }, 1000);
+    } else if (quotationType === "VK") {
+      const client = await pool.connect();
+      try {
+        // ==============================================================
+        // 1️⃣ Generate unique quotation number
+        // ==============================================================
+        const { rows } = await client.query(
+          "SELECT generate_vk_quotation_number() AS quotation_number"
+        );
+        const quotationNumber = rows[0].quotation_number;
+
+        // ==============================================================
+        // 2️⃣ Extract and sanitize form data
+        // ==============================================================
+        const formData = req.body || " ";
+        console.log(formData);
+
+        // Process PV Wiring Adaptor Details and KIET Costs
+        let pvAdaptors = [];
+        let kietCosts = [];
+        console.log(formData["itemDescription"]);
+
+        if (
+          formData["itemDescription"] &&
+          Array.isArray(formData["itemDescription"])
+        ) {
+          formData["itemDescription"].forEach((desc, index) => {
+            const cost = parseFloat(formData["priceInput"][index]) || 0;
+            const qty = parseFloat(formData["qtyInput"][index]) || 0;
+
+            kietCosts.push({
+              description: desc,
+              cost: cost,
+              qty: qty,
+              totalValue: (cost * qty).toFixed(2),
+            });
+          });
+
+          // 🧾 Calculate total for user inputs
+          const kietTotal = kietCosts
+            .reduce((sum, item) => sum + parseFloat(item.totalValue), 0)
+            .toFixed(2);
+
+          // ➕ Add total row (colspan-ready)
+          kietCosts.push({
+            description: `Total costs in ${
+              formData.currency || "INR"
+            } (qty of 1 No.)`,
+            cost: kietTotal,
+            qty: 1,
+            totalValue: kietTotal,
+            colSpan: 3, // 👈 for PDF/HTML table formatting
+            isSummaryRow: true,
+          });
+
+          // ➕ Add additional fixed rows
+          const priceInputs = formData["priceInput"] || [];
+
+          kietCosts.push({
+            description: "Export packaging charges included",
+            cost: priceInputs[4] || "2650",
+            qty: "",
+            totalValue: priceInputs[4] || "2650",
+            colSpan: 3, // 👈 merge first 3 columns
+            isSummaryRow: true,
+          });
+
+          kietCosts.push({
+            description: "Bigger box setup",
+            cost: priceInputs[5] || "",
+            qty: "",
+            totalValue: priceInputs[5] || "",
+            colSpan: 3,
+            isSummaryRow: true,
+          });
+
+          console.log(kietCosts);
+        } else {
+          console.log("no pv data");
         }
-      });
-    }, 1000); // 1 second delay
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    res.status(500).send("Error generating quotation PDF");
+
+        if (formData["pvQty"] && Array.isArray(formData["pvQty"])) {
+          formData["pvQty"].forEach((qty, index) => {
+            pvAdaptors.push({
+              slNo: index + 1,
+              qty: parseFloat(qty) || 0,
+              familyName: formData["pvFamilyName"][index] || "",
+              revNo: formData["pvRevNo"][index] || "",
+              coaxialPin: formData["pvCoaxialPin"][index] || "",
+              sokCard: formData["pvSokCard"][index] || "",
+              sokQty: parseFloat(formData["pvSokQty"][index]) || 0,
+              rate: parseFloat(formData["pvRate"][index]) || 0,
+              totalAmount: (
+                parseFloat(qty) * parseFloat(formData["pvRate"][index] || 0)
+              ).toFixed(2),
+            });
+          });
+        }
+
+        // Parse PV adaptors data (this is the main data for VK quotations)
+
+        console.log("🔧 Parsed PV Adaptors:", pvAdaptors);
+        console.log(`📦 PV Adaptors Count: ${pvAdaptors.length}`);
+        console.log(`💰 KIET Costs Count: ${kietCosts.length}`);
+
+        // Extract form data fields
+        const {
+          quotationDate,
+          referenceNo,
+          validUntil,
+          currency,
+          paymentTerms,
+          deliveryDuration,
+          companyName,
+          companyEmail,
+          companyGST,
+          companyAddress,
+          clientName,
+          clientEmail,
+          clientPhone,
+          notes,
+        } = req.body;
+
+        // ==============================================================
+        // 4️⃣ Calculate total amount
+        // ==============================================================
+        const totalAmount = pvAdaptors.reduce((sum, item) => {
+          const qty = parseFloat(item.qty) || 0;
+          const rate = parseFloat(item.rate) || 0;
+          return sum + qty * rate;
+        }, 0);
+
+        console.log("✅ Total amount:", totalAmount);
+
+        // ==============================================================
+        // 5️⃣ Prepare values for insertion
+        // ==============================================================
+        const defaultValidUntil =
+          validUntil ||
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0];
+
+        const quotationValues = [
+          "VK", // quotation_type
+          quotationNumber,
+          quotationDate || new Date().toISOString().split("T")[0],
+          referenceNo || null,
+          defaultValidUntil,
+          currency || "INR",
+          paymentTerms || null,
+          deliveryDuration || null,
+          companyName || null,
+          companyEmail || null,
+          companyGST || null,
+          companyAddress || null,
+          clientName || null,
+          clientEmail || null,
+          clientPhone || null,
+          totalAmount,
+          notes || null,
+          "pending", // default status
+          req.session?.user?.email || null, // created_by
+          JSON.stringify(kietCosts),
+          JSON.stringify(pvAdaptors),
+        ];
+
+        // ==============================================================
+        // 6️⃣ Insert into database
+        // ==============================================================
+        const insertQuery = `
+      INSERT INTO vk_quotations (
+        quotation_type, quotation_number, quotation_date, reference_no,
+        valid_until, currency, payment_terms, delivery_duration,
+        company_name, company_email, company_gst, company_address,
+        client_name, client_email, client_phone,
+        total_amount, notes, status, created_by, kiet_costs, pv_adaptors
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17, $18, $19, $20, $21
+      )
+      RETURNING id
+    `;
+
+        const { rows: inserted } = await client.query(
+          insertQuery,
+          quotationValues
+        );
+        const quotationId = inserted[0].id;
+
+        console.log("🆔 VK Quotation inserted with ID:", quotationId);
+
+        // ==============================================================
+        // 7️⃣ Prepare PDF data
+        // ==============================================================
+        const poData = {
+          company: {
+            logo: path.join(__dirname, "public/images/page_logo.jpg"),
+            name: companyName || "",
+            email: companyEmail || "",
+            gst: companyGST || "",
+            address: companyAddress || "",
+          },
+          supplier: {
+            address: req.body.clientAddress || "",
+            contact: clientPhone || "",
+            duration: deliveryDuration || "",
+          },
+          clientEmail,
+          poNumber: quotationNumber || "",
+          date: quotationDate || "",
+          requester: { name: clientName || "" },
+          reference_no: referenceNo || "",
+          expected_date: validUntil || "",
+          termsOfPayment: paymentTerms || "",
+          currency: currency || "INR",
+          kietCosts,
+          pvAdaptors,
+          line: path.join(__dirname, "public/images/line.png"),
+          signPath: path.join(__dirname, "public/images/signature.png"),
+        };
+
+        const sanitizedNumber = (quotationNumber || "temp").replace(
+          /[^a-zA-Z0-9.-]/g,
+          "_"
+        );
+        const filePath = path.join(
+          qtUploadsDir,
+          `quotation_${sanitizedNumber}.pdf`
+        );
+
+        await generateVKQuotation(poData, filePath);
+
+        // ==============================================================
+        // 8️⃣ Send generated PDF to client
+        // ==============================================================
+        res.download(filePath, `quotation_${sanitizedNumber}.pdf`, (err) => {
+          if (err) {
+            console.error("❌ Error sending VK PDF:", err);
+            res.status(500).send("Error generating VK quotation PDF");
+          }
+        });
+      } catch (error) {
+        console.error("🚨 VK quotation error:", error);
+        res.status(500).json({ error: "Failed to generate VK quotation" });
+      } finally {
+        client.release();
+      }
+    }
   }
-});
+);
 
 const quotationStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -2416,7 +2642,7 @@ app.get("/download-quotation/:param", async (req, res) => {
     const filePath = path.join(qtUploadsDir, fileName);
 
     console.log("🧾 Generating VK Quotation PDF...");
-    generateVKQuotation(poData, filePath);
+    await generateVKQuotation(poData, filePath);
 
     // Wait for file creation
     await new Promise((resolve, reject) => {
@@ -2643,83 +2869,83 @@ app.post(
 );
 
 // Generate quotation PDF
-app.post(
-  "/generate-quotation",
-  quotationUpload.array("attachments[]"),
-  async (req, res) => {
-    console.log("Generate Quotation Request Body:", req.body);
-    try {
-      const saveResponse = await fetch(
-        `${req.protocol}://${req.get("host")}/api/save-quotation`,
-        {
-          method: "POST",
-          body: req.body,
-          headers: req.headers,
-        }
-      );
+// app.post(
+//   "/generate-quotation",
+//   quotationUpload.array("attachments[]"),
+//   async (req, res) => {
+//     console.log("Generate Quotation Request Body:", req.body);
+//     try {
+//       const saveResponse = await fetch(
+//         `${req.protocol}://${req.get("host")}/api/save-quotation`,
+//         {
+//           method: "POST",
+//           body: req.body,
+//           headers: req.headers,
+//         }
+//       );
 
-      if (!saveResponse.ok) {
-        throw new Error("Failed to save quotation before generating PDF");
-      }
+//       if (!saveResponse.ok) {
+//         throw new Error("Failed to save quotation before generating PDF");
+//       }
 
-      const saveResult = await saveResponse.json();
+//       const saveResult = await saveResponse.json();
 
-      const poData = {
-        poNumber: req.body.quotationNumber,
-        date: req.body.quotationDate,
-        expected_date: req.body.validUntil,
-        termsOfPayment: req.body.paymentTerms,
-        currency: req.body.currency,
-        company: {
-          name: req.body.companyName || "KIET TECHNOLOGIES PRIVATE LIMITED",
-          email: req.body.companyEmail || "info@kiet.com",
-          gst: req.body.companyGST || "29AAFCK6528DIZG",
-          address:
-            req.body.companyAddress ||
-            "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
-          logo: "./public/images/page_logo.jpg",
-        },
-        supplier: {
-          name: req.body.clientName,
-          address: req.body.clientAddress,
-          duration: req.body.deliveryDuration,
-        },
-        shipTo: req.body.clientAddress,
-        reference_no: req.body.referenceNo,
-        requester: {
-          name: req.body.clientName,
-        },
-        items: JSON.parse(req.body.items || "[]"),
-        line: "./public/images/line.png",
-        signPath: "./public/images/signature.png",
-      };
+//       const poData = {
+//         poNumber: req.body.quotationNumber,
+//         date: req.body.quotationDate,
+//         expected_date: req.body.validUntil,
+//         termsOfPayment: req.body.paymentTerms,
+//         currency: req.body.currency,
+//         company: {
+//           name: req.body.companyName || "KIET TECHNOLOGIES PRIVATE LIMITED",
+//           email: req.body.companyEmail || "info@kiet.com",
+//           gst: req.body.companyGST || "29AAFCK6528DIZG",
+//           address:
+//             req.body.companyAddress ||
+//             "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+//           logo: "./public/images/page_logo.jpg",
+//         },
+//         supplier: {
+//           name: req.body.clientName,
+//           address: req.body.clientAddress,
+//           duration: req.body.deliveryDuration,
+//         },
+//         shipTo: req.body.clientAddress,
+//         reference_no: req.body.referenceNo,
+//         requester: {
+//           name: req.body.clientName,
+//         },
+//         items: JSON.parse(req.body.items || "[]"),
+//         line: "./public/images/line.png",
+//         signPath: "./public/images/signature.png",
+//       };
 
-      const fileName = `quotation_${
-        req.body.quotationNumber
-      }_${Date.now()}.pdf`;
-      const filePath = path.join("uploads", "quotations", fileName);
+//       const fileName = `quotation_${
+//         req.body.quotationNumber
+//       }_${Date.now()}.pdf`;
+//       const filePath = path.join("uploads", "quotations", fileName);
 
-      generateQuotation(poData, filePath);
+//       generateQuotation(poData, filePath);
 
-      res.download(filePath, fileName, (err) => {
-        if (err) {
-          console.error("Error downloading file:", err);
-        }
-        setTimeout(() => {
-          fs.unlink(filePath, (err) => {
-            if (err) console.error("Error deleting temp file:", err);
-          });
-        }, 60000);
-      });
-    } catch (error) {
-      console.error("Error generating quotation:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to generate quotation PDF",
-      });
-    }
-  }
-);
+//       res.download(filePath, fileName, (err) => {
+//         if (err) {
+//           console.error("Error downloading file:", err);
+//         }
+//         setTimeout(() => {
+//           fs.unlink(filePath, (err) => {
+//             if (err) console.error("Error deleting temp file:", err);
+//           });
+//         }, 60000);
+//       });
+//     } catch (error) {
+//       console.error("Error generating quotation:", error);
+//       res.status(500).json({
+//         success: false,
+//         error: "Failed to generate quotation PDF",
+//       });
+//     }
+//   }
+// );
 //get pending vk quotations for md approval
 app.get("/api/pending-vk_quotations", async (req, res) => {
   try {
@@ -3190,7 +3416,7 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
 
     // Use the appropriate generator based on quotation type
     if (quotation.quotation_type === "VK") {
-      generateVKQuotation(poData, filePath);
+      await generateVKQuotation(poData, filePath);
     } else {
       generateQuotation(poData, filePath);
     }
@@ -3449,7 +3675,7 @@ KIET TECHNOLOGIES PVT LTD
       try {
         await sendNotification("MD", {
           title: "New VK Quotation Approval Required",
-          body: `VK Quotation ${quotationNumberValue} from ${clientName} requires your approval`,
+          body: `VK Quotation ${quotationNumber} from ${clientName} requires your approval`,
           icon: "/images/page_logo.png",
           data: {
             type: "vk_quotation_approval",
