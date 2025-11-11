@@ -2028,13 +2028,7 @@ app.post("/generate-quotation", upload.array("attachments[]"), (req, res) => {
     (formData && formData["itemDescription[]"]) ||
     (formData && formData.itemDescription) ||
     [];
-  let itemQuantities,
-    itemPrices,
-    itemGSTs,
-    itemDiscounts,
-    itemPartNos,
-    itemHSNs,
-    itemUnits;
+  let itemQuantities, itemPrices, itemPartNos, itemHSNs, itemUnits;
 
   if (quotationType === "VK") {
     itemQuantities = (formData && formData["qtyInput[]"]) || [];
@@ -2053,14 +2047,7 @@ app.post("/generate-quotation", upload.array("attachments[]"), (req, res) => {
       (formData && formData["itemPrice[]"]) ||
       (formData && formData.itemPrice) ||
       [];
-    itemGSTs =
-      (formData && formData["itemGST[]"]) ||
-      (formData && formData.itemGST) ||
-      [];
-    itemDiscounts =
-      (formData && formData["itemDiscount[]"]) ||
-      (formData && formData.itemDiscount) ||
-      [];
+
     itemPartNos =
       (formData && formData["itemPartNo[]"]) ||
       (formData && formData.itemPartNo) ||
@@ -2081,28 +2068,20 @@ app.post("/generate-quotation", upload.array("attachments[]"), (req, res) => {
   itemDescriptions.forEach((desc, index) => {
     const quantity = parseFloat(itemQuantities[index]) || 0;
     const price = parseFloat(itemPrices[index]) || 0;
-    const gst = parseFloat(itemGSTs[index]) || 18;
-    const discount = parseFloat(itemDiscounts[index]) || 0;
+
     subtotal += quantity * price;
 
     items.push({
       part_no: itemPartNos[index] || "",
       description: desc,
       hsn_code: itemHSNs[index] || "",
-      gst: gst,
       quantity: quantity,
       unit: itemUnits[index] || "Nos",
       unit_price: price,
-      discount: discount,
     });
   });
 
-  const taxRate = parseFloat(formData.taxRate) || 0;
-  const discountRate = parseFloat(formData.discountRate) || 0;
-
-  const taxAmount = subtotal * (taxRate / 100);
-  const discountAmount = subtotal * (discountRate / 100);
-  const total = subtotal + taxAmount - discountAmount;
+  const total = subtotal;
 
   // Handle attachments
   const attachments = [];
@@ -4051,8 +4030,7 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
       clientPhone,
       clientCompany,
       clientAddress,
-      taxRate,
-      discountRate,
+
       notes,
     } = req.body;
 
@@ -4083,11 +4061,11 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
           partNo: req.body.itemPartNo[i],
           description: req.body.itemDescription[i],
           hsn: req.body.itemHSN[i],
-          gst: parseFloat(req.body.itemGST[i]) || 0,
+
           quantity: parseFloat(req.body.itemQuantity[i]) || 0,
           unit: req.body.itemUnit[i],
           unitPrice: parseFloat(req.body.itemPrice[i]) || 0,
-          discount: parseFloat(req.body.itemDiscount[i]) || 0,
+
           total: parseFloat(req.body.itemTotal[i]) || 0,
         });
       }
@@ -4118,11 +4096,11 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
         valid_until, currency, payment_terms, delivery_duration,
         company_name, company_email, company_gst, company_address,
         client_name, client_email, client_phone, client_company, client_address,
-        tax_rate, discount_rate, total_amount, notes, status, created_by
+        total_amount, notes, status, created_by
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18,
-        $19, $20, $21, $22, $23
+        $19, $20, $21
       )
       RETURNING id
     `;
@@ -4145,8 +4123,7 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
       clientPhone,
       clientCompany,
       clientAddress,
-      parseFloat(taxRate) || 18,
-      parseFloat(discountRate) || 0,
+
       totalAmount,
       notes,
       "approved",
@@ -4159,9 +4136,9 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
     // ✅ Insert quotation items
     const itemQuery = `
       INSERT INTO quotation_items (
-        quotation_id, part_no, description, hsn_code, gst_rate,
-        quantity, unit, unit_price, discount, total_amount
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        quotation_id, part_no, description, hsn_code,
+        quantity, unit, unit_price, total_amount
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `;
 
     for (const item of itemsData) {
@@ -4170,11 +4147,11 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
         item.partNo,
         item.description,
         item.hsn,
-        item.gst,
+
         item.quantity,
         item.unit,
         item.unitPrice,
-        item.discount,
+
         item.total,
       ];
       await client.query(itemQuery, itemValues);

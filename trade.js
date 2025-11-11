@@ -1,6 +1,7 @@
 import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";
+import { text } from "stream/consumers";
 
 const toWordsInstance = new ToWords();
 
@@ -36,7 +37,9 @@ const printer = new PdfPrinter(fonts);
 
 function getBase64Image(filePath) {
   if (!filePath || !fs.existsSync(filePath)) return null;
-  return "data:image/png;base64," + fs.readFileSync(filePath).toString("base64");
+  return (
+    "data:image/png;base64," + fs.readFileSync(filePath).toString("base64")
+  );
 }
 
 // Layout = horizontal lines only
@@ -53,16 +56,21 @@ function generateQuotation(poData, filePath) {
   // 👉 Build the items table
   const itemsTable = [
     [
-      { text: "SL", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Part No.", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Item Description", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "HSN", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "GST%", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Qty", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Unit", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Unit Price", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Discount", bold: true, fillColor: '#3498db', color: 'white' },
-      { text: "Total", bold: true, fillColor: '#3498db', color: 'white' },
+      { text: "SL", bold: true, fillColor: "#3498db", color: "white" },
+      { text: "Part No.", bold: true, fillColor: "#3498db", color: "white" },
+      {
+        text: "Item Description",
+        bold: true,
+        fillColor: "#3498db",
+        color: "white",
+      },
+      { text: "HSN", bold: true, fillColor: "#3498db", color: "white" },
+
+      { text: "Qty", bold: true, fillColor: "#3498db", color: "white" },
+      { text: "Unit", bold: true, fillColor: "#3498db", color: "white" },
+      { text: "Unit Price", bold: true, fillColor: "#3498db", color: "white" },
+
+      { text: "Total", bold: true, fillColor: "#3498db", color: "white" },
     ],
   ];
 
@@ -70,33 +78,31 @@ function generateQuotation(poData, filePath) {
   poData.items.forEach((item, i) => {
     const unitPrice = parseFloat(item.unit_price || item.unitPrice || 0);
     const quantity = parseFloat(item.quantity || 0);
-    const gst = parseFloat(item.gst || 0);
-    const discount = parseFloat(item.discount || 0); // flat value
 
     // Step 1: Base price
     const gross = unitPrice * quantity;
 
     // Step 2: Apply discount directly
-    const afterDiscount = gross - discount;
+    // const afterDiscount = gross - discount;
 
-    // Step 3: GST on discounted value
-    const gstAmount = afterDiscount * (gst / 100);
+    // // Step 3: GST on discounted value
+    // const gstAmount = afterDiscount * (gst / 100);
 
-    // Step 4: Final total (after discount + GST)
-    const finalTotal = afterDiscount + gstAmount;
+    // // Step 4: Final total (after discount + GST)
+    const finalTotal = gross;
 
-    subtotal += finalTotal;
+    subtotal += gross;
 
     itemsTable.push([
       i + 1,
       item.part_no || item.partNo || "",
       item.description || "",
       item.hsn_code || item.hsnCode || "",
-      gst + "%",
-      quantity,
+      item.quantity || 0,
+
       item.unit || "",
       unitPrice.toFixed(2),
-      discount.toFixed(2),
+
       finalTotal.toFixed(2),
     ]);
   });
@@ -104,47 +110,68 @@ function generateQuotation(poData, filePath) {
   const grandTotal = subtotal;
   let formattedAddress = poData.shipTo
     ? poData.shipTo
-        .split("\n")                 // break into lines
-        .map(line => line.trim())    // trim spaces
-        .filter(line => line)        // remove empty ones
+        .split("\n") // break into lines
+        .map((line) => line.trim()) // trim spaces
+        .filter((line) => line) // remove empty ones
         .join(" ")
-    : "";  // join with commas
+    : ""; // join with commas
   let supplierAddress = poData.supplier.address
     ? poData.supplier.address
-        .split("\n")                 // break into lines
-        .map(line => line.trim())    // trim spaces
-        .filter(line => line)        // remove empty ones
+        .split("\n") // break into lines
+        .map((line) => line.trim()) // trim spaces
+        .filter((line) => line) // remove empty ones
         .join("\n")
-    : "";  // join with newlines
+    : ""; // join with newlines
   // 👉 Document definition
   const docDefinition = {
-  header: function(currentPage, pageCount) {
-    return {
-      table: {
-        widths: ['*', 'auto'],
-        body: [[
-          { text: 'kietsindia.com', alignment: 'left', fontSize: 9, font: 'Times', color: '#0000FF' },
-          { text: `Page ${currentPage} of ${pageCount}`, alignment: 'right', fontSize: 9, font: 'Times' }
-        ]]
-      },
-      layout: 'noBorders',
-      margin: [40, 20, 25, 0]
-    };
-  },
-  background: [
-    ...(getBase64Image("./public/images/lg.jpg") ? [{
-      image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
-      width: 400,          // scale watermark size
-      opacity: 0.08,        // make it transparent
-      absolutePosition: { x: 100, y: 350 }, // adjust placement
-    }] : []),
-    ...(getBase64Image(poData.line) ? [{
-      image: getBase64Image(poData.line),   // base64 of your gradient image
-      width: 5,                // thickness of the strip
-      height: 842,             // A4 page height in pt (adjust if needed)
-      absolutePosition: { x: 590, y: 0 } // right edge (595pt is A4 width)
-    }] : [])
-  ],
+    header: function (currentPage, pageCount) {
+      return {
+        table: {
+          widths: ["*", "auto"],
+          body: [
+            [
+              {
+                text: "kietsindia.com",
+                alignment: "left",
+                fontSize: 9,
+                font: "Times",
+                color: "#0000FF",
+              },
+              {
+                text: `Page ${currentPage} of ${pageCount}`,
+                alignment: "right",
+                fontSize: 9,
+                font: "Times",
+              },
+            ],
+          ],
+        },
+        layout: "noBorders",
+        margin: [40, 20, 25, 0],
+      };
+    },
+    background: [
+      ...(getBase64Image("./public/images/lg.jpg")
+        ? [
+            {
+              image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
+              width: 400, // scale watermark size
+              opacity: 0.08, // make it transparent
+              absolutePosition: { x: 100, y: 350 }, // adjust placement
+            },
+          ]
+        : []),
+      ...(getBase64Image(poData.line)
+        ? [
+            {
+              image: getBase64Image(poData.line), // base64 of your gradient image
+              width: 5, // thickness of the strip
+              height: 842, // A4 page height in pt (adjust if needed)
+              absolutePosition: { x: 590, y: 0 }, // right edge (595pt is A4 width)
+            },
+          ]
+        : []),
+    ],
 
     content: [
       {
@@ -155,81 +182,80 @@ function generateQuotation(poData, filePath) {
         alignment: "center",
         margin: [0, 0, 0, 20],
       },
-     {
+      {
         columns: [
-  {
-    stack: [
-      logoBase64
-        ? {
-            image: logoBase64,
-            width: 120,
-            margin: [0, -30, 0, 10],
-          }
-        : { text: "" },
-      {
-        text: "KIET TECHNOLOGIES PRIVATE LIMITED",
-        font: "Times",
-        bold: true,
-        fontSize: 10,
-        margin: [0, 0, 0, 5],
+          {
+            stack: [
+              logoBase64
+                ? {
+                    image: logoBase64,
+                    width: 120,
+                    margin: [0, -30, 0, 10],
+                  }
+                : { text: "" },
+              {
+                text: "KIET TECHNOLOGIES PRIVATE LIMITED",
+                font: "Times",
+                bold: true,
+                fontSize: 10,
+                margin: [0, 0, 0, 5],
+              },
+              {
+                text: "CIN: U29253KA2014PTC076845",
+                font: "Times",
+                bold: true,
+                fontSize: 10,
+                margin: [0, 0, 0, 5],
+              },
+              {
+                text: "GSTIN: 29AAFCK6528DIZG",
+                font: "Times",
+                bold: true,
+                fontSize: 10,
+                margin: [0, 0, 0, 5],
+              },
+            ],
+          },
+          {
+            stack: [
+              {
+                text: "CONTACT DETAILS",
+                font: "Times",
+                bold: true,
+                fontSize: 11,
+                margin: [35, 25, 0, 5],
+                decoration: "underline",
+                alignment: "right",
+              },
+              {
+                text: "CHANDRASHEKARAIAH R",
+                font: "Times",
+                bold: true,
+                fontSize: 11,
+                margin: [35, 0, 0, 5],
+                alignment: "right",
+              },
+              {
+                text: "Phone : +91 9620875552",
+                font: "Times",
+                bold: true,
+                fontSize: 11,
+                margin: [35, 0, 0, 5],
+                alignment: "right",
+              },
+              {
+                text: "E-mail : chandrashekaraiah.r@kietsindia.com",
+                font: "Times",
+                bold: true,
+                fontSize: 11,
+                margin: [35, 0, 0, 5],
+                alignment: "right",
+              },
+            ],
+          },
+        ],
       },
       {
-        text: "CIN: U29253KA2014PTC076845",
-        font: "Times",
-        bold: true,
-        fontSize:10,
-        margin: [0, 0, 0, 5],
-      },
-      {
-        text: "GSTIN: 29AAFCK6528DIZG",
-        font: "Times",
-        bold: true,
-        fontSize: 10,
-        margin: [0, 0, 0, 5],
-      },
-    ],
-  },
-  {
-    stack: [
-      {
-        text: "CONTACT DETAILS",
-        font: "Times",
-        bold: true,
-        fontSize: 11,
-        margin: [35, 25, 0, 5],
-        decoration: "underline",
-        alignment:'right'
-      },
-      {
-        text: "CHANDRASHEKARAIAH R",
-        font: "Times",
-        bold: true,
-        fontSize: 11,
-        margin: [35, 0, 0, 5],
-        alignment:'right'
-      },
-      {
-        text: "Phone : +91 9620875552",
-        font: "Times",
-        bold: true,
-        fontSize: 11,
-        margin: [35, 0, 0, 5],
-        alignment:'right'
-      },
-      {
-        text: "E-mail : chandrashekaraiah.r@kietsindia.com",
-        font: "Times",
-        bold: true,
-        fontSize: 11,
-        margin: [35, 0, 0, 5],
-        alignment:'right'
-      },
-    ],
-  },
-]
-
-        
-      },{
         table: {
           widths: ["55%", "45%"],
           body: [
@@ -237,11 +263,34 @@ function generateQuotation(poData, filePath) {
               // LEFT CELL
               {
                 stack: [
-                  { text: "To,", font: "Times", bold: true, margin: [10, 30, 0, 5] },
-                  { text: poData.company.name, font: "Times", bold: true, fontSize: 12, margin: [10, 0, 0, 5] },
-                  { text: poData.company.address, font: "Times", margin: [10, 0, 0, 5] },
-                  { text: `Email: ${poData.company.email}`, font: "Times", margin: [10, 0, 0, 5] },
-                  { text: `GSTIN: ${poData.company.gst}`, font: "Times", margin: [10, 0, 0, 5] },
+                  {
+                    text: "To,",
+                    font: "Times",
+                    bold: true,
+                    margin: [10, 30, 0, 5],
+                  },
+                  {
+                    text: poData.company.name,
+                    font: "Times",
+                    bold: true,
+                    fontSize: 12,
+                    margin: [10, 0, 0, 5],
+                  },
+                  {
+                    text: poData.company.address,
+                    font: "Times",
+                    margin: [10, 0, 0, 5],
+                  },
+                  {
+                    text: `Email: ${poData.company.email}`,
+                    font: "Times",
+                    margin: [10, 0, 0, 5],
+                  },
+                  {
+                    text: `GSTIN: ${poData.company.gst}`,
+                    font: "Times",
+                    margin: [10, 0, 0, 5],
+                  },
                 ],
               },
 
@@ -251,39 +300,107 @@ function generateQuotation(poData, filePath) {
                   widths: ["40%", "60%"],
                   body: [
                     [
-                      { text: "Quotation Number", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.poNumber, font: "Times", alignment: "right" },
+                      {
+                        text: "Quotation Number",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.poNumber,
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
                     [
-                      { text: "Date", font: "Times", bold: true, alignment: "left" },
+                      {
+                        text: "Date",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
                       { text: poData.date, font: "Times", alignment: "right" },
                     ],
 
                     [
-                      { text: "Client Name", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.requester?.name, font: "Times", alignment: "right", fontSize: 12 },
+                      {
+                        text: "Client Name",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.requester?.name,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 12,
+                      },
                     ],
                     [
-                      { text: "Reference No", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.reference_no, font: "Times", alignment: "right" },
+                      {
+                        text: "Reference No",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.reference_no,
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
 
-
                     [
-                      { text: "Valid Until", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.expected_date, font: "Times", alignment: "right" },
+                      {
+                        text: "Valid Until",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.expected_date,
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
                     [
-                      { text: "Delivery Terms", font: "Times", bold: true, alignment: "left" },
-                      { text: "Ex-works/DoorStep", font: "Times", alignment: "right" },
+                      {
+                        text: "Delivery Terms",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: "Ex-works/DoorStep",
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
                     [
-                      { text: "Payment Terms", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.termsOfPayment || "", font: "Times", alignment: "right" },
+                      {
+                        text: "Payment Terms",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.termsOfPayment || "",
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
                     [
-                      { text: "Delivery Leadtime", font: "Times", bold: true, alignment: "left" },
-                      { text: poData.supplier.duration || "", font: "Times", alignment: "right" },
+                      {
+                        text: "Delivery Leadtime",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                      },
+                      {
+                        text: poData.supplier.duration || "",
+                        font: "Times",
+                        alignment: "right",
+                      },
                     ],
                   ],
                 },
@@ -305,7 +422,9 @@ function generateQuotation(poData, filePath) {
         },
       },
 
-      { canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }] },
+      {
+        canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 }],
+      },
       {
         text: "Dear Sir/Madam,",
         font: "Times",
@@ -323,7 +442,7 @@ function generateQuotation(poData, filePath) {
       // ✅ Items Table
       {
         table: {
-          widths: ["auto", "auto", "*", "auto", "auto", "auto", "auto", "auto", "auto", "auto"],
+          widths: ["auto", "auto", "*", "auto", "auto", "auto", "auto", "auto"],
           body: itemsTable,
         },
         layout: horizontalLineLayout,
@@ -331,40 +450,102 @@ function generateQuotation(poData, filePath) {
         fontSize: 10,
       },
 
-
-
       // ✅ Totals Table
       {
         table: {
           widths: ["*", "auto"],
           body: [
-
             [
-              { text: "Grand Total(*included with Gst*)", bold: true },
-              { text:`${poData.currency}. ${grandTotal.toFixed(2)}`, bold: true, alignment: "right" },
+              {
+                text: "Grand Total : ",
+                bold: true,
+                alignment: "right",
+              },
+              {
+                text: `${poData.currency}. ${grandTotal.toFixed(2)}`,
+                bold: true,
+                alignment: "right",
+              },
             ],
           ],
         },
         layout: horizontalLineLayout,
-        margin: [0, 10, 0,10],
+        margin: [0, 10, 0, 10],
         font: "Times",
       },
 
       {
         text: [
           { text: "Amount in words: ", font: "Times", italics: true },
-          { text: ` ${poData.currency}. ${toWordsInstance.convert(grandTotal)} only`, font: "Times", italics: true, bold: true },
+          {
+            text: ` ${poData.currency}. ${toWordsInstance.convert(
+              grandTotal
+            )} only`,
+            font: "Times",
+            italics: true,
+            bold: true,
+          },
         ],
       },
 
-      { canvas: [{ type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 ,margin:[0,10,0,0]}] },
+      {
+        canvas: [
+          {
+            type: "line",
+            x1: 0,
+            y1: 0,
+            x2: 510,
+            y2: 0,
+            lineWidth: 1,
+            margin: [0, 10, 0, 0],
+          },
+        ],
+      },
+      {
+        text: "GST and packing charges will be applied based on actuals prevailing at the time of delivery",
+        font: "Times",
+        margin: [0, 30, 0, 0],
+        lineHeight: 1.2,
+        bold: true,
+        fontSize: 10,
+        color: "blue",
+        decoration: "underline",
+      },
 
       {
+        text: "Thank you for considering our quotation. We look forward to the opportunity to serve you and contribute to the success of your projects.",
+        font: "Times",
+        margin: [0, 10, 0, 0],
+        lineHeight: 1.2,
+        bold: true,
+        fontSize: 10,
+      },
+      {
         columns: [
-          { text: "" },
           {
             stack: [
-              { text: "**Authorized Signatory**", margin: [0, 20, 0, 0] },
+              {
+                text: "Kindly place your order in favour of",
+                font: "Times",
+                fontSize: 8,
+                italics: true,
+                margin: [0, 80, 0, 5],
+                decoration: "underline",
+              },
+              {
+                text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 56011",
+                font: "Times",
+                fontSize: 10,
+                bold: true,
+                margin: [0, 0, 0, 0],
+                lineHeight: 1.2,
+              },
+            ],
+            alignment: "left",
+          },
+          {
+            stack: [
+              { text: "**Authorized Signatory**", margin: [0, 80, 0, 0] },
               signBase64 ? { image: signBase64, width: 120 } : {},
             ],
             alignment: "right",
@@ -378,54 +559,60 @@ function generateQuotation(poData, filePath) {
         alignment: "center",
       },
     ],
-    footer: function(currentPage, pageCount) {
-  return {
-    stack: [
-      {
-        canvas: [
-          { type: 'line', x1: 0, y1: 0, x2: 520, y2: 0, lineWidth: 1 }
-        ],
-        margin: [0, 0, 0, 6]
-      },
-      {
-        text: `Generated on: ${new Date().toLocaleString()}`,
-        alignment: 'left',
-        fontSize: 7,
-        font: 'Times',
-
-      },
-      {
+    footer: function (currentPage, pageCount) {
+      return {
         stack: [
           {
-            text: "kindly place your order in favor of,",
-            alignment: 'left',
-            fontSize: 6,
-            font: 'Times',
-            italics: true
+            canvas: [
+              { type: "line", x1: 0, y1: 0, x2: 520, y2: 0, lineWidth: 1 },
+            ],
+            margin: [0, 0, 0, 6],
           },
           {
-            text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
-            alignment: 'left',
-            fontSize: 6,
-            font: 'Times',
-            bold: true,
-            margin: [0, 2, 0, 0]
+            text: `Generated on: ${new Date().toLocaleString()}`,
+            alignment: "left",
+            fontSize: 7,
+            font: "Times",
           },
-          signBase64 ? { image: signBase64, width: 120, alignment: 'left', margin: [0, 10, 0, 0] } : {}
+          {
+            stack: [
+              {
+                text: "kindly place your order in favor of,",
+                alignment: "left",
+                fontSize: 6,
+                font: "Times",
+                italics: true,
+              },
+              {
+                text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
+                alignment: "left",
+                fontSize: 6,
+                font: "Times",
+                bold: true,
+                margin: [0, 2, 0, 0],
+              },
+              signBase64
+                ? {
+                    image: signBase64,
+                    width: 120,
+                    alignment: "left",
+                    margin: [0, 10, 0, 0],
+                  }
+                : {},
+            ],
+            margin: [0, 3, 0, 0],
+          },
+          {
+            text: "Thank you for your business. For more information, contact us at info@kiet.com",
+            alignment: "left",
+            fontSize: 8,
+            font: "Times",
+            margin: [0, 10, 0, 0],
+          },
         ],
-        margin: [0, 3, 0, 0]
-      },
-      {
-        text: "Thank you for your business. For more information, contact us at info@kiet.com",
-        alignment: 'left',
-        fontSize: 8,
-        font: 'Times',
-        margin: [0, 10, 0, 0]
-      }
-    ],
-    margin: [40, 5, 0, 40]
-  };
-}
+        margin: [40, 5, 0, 40],
+      };
+    },
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);

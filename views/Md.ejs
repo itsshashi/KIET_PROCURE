@@ -1115,7 +1115,7 @@ select {
     <!-- new trade order creation and approval in md.ejs -->
 
     <div id="new_trade" class="tab-content">
-      <form id="quotationForm" method="POST" action="/md/trade_generation" enctype="multipart/form-data">
+     <form id="quotationForm" enctype="multipart/form-data">
       <div class="form-section">
                         <h2 class="section-title">Quotation Information</h2>
                         <div class="form-row">
@@ -1381,11 +1381,11 @@ select {
                                     <th>Part No</th>
                                     <th>Description</th>
                                     <th>HSN Code</th>
-                                    <th>GST (%)</th>
+                                    
                                     <th>Qty</th>
                                     <th>Unit</th>
                                     <th>Unit Price</th>
-                                    <th>Discount (%)</th>
+                                    
                                     <th>Total Amount</th>
                                     <th>Actions</th>
                                 </tr>
@@ -1395,18 +1395,18 @@ select {
                                     <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
                                     <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
                                     <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                                    <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
+                                   
                                     <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
                                     <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
                                     <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
-                                    <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
+                                    
                                     <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
                                     <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="8" style="text-align: right; font-weight: bold; padding-right: 10px;">Grand Total:</td>
+                                    <td colspan="6" style="text-align: right; font-weight: bold; padding-right: 10px;">Grand Total:</td>
                                     <td><input type="number" step="0.01" id="grandTotal" readonly style="background-color: #f0f0f0; font-weight: bold; width: 100%;"></td>
                                     <td></td>
                                 </tr>
@@ -1477,11 +1477,11 @@ select {
                     <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
                     <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
                     <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                    <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
+                    
                     <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
                     <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
                     <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
-                    <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
+                    
                     <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
                     <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
                 `;
@@ -1501,21 +1501,18 @@ select {
             function attachCalculationListeners(row) {
                 const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
                 const priceInput = row.querySelector('input[name="itemPrice[]"]');
-                const discountInput = row.querySelector('input[name="itemDiscount[]"]');
-                const gstInput = row.querySelector('input[name="itemGST[]"]');
+                
+               
                 const totalInput = row.querySelector('input[name="itemTotal[]"]');
 
                 function calculateRowTotal() {
                     const quantity = parseFloat(quantityInput.value) || 0;
                     const price = parseFloat(priceInput.value) || 0;
-                    const discount = parseFloat(discountInput.value) || 0;
-                    const gst = parseFloat(gstInput.value) || 0;
+                    
 
                     const subtotal = quantity * price;
-                    const discountAmount = subtotal * (discount / 100);
-                    const afterDiscount = subtotal - discountAmount;
-                    const gstAmount = afterDiscount * (gst / 100);
-                    const total = afterDiscount + gstAmount;
+                    
+                    const total = subtotal;
 
                     totalInput.value = total.toFixed(2);
                     calculateGrandTotal();
@@ -1523,8 +1520,7 @@ select {
 
                 quantityInput.addEventListener('input', calculateRowTotal);
                 priceInput.addEventListener('input', calculateRowTotal);
-                discountInput.addEventListener('input', calculateRowTotal);
-                gstInput.addEventListener('input', calculateRowTotal);
+               
             }
 
             // Attach listeners to existing rows
@@ -1542,39 +1538,85 @@ select {
 
             // Initialize async function and call it immediately
            
-            const quotationForm = document.getElementById('quotationForm');
+
+
+
+
+
+
+
+
+
+
+
+
+
+const quotationForm = document.getElementById('quotationForm');
 
 quotationForm.addEventListener('submit', async function (e) {
-  e.preventDefault(); // stop normal form submission
+  e.preventDefault();
 
   try {
-    const formData = new FormData(quotationForm);
+    // 1️⃣ Prepare first FormData for trade generation
+    const formData1 = new FormData(quotationForm);
 
-    // Send to backend
-    const response = await fetch('/generate-quotation', {
+    // 2️⃣ First request: Trade generation
+    const tradeResponse = await fetch('/md/trade_generation', {
       method: 'POST',
-      body: formData,
+      body: formData1,
     });
 
-    if (!response.ok) throw new Error('Failed to generate quotation');
+    if (!tradeResponse.ok) throw new Error('Trade generation failed');
 
-    // Convert response to file (PDF)
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+    // Try reading JSON safely (some backends may return plain text)
+    let tradeData;
+    try {
+      tradeData = await tradeResponse.json();
+      console.log('✅ Trade generation data:', tradeData.rows || tradeData);
+    } catch {
+      const text = await tradeResponse.text();
+      console.log('ℹ️ Trade generation response (non-JSON):', text);
+    }
+
+    // 3️⃣ Create new FormData for quotation generation
+    const formData2 = new FormData(quotationForm);
+
+    // 4️⃣ Second request: Quotation generation (PDF)
+    const quoteResponse = await fetch('/generate-quotation', {
+      method: 'POST',
+      body: formData2,
+    });
+
+    if (!quoteResponse.ok) throw new Error('Failed to generate quotation');
+
+    // 5️⃣ Download PDF automatically
+    const blob = await quoteResponse.blob();
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Quotation_${formData.get('quotationNumber')}.pdf`;
+    a.download = `Quotation_${formData2.get('quotationNumber') || 'Document'}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    window.URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
 
     console.log('✅ Quotation PDF downloaded successfully.');
   } catch (error) {
     console.error('❌ Error generating quotation:', error);
-    alert('Failed to generate quotation. Please try again.');
+    alert(error.message || 'Failed to generate quotation. Please try again.');
   }
 });
+
+
+
+
+
+
+
+
+
+
+
 
 // Get all form elements
   
