@@ -281,11 +281,11 @@ function generateQuotation(poData, filePath) {
                     font: "Times",
                     margin: [10, 0, 0, 5],
                   },
-                  {
-                    text: `Email: ${poData.company.email}`,
-                    font: "Times",
-                    margin: [10, 0, 0, 5],
-                  },
+                  // {
+                  //   text: `Email: ${poData.company.email}`,
+                  //   font: "Times",
+                  //   margin: [10, 0, 0, 5],
+                  // },
                   {
                     text: `GSTIN: ${poData.company.gst}`,
                     font: "Times",
@@ -305,11 +305,13 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.poNumber,
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                     [
@@ -318,8 +320,14 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
-                      { text: poData.date, font: "Times", alignment: "right" },
+                      {
+                        text: poData.date,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 10,
+                      },
                     ],
 
                     [
@@ -328,12 +336,28 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.requester?.name,
                         font: "Times",
                         alignment: "right",
-                        fontSize: 12,
+                        fontSize: 10,
+                      },
+                    ],
+                    [
+                      {
+                        text: "Client Phone",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                        fontSize: 10,
+                      },
+                      {
+                        text: poData.supplier.contact,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                     [
@@ -342,11 +366,13 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.reference_no,
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
                       },
                     ],
 
@@ -356,11 +382,13 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.expected_date,
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                     [
@@ -369,11 +397,58 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
-                        text: "Ex-works/DoorStep",
+                        text: poData.deliveyt,
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
+                      },
+                    ],
+                    [
+                      {
+                        text: "GST",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                        fontSize: 10,
+                      },
+                      {
+                        text: poData.gstterms,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 10,
+                      },
+                    ],
+                    [
+                      {
+                        text: "Insurance",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                        fontSize: 10,
+                      },
+                      {
+                        text: poData.insurance,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 10,
+                      },
+                    ],
+                    [
+                      {
+                        text: "Package",
+                        font: "Times",
+                        bold: true,
+                        alignment: "left",
+                        fontSize: 10,
+                      },
+                      {
+                        text: poData.package,
+                        font: "Times",
+                        alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                     [
@@ -382,11 +457,13 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.termsOfPayment || "",
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                     [
@@ -395,11 +472,13 @@ function generateQuotation(poData, filePath) {
                         font: "Times",
                         bold: true,
                         alignment: "left",
+                        fontSize: 10,
                       },
                       {
                         text: poData.supplier.duration || "",
                         font: "Times",
                         alignment: "right",
+                        fontSize: 10,
                       },
                     ],
                   ],
@@ -462,7 +541,9 @@ function generateQuotation(poData, filePath) {
                 alignment: "right",
               },
               {
-                text: `${poData.currency}. ${grandTotal.toFixed(2)}`,
+                text: `${poData.currency}. ${(
+                  grandTotal.toFixed(2) * 1
+                ).toLocaleString()}`,
                 bold: true,
                 alignment: "right",
               },
@@ -500,16 +581,6 @@ function generateQuotation(poData, filePath) {
             margin: [0, 10, 0, 0],
           },
         ],
-      },
-      {
-        text: "GST and packing charges will be applied based on actuals prevailing at the time of delivery",
-        font: "Times",
-        margin: [0, 30, 0, 0],
-        lineHeight: 1.2,
-        bold: true,
-        fontSize: 10,
-        color: "blue",
-        decoration: "underline",
       },
 
       {

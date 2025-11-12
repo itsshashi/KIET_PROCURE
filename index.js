@@ -2025,6 +2025,7 @@ app.post(
     // console.log('Form Data Received:', formData);
 
     const quotationType = formData.quotationType || "Trade"; // Default to Trade if not specified
+    console.log(formData);
 
     // Normalize form data to arrays with null checks
     const itemDescriptions =
@@ -2122,6 +2123,10 @@ app.post(
         expected_date: formData.validUntil || "",
         termsOfPayment: formData.paymentTerms || "",
         items: items,
+        gstterms: formData.gst || "Extra 18%",
+        insurance: formData.insurance || "N/A",
+        deliveyt: formData.deliveryTerms,
+        package: formData.packaging,
 
         currency: formData.currency || "",
         line: path.join(__dirname, "public", "images", "line.png"),
