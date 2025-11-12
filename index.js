@@ -359,10 +359,11 @@ app.get("/api/orders", async (req, res) => {
                 quotation_file,
                 single,
                 terms_of_payment as payment_terms,
-                created_at
+                created_at,
+                send_date 
             FROM purchase_orders
             ORDER BY created_at DESC
-        `);
+        `); //send date added
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1580,7 +1581,7 @@ app.put("/api/orders/:id/send", async (req, res) => {
   const { id } = req.params;
   try {
     const { rows } = await pool.query(
-      "UPDATE purchase_orders SET status='sent' WHERE id=$1 RETURNING *",
+      "UPDATE purchase_orders SET status='sent', send_date=NOW() WHERE id=$1 RETURNING *",
       [id]
     );
     if (!rows.length) return res.status(404).json({ error: "Order not found" });

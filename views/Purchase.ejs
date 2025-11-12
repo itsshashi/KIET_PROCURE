@@ -1326,7 +1326,7 @@ function addNewProductRow() {
       }
       const data = [];
       // Add header row
-      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Base Amount','GST','Total', 'Status', 'Quotations'];
+      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Send Date', 'Base Amount','GST','Total', 'Status', 'Quotations'];
       data.push(headers);
       let totalCost = 0;
       // Add data rows
@@ -1343,6 +1343,7 @@ function addNewProductRow() {
           order.requested_by,
           formatDate(order.date_required),
           formatDate(order.created_at),
+          formatDate(order.send_date),//send data changed
           '₹' + baseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
           '₹' + gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
           '₹' + totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
