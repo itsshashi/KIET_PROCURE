@@ -2224,6 +2224,23 @@ app.post(
             isSummaryRow: true,
           });
 
+          const a = Number(priceInputs[5] || 0);
+          const b = Number(priceInputs[4] || 0);
+          const c = Number(kietTotal || 0);
+
+          const total = a + b + c;
+
+          console.log("Total:", total.toLocaleString()); // e.g., "15,900"
+
+          kietCosts.push({
+            description: "Total Cost",
+            cost: total || " ",
+            qty: "",
+            totalValue: total || "",
+            colSpan: 3,
+            isSummaryRow: true,
+          });
+
           console.log(kietCosts);
         } else {
           console.log("no pv data");
