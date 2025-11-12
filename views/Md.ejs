@@ -1569,6 +1569,7 @@ quotationForm.addEventListener('submit', async function (e) {
 
     // 3️⃣ Create new FormData for quotation generation
     const formData2 = new FormData(quotationForm);
+    
 
     // 4️⃣ Second request: Quotation generation (PDF)
     const quoteResponse = await fetch('/generate-quotation', {
@@ -4347,16 +4348,28 @@ function calculateEditKietRowValue(row) {
       const savePvFamilyBtn = document.getElementById('savePvFamily');
       let currentFamilyInput = null;
 
+
       function openPvFamilyModal(familyInput) {
         currentFamilyInput = familyInput;
         pvFamilyModal.style.display = 'block';
-        // Clear modal fields
-        document.getElementById('modalFamilyName').value = '';
-        document.getElementById('modalCode').value = '';
-        document.getElementById('modalRevType').value = '';
-        document.getElementById('modalConfig').value = '';
-        document.getElementById('modalSokCard').value = '';
-        document.getElementById('modalpart_no').value = '';
+        const value = familyInput.value.trim();
+        if (value) {
+          const parsed = parseFamilyData(value);
+          document.getElementById('modalFamilyName').value = parsed.familyName;
+          document.getElementById('modalCode').value = parsed.code;
+          document.getElementById('modalRevType').value = parsed.revType;
+          document.getElementById('modalConfig').value = parsed.config;
+          document.getElementById('modalSokCard').value = parsed.sokCard;
+          document.getElementById('modalpart_no').value = parsed.part_no;
+        } else {
+          // Clear modal fields
+          document.getElementById('modalFamilyName').value = '';
+          document.getElementById('modalCode').value = '';
+          document.getElementById('modalRevType').value = '';
+          document.getElementById('modalConfig').value = '';
+          document.getElementById('modalSokCard').value = '';
+          document.getElementById('modalpart_no').value = '';
+        }
       }
 
       function closePvFamilyModal() {
@@ -4408,10 +4421,18 @@ function calculateEditKietRowValue(row) {
        try {
                     const response = await fetch('/api/generate-vk-quotation-number');
                     if (response.ok) {
-                        const data = await response.json();
-
-                        quotationNumberInput.value = data.quotationNumber;
-                    } else {
+                      const data = await response.json(); // { quotationNumber: "VK-20251112-089" }
+                    
+                      const famN = prompt('Enter Family Name'); // browser prompt
+                      if (famN) {
+                        // Modify the quotation number string
+                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
+                      }
+                    
+                      // Set the modified number in your input field
+                      quotationNumberInput.value = data.quotationNumber;
+                    }
+ else {
                         // Fallback to client-side generation
                         const today = new Date();
                         const year = today.getFullYear();
