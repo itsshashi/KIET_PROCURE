@@ -2229,14 +2229,20 @@ app.post(
           const c = Number(kietTotal || 0);
 
           const total = a + b + c;
+          let total1 = (total * 1).toLocaleString();
+          const totalFormatted = total.toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
 
-          console.log("Total:", total.toLocaleString()); // e.g., "15,900"
+          console.log("Total_hjkjkjkjk:", total1, totalFormatted); // e.g., "15,900"
 
           kietCosts.push({
             description: "Total Cost",
-            cost: total || " ",
+            cost: `${totalFormatted}` || " ",
             qty: "",
-            totalValue: total || "",
+            totalValue: total1 || "",
+
             colSpan: 3,
             isSummaryRow: true,
           });
