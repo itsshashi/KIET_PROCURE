@@ -2147,6 +2147,7 @@ app.post(
       }, 1000);
     } else if (quotationType === "VK") {
       const client = await pool.connect();
+
       try {
         // ==============================================================
         // 1️⃣ Generate unique quotation number
@@ -2154,7 +2155,9 @@ app.post(
         const { rows } = await client.query(
           "SELECT generate_vk_quotation_number() AS quotation_number"
         );
-        const quotationNumber = rows[0].quotation_number;
+        vale = promt("Enter Family Name");
+        let quotationNumber = rows[0].quotation_number;
+        quotationNumber = quotationNumber.replace("VK-", `VK-${vale}-KQPS-`);
 
         // ==============================================================
         // 2️⃣ Extract and sanitize form data
@@ -2690,7 +2693,9 @@ app.get("/api/generate-quotation-number", async (req, res) => {
     const result = await client.query(
       "SELECT generate_quotation_number() as quotation_number"
     );
+
     const quotationNumber = result.rows[0].quotation_number;
+
     client.release();
 
     res.json({ quotationNumber });
@@ -3014,7 +3019,9 @@ app.get("/api/generate-vk-quotation-number", async (req, res) => {
     const result = await client.query(
       "SELECT generate_vk_quotation_number() as quotation_number"
     );
-    const quotationNumber = result.rows[0].quotation_number;
+    let quotationNumber = result.rows[0].quotation_number;
+
+    quotationNumber = quotationNumber.replace("VK-", "VK-KQPS-");
     client.release();
 
     res.json({ quotationNumber });
@@ -3491,7 +3498,8 @@ app.post(
       const quotationNumber = await client.query(
         "SELECT generate_vk_quotation_number() as quotation_number"
       );
-      const quotationNumberValue = quotationNumber.rows[0].quotation_number;
+      let quotationNumberValue = quotationNumber.rows[0].quotation_number;
+      quotationNumberValue = quotationNumberValue.replace("VK-", "VK-KQPS-");
       console.log("Generated VK quotation number:", quotationNumber);
 
       // Extract form data
