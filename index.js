@@ -2152,18 +2152,13 @@ app.post(
         // ==============================================================
         // 1️⃣ Generate unique quotation number
         // ==============================================================
-        const { rows } = await client.query(
-          "SELECT generate_vk_quotation_number() AS quotation_number"
-        );
-        vale = promt("Enter Family Name");
-        let quotationNumber = rows[0].quotation_number;
-        quotationNumber = quotationNumber.replace("VK-", `VK-${vale}-KQPS-`);
 
         // ==============================================================
         // 2️⃣ Extract and sanitize form data
         // ==============================================================
         const formData = req.body || " ";
         console.log(formData);
+        const quotationNumber = formData.quotationNumber;
 
         // Process PV Wiring Adaptor Details and KIET Costs
         let pvAdaptors = [];
