@@ -266,9 +266,14 @@
       <div class="mt-4 p-4 bg-gray-50 rounded-lg">
         <div class="flex justify-between items-center">
           <h3 class="text-lg font-semibold">Total Cost: ₹<span id="totalCost">0.00</span></h3>
-          <button onclick="exportToExcel()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-            <i class="fas fa-download mr-2"></i>Export to Excel
-          </button>
+          <div class="flex gap-2">
+            <button onclick="exportToExcel()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+              <i class="fas fa-download mr-2"></i>Export to Excel
+            </button>
+            <button onclick="exportAllSentOrders()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+              <i class="fas fa-download mr-2"></i>Export All Sent Orders
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1310,6 +1315,53 @@ function addNewProductRow() {
 
       // Download file
       XLSX.writeFile(wb, 'Cost_Calculation.xlsx');
+    }
+
+    // Export All Sent Orders
+    function exportAllSentOrders() {
+      const sentOrders = allOrders.filter(order => order.status === 'sent');
+      if (sentOrders.length === 0) {
+        alert('No sent orders to export.');
+        return;
+      }
+      const data = [];
+      // Add header row
+      const headers = ['Order ID', 'Project', 'Project Code', 'Supplier', 'Requested By', 'Date Required', 'Created At', 'Base Amount','GST','Total', 'Status', 'Quotations'];
+      data.push(headers);
+      let totalCost = 0;
+      // Add data rows
+      sentOrders.forEach(order => {
+        const baseAmount = order.total_amount / 1.18;
+        const gstAmount = baseAmount * 0.18;
+        const totalAmount = order.total_amount;
+        totalCost += baseAmount;
+        const rowData = [
+          order.order_id,
+          order.project,
+          order.projectcodenumber || '',
+          order.supplier,
+          order.requested_by,
+          formatDate(order.date_required),
+          formatDate(order.created_at),
+          '₹' + baseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+          '₹' + gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+          '₹' + totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+          capitalizeFirst(order.status),
+          order.quotation_file && order.quotation_file.length > 0 ? order.quotation_file.length + ' file' + (order.quotation_file.length > 1 ? 's' : '') : 'No files'
+        ];
+        data.push(rowData);
+      });
+      // Add total cost row
+      data.push(['', '', '', '', '', '', '', '', '', 'Total Cost(no GST): ₹' + totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })]);
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      // Auto-size columns
+      const colWidths = headers.map(header => ({ wch: Math.max(header.length, 10) }));
+      ws['!cols'] = colWidths;
+      XLSX.utils.book_append_sheet(wb, ws, 'All Sent Orders');
+      // Download file
+      XLSX.writeFile(wb, 'All_Sent_Orders.xlsx');
     }
 
 
