@@ -2240,9 +2240,9 @@ app.post(
 
           kietCosts.push({
             description: "Total Cost",
-            cost: `${totalFormatted}` || " ",
+            cost: total || " ",
             qty: "",
-            totalValue: total1 || "",
+            totalValue: total || "",
 
             colSpan: 3,
             isSummaryRow: true,
