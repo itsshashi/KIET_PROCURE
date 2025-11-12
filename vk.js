@@ -629,21 +629,7 @@ function generateVKQuotation(poData, filePath) {
                           fontSize: 9,
                         },
                       ],
-                      [
-                        {
-                          text: "GST Terms",
-                          font: "Times",
-                          bold: true,
-                          alignment: "left",
-                          fontSize: 9,
-                        },
-                        {
-                          text: poData.gstterms || "",
-                          font: "Times",
-                          alignment: "right",
-                          fontSize: 9,
-                        },
-                      ],
+
                       [
                         {
                           text: "Delivery Leadtime",
