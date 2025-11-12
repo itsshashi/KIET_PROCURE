@@ -469,11 +469,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.poNumber,
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -482,11 +484,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.date,
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -495,12 +499,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.requester?.name,
                           font: "Times",
                           alignment: "right",
-                          fontSize: 12,
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -509,11 +514,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.supplier.contact || "",
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -522,12 +529,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.clientEmail || "",
                           font: "Times",
                           alignment: "right",
-                          fontSize: 10,
+                          fontSize: 9,
                         },
                       ],
 
@@ -537,11 +545,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.expected_date,
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -550,11 +560,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
-                          text: "Ex-works/DoorStep",
+                          text: poData.deliveyt,
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -563,11 +575,73 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.termsOfPayment || "",
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      [
+                        {
+                          text: "GST Terms",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.gstterms || "",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      [
+                        {
+                          text: "Packaging Terms",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.package || "",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      [
+                        {
+                          text: "Insurance",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.insurance || "",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      [
+                        {
+                          text: "GST Terms",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.gstterms || "",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                       [
@@ -576,11 +650,13 @@ function generateVKQuotation(poData, filePath) {
                           font: "Times",
                           bold: true,
                           alignment: "left",
+                          fontSize: 9,
                         },
                         {
                           text: poData.supplier.duration || "",
                           font: "Times",
                           alignment: "right",
+                          fontSize: 9,
                         },
                       ],
                     ],
@@ -666,17 +742,19 @@ function generateVKQuotation(poData, filePath) {
             widths: ["*", "auto"],
             body: [
               [
-                { text: "Grand Total(*Excluded with Gst*)", bold: true },
+                { text: "Grand Total", bold: true, alignment: "right" },
                 {
-                  text: `${poData.currency}. ${grandTotal.toFixed(2)}`,
+                  text: `${poData.currency}. ${(
+                    grandTotal.toFixed(2) * 1
+                  ).toLocaleString()}`,
                   bold: true,
-                  alignment: "right",
+                  alignment: "left",
                 },
               ],
             ],
           },
           layout: horizontalLineLayout,
-          margin: [0, 10, 0, 10],
+          margin: [0, 5, 0, 10],
           font: "Times",
         },
         {
@@ -685,7 +763,7 @@ function generateVKQuotation(poData, filePath) {
               text: "Amount in words: ",
               font: "Times",
               italics: true,
-              margin: [0, 10, 0, 0],
+              margin: [0, 5, 0, 0],
             },
             {
               text: ` ${poData.currency}. ${toWordsInstance.convert(
@@ -709,6 +787,7 @@ function generateVKQuotation(poData, filePath) {
           margin: [0, 15, 0, 0],
           color: "purple",
           lineHeight: 1.3,
+          fontSize: 10,
         },
 
         {
