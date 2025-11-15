@@ -2126,8 +2126,8 @@ app.post(
         items: items,
         gstterms: formData.gst || "Extra 18%",
         insurance: formData.insurance || "N/A",
-        deliveyt: formData.deliveryTerms,
-        package: formData.packaging,
+        deliveyt: formData.deliveryTerms || "Ex-Works/DAP",
+        package: formData.packaging || "Standard Export Packaging extra",
 
         currency: formData.currency || "",
         line: path.join(__dirname, "public", "images", "line.png"),
@@ -2538,57 +2538,66 @@ app.get("/approved-quotations", async (req, res) => {
 app.get("/download-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
-    console.log(`📥 Starting download for quotation param: ${param}`);
 
     const isNumeric = /^\d+$/.test(param);
-    let quotationType = "TRADE";
-    let quotation = null;
 
-    // Try VK first
-    let quotationResult = await pool.query(
-      `SELECT * FROM vk_quotations WHERE ${
+    const quotationResult = await pool.query(
+      `SELECT * FROM quotations WHERE ${
         isNumeric ? "id" : "quotation_number"
       } = $1 LIMIT 1`,
       [param]
     );
 
-    if (quotationResult.rows.length > 0) {
-      quotationType = "VK";
-      console.log(
-        "🔍 VK quotation query result:",
-        JSON.stringify(quotationResult.rows)
-      );
-    } else {
-      quotationResult = await pool.query(
-        `SELECT * FROM quotations WHERE ${
-          isNumeric ? "id" : "quotation_number"
-        } = $1 LIMIT 1`,
-        [param]
-      );
-    }
-
     if (quotationResult.rows.length === 0) {
       return res.status(404).json({ error: "Quotation not found" });
     }
 
-    quotation = quotationResult.rows[0];
-    console.log(
-      `✅ Found quotation: ${quotation.quotation_number} (type: ${quotationType})`
-    );
+    const quotation = quotationResult.rows[0];
+    console.log("quotation format consolw", quotation);
 
+    // =======================================================
+    //  FETCH ITEMS FROM quotation_items TABLE
+    // =======================================================
+    const itemsQuery = `
+      SELECT 
+        part_no,
+        description,
+        hsn_code,
+        quantity,
+        unit,
+        unit_price,
+        total_amount
+      FROM quotation_items
+      WHERE quotation_id = $1
+      ORDER BY id ASC
+    `;
+
+    const itemsResult = await pool.query(itemsQuery, [quotation.id]);
+    const items = itemsResult.rows || [];
+
+    console.log("Fetched items:", items);
+    console.log("quotation items :", quotation);
+
+    // =======================================================
+    //  BUILD poData WITH DATABASE ITEMS
+    // =======================================================
     const poData = {
       poNumber: quotation.quotation_number,
-      date: quotation.quotation_date,
-      expected_date: quotation.valid_until,
+      date: quotation.quotation_date.toLocaleDateString("en-GB"),
+      expected_date: quotation.valid_until.toLocaleDateString("en-GB"),
       termsOfPayment: quotation.payment_terms || "",
       currency: quotation.currency || "INR",
+      requester: {
+        name: quotation.client_name || "",
+      },
+      reference_no: quotation.reference_no,
       company: {
         name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.company_email || "info@kiet.com",
         gst: quotation.company_gst || "29AAFCK6528DIZG",
         address:
           quotation.company_address ||
-          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
         logo: path.join(process.cwd(), "public", "images", "page_logo.jpg"),
       },
       supplier: {
@@ -2597,119 +2606,41 @@ app.get("/download-quotation/:param", async (req, res) => {
         duration: quotation.delivery_duration || "",
         contact: quotation.client_phone || "",
       },
-      shipTo: quotation.client_address || "",
-      requester: { name: quotation.client_name },
-      line: path.join(process.cwd(), "public", "images", "line.png"),
-      signPath: path.join(process.cwd(), "public", "images", "signature.png"),
-      kietCosts: [],
-      pvAdaptors: [],
+      gstterms: quotation.gst || "Extra 18%",
+      insurance: quotation.insurance || "N/A",
+      deliveyt: quotation.deliveryTerms || "Ex-Works/DAP",
+      package: quotation.packaging || "Standard Export Packaging extra",
+      currency: quotation.currency || "",
+      line: path.join(__dirname, "public", "images", "line.png"),
+      signPath: path.join(__dirname, "public", "images", "signature.png"),
+      items: items, // <-- NOW ITEMS COME FROM THE TABLE
     };
 
-    // 🟩 VK-Specific Handling
-    if (quotationType === "VK") {
-      try {
-        console.log(
-          "🔍 Fetching VK-specific data for quotation ID:",
-          quotation
-        );
-        const vkDataResult = await pool.query(
-          "SELECT kiet_costs, pv_adaptors FROM vk_quotations WHERE id = $1",
-          [quotation.id]
-        );
-        console.log("✅ VK-specific data fetched", vkDataResult);
+    console.log("quotation poData:", poData);
 
-        if (vkDataResult.rows.length > 0) {
-          const vkData = vkDataResult.rows[0];
-
-          // Handle KIET COSTS
-          if (vkData.kiet_costs) {
-            try {
-              if (typeof vkData.kiet_costs === "string") {
-                poData.kietCosts = JSON.parse(vkData.kiet_costs);
-              } else if (Array.isArray(vkData.kiet_costs)) {
-                poData.kietCosts = vkData.kiet_costs;
-              } else {
-                poData.kietCosts = JSON.parse(
-                  JSON.stringify(vkData.kiet_costs)
-                );
-              }
-            } catch (err) {
-              console.error("❌ Failed to parse kiet_costs JSON:", err.message);
-            }
-          }
-
-          // Handle PV ADAPTORS
-          if (vkData.pv_adaptors) {
-            try {
-              if (typeof vkData.pv_adaptors === "string") {
-                poData.pvAdaptors = JSON.parse(vkData.pv_adaptors);
-              } else if (Array.isArray(vkData.pv_adaptors)) {
-                poData.pvAdaptors = vkData.pv_adaptors;
-              } else {
-                poData.pvAdaptors = JSON.parse(
-                  JSON.stringify(vkData.pv_adaptors)
-                );
-              }
-            } catch (err) {
-              console.error(
-                "❌ Failed to parse pv_adaptors JSON:",
-                err.message
-              );
-            }
-          }
-        }
-
-        console.log("📊 Loaded KIET Costs:", poData.kietCosts);
-        console.log("📊 Loaded PV Adaptors:", poData.pvAdaptors.length);
-      } catch (err) {
-        console.error("❌ Error fetching VK data:", err.message);
-      }
-    }
-
-    // 🧾 Generate PDF
+    // =======================================================
+    //  GENERATE PDF
+    // =======================================================
     const fileName = `quotation_${
       quotation.quotation_number
     }_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
-    console.log("🧾 Generating VK Quotation PDF...");
-    await generateVKQuotation(poData, filePath);
+    console.log("📄 Generating PDF:", filePath);
 
-    // Wait for file creation
-    await new Promise((resolve, reject) => {
-      const checkFile = () => {
-        if (fs.existsSync(filePath)) {
-          const stats = fs.statSync(filePath);
-          if (stats.size > 0) return resolve();
-        }
-        setTimeout(checkFile, 500);
-      };
-      checkFile();
-      setTimeout(() => reject(new Error("PDF generation timeout")), 15000);
-    });
+    await generateQuotation(poData, filePath);
 
-    console.log("✅ PDF generated, sending for download...");
-    res.download(
-      filePath,
-      `quotation_${quotation.quotation_number}.pdf`,
-      (err) => {
-        if (err) {
-          console.error("❌ Download error:", err);
-          if (!res.headersSent)
-            res.status(500).json({ error: "Download failed" });
-        } else {
-          console.log("✅ Download successful");
-          setTimeout(() => fs.unlink(filePath, () => {}), 300000); // cleanup after 5 mins
-        }
+    console.log("✅ PDF successfully generated, preparing download...");
+
+    return res.download(filePath, fileName, (err) => {
+      if (err) {
+        console.error("❌ Error downloading file:", err);
+        res.status(500).send("Error delivering the file");
       }
-    );
+    });
   } catch (error) {
-    console.error("❌ Download error:", error);
-    if (!res.headersSent) {
-      res
-        .status(500)
-        .json({ error: "Download failed", details: error.message });
-    }
+    console.error("❌ Error fetching quotation:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
 
@@ -3015,15 +2946,16 @@ app.get("/api/pending-quotations", async (req, res) => {
     // Get regular quotations
     const regularResult = await client.query(`
             SELECT
-                q.*,
-                COALESCE(SUM(qi.total_amount), 0) as total_amount,
-                COUNT(qi.id) as item_count,
-                'regular' as quotation_source
-            FROM quotations q
-            LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
-            WHERE q.status = 'pending'
-            GROUP BY q.id
-            ORDER BY q.created_at DESC
+    q.*,
+    COALESCE(SUM(qi.total_amount), 0) AS items_total,
+    COUNT(qi.id) AS item_count,
+    'regular' AS quotation_source
+FROM quotations q
+LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+WHERE q.status = 'pending'
+GROUP BY q.id
+ORDER BY q.created_at DESC;
+
         `);
 
     // Get VK quotations
@@ -3090,6 +3022,37 @@ app.get("/api/quotations/:id/attachments", async (req, res) => {
   }
 });
 
+// Get VK quotation attachments
+app.get("/api/vk-quotations/:id/attachments", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await pool.connect();
+    const result = await client.query(
+      `
+            SELECT
+                id,
+                file_name,
+                original_name,
+                file_path,
+                file_size,
+                mime_type,
+                notes,
+                uploaded_at
+            FROM vk_quotation_attachments
+            WHERE quotation_id = $1
+            ORDER BY uploaded_at DESC
+        `,
+      [id]
+    );
+
+    client.release();
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching VK quotation attachments:", error);
+    res.status(500).json({ error: "Failed to fetch VK quotation attachments" });
+  }
+});
+
 // Get quotation items
 app.get("/api/quotations/:id/items", async (req, res) => {
   try {
@@ -3103,11 +3066,11 @@ app.get("/api/quotations/:id/items", async (req, res) => {
                 part_no,
                 description,
                 hsn_code,
-                gst_rate,
+                
                 quantity,
                 unit,
                 unit_price,
-                discount,
+                
                 total_amount
             FROM quotation_items
             WHERE quotation_id = $1
@@ -3756,6 +3719,7 @@ app.post(
     console.log("🔄 Starting send-quotation-approval request");
     console.log("Request body keys:", Object.keys(req.body));
     console.log("Files received:", req.files ? req.files.length : 0);
+    console.log("Quotation request body:", req.body);
 
     const client = await pool.connect();
 
@@ -3768,6 +3732,7 @@ app.post(
       );
       const quotationNumber = quotationNumberResult.rows[0].quotation_number;
       console.log("Generated quotation number:", quotationNumber);
+      console.log("quotation req body items:", req.body);
 
       // Extract form data
       const {
@@ -3787,11 +3752,63 @@ app.post(
         clientPhone,
         clientCompany,
         clientAddress,
-        taxRate,
-        discountRate,
+        gstterms,
+        packaging,
+        insurance,
+        deliveryTerms,
+
         notes,
-        items,
       } = req.body;
+
+      const items = [];
+      const formData = req.body || {};
+
+      const itemDescriptions =
+        (formData && formData["itemDescription"]) ||
+        (formData && formData.itemDescription) ||
+        [];
+      let itemQuantities, itemPrices, itemPartNos, itemHSNs, itemUnits;
+
+      itemQuantities =
+        (formData && formData["itemQuantity"]) ||
+        (formData && formData.itemQuantity) ||
+        [];
+      itemPrices =
+        (formData && formData["itemPrice"]) ||
+        (formData && formData.itemPrice) ||
+        [];
+
+      itemPartNos =
+        (formData && formData["itemPartNo"]) ||
+        (formData && formData.itemPartNo) ||
+        [];
+      itemHSNs =
+        (formData && formData["itemHSN"]) ||
+        (formData && formData.itemHSN) ||
+        [];
+      itemUnits =
+        (formData && formData["itemUnit"]) ||
+        (formData && formData.itemUnit) ||
+        [];
+
+      let subtotal = 0;
+
+      itemDescriptions.forEach((desc, index) => {
+        const quantity = parseFloat(itemQuantities[index]) || 0;
+        const price = parseFloat(itemPrices[index]) || 0;
+
+        subtotal += quantity * price;
+
+        items.push({
+          part_no: itemPartNos[index] || "",
+          description: desc,
+          hsn_code: itemHSNs[index] || "",
+
+          quantity: quantity,
+          unit: itemUnits[index] || "Nos",
+          unit_price: price,
+        });
+      });
 
       console.log("Form data extracted:", {
         quotationType,
@@ -3804,39 +3821,39 @@ app.post(
       console.log("Raw items data:", items);
       console.log("Type of items:", typeof items);
       let itemsData;
+
       try {
         if (typeof items === "string") {
           itemsData = JSON.parse(items);
         } else if (Array.isArray(items)) {
-          // If items is already an array, use it directly
           itemsData = items;
         } else {
-          console.error(
-            "Items is undefined or not a valid type for regular quotation"
-          );
           await client.query("ROLLBACK");
           return res.status(400).json({
             success: false,
             error: "Invalid items data format",
-            details: "Items field is missing or invalid",
           });
         }
-        console.log("Parsed items data:", itemsData.length, "items");
-      } catch (parseError) {
-        console.error("Error parsing items JSON:", parseError);
+      } catch (e) {
         await client.query("ROLLBACK");
         return res.status(400).json({
           success: false,
-          error: "Invalid items data format",
-          details: parseError.message,
+          error: "Invalid JSON",
+          details: e.message,
         });
       }
 
-      // Calculate total amount
+      console.log("Parsed items data:", itemsData);
+
+      // ✅ Calculate total correctly
       let totalAmount = 0;
+
       for (const item of itemsData) {
-        totalAmount += parseFloat(item.total) || 0;
+        const qty = Number(item.quantity) || 0;
+        const price = Number(item.unit_price) || 0;
+        totalAmount += qty * price;
       }
+
       console.log("Calculated total amount:", totalAmount);
 
       // Insert quotation with pending approval status
@@ -3846,8 +3863,8 @@ app.post(
                 valid_until, currency, payment_terms, delivery_duration,
                 company_name, company_email, company_gst, company_address,
                 client_name, client_email, client_phone, client_company, client_address,
-                tax_rate, discount_rate, total_amount, notes, status, created_by
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                 total_amount, notes, status, created_by,gstterms,packaging,insurance,deliveryTerms
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21,$22,$23,$24,$25)
             RETURNING id
         `;
 
@@ -3869,12 +3886,15 @@ app.post(
         clientPhone,
         clientCompany,
         clientAddress,
-        parseFloat(taxRate) || 18,
-        parseFloat(discountRate) || 0,
+
         totalAmount,
         notes,
         "pending",
         req.session.user ? req.session.user.email : null,
+        gstterms,
+        packaging,
+        insurance,
+        deliveryTerms,
       ];
 
       const quotationResult = await client.query(
@@ -3887,22 +3907,22 @@ app.post(
       for (const item of itemsData) {
         const itemQuery = `
                 INSERT INTO quotation_items (
-                    quotation_id, part_no, description, hsn_code, gst_rate,
-                    quantity, unit, unit_price, discount, total_amount
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    quotation_id, part_no, description, hsn_code,
+                    quantity, unit, unit_price,  total_amount
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             `;
 
         const itemValues = [
           quotationId,
-          item.partNo,
+          item.part_no,
           item.description,
-          item.hsn,
-          item.gst,
+          item.hsn_code,
+
           item.quantity,
           item.unit,
-          item.unitPrice,
-          item.discount,
-          item.total,
+          item.unit_price,
+
+          totalAmount,
         ];
 
         await client.query(itemQuery, itemValues);
@@ -4440,6 +4460,62 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
     });
   } finally {
     client.release();
+  }
+});
+
+//update the quotation info in database and generate the quotation for md created by md
+app.put("/api/quotations/:id/items", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items } = req.body;
+    console.log("PUT /api/quotations/:id/items called", items);
+    const grandTotal = items.reduce((sum, item) => {
+      return sum + Number(item.total || 0);
+    }, 0);
+
+    console.log("Grand totalasdfghjkl;lkjhgfdsa =", grandTotal);
+
+    console.log("Updating quotation items for ID:", id);
+    console.log("Items received:", items);
+
+    const client = await pool.connect();
+
+    // 1. Delete old items
+    await client.query(`DELETE FROM quotation_items WHERE quotation_id = $1`, [
+      id,
+    ]);
+
+    // 2. Insert new items
+    for (let item of items) {
+      await client.query(
+        `
+        INSERT INTO quotation_items
+        (quotation_id, part_no, description, hsn_code, quantity, unit, unit_price, total_amount)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `,
+        [
+          id,
+          item.partNo,
+          item.description,
+          item.hsn,
+          item.quantity,
+          item.unit,
+          item.unitPrice,
+          item.total,
+        ]
+      );
+    }
+    await client.query(
+      `UPDATE quotations SET total_amount = $1 WHERE id = $2`,
+      [grandTotal, id]
+    );
+
+    client.release();
+
+    res.json({ message: "Quotation items updated successfully" });
+  } catch (error) {
+    console.error("Error updating quotation items:", error);
+    res.status(500).json({ error: "Failed to update quotation items" });
   }
 });
 

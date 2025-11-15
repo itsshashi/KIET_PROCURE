@@ -686,9 +686,23 @@ function generateQuotation(poData, filePath) {
     },
   };
 
-  const pdfDoc = printer.createPdfKitDocument(docDefinition);
-  pdfDoc.pipe(fs.createWriteStream(filePath));
-  pdfDoc.end();
+  return new Promise((resolve, reject) => {
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const stream = fs.createWriteStream(filePath);
+
+    pdfDoc.pipe(stream);
+    pdfDoc.end();
+
+    stream.on("finish", () => {
+      console.log("📌 PDF successfully written:", filePath);
+      resolve();
+    });
+
+    stream.on("error", (err) => {
+      console.error("❌ PDF write error:", err);
+      reject(err);
+    });
+  });
 }
 
 export default generateQuotation;
