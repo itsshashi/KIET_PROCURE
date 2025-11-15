@@ -1378,6 +1378,7 @@
                 </li>
 
                 <li class="menu-item" id="logout-btn">
+                    
 
     <form action="/logout" method="post">
 <i class="fas fa-sign-out-alt"></i>
@@ -1539,13 +1540,19 @@
     <i class="fas fa-paper-plane"></i> Submit Order
   </button>
 </form>
+ <!-- Loader Overlay -->
+    <div id="loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+        <p>Submitting Order...</p>
+    </div>
 
 
 
 
 
             </div>
-            <script>
+
+    <script>
 document.getElementById("supplierName").addEventListener("blur", async function () {
       const supplier_name = this.value.trim();
       if (!supplier_name) return;
@@ -1565,7 +1572,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
         console.error("Error fetching supplier:", error);
       }
     });
-    </script>
+    </script>           
 
             <!-- Trade & Service Tab -->
             <div class="tab-content" id="trade-service">
@@ -1655,7 +1662,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                 </div>
                    
                             </div>
-                            <div class="form-col">
+                            
                <div class="form-row">
                  <div class="form-col">
                    <div class="form-group">
@@ -1830,127 +1837,8 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                     </form>
                 </div>
             </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-            // Generate Quotation Number
-            const generateQuotationNumberBtn = document.getElementById('generateQuotationNumber');
-            const quotationNumberInput = document.getElementById('quotationNumber');
-
-            generateQuotationNumberBtn.addEventListener('click', async function() {
-                try {
-                    const response = await fetch('/api/generate-quotation-number');
-                    if (response.ok) {
-                        const data = await response.json();
-                        quotationNumberInput.value = data.quotationNumber;
-                    } else {
-                        // Fallback to client-side generation
-                        const today = new Date();
-                        const year = today.getFullYear();
-                        const month = String(today.getMonth() + 1).padStart(2, '0');
-                        const day = String(today.getDate()).padStart(2, '0');
-                        const dateStr = `${year}${month}${day}`;
-                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                        const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
-                        quotationNumberInput.value = quotationNumber;
-                    }
-                } catch (error) {
-                    console.error('Error generating quotation number:', error);
-                    // Fallback to client-side generation
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const dateStr = `${year}${month}${day}`;
-                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                    const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
-                    quotationNumberInput.value = quotationNumber;
-                }
-            });
-
-            // Generate Reference Number
-            const generateReferenceNumberBtn = document.getElementById('generateReferenceNumber');
-            const referenceNoInput = document.getElementById('referenceNo');
-
-            generateReferenceNumberBtn.addEventListener('click', function() {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${day}`;
-                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                const referenceNumber = `REF-${dateStr}-${randomNum}`;
-                referenceNoInput.value = referenceNumber;
-            });
-        
-
-            // Add Item functionality
-            const addItemBtn = document.getElementById('addItem');
-            const itemsTableBody = document.getElementById('itemsTableBody');
-
-            addItemBtn.addEventListener('click', function() {
-                const newRow = document.createElement('tr');
-                newRow.className = 'item-row';
-                newRow.innerHTML = `
-                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
-                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
-                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
-                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
-                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
-                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
-                `;
-                itemsTableBody.appendChild(newRow);
-                attachCalculationListeners(newRow);
-            });
-
-            // Remove Item functionality
-            itemsTableBody.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-item')) {
-                    e.target.closest('tr').remove();
-                    calculateGrandTotal();
-                }
-            });
-
-            // Function to attach calculation listeners to a row
-            function attachCalculationListeners(row) {
-                const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
-                const priceInput = row.querySelector('input[name="itemPrice[]"]');
+            
                 
-                const totalInput = row.querySelector('input[name="itemTotal[]"]');
-
-                function calculateRowTotal() {
-                    const quantity = parseFloat(quantityInput.value) || 0;
-                    const price = parseFloat(priceInput.value) || 0;
-                   
-
-                    const subtotal = quantity * price;
-                    
-                    const total = subtotal;
-
-                    totalInput.value = total.toFixed(2);
-                    calculateGrandTotal();
-                }
-
-                quantityInput.addEventListener('input', calculateRowTotal);
-                priceInput.addEventListener('input', calculateRowTotal);
-                
-            }
-
-            // Attach listeners to existing rows
-            document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
-
-            // Function to calculate grand total
-            function calculateGrandTotal() {
-                const totalInputs = document.querySelectorAll('input[name="itemTotal[]"]');
-                let grandTotal = 0;
-                totalInputs.forEach(input => {
-                    grandTotal += parseFloat(input.value) || 0;
-                });
-                document.getElementById('tradeGrandTotal').value = grandTotal.toFixed(2);
-            }
-        });
-            </script>
 
             <!-- MAE Tab -->
             <div class="tab-content" id="mae">
@@ -2687,6 +2575,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
             </div>
         </div>
     </div>
+</div></div>
     <script>
 
      
@@ -4859,11 +4748,131 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 
     </script>
 
-    <!-- Loader Overlay -->
-    <div id="loader" class="loader-overlay">
-        <div class="loader-spinner"></div>
-        <p>Submitting Order...</p>
-    </div>
+   
+
+    <script>
+        
+document.addEventListener('DOMContentLoaded', function() {
+            // Generate Quotation Number
+            const generateQuotationNumberBtn = document.getElementById('generateQuotationNumber');
+            const quotationNumberInput = document.getElementById('quotationNumber');
+
+            generateQuotationNumberBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/generate-quotation-number');
+                    if (response.ok) {
+                        const data = await response.json();
+                        quotationNumberInput.value = data.quotationNumber;
+                    } else {
+                        // Fallback to client-side generation
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                        const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                        quotationNumberInput.value = quotationNumber;
+                    }
+                } catch (error) {
+                    console.error('Error generating quotation number:', error);
+                    // Fallback to client-side generation
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                    quotationNumberInput.value = quotationNumber;
+                }
+            });
+
+            // Generate Reference Number
+            const generateReferenceNumberBtn = document.getElementById('generateReferenceNumber');
+            const referenceNoInput = document.getElementById('referenceNo');
+
+            generateReferenceNumberBtn.addEventListener('click', function() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${year}${month}${day}`;
+                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const referenceNumber = `REF-${dateStr}-${randomNum}`;
+                referenceNoInput.value = referenceNumber;
+            });
+        
+
+            // Add Item functionality
+            const addItemBtn = document.getElementById('addItem');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+
+            addItemBtn.addEventListener('click', function() {
+                const newRow = document.createElement('tr');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
+                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
+                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
+                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
+                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
+                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
+                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+                `;
+                itemsTableBody.appendChild(newRow);
+                attachCalculationListeners(newRow);
+            });
+
+            // Remove Item functionality
+            itemsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-item')) {
+                    e.target.closest('tr').remove();
+                    calculateGrandTotal();
+                }
+            });
+
+            // Function to attach calculation listeners to a row
+            function attachCalculationListeners(row) {
+                const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
+                const priceInput = row.querySelector('input[name="itemPrice[]"]');
+                
+                const totalInput = row.querySelector('input[name="itemTotal[]"]');
+
+                function calculateRowTotal() {
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                   
+
+                    const subtotal = quantity * price;
+                    
+                    const total = subtotal;
+
+                    totalInput.value = total.toFixed(2);
+                    calculateGrandTotal();
+                }
+
+                quantityInput.addEventListener('input', calculateRowTotal);
+                priceInput.addEventListener('input', calculateRowTotal);
+                
+            }
+
+            // Attach listeners to existing rows
+            document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
+
+            // Function to calculate grand total
+            function calculateGrandTotal() {
+                const totalInputs = document.querySelectorAll('input[name="itemTotal[]"]');
+                let grandTotal = 0;
+                totalInputs.forEach(input => {
+                    grandTotal += parseFloat(input.value) || 0;
+                });
+                document.getElementById('tradeGrandTotal').value = grandTotal.toFixed(2);
+            }
+        });
+            
+    </script>
 </body>
 </html>
 
