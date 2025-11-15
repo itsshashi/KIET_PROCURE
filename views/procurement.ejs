@@ -968,7 +968,7 @@
 
         /* Trade & Service Form Styles */
         .form-container {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -1543,7 +1543,29 @@
 
 
 
+
             </div>
+            <script>
+document.getElementById("supplierName").addEventListener("blur", async function () {
+      const supplier_name = this.value.trim();
+      if (!supplier_name) return;
+
+      try {
+        const response = await fetch(`/supplier/${encodeURIComponent(supplier_name)}`);
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById("supplierAddress").value = data.supplier_address || "";
+          document.getElementById("supplierGst").value = data.supplier_gst || "";
+          document.getElementById("phone").value=data.contact|| "";
+          alert("We found the Supplier🤩 ")
+        } else {
+          alert("Supplier not found");
+        }
+      } catch (error) {
+        console.error("Error fetching supplier:", error);
+      }
+    });
+    </script>
 
             <!-- Trade & Service Tab -->
             <div class="tab-content" id="trade-service">
@@ -1633,6 +1655,54 @@
                                 </div>
                    
                             </div>
+                            <div class="form-col">
+               <div class="form-row">
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="gst">GST</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="gst" name="gstterms" placeholder="GST">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="packaging">Packaging</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="packaging" name="packaging" placeholder="Packaging">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="insurance">Insurance</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="insurance" name="insurance" placeholder="Insurance">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="deliveryTerms">Delivery Terms</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="deliveryTerms" name="deliveryTerms" placeholder="Delivery Terms">
+                   </div>
+                 </div>
+               </div>
+                            
                         </div>
 
                         <!-- Client Information Section -->
@@ -1687,11 +1757,11 @@
                                         <th>Part No</th>
                                         <th>Description</th>
                                         <th>HSN Code</th>
-                                        <th>GST (%)</th>
+
                                         <th>Qty</th>
                                         <th>Unit</th>
                                         <th>Unit Price</th>
-                                        <th>Discount (%)</th>
+
                                         <th>Total Amount</th>
                                         <th>Actions</th>
                                     </tr>
@@ -1701,18 +1771,18 @@
                                         <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
                                         <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
                                         <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                                        <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
+
                                         <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
                                         <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
                                         <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
-                                        <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
+
                                         <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
                                         <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
                                     </tr>
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="8" style="text-align: right; font-weight: bold; padding-right: 10px;">Grand Total:</td>
+                                        <td colspan="6" style="text-align: right; font-weight: bold; padding-right: 10px;">Grand Total:</td>
                                         <td><input type="number" step="0.01" id="tradeGrandTotal" readonly style="background-color: #f0f0f0; font-weight: bold; width: 100%;"></td>
                                         <td></td>
                                     </tr>
@@ -1724,20 +1794,7 @@
                         <!-- Summary Section -->
                         <div class="form-section">
                             <h2 class="section-title">Summary</h2>
-                            <div class="form-row">
-                                <div class="form-col">
-                                    <div class="form-group">
-                                        <label for="taxRate">Tax Rate (%)</label>
-                                        <input type="number" step="0.01" id="taxRate" name="taxRate" value="18">
-                                    </div>
-                                </div>
-                                <div class="form-col">
-                                    <div class="form-group">
-                                        <label for="discountRate">Discount Rate (%)</label>
-                                        <input type="number" step="0.01" id="discountRate" name="discountRate" value="0">
-                                    </div>
-                                </div>
-                            </div>
+                            
                             <div class="form-group">
                                 <label for="notes">Additional Notes</label>
                                 <textarea id="notes" name="notes" rows="4" placeholder="Any additional notes or terms"></textarea>
@@ -1767,12 +1824,133 @@
                         <div class="form-actions">
                             
                             
-<button type="button" id="sendApprovalRequest">Send Approval Request</button>
+<button type="submit" id="sendApprovalRequest" class="btn btn-primary">Send Approval Request</button>
                             
                         </div>
                     </form>
                 </div>
             </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+            // Generate Quotation Number
+            const generateQuotationNumberBtn = document.getElementById('generateQuotationNumber');
+            const quotationNumberInput = document.getElementById('quotationNumber');
+
+            generateQuotationNumberBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/generate-quotation-number');
+                    if (response.ok) {
+                        const data = await response.json();
+                        quotationNumberInput.value = data.quotationNumber;
+                    } else {
+                        // Fallback to client-side generation
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                        const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                        quotationNumberInput.value = quotationNumber;
+                    }
+                } catch (error) {
+                    console.error('Error generating quotation number:', error);
+                    // Fallback to client-side generation
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
+                    quotationNumberInput.value = quotationNumber;
+                }
+            });
+
+            // Generate Reference Number
+            const generateReferenceNumberBtn = document.getElementById('generateReferenceNumber');
+            const referenceNoInput = document.getElementById('referenceNo');
+
+            generateReferenceNumberBtn.addEventListener('click', function() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${year}${month}${day}`;
+                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const referenceNumber = `REF-${dateStr}-${randomNum}`;
+                referenceNoInput.value = referenceNumber;
+            });
+        
+
+            // Add Item functionality
+            const addItemBtn = document.getElementById('addItem');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+
+            addItemBtn.addEventListener('click', function() {
+                const newRow = document.createElement('tr');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
+                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
+                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
+                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
+                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
+                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
+                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+                `;
+                itemsTableBody.appendChild(newRow);
+                attachCalculationListeners(newRow);
+            });
+
+            // Remove Item functionality
+            itemsTableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-item')) {
+                    e.target.closest('tr').remove();
+                    calculateGrandTotal();
+                }
+            });
+
+            // Function to attach calculation listeners to a row
+            function attachCalculationListeners(row) {
+                const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
+                const priceInput = row.querySelector('input[name="itemPrice[]"]');
+                
+                const totalInput = row.querySelector('input[name="itemTotal[]"]');
+
+                function calculateRowTotal() {
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                   
+
+                    const subtotal = quantity * price;
+                    
+                    const total = subtotal;
+
+                    totalInput.value = total.toFixed(2);
+                    calculateGrandTotal();
+                }
+
+                quantityInput.addEventListener('input', calculateRowTotal);
+                priceInput.addEventListener('input', calculateRowTotal);
+                
+            }
+
+            // Attach listeners to existing rows
+            document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
+
+            // Function to calculate grand total
+            function calculateGrandTotal() {
+                const totalInputs = document.querySelectorAll('input[name="itemTotal[]"]');
+                let grandTotal = 0;
+                totalInputs.forEach(input => {
+                    grandTotal += parseFloat(input.value) || 0;
+                });
+                document.getElementById('tradeGrandTotal').value = grandTotal.toFixed(2);
+            }
+        });
+            </script>
 
             <!-- MAE Tab -->
             <div class="tab-content" id="mae">
@@ -2445,7 +2623,7 @@
                     </div>
                 </div>
 
-              <div class="tracking-wrapper">
+              <div class="tracking-wrapper" style="display: none;">
   <!-- Progress line -->
             <div id="progressBar"></div>
 
@@ -2509,13 +2687,12 @@
             </div>
         </div>
     </div>
-      </div>
-            </div>
-
-            
-
     <script>
-        // Sample data for orders
+
+     
+     
+    
+        
         let orders = [];
         let approvedQuotations = [];
 
@@ -2767,14 +2944,14 @@
                     <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
                 </td>
             `;
-            
+
             tbody.appendChild(newRow);
             addRowEventListeners(newRow);
-            
+
             // Update row numbers
             updateRowNumbers();
         }
-        calculateRowTotal(row);
+        calculateRowTotal(newRow);
         // Add event listeners to a table row
         function addRowEventListeners(row) {
             // Quantity change
@@ -2794,7 +2971,7 @@
 
             row.querySelector('.discount').addEventListener('input', function() {
             calculateRowTotal(row);
-    });
+            });
             // Delete row
             row.querySelector('.delete-row').addEventListener('click', function() {
                 if (document.querySelectorAll('#productTable tbody tr').length > 1) {
@@ -3200,25 +3377,7 @@
             loadQuotationUploads();
         });
 
-    document.getElementById("supplierName").addEventListener("blur", async function () {
-      const supplier_name = this.value.trim();
-      if (!supplier_name) return;
-
-      try {
-        const response = await fetch(`/supplier/${encodeURIComponent(supplier_name)}`);
-        if (response.ok) {
-          const data = await response.json();
-          document.getElementById("supplierAddress").value = data.supplier_address || "";
-          document.getElementById("supplierGst").value = data.supplier_gst || "";
-          document.getElementById("phone").value=data.contact|| "";
-          alert("We found the Suppler🤩 ")
-        } else {
-          alert("Supplier not found");
-        }
-      } catch (error) {
-        console.error("Error fetching supplier:", error);
-      }
-    });
+    
 
         // Function to show order details
         function showOrderDetails(order) {
@@ -3306,131 +3465,9 @@
          // Select an order to update tracking visualization
 
          // Trade & Service Tab JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
+        
             // Generate Quotation Number
-            const generateQuotationNumberBtn = document.getElementById('generateQuotationNumber');
-            const quotationNumberInput = document.getElementById('quotationNumber');
-
-            generateQuotationNumberBtn.addEventListener('click', async function() {
-                try {
-                    const response = await fetch('/api/generate-quotation-number');
-                    if (response.ok) {
-                        const data = await response.json();
-                        quotationNumberInput.value = data.quotationNumber;
-                    } else {
-                        // Fallback to client-side generation
-                        const today = new Date();
-                        const year = today.getFullYear();
-                        const month = String(today.getMonth() + 1).padStart(2, '0');
-                        const day = String(today.getDate()).padStart(2, '0');
-                        const dateStr = `${year}${month}${day}`;
-                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                        const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
-                        quotationNumberInput.value = quotationNumber;
-                    }
-                } catch (error) {
-                    console.error('Error generating quotation number:', error);
-                    // Fallback to client-side generation
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const dateStr = `${year}${month}${day}`;
-                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                    const quotationNumber = `TRADE-${dateStr}-${randomNum}`;
-                    quotationNumberInput.value = quotationNumber;
-                }
-            });
-
-            // Generate Reference Number
-            const generateReferenceNumberBtn = document.getElementById('generateReferenceNumber');
-            const referenceNoInput = document.getElementById('referenceNo');
-
-            generateReferenceNumberBtn.addEventListener('click', function() {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${day}`;
-                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                const referenceNumber = `REF-${dateStr}-${randomNum}`;
-                referenceNoInput.value = referenceNumber;
-            });
-
-            // Add Item functionality
-            const addItemBtn = document.getElementById('addItem');
-            const itemsTableBody = document.getElementById('itemsTableBody');
-
-            addItemBtn.addEventListener('click', function() {
-                const newRow = document.createElement('tr');
-                newRow.className = 'item-row';
-                newRow.innerHTML = `
-                    <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
-                    <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                    <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
-                    <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
-                    <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
-                    <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" required></td>
-                    <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
-                    <td><input type="number" step="0.01" name="itemTotal[]" placeholder="Total" readonly style="background-color: #f0f0f0;"></td>
-                    <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
-                `;
-                itemsTableBody.appendChild(newRow);
-                attachCalculationListeners(newRow);
-            });
-
-            // Remove Item functionality
-            itemsTableBody.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-item')) {
-                    e.target.closest('tr').remove();
-                    calculateGrandTotal();
-                }
-            });
-
-            // Function to attach calculation listeners to a row
-            function attachCalculationListeners(row) {
-                const quantityInput = row.querySelector('input[name="itemQuantity[]"]');
-                const priceInput = row.querySelector('input[name="itemPrice[]"]');
-                const discountInput = row.querySelector('input[name="itemDiscount[]"]');
-                const gstInput = row.querySelector('input[name="itemGST[]"]');
-                const totalInput = row.querySelector('input[name="itemTotal[]"]');
-
-                function calculateRowTotal() {
-                    const quantity = parseFloat(quantityInput.value) || 0;
-                    const price = parseFloat(priceInput.value) || 0;
-                    const discount = parseFloat(discountInput.value) || 0;
-                    const gst = parseFloat(gstInput.value) || 0;
-
-                    const subtotal = quantity * price;
-                    const discountAmount = subtotal * (discount / 100);
-                    const afterDiscount = subtotal - discountAmount;
-                    const gstAmount = afterDiscount * (gst / 100);
-                    const total = afterDiscount + gstAmount;
-
-                    totalInput.value = total.toFixed(2);
-                    calculateGrandTotal();
-                }
-
-                quantityInput.addEventListener('input', calculateRowTotal);
-                priceInput.addEventListener('input', calculateRowTotal);
-                discountInput.addEventListener('input', calculateRowTotal);
-                gstInput.addEventListener('input', calculateRowTotal);
-            }
-
-            // Attach listeners to existing rows
-            document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
-
-            // Function to calculate grand total
-            function calculateGrandTotal() {
-                const totalInputs = document.querySelectorAll('input[name="itemTotal[]"]');
-                let grandTotal = 0;
-                totalInputs.forEach(input => {
-                    grandTotal += parseFloat(input.value) || 0;
-                });
-                document.getElementById('tradeGrandTotal').value = grandTotal.toFixed(2);
-            }
-        });
+           
 
         // Add Attachment functionality
             const addAttachmentBtn = document.getElementById('addAttachment');
@@ -3495,8 +3532,10 @@
             try {
                 const response = await fetch('/api/send-quotation-approval', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    
                 });
+                console.log("Response:", response);
 
                 if (response.ok) {
                     const result = await response.json();

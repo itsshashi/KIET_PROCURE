@@ -2577,9 +2577,9 @@ function resetFields() {
                  <th class="px-6 py-3 border">HSN Code</th>
                  <th class="px-6 py-3 border">Quantity</th>
                  <th class="px-6 py-3 border">Unit Price (₹)</th>
-                 <th class="px-6 py-3 border">GST %</th>
+                 
                  <th class="px-6 py-3 border">Unit</th>
-                 <th class="px-6 py-3 border">Discount</th>
+                 
                  <th class="px-6 py-3 border">Total (₹)</th>
                  <th class="px-6 py-3 border">Actions</th>
                </tr>
@@ -2589,7 +2589,7 @@ function resetFields() {
              </tbody>
              <tfoot id="editQuotationTableFooter" class="bg-gray-100">
                <tr>
-                 <td colspan="10" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
+                 <td colspan="8" class="px-4 py-2 border font-semibold text-right">Grand Total:</td>
                  <td class="px-4 py-2 border font-bold text-lg" id="editQuotationGrandTotal">₹0.00</td>
                </tr>
              </tfoot>
@@ -3153,10 +3153,10 @@ function resetFields() {
               <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'vk')">
+              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'regular')">
                 <i class="fas fa-check"></i> Approve
               </button>
-              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'vk')">
+              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'regular')">
                 <i class="fas fa-times"></i> Reject
               </button>
             </td>
@@ -3537,6 +3537,7 @@ document.getElementById('editQuotationForm').addEventListener('submit', async fu
   // Collect quotation items
   const items = [];
   const itemRows = document.querySelectorAll('#editQuotationTableBody tr');
+  console.log('Item Rows:', itemRows);
 
   itemRows.forEach(row => {
     const item = {
@@ -3545,9 +3546,9 @@ document.getElementById('editQuotationForm').addEventListener('submit', async fu
       hsn: row.querySelector('.edit-quotation-hsn').value,
       quantity: row.querySelector('.edit-quotation-quantity').value,
       unitPrice: row.querySelector('.edit-quotation-unit-price').value,
-      gst: row.querySelector('.edit-quotation-gst').value,
+     
       unit: row.querySelector('.edit-quotation-unit').value,
-      discount: row.querySelector('.edit-quotation-discount').value,
+      
       total: row.querySelector('.edit-quotation-total').value
     };
     items.push(item);
@@ -3570,22 +3571,7 @@ document.getElementById('editQuotationForm').addEventListener('submit', async fu
     if (!response.ok) throw new Error('Failed to update quotation');
 
     // Handle file uploads if any
-    const files = document.getElementById('newQuotationFileForEdit').files;
-    if (files.length > 0) {
-      const fileFormData = new FormData();
-      for (let file of files) {
-        fileFormData.append('quotations', file);
-      }
-
-      const fileResponse = await fetch(`/api/quotations/${currentEditId}/attachments`, {
-        method: 'POST',
-        body: fileFormData
-      });
-
-      if (!fileResponse.ok) {
-        console.warn('File upload failed, but quotation details were updated');
-      }
-    }
+   
 
     alert('Quotation updated successfully! ✅');
     closeEditQuotation();
@@ -3701,6 +3687,7 @@ function populateEditQuotationTable(order, items = []) {
   if (items && items.length > 0) {
     items.forEach((product, index) => {
       addEditQuotationRow(product, index + 1);
+      console.log('Added quotation row for product:', product);
     });
   } else {
     addEditQuotationRow(null, 1);
@@ -3819,31 +3806,27 @@ function addEditQuotationRow(product = null, slNo = null) {
   row.innerHTML = `
     <td class="px-6 py-3 border text-center">${slNo}</td>
     <td class="px-6 py-3 border">
-      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-part-no" value="${product ? product.partno || '' : ''}" placeholder="Part No">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-part-no" value="${product ? product.part_no || '' : ''}" placeholder="Part No">
     </td>
     <td class="px-6 py-3 border">
       <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
     </td>
     <td class="px-6 py-3 border">
-      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-hsn" value="${product ? product.hsncode || '' : ''}" placeholder="HSN Code">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-hsn" value="${product ? product.hsn_code || '' : ''}" placeholder="HSN Code">
     </td>
     <td class="px-6 py-3 border">
       <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
     </td>
     <td class="px-6 py-3 border">
-      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-unit-price" value="${product ? product.unitprice || '' : ''}" placeholder="Price" step="0.01">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-unit-price" value="${product ? product.unit_price || '' : ''}" placeholder="Price" step="0.01">
     </td>
-    <td class="px-6 py-3 border">
-      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
-    </td>
+    
     <td class="px-6 py-3 border">
       <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-unit" value="${product ? product.unit || '' : ''}" placeholder="Unit">
     </td>
+    
     <td class="px-6 py-3 border">
-      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-discount" value="${product ? product.discount || '' : ''}" placeholder="Discount" step="0.01">
-    </td>
-    <td class="px-6 py-3 border">
-      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-total" value="${product ? product.total || '' : ''}" placeholder="Total" readonly>
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quotation-total" value="${product ? product.total_amount || '' : ''}" placeholder="Total" readonly>
     </td>
     <td class="px-6 py-3 border text-center">
       <button type="button" class="text-red-500 hover:text-red-700 delete-edit-quotation-row" title="Delete Row">
@@ -3881,14 +3864,11 @@ function updateEditQuotationSlNos() {
 function calculateEditQuotationRowTotal(row) {
   const quantity = parseFloat(row.querySelector('.edit-quotation-quantity').value) || 0;
   const unitPrice = parseFloat(row.querySelector('.edit-quotation-unit-price').value) || 0;
-  const gst = parseFloat(row.querySelector('.edit-quotation-gst').value) || 0;
-  const discount = parseFloat(row.querySelector('.edit-quotation-discount').value) || 0;
+
 
   const subtotal = quantity * unitPrice;
-  const discountAmount = discount;
-  const discountedSubtotal = subtotal - discountAmount;
-  const gstAmount = discountedSubtotal * (gst / 100);
-  const total = discountedSubtotal + gstAmount;
+ 
+  const total = subtotal;
 
   row.querySelector('.edit-quotation-total').value = total.toFixed(2);
 }
@@ -5219,10 +5199,8 @@ async function editQuotation(orderId, type) {
   console.log("sdfghj",type);
   
   
-  
-
   try {
-    
+
     // Fetch quotation details
     const orderResponse = await fetch(`/api/quotations/${orderId}/details/${type}`);
     if (!orderResponse.ok) throw new Error('Failed to fetch quotation details');
@@ -5233,21 +5211,18 @@ async function editQuotation(orderId, type) {
     // Fetch product items for this quotation
     const itemsResponse = await fetch(`/api/quotations/${orderId}/items`);
     const items = itemsResponse.ok ? await itemsResponse.json() : [];
-    if (type=="Trade & Services"){
-    document.getElementById("items_table").style.display='block';
-    document.getElementById("editPvAdaptors").style.display="none";
-    
-    
-    
-    
-    
-    console.log("Boolean ",src)
 
-    // Fetch attachments for this quotation
+    // Fetch attachments for this quotation (for all types)
     const attachmentsResponse = await fetch(`/api/quotations/${orderId}/attachments`);
     const attachments = attachmentsResponse.ok ? await attachmentsResponse.json() : [];
     console.log('Quotation attachments:', attachments);
-    
+
+    if (type=="Trade & Services"){
+    document.getElementById("items_table").style.display='block';
+    document.getElementById("editPvAdaptors").style.display="none";
+
+    console.log("Boolean ",src)
+
     }
     console.log("fghjkfhgjkgfvhjkgfhbj",order.created_at ? new Date(order.quotation_date).toLocaleDateString() : '');
 
@@ -5267,21 +5242,23 @@ async function editQuotation(orderId, type) {
     document.getElementById('editQuotationClientName').textContent = order.clientname || '';
     document.getElementById('editQuotationClientEmail').textContent = order.clientemail || '';
     document.getElementById('editQuotationClientPhone').textContent = order.clientphone || '';
-    
+
     document.getElementById('editTaxRate').textContent = order.taxrate || 'N/A';
     document.getElementById('editDiscountRate').textContent = order.discountrate || 'N/A';
     document.getElementById('editQuotationTotalAmount').textContent = order.totalamount || '';
+    console.log('sdfiedijedcjewdc ijadscu',items)
 
     // Populate quotation table with fetched items
     populateEditQuotationTable(order, items);
 
     // Check if VK quotation and show KIET section
-    
+
     const kietSection = document.getElementById('editKietSection');
     if (order.quotationtype === 'VK') {
-    
-    
+
+
     const pv_adaptors = document.getElementById('editPvAdaptors');
+
 
 
       src=true;
@@ -5296,7 +5273,7 @@ async function editQuotation(orderId, type) {
           kietItems = typeof order.kiet_costs === 'string' ? JSON.parse(order.kiet_costs) : order.kiet_costs;
           pvAdaptor = typeof order.pv_adaptors ==='string' ? JSON.parse(order.pv_adaptors):order.pv_adaptors;
           console.log("pv adaptors items are",pvAdaptor)
-          
+
         } catch (e) {
           console.error('Error parsing KIET costs:', e);
           kietItems = [];
@@ -5304,18 +5281,14 @@ async function editQuotation(orderId, type) {
       }
       populateEditKietTable(kietItems);
       populateEditPvAdaptor(pvAdaptor);
-      
-      
+
+
     } else {
       kietSection.style.display = 'none';
     }
     console.log('fghjgybhunjmtgbhnjmkbghnjm: src state',src)
-    if (src==false){
-    document.getElementById("items_table");
-    console.log('')
-    
 
-    // Display attachments with preview
+    // Display attachments with preview (for all types)
     function renderAttachmentPreview(attachment) {
       const fileExtension = attachment.original_name?.split('.').pop()?.toLowerCase() || '';
       const fileUrl = `/uploads/quotations/${attachment.file_name}`;
@@ -5352,17 +5325,23 @@ async function editQuotation(orderId, type) {
 
     function displayAttachments(attachments, containerId = 'editQuotationAttachmentsDisplay') {
       const container = document.getElementById(containerId);
+      const attachmentsSection = container.closest('.mt-6.p-4.border.border-gray-300.rounded.bg-gray-50');
       if (!container) return;
 
       if (attachments && attachments.length > 0) {
         const html = attachments.map(renderAttachmentPreview).join('');
         container.innerHTML = html;
+        if (attachmentsSection) {
+          attachmentsSection.style.display = 'block';
+        }
       } else {
         container.innerHTML = '<div class="text-gray-500 italic">No attachments available.</div>';
+        if (attachmentsSection) {
+          attachmentsSection.style.display = 'none';
+        }
       }
     }
     displayAttachments(attachments);
-  }
  
 
     document.getElementById('editQuotationModal').classList.remove('hidden');
@@ -5491,12 +5470,14 @@ function addEditProductRow(product = null, slNo = null) {
   if (!slNo) {
     const rows = tbody.querySelectorAll('tr');
     slNo = rows.length + 1;
+    
   }
+  console.log("Adding product row:", product);
 
   row.innerHTML = `
     <td class="px-6 py-3 border text-center">${slNo}</td>
     <td class="px-6 py-3 border">
-      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partno || '' : ''}" placeholder="Part No">
+      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-part-no" value="${product ? product.partNo || '' : ''}" placeholder="Part No">
     </td>
     <td class="px-6 py-3 border">
       <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
@@ -5508,7 +5489,7 @@ function addEditProductRow(product = null, slNo = null) {
       <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-quantity" value="${product ? product.quantity || '' : ''}" placeholder="Qty" min="1">
     </td>
     <td class="px-6 py-3 border">
-      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitprice || '' : ''}" placeholder="Price" step="0.01">
+      <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-unit-price" value="${product ? product.unitPrice || '' : ''}" placeholder="Price" step="0.01">
     </td>
     <td class="px-6 py-3 border">
       <input type="number" class="w-full border border-gray-300 p-1 text-sm edit-gst" value="${product ? product.gst || '' : ''}" placeholder="GST %" step="0.01">
