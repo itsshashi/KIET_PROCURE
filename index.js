@@ -2333,7 +2333,7 @@ app.post(
           clientPhone || null,
           totalAmount,
           notes || null,
-          "pending", // default status
+          "approved", // default status
           req.session?.user?.email || null, // created_by
           JSON.stringify(kietCosts),
           JSON.stringify(pvAdaptors),
@@ -3288,64 +3288,156 @@ app.get("/api/quotations/:id/details/:type", async (req, res) => {
 //     }
 // });
 
-// Approve quotation
+// Custom Error Classes
+class QuotationNotFoundError extends Error {
+  constructor(quotationId) {
+    super(`Quotation ${quotationId} not found`);
+    this.name = "QuotationNotFoundError";
+    this.statusCode = 404;
+  }
+}
+
+class InvalidQuotationSourceError extends Error {
+  constructor(source) {
+    super(`Invalid quotation source: ${source}`);
+    this.name = "InvalidQuotationSourceError";
+    this.statusCode = 400;
+  }
+}
+
+class PDFGenerationError extends Error {
+  constructor(message, originalError) {
+    super(message);
+    this.name = "PDFGenerationError";
+    this.statusCode = 500;
+    this.originalError = originalError;
+  }
+}
+
+class DatabaseTransactionError extends Error {
+  constructor(message, originalError) {
+    super(message);
+    this.name = "DatabaseTransactionError";
+    this.statusCode = 500;
+    this.originalError = originalError;
+  }
+}
+
+// Enhanced endpoint with comprehensive error handling
 app.put("/api/quotations/:id/approve", async (req, res) => {
   const client = await pool.connect();
 
   try {
-    await client.query("BEGIN");
-
+    // Input validation
     const quotationId = req.params.id;
+    console.log("QUOTATION BODY", req.body);
     const { quotation_source } = req.body;
-    console.log("sdfgh", req.body); // 'regular' or 'vk'
+    console.log(req.body, "bodyyy");
 
-    let quotationResult, itemsResult, quotation, itemsTable, quotationsTable;
+    if (!quotationId || isNaN(quotationId)) {
+      return res.status(400).json({
+        error: "Invalid quotation ID",
+        details: "Quotation ID must be a valid number",
+      });
+    }
 
-    // Determine which table to query based on quotation source
+    if (!quotation_source) {
+      return res.status(400).json({
+        error: "Missing required field",
+        details: "quotation_source is required",
+      });
+    }
+
+    console.log(
+      "Approving quotation ID:",
+      quotationId,
+      "Source:",
+      quotation_source
+    );
+    // Determine tables
+    let quotationsTable, itemsTable;
     if (quotation_source === "vk") {
       quotationsTable = "vk_quotations";
       itemsTable = "vk_quotation_items";
     } else {
+      // Default to standard quotations for any non-VK source (regular, standard, etc.)
       quotationsTable = "quotations";
       itemsTable = "quotation_items";
     }
 
-    // Get quotation details for PDF generation
-    quotationResult = await client.query(
-      `
-            SELECT * FROM ${quotationsTable} WHERE id = $1
-        `,
-      [quotationId]
-    );
+    await client.query("BEGIN");
 
-    if (quotationResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Quotation not found" });
+    // Fetch quotation with error handling
+    let quotationResult;
+    try {
+      quotationResult = await client.query(
+        `SELECT * FROM ${quotationsTable} WHERE id = $1`,
+        [quotationId]
+      );
+    } catch (dbError) {
+      throw new DatabaseTransactionError(
+        "Failed to fetch quotation from database",
+        dbError
+      );
     }
 
-    quotation = quotationResult.rows[0];
+    if (quotationResult.rows.length === 0) {
+      throw new QuotationNotFoundError(quotationId);
+    }
 
-    // Get quotation items
-    itemsResult = await client.query(
-      `
-            SELECT * FROM ${itemsTable} WHERE quotation_id = $1 ORDER BY id
-        `,
-      [quotationId]
-    );
+    const quotation = quotationResult.rows[0];
 
-    // Update quotation status
-    await client.query(
-      `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-      ["approved", quotationId]
-    );
+    // Check if already approved
+    if (quotation.status === "approved") {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        error: "Quotation already approved",
+        details: `Quotation ${quotationId} has already been approved`,
+      });
+    }
 
-    // Prepare data for PDF generation
+    // Fetch items with error handling
+    let itemsResult;
+    try {
+      itemsResult = await client.query(
+        `SELECT * FROM ${itemsTable} WHERE quotation_id = $1 ORDER BY id`,
+        [quotationId]
+      );
+    } catch (dbError) {
+      throw new DatabaseTransactionError(
+        "Failed to fetch quotation items",
+        dbError
+      );
+    }
+
+    if (itemsResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        error: "Cannot approve quotation",
+        details: "Quotation has no items",
+      });
+    }
+
+    // Update status
+    try {
+      await client.query(
+        `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        ["approved", quotationId]
+      );
+    } catch (dbError) {
+      throw new DatabaseTransactionError(
+        "Failed to update quotation status",
+        dbError
+      );
+    }
+
+    // Prepare PDF data with validation
     const poData = {
-      poNumber: quotation.quotation_number,
-      date: quotation.quotation_date,
+      poNumber: quotation.quotation_number || "N/A",
+      date: quotation.quotation_date || new Date().toISOString(),
       expected_date: quotation.valid_until,
-      termsOfPayment: quotation.payment_terms,
-      currency: quotation.currency,
+      termsOfPayment: quotation.payment_terms || "Net 30",
+      currency: quotation.currency || "INR",
       company: {
         name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.company_email || "info@kiet.com",
@@ -3356,85 +3448,153 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
         logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
       },
       supplier: {
-        name: quotation.client_name,
-        address: quotation.client_address,
+        name: quotation.client_name || "Unknown Supplier",
+        address: quotation.client_address || "Address not provided",
         duration: quotation.delivery_duration,
       },
-      shipTo: quotation.client_address,
+      shipTo: quotation.client_address || "Address not provided",
       reference_no: quotation.reference_no,
       requester: {
-        name: quotation.client_name,
+        name: quotation.client_name || "Unknown",
       },
       items: itemsResult.rows.map((row) => ({
-        part_no: row.part_no,
-        description: row.description,
+        part_no: row.part_no || "N/A",
+        description: row.description || "No description",
         hsn_code: row.hsn_code,
-        gst: row.gst_rate,
-        quantity: row.quantity,
-        unit: row.unit,
-        unit_price: row.unit_price,
-        discount: row.discount,
-        total: row.total_amount,
+        gst: row.gst_rate || 0,
+        quantity: row.quantity || 0,
+        unit: row.unit || "PCS",
+        unit_price: row.unit_price || 0,
+        discount: row.discount || 0,
+        total: row.total_amount || 0,
       })),
       line: path.join(__dirname, "public", "images", "line.png"),
       signPath: path.join(__dirname, "public", "images", "signature.png"),
     };
 
-    // Add VK-specific data if quotation type is VK
-    if (quotation.quotation_type === "VK") {
-      // Fetch VK-specific data from database
+    // VK-specific fields with error handling
+    if (quotation_source === "vk") {
       try {
         const vkDataResult = await client.query(
-          `
-                    SELECT kiet_costs, pv_adaptors FROM ${quotationsTable} WHERE id = $1
-                `,
-          [quotation.id]
+          `SELECT kiet_costs, pv_adaptors FROM ${quotationsTable} WHERE id = $1`,
+          [quotationId]
         );
 
-        if (vkDataResult.rows.length > 0) {
-          if (vkDataResult.rows[0].kiet_costs) {
-            poData.kietCosts = JSON.parse(vkDataResult.rows[0].kiet_costs);
+        const vkData = vkDataResult.rows[0];
+
+        if (vkData.kiet_costs) {
+          try {
+            poData.kietCosts = JSON.parse(vkData.kiet_costs);
+          } catch (parseError) {
+            console.warn("Failed to parse kiet_costs JSON:", parseError);
+            poData.kietCosts = null;
           }
-          if (vkDataResult.rows[0].pv_adaptors) {
-            poData.pvAdaptors = JSON.parse(vkDataResult.rows[0].pv_adaptors);
+        }
+
+        if (vkData.pv_adaptors) {
+          try {
+            poData.pvAdaptors = JSON.parse(vkData.pv_adaptors);
+          } catch (parseError) {
+            console.warn("Failed to parse pv_adaptors JSON:", parseError);
+            poData.pvAdaptors = null;
           }
         }
       } catch (vkError) {
-        console.error("Error fetching VK data:", vkError);
+        console.warn("VK data fetch non-critical error:", vkError);
+        // Continue without VK-specific data
       }
     }
 
-    // Generate and save PDF
-    const sanitizedNumber = quotation.quotation_number.replace(
+    // Generate PDF with error handling
+    const sanitizedNumber = (quotation.quotation_number || "unknown").replace(
       /[^a-zA-Z0-9.-]/g,
       "_"
     );
     const fileName = `quotation_${sanitizedNumber}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
-    // Use the appropriate generator based on quotation type
-    if (quotation.quotation_type === "VK") {
-      await generateVKQuotation(poData, filePath);
-    } else {
-      generateQuotation(poData, filePath);
-    }
+    try {
+      // Verify directory exists
+      if (!fs.existsSync(qtUploadsDir)) {
+        fs.mkdirSync(qtUploadsDir, { recursive: true });
+      }
 
-    // Log approval action
-    console.log(`Quotation ${quotationId} approved by MD and PDF generated`);
+      if (quotation.quotation_type === "VK") {
+        await generateVKQuotation(poData, filePath);
+      } else {
+        await generateQuotation(poData, filePath);
+      }
+
+      // Verify PDF was created
+      if (!fs.existsSync(filePath)) {
+        throw new PDFGenerationError("PDF file was not created");
+      }
+    } catch (pdfError) {
+      throw new PDFGenerationError("Failed to generate PDF document", pdfError);
+    }
 
     await client.query("COMMIT");
 
-    res.json({ success: true, message: "Quotation approved successfully" });
+    res.json({
+      success: true,
+      message: "Quotation approved and PDF generated successfully",
+      data: {
+        quotationId,
+        quotationNumber: quotation.quotation_number,
+        pdfPath: fileName,
+      },
+    });
   } catch (error) {
-    await client.query("ROLLBACK");
-    console.error("Error approving quotation:", error);
-    res.status(500).json({ error: "Failed to approve quotation" });
+    // Rollback transaction if still active
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Rollback failed:", rollbackError);
+    }
+
+    // Log full error details for debugging
+    console.error("Error approving quotation:", {
+      error: error.message,
+      stack: error.stack,
+      quotationId: req.params.id,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Handle custom errors
+    if (
+      error instanceof QuotationNotFoundError ||
+      error instanceof InvalidQuotationSourceError
+    ) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+        quotationId: req.params.id,
+      });
+    }
+
+    if (
+      error instanceof PDFGenerationError ||
+      error instanceof DatabaseTransactionError
+    ) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+        details: "Please contact support if this issue persists",
+      });
+    }
+
+    // Handle unexpected errors
+    res.status(500).json({
+      error: "Failed to approve quotation",
+      message: "An unexpected error occurred. Please try again later.",
+    });
   } finally {
-    client.release();
+    // Always release the client
+    try {
+      client.release();
+    } catch (releaseError) {
+      console.error("Failed to release database client:", releaseError);
+    }
   }
 });
-
-// Download quotation PDF
 
 // Reject quotation
 app.put("/api/quotations/:id/reject", async (req, res) => {
@@ -4029,12 +4189,23 @@ KIET TECHNOLOGIES PVT LTD
       }
 
       console.log("✅ Quotation approval request completed successfully");
-      res.json({
-        success: true,
-        message: "Quotation approval request sent successfully",
-        quotationNumber: quotationNumber,
-        quotationId: quotationId,
-      });
+      res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Quotation Approval</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+          .success { color: green; font-size: 20px; margin-bottom: 20px; }
+          button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        </style>
+      </head>
+      <body>
+        <div class="success">✅ Quotation approval request sent successfully!</div>
+        <button onclick="window.history.back()">Go Back</button>
+      </body>
+    </html>
+  `);
     } catch (error) {
       console.error("❌ Error in send-quotation-approval:", error);
       console.error("Error stack:", error.stack);
@@ -4516,6 +4687,354 @@ app.put("/api/quotations/:id/items", async (req, res) => {
   } catch (error) {
     console.error("Error updating quotation items:", error);
     res.status(500).json({ error: "Failed to update quotation items" });
+  }
+});
+
+//custom api for get approved vk quotations\
+app.get("/api/render-vk_quotations", async (req, res) => {
+  const client = await pool.connect();
+
+  // Determine which tables to query based on source
+
+  const quotationResult = await client.query(`
+    SELECT
+        id,
+        quotation_type AS "quotationType",
+        quotation_number AS "quotationNumber",
+        quotation_date AS "quotationDate",
+        reference_no AS "referenceNo",
+        valid_until AS "validUntil",
+        currency,
+        payment_terms AS "paymentTerms",
+        delivery_duration AS "deliveryDuration",
+        company_name AS "companyName",
+        company_email AS "companyEmail",
+        company_gst AS "companyGST",
+        company_address AS "companyAddress",
+        client_name AS "clientName",
+        client_email AS "clientEmail",
+        client_phone AS "clientPhone",
+        client_address AS "clientAddress",
+
+        kiet_costs::jsonb AS "kietCosts",
+        pv_adaptors::jsonb AS "pvAdaptors",
+
+        total_amount AS "totalAmount",
+        notes,
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt",created_by AS "createdBy"
+
+    FROM vk_quotations
+    WHERE status = 'approved'
+    ORDER BY created_at DESC;
+ `);
+  client.release();
+
+  res.json(quotationResult.rows);
+});
+
+// Route to get VK quotation details for editing
+app.get("/edit-vk-quotation/:id", async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/");
+  }
+
+  try {
+    const { id } = req.params;
+    const client = await pool.connect();
+
+    const quotationResult = await client.query(
+      `
+      SELECT
+        id,
+        quotation_type,
+        quotation_number,
+        quotation_date,
+        reference_no,
+        valid_until,
+        currency,
+        payment_terms,
+        delivery_duration,
+        company_name,
+        company_email,
+        company_gst,
+        company_address,
+        client_name,
+        client_email,
+        client_phone,
+        gstterms,
+        packaging,
+        insurance,
+        deliveryTerms,
+        kiet_costs,
+        pv_adaptors,
+        total_amount,
+        notes,
+        status,
+        created_at,
+        created_by
+      FROM vk_quotations
+      WHERE id = $1 AND status = 'approved'
+    `,
+      [id]
+    );
+
+    client.release();
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).send("VK Quotation not found or not approved");
+    }
+
+    const quotation = quotationResult.rows[0];
+
+    // Parse JSON fields
+    quotation.kietCosts = quotation.kiet_costs || [];
+    quotation.pvAdaptors = quotation.pv_adaptors || [];
+    res.json(quotation);
+  } catch (error) {
+    console.error("Error fetching VK quotation for editing:", error);
+    res.status(500).send("Internal server error");
+  }
+});
+
+// Route to update VK quotation
+app.post("/update-vk-quotation/:id", upload.none(), async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, error: "Not authenticated" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { id } = req.params;
+    const {
+      quotationNumber,
+      quotationDate,
+      referenceNo,
+      validUntil,
+      currency,
+      paymentTerms,
+      deliveryDuration,
+      companyName,
+      companyEmail,
+      companyGST,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      gstterms,
+      packaging,
+      insurance,
+      deliveryTerms,
+      notes,
+    } = req.body;
+
+    // Parse KIET costs and PV adaptors from form data
+    let kietCosts = [];
+    let pvAdaptors = [];
+
+    // Parse KIET costs
+    if (req.body.itemDescription && Array.isArray(req.body.itemDescription)) {
+      req.body.itemDescription.forEach((desc, index) => {
+        const cost = parseFloat(req.body.priceInput[index]) || 0;
+        const qty = parseFloat(req.body.qtyInput[index]) || 0;
+
+        kietCosts.push({
+          description: desc,
+          cost: cost,
+          qty: qty,
+          totalValue: (cost * qty).toFixed(2),
+        });
+      });
+    }
+
+    // Parse PV adaptors
+    if (req.body.pvQty && Array.isArray(req.body.pvQty)) {
+      req.body.pvQty.forEach((qty, index) => {
+        pvAdaptors.push({
+          slNo: index + 1,
+          qty: parseFloat(qty) || 0,
+          familyName: req.body.pvFamilyName[index] || "",
+          revNo: req.body.pvRevNo[index] || "",
+          coaxialPin: req.body.pvCoaxialPin[index] || "",
+          sokCard: req.body.pvSokCard[index] || "",
+          sokQty: parseFloat(req.body.pvSokQty[index]) || 0,
+          rate: parseFloat(req.body.pvRate[index]) || 0,
+          totalAmount: (
+            parseFloat(qty) * parseFloat(req.body.pvRate[index] || 0)
+          ).toFixed(2),
+        });
+      });
+    }
+
+    // Calculate total amount
+    const totalAmount = pvAdaptors.reduce(
+      (sum, item) => sum + parseFloat(item.totalAmount),
+      0
+    );
+
+    // Update VK quotation
+    await client.query(
+      `
+      UPDATE vk_quotations SET
+        quotation_number = $1,
+        quotation_date = $2,
+        reference_no = $3,
+        valid_until = $4,
+        currency = $5,
+        payment_terms = $6,
+        delivery_duration = $7,
+        company_name = $8,
+        company_email = $9,
+        company_gst = $10,
+        company_address = $11,
+        client_name = $12,
+        client_email = $13,
+        client_phone = $14,
+        gstterms = $15,
+        packaging = $16,
+        insurance = $17,
+        deliveryTerms = $18,
+        kiet_costs = $19,
+        pv_adaptors = $20,
+        total_amount = $21,
+        notes = $22,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $23
+    `,
+      [
+        quotationNumber,
+        quotationDate,
+        referenceNo,
+        validUntil,
+        currency,
+        paymentTerms,
+        deliveryDuration,
+        companyName,
+        companyEmail,
+        companyGST,
+        companyAddress,
+        clientName,
+        clientEmail,
+        clientPhone,
+        gstterms,
+        packaging,
+        insurance,
+        deliveryTerms,
+        JSON.stringify(kietCosts),
+        JSON.stringify(pvAdaptors),
+        totalAmount,
+        notes,
+        id,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "VK quotation updated successfully",
+      quotationId: id,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error updating VK quotation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update VK quotation",
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Route to regenerate VK quotation PDF
+app.post("/regenerate-vk-pdf/:id", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, error: "Not authenticated" });
+  }
+
+  try {
+    const { id } = req.params;
+    const client = await pool.connect();
+
+    // Fetch updated quotation data
+    const quotationResult = await client.query(
+      `
+      SELECT * FROM vk_quotations WHERE id = $1
+    `,
+      [id]
+    );
+
+    client.release();
+
+    if (quotationResult.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, error: "VK quotation not found" });
+    }
+
+    const quotation = quotationResult.rows[0];
+
+    // Prepare data for PDF generation
+    const poData = {
+      company: {
+        logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
+        name: quotation.company_name || "",
+        email: quotation.company_email || "",
+        gst: quotation.company_gst || "",
+        address: quotation.company_address || "",
+      },
+      supplier: {
+        address: quotation.client_address || "",
+        contact: quotation.client_phone || "",
+        duration: quotation.delivery_duration || "",
+      },
+      clientEmail: quotation.client_email,
+      poNumber: quotation.quotation_number || "",
+      date: quotation.quotation_date || "",
+      requester: { name: quotation.client_name || "" },
+      reference_no: quotation.reference_no || "",
+      expected_date: quotation.valid_until || "",
+      termsOfPayment: quotation.payment_terms || "",
+      gstterms: quotation.gstterms || "Extra 18%",
+      insurance: quotation.insurance || "N/A",
+      deliveyt: quotation.deliveryTerms || "",
+      package: quotation.packaging || "",
+      currency: quotation.currency || "INR",
+      kietCosts: quotation.kiet_costs ? JSON.parse(quotation.kiet_costs) : [],
+      pvAdaptors: quotation.pv_adaptors
+        ? JSON.parse(quotation.pv_adaptors)
+        : [],
+      line: path.join(__dirname, "public", "images", "line.png"),
+      signPath: path.join(__dirname, "public", "images", "signature.png"),
+    };
+
+    const sanitizedNumber = (quotation.quotation_number || "temp").replace(
+      /[^a-zA-Z0-9.-]/g,
+      "_"
+    );
+    const filePath = path.join(
+      qtUploadsDir,
+      `quotation_${sanitizedNumber}.pdf`
+    );
+
+    await generateVKQuotation(poData, filePath);
+
+    res.json({
+      success: true,
+      message: "VK quotation PDF regenerated successfully",
+      filePath: `/qt_uploads/quotation_${sanitizedNumber}.pdf`,
+    });
+  } catch (error) {
+    console.error("Error regenerating VK PDF:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to regenerate VK quotation PDF",
+    });
   }
 });
 
