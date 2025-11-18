@@ -3263,7 +3263,7 @@ function resetFields() {
     // Load approved quotations
     async function loadApprovedQuotations() {
       try {
-        const res = await fetch('/api/pending-quotations');
+        const res = await fetch('/api/approved-quotations');
         const allOrders = await res.json();
         console.log('All Quotations:', allOrders);
         let quotations = allOrders.filter(order => order.status = 'approved');

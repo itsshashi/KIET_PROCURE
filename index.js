@@ -2971,6 +2971,38 @@ ORDER BY q.created_at DESC;
     res.status(500).json({ error: "Failed to fetch pending quotations" });
   }
 });
+app.get("/api/approved-quotations", async (req, res) => {
+  try {
+    const client = await pool.connect();
+
+    // Get regular quotations
+    const regularResult = await client.query(`
+            SELECT
+    q.*,
+    COALESCE(SUM(qi.total_amount), 0) AS items_total,
+    COUNT(qi.id) AS item_count,
+    'regular' AS quotation_source
+FROM quotations q
+LEFT JOIN quotation_items qi ON q.id = qi.quotation_id
+WHERE q.status = 'approved'
+GROUP BY q.id
+ORDER BY q.created_at DESC;
+
+        `);
+
+    // Get VK quotations
+
+    // Combine results
+    const allQuotations = regularResult.rows;
+
+    client.release();
+    res.json(allQuotations);
+    console.log("Fetched pending quotations for MD approval:", allQuotations);
+  } catch (error) {
+    console.error("Error fetching pending quotations:", error);
+    res.status(500).json({ error: "Failed to fetch pending quotations" });
+  }
+});
 
 // Generate VK quotation number API
 app.get("/api/generate-vk-quotation-number", async (req, res) => {
