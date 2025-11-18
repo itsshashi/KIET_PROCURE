@@ -43,10 +43,13 @@ if (!fs.existsSync(qtUploadsDir)) {
 }
 
 const pool = new Pool({
-  connectionString:
-    "postgresql://postgres:abzyxwvu12345@database-1.c7iiekukgmcp.ap-south-1.rds.amazonaws.com:5432/postgres",
-  ssl: { rejectUnauthorized: false }, // this will bypass self-signed cert errors
+  user: "postgres",
+  host: "13.234.3.0",
+  database: "mydb",
+  password: "shashank@kiet15",
+  port: 5432,
 });
+
 
 // =============================
 // MIDDLEWARE
