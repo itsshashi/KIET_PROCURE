@@ -5,6 +5,8 @@
   <title>MD SECTION - Final Approval</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     
@@ -837,15 +839,17 @@ select {
         </button>
       </div>
       <ul class="menu">
-        <li class="menu-heading">Purchase Orders</li>
+        <li class="menu-heading">PO</li>
         <li class="menu-item active" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals</li>
-        <li class="menu-item" data-tab="all"><i class="fas fa-list"></i> All Orders</li>
+        
         <li class="menu-item" data-tab="rejected"><i class="fas fa-times"></i> Rejected Orders</li>
-        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotation(PO)</li>
-        <li class="menu-heading">Quotation approvals</li>
-        <li class="menu-item" data-tab="approve"><i class="fas fa-check"></i> Approve Quotation</li>
-        <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check-circle"></i> VK Quotation Approval</li>
-        <li class="menu-item" data-tab="new-order"><i class="fas fa-plus"></i> New Quotation(VK)</li>
+        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotations(PO)</li>
+        <li class="menu-heading">QUOTATIONS</li>
+        <li class="menu-item" data-tab="approved-quotations"><i class="fas fa-check-circle"></i> Approved (T & S)</li>
+        <li class="menu-item" data-tab="approved-vk-quotations"><i class="fas fa-check-circle"></i>Approved (VK)</li>
+        <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check" style="display: none;"></i> VK APPROVAL </li>
+
+        
 
         
         <li class="menu-item logout">
@@ -907,15 +911,18 @@ select {
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab-button active" onclick="switchTab('pending')">Pending Approvals</button>
-      <button class="tab-button" onclick="switchTab('all')">All Orders</button>
-      <button class="tab-button" onclick="switchTab('rejected')">Rejected Orders</button>
-      <button class="tab-button" onclick="switchTab('quotations')">All Quotations</button>
-      <button class="tab-button" onclick="switchTab('approve')">Approve Quotation</button>
-      <button class="tab-button" onclick="switchTab('vk-approve')">VK Quotation Approval</button>
-      <button class="tab-button" onclick="switchTab('new-order')">New Order</button>
-      <button class="tab-button" onclick="switchTab('new-trade')">New Trade</button>
+      <button class="tab-button" onclick="switchTab('all')">All POs</button>
+      <button class="tab-button" onclick="switchTab('rejected')" style="display: none;">Rejected Orders</button>
+      <button class="tab-button" onclick="switchTab('quotations')" style="display: none;">All Quotations</button>
+      
+      <button class="tab-button" onclick="switchTab('approve')">Trade & Service Approval</button>
+      <button class="tab-button" onclick="switchTab('vk-approve')" style="display: none;">VK Quotation Approval</button>
+      <button class="tab-button" onclick="switchTab('new-order')">New VK Quotation Generation</button>
+      <button class="tab-button" onclick="switchTab('new-trade')">New Trade Quotation Generation</button>
+      <button class="tab-button" onclick="switchTab('approved-quotations')" style="display: none;">Approved(T & S)</button>
+      <button class="tab-button" onclick="switchTab('approved-vk-quotations')" style="display: none;">Approved (VK)</button>
       <button id="costCalculationTab" class="tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300" onclick="switchTab('costCalculation')">
-        <i class="fas fa-calculator mr-2"></i>Cost Calculation
+        <i class="fas fa-calculator mr-2"></i>Cost cal
       </button>
 
     </div>
@@ -1007,6 +1014,46 @@ select {
       </table>
       <!-- Pagination -->
       <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Approved Quotations Table -->
+    <div id="approvedQuotationsTab" class="tab-content">
+      <table id="approvedQuotationsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_type')">Quotation Type <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('created_at')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="approvedQuotationsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Approved VK Quotations Table -->
+    <div id="approvedVKQuotationsTab" class="tab-content">
+      <table id="approvedVKQuotationsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_number')">Quotation Number <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('quotation_date')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="approvedVKQuotationsBody"></tbody>
+      </table>
     </div>
 
     <!-- Approve Quotation Table -->
@@ -2518,53 +2565,84 @@ function resetFields() {
 
 
         <!-- KIET Cost Calculations Section (only for VK quotations) -->
-        <div id="editKietSection" style="display: none;">
-          <h3 class="text-lg font-semibold text-gray-800 mb-3">KIET Cost Calculations</h3>
-          <p class="text-sm text-gray-600 mb-4">As per Price Agreement - Document No: <strong>con_GPAG_PU14_54808</strong></p>
+        <!-- KIET Cost Calculations Section -->
+<!-- KIET Cost Calculations Section -->
+<div id="editKietSection" class="mt-8 hidden">
 
-          <table class="kiet-table min-w-full text-sm text-left border border-gray-300 rounded" id="editKietTable">
-            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
-              <tr>
-                <th class="px-6 py-3 border">Item Description</th>
-                <th class="px-6 py-3 border">Price Agreement Costs</th>
-                <th class="px-6 py-3 border">Total Qty</th>
-                <th class="px-6 py-3 border">Total Value in INR</th>
-                <th class="px-6 py-3 border">Actions</th>
-              </tr>
+    <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations</h3>
+    <p class="text-sm text-gray-600 mb-3">
+        As per Price Agreement - Document No:
+        <strong>con_GPAG_PU14_54808</strong>
+    </p>
+
+    <div class="overflow-x-auto w-full mt-2">
+        <table class="min-w-[900px] w-full border border-gray-300 rounded-lg text-sm" id="editKietTable">
+            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr>
+                    <th class="px-4 py-2 border">Item Description</th>
+                    <th class="px-4 py-2 border">Price Agreement Costs</th>
+                    <th class="px-4 py-2 border">Total Qty</th>
+                    <th class="px-4 py-2 border">Total Value (INR)</th>
+                    <th class="px-4 py-2 border">Actions</th>
+                </tr>
             </thead>
+
             <tbody id="editKietTableBody">
-              <!-- KIET rows will be dynamically populated -->
+                <!-- Populated dynamically -->
             </tbody>
-          </table>
 
-        </div>
-        <div id="editPvAdaptors" style="display: none;">
-           <h3 class="text-lg font-semibold text-gray-800 mb-3">PV Wiring Adaptor Details</h3>
-          <hr>
+        </table>
+    </div>
+</div>
 
-          <table class="kiet-table min-w-full text-sm text-left border border-gray-300 rounded" id="editKietTable">
-            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
-              <tr>
-                <th class="px-6 py-3 border">FAMILY NAME</th>
-                <th class="px-6 py-3 border">REV NO</th>
-                <th class="px-6 py-3 border">SOK CARD</th>
-                <th class="px-6 py-3 border">SOK QTY</th>
-                <th class="px-6 py-3 border">COAXIAL PIN</th>
-                <th class="px-6 py-3 border">Qty</th>
-                <th class="px-6 py-3 border">RATE</th>
-              </tr>
+
+        <!-- PV Adaptor Section -->
+<!-- PV Adaptor Details Section -->
+<div id="editPvAdaptors" class="mt-10 hidden">
+
+    <h3 class="text-lg font-semibold text-gray-800">PV Wiring Adaptor Details</h3>
+
+    <div class="overflow-x-auto w-full mt-2">
+        <table class="min-w-[900px] w-full border border-gray-300 rounded-lg text-sm">
+            <thead class="bg-gray-100 text-gray-700">
+                <tr>
+                    <th class="px-4 py-2 border">Sl No</th>
+                    <th class="px-4 py-2 border">Family Name</th>
+                    <th class="px-4 py-2 border">revNo</th>
+                    <th class="px-4 py-2 border">CoaxialPin</th>
+                    <th class="px-4 py-2 border">SOK Card</th>
+                    <th class="px-4 py-2 border">SOK Qty</th>
+                    <th class="px-4 py-2 border">Rate</th>
+                    <th class="px-4 py-2 border">Rate/Unit</th>
+                    <th class="px-4 py-2 border">Total Amount</th>
+                </tr>
             </thead>
+
             <tbody id="editPvAdaptorsTable">
-              <!-- KIET rows will be dynamically populated -->
+                <!-- Rows dynamically populated -->
             </tbody>
-          </table>
+        </table>
+    </div>
+
+    <!-- <div class="text-right mt-2 font-semibold text-gray-800">
+        Total PV Amount INR:
+        <span class="currency-symbol">₹</span>
+        <span id="pv-total-amount">0.00</span>
+    </div> -->
+
+    <button type="button" id="addPvRow"
+            class="mt-3 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow">
+        Add Row
+    </button>
+
+</div>
 
 
 
 
 
 
-        </div>
+        
 
         <div id="items_table">
            <label class="block text-sm font-medium text-gray-700 mb-1">Quotation Items</label>
@@ -2613,6 +2691,8 @@ function resetFields() {
       </form>
     </div>
   </div>
+ 
+
 
   <script>
     let currentTab = 'pending';
@@ -2738,6 +2818,8 @@ function resetFields() {
         document.querySelector('.main-content').appendChild(rejectedTab);
       }
       document.getElementById('rejectedTab').style.display = tab === 'rejected' ? 'block' : 'none';
+      document.getElementById('approvedQuotationsTab').style.display = tab === 'approved-quotations' ? 'block' : 'none';
+      document.getElementById('approvedVKQuotationsTab').style.display = tab === 'approved-vk-quotations' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       // Load data
@@ -2750,6 +2832,12 @@ function resetFields() {
       } else if (tab === 'rejected') {
         document.getElementById("filtersSection").style.display="block";
         loadRejectedOrders();
+      } else if (tab === 'approved-quotations') {
+        document.getElementById("filtersSection").style.display="none";
+        loadApprovedQuotations();
+      } else if (tab === 'approved-vk-quotations') {
+        document.getElementById("filtersSection").style.display="none";
+        loadApprovedVKQuotations();
       } else if (tab === 'approve') {
         document.getElementById("filtersSection").style.display="none";
         loadApproveQuotations();
@@ -3104,6 +3192,46 @@ function resetFields() {
       loadApproveQuotations();
       
     }
+     async function loadApprovedVKQuotations() {
+      try {
+        const res = await fetch('/api/render-vk_quotations');
+        const allOrders = await res.json();
+        console.log('All Quotations:', allOrders);
+        let quotations = allOrders.filter(order => order.status = 'approved');
+
+        renderApprovedvkQuotations(quotations, 'approvedVKQuotationsBody');
+      } catch (err) {
+        console.error('Failed to load approved quotations:', err);
+        document.getElementById('approvedVKQuotationsBody').innerHTML = '<tr><td colspan="9">Failed to load approved quotations</td></tr>';
+      }
+    }
+  function renderApprovedvkQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.quotationNumber}</td>
+        <td>${quotation.companyName}</td>
+        <td>${quotation.clientName}</td>
+        <td>${quotation.createdBy|| 'N/A'}</td>
+        <td>${new Date(quotation.createdAt).toLocaleDateString()}</td>
+        <td>₹${quotation.totalAmount ? quotation.totalAmount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotationType}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+}
 
     //render the vk approve quotations table
     async function loadVKApproveQuotations() {
@@ -3125,48 +3253,148 @@ function resetFields() {
           );
         }
 
-        renderApproveQuotations(vk_quotations, 'vkApproveBody');
+        renderApprovevkQuotations(vk_quotations, 'vkApproveBody');
       } catch (err) {
         console.error('Failed to load VK approve quotations:', err);
         document.getElementById('vkApproveBody').innerHTML = '<tr><td colspan="9">Failed to load VK quotations for approval</td></tr>';
       }
     }
 
-    // Render approve quotations table
-    function renderApproveQuotations(quotations, tbodyId) {
-      const tbody = document.getElementById(tbodyId);
-      tbody.innerHTML = "";
-      
+    // Load approved quotations
+    async function loadApprovedQuotations() {
+      try {
+        const res = await fetch('/api/pending-quotations');
+        const allOrders = await res.json();
+        console.log('All Quotations:', allOrders);
+        let quotations = allOrders.filter(order => order.status = 'approved');
 
-      quotations.forEach(quotation => {
-        const row = `
-          <tr>
-            <td>${quotation.id}</td>
-            <td>${quotation.company_name}</td>
-            <td>${quotation.quotation_type}</td>
-            <td>${quotation.client_name}</td>
-            <td>${quotation.created_by|| 'N/A'}</td>
-            <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
-            <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
-            <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
-            <td class="actions">
-              <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'regular')">
-                <i class="fas fa-check"></i> Approve
-              </button>
-              <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'regular')">
-                <i class="fas fa-times"></i> Reject
-              </button>
-            </td>
-          </tr>
-        `;
-        
-        tbody.insertAdjacentHTML("beforeend", row);
-      });
-      
+        renderApprovedQuotations(quotations, 'approvedQuotationsBody');
+      } catch (err) {
+        console.error('Failed to load approved quotations:', err);
+        document.getElementById('approvedQuotationsBody').innerHTML = '<tr><td colspan="9">Failed to load approved quotations</td></tr>';
+      }
     }
+// Render approve quotations table
+function renderApproveQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.company_name}</td>
+        <td>${quotation.quotation_type}</td>
+        <td>${quotation.client_name}</td>
+        <td>${quotation.created_by|| 'N/A'}</td>
+        <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
+        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'regular')">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'regular')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+}
+
+
+
+function renderApprovevkQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.company_name}</td>
+        <td>${quotation.quotation_type}</td>
+        <td>${quotation.client_name}</td>
+        <td>${quotation.created_by|| 'N/A'}</td>
+        <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
+        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="approve" onclick="updateQuotationStatus(${quotation.id}, 'approved', 'vk')">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button class="reject" onclick="updateQuotationStatus(${quotation.id}, 'rejected', 'vk')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Render approved quotations table
+function renderApprovedQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.company_name}</td>
+        <td>${quotation.quotation_type}</td>
+        <td>${quotation.client_name}</td>
+        <td>${quotation.created_by|| 'N/A'}</td>
+        <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
+        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+}
 
     // View all quotations for an order
     async function viewAllQuotations(orderId) {
@@ -3886,136 +4114,202 @@ function calculateEditQuotationTotal() {
 }
 
 // KIET table functions for edit quotation modal
+/* ---------------------- KIET TABLE ---------------------- */
+
 function populateEditKietTable(kietItems = []) {
-  const tbody = document.getElementById('editKietTableBody');
-  tbody.innerHTML = '';
+  const tbody = document.getElementById("editKietTableBody");
+  tbody.innerHTML = "";
 
-  if (kietItems && kietItems.length > 0) {
-    kietItems.forEach((item, index) => {
-      addEditKietRow(item, index + 1);
-    });
-  } else {
-    // Add default KIET rows if no items
-    const defaultItems = [
-      { description: "Standard Housing", cost: 135459.52, qty: 1, value: 135459.52 },
-      { description: "Hypertek parts and pins (Wiring class-2)", cost: 213.33, qty: 35000, value: 7466550.00 },
-      { description: "SOK 10150", cost: 10000.00, qty: 1, value: 10000.00 },
-      { description: "Koaxial-Stift-Radial", cost: 4770.00, qty: 1, value: 4770.00 }
-    ];
-    defaultItems.forEach((item) => {
+  // If editing, use DB items; else default template
+  const itemsToLoad = kietItems.length > 0 ? kietItems : [
+    { description: "Standard Housing", cost: 135459.52, qty: 1, totalValue: 135459.52 },
+    { description: "Hypertek parts and pins (Wiring class-12)", cost: 153.00, qty: 35000, totalValue: 5355000.00 },
+    { description: "SOK 10150", cost: 10000.0, qty: 1, totalValue: 10000.0 },
+    { description: "Koaxial-Stift-Radial", cost: 4770.0, qty: 1, totalValue: 4770.0 },
+
+    // Summary rows
+    { description: "Total costs in INR (qty of 1 No.)", totalValue: 5505229.52, isSummaryRow: true },
+    { description: "Export packaging charges included", totalValue: 2650.00, isSummaryRow: true },
+    { description: "Bigger box setup", totalValue: 13250.00, isSummaryRow: true }
+  ];
+
+  itemsToLoad.forEach((item, i) => {
+    if (item.isSummaryRow) {
+      addEditKietSummaryRow(item);
+    } else {
       addEditKietRow(item);
-    });
-  }
+    }
+  });
 }
 
 
+/* ----------- Add normal editable row ----------- */
 
-function populateEditPvAdaptor(pv_adaptors=[]) {
-  const tbody = document.getElementById('editPvAdaptorsTable');
-  tbody.innerHTML = '';
+function addEditKietRow(item = {}) {
+  const tbody = document.getElementById("editKietTableBody");
 
-  if (pv_adaptors && pv_adaptors.length > 0) {
-    pv_adaptors.forEach((item) => {
-      addEditPvRow(item );
-      console.log('itemsssssss',item);
-    });
-  } else {
-    // Add default KIET rows if no items
-    alert('your pv adaptor details is not communicatable');
-  }
-} 
+  const row = document.createElement("tr");
+  row.className = "text-sm";
 
-
-
-
-
-
-function addEditPvRow(item = null) {
-  const tbody = document.getElementById('editPvAdaptorsTable');
-  if (!tbody) {
-    console.error("❌ PV Adaptors table body not found (#editPvAdaptorsTable)");
-    return;
-  }
-
-  const row = document.createElement('tr');
   row.innerHTML = `
-    <td class="px-6 py-3 border">${item?.familyName || ''}</td>
-    <td class="px-6 py-3 border">${item?.revNo || ''}</td>
-    <td class="px-6 py-3 border">${item?.sokCard || ''}</td>
-    <td class="px-6 py-3 border">${item?.sokQty || ''}</td>
-    <td class="px-6 py-3 border">${item?.coaxialPin || ''}</td>
-     <td class="px-6 py-3 border">${item?.qty || ''}</td>
-    <td class="px-6 py-3 border">${item?.rate || ''}</td>
-   
+    <td class="px-4 py-2 border">${item.description}</td>
 
-  `;
-  tbody.appendChild(row);
-}
-
-
-function addEditKietRow(item = null, slNo = null) {
-  const tbody = document.getElementById('editKietTableBody');
-  const row = document.createElement('tr');
-
-  if (!slNo) {
-    const rows = tbody.querySelectorAll('tr');
-    slNo = rows.length + 1;
-  }
-  
-  row.innerHTML = `
-    <td class="px-6 py-3 border">
-      ${item ? item.description || '' : ''}
-    </td>
-    <td class="px-6 py-3 border">
-      
-      <div class="flex items-center">
-        <span class="currency-symbol">₹</span>
-        <input type="number" step="0.01" class="w-full border border-gray-300 p-1 text-sm edit-kiet-cost" value="${item ? item.cost || '' : ''}" placeholder="Cost">
+    <td class="px-4 py-2 border">
+      <div class="flex items-center gap-1">
+        <span>₹</span>
+        <input 
+          type="number" step="0.01"
+          class="w-full border rounded p-1 edit-kiet-cost"
+          value="${item.cost}"
+        />
       </div>
     </td>
-    <td class="px-6 py-3 border">
-      <input type="number" step="1" class="w-full border border-gray-300 p-1 text-sm edit-kiet-qty" value="${item ? item.qty || '' : ''}" placeholder="Qty">
+
+    <td class="px-4 py-2 border">
+      <input 
+        type="number" step="1"
+        class="w-full border rounded p-1 edit-kiet-qty"
+        value="${item.qty}"
+      />
     </td>
-    <td class="px-6 py-3 border">
-      <span class="currency-symbol">₹</span>
-      <span class="edit-kiet-value">${item ? item.value || '0.00' : '0.00'}</span>
+
+    <td class="px-4 py-2 border">
+      ₹ <span class="edit-kiet-value">${item.totalValue}</span>
     </td>
-    <td class="px-6 py-3 border text-center">
-      <button type="button" class="text-red-500 hover:text-red-700 delete-edit-kiet-row" title="Delete Row">
+
+    <td class="px-4 py-2 border text-left">
+      <button class="text-red-500 hover:text-red-700 delete-edit-kiet-row">
         <i class="fas fa-trash"></i>
       </button>
     </td>
   `;
 
   tbody.appendChild(row);
+
+  // Calculate on load
   calculateEditKietRowValue(row);
 
-  // Add event listeners
-  row.querySelector('.delete-edit-kiet-row').addEventListener('click', function() {
+  // Delete row event
+  row.querySelector(".delete-edit-kiet-row").addEventListener("click", () => {
     row.remove();
+    updateSummaryTotals();
   });
 
-  row.querySelectorAll('input').forEach(input => {
-    input.addEventListener('input', function() {
+  // Auto recalc
+  row.querySelectorAll("input").forEach((input) =>
+    input.addEventListener("input", () => {
       calculateEditKietRowValue(row);
-    });
-  });
+      updateSummaryTotals();
+    })
+  );
 }
 
+
+/* ----------- Add summary row (no edit fields) ----------- */
+
+function addEditKietSummaryRow(item) {
+  const tbody = document.getElementById("editKietTableBody");
+
+  const row = document.createElement("tr");
+  row.className = "bg-gray-200 font-semibold";
+
+  row.innerHTML = `
+    <td colspan="3" class="px-4 py-2 border">${item.description}</td>
+    <td class="px-4 py-2 border">₹ ${item.totalValue}</td>
+    <td class="px-4 py-2 border"></td>
+  `;
+
+  row.classList.add("summary-row");
+
+  tbody.appendChild(row);
+}
+
+
+/* ----------- Normal row value update ----------- */
+updateSummaryTotals() ;
 function calculateEditKietRowValue(row) {
-  const cost = parseFloat(row.querySelector('.edit-kiet-cost').value) || 0;
-  const qty = parseFloat(row.querySelector('.edit-kiet-qty').value) || 0;
-  const value = cost * qty;
-  row.querySelector('.edit-kiet-value').textContent = value.toFixed(2);
+  const cost = parseFloat(row.querySelector(".edit-kiet-cost")?.value) || 0;
+  const qty = parseFloat(row.querySelector(".edit-kiet-qty")?.value) || 0;
+  row.querySelector(".edit-kiet-value").textContent = (cost * qty).toFixed(2);
 }
 
 
+/* ----------- Recalculate summary total dynamically ----------- */
+function updateSummaryTotals() {
+
+  // 1️⃣ Calculate total of all editable rows
+  const rows = document.querySelectorAll("#editKietTableBody tr:not(.summary-row)");
+  let itemsTotal = 0;
+
+  rows.forEach(row => {
+    const value = parseFloat(row.querySelector(".edit-kiet-value")?.textContent || 0);
+    itemsTotal += value;
+  });
+
+  // 2️⃣ Get all summary rows
+  const summaryRows = document.querySelectorAll("#editKietTableBody tr.summary-row");
+
+  if (summaryRows.length < 4) return;
+
+  // Helper to extract numeric value
+  const getNumeric = (el) => {
+    const txt = el?.textContent || "0";
+    return parseFloat(txt.replace("₹", "").replace(/,/g, "").trim()) || 0;
+  };
+
+  // 3️⃣ Update FIRST summary row (Total costs in INR)
+  const totalCostCell = summaryRows[0].children[1];
+  totalCostCell.textContent = "₹ " + itemsTotal.toFixed(2);
+
+  // 4️⃣ Read static charges
+  const exportCharge = getNumeric(summaryRows[1].children[1]);
+  const boxCharge = getNumeric(summaryRows[2].children[1]);
+
+  // 5️⃣ Final Total
+  const finalTotal = itemsTotal + exportCharge + boxCharge;
+
+  // 6️⃣ Update LAST summary row
+  summaryRows[3].children[1].textContent = "₹ " + finalTotal.toFixed(2);
+
+  console.log("Export Charge:", exportCharge, "Box Charge:", boxCharge, "Items Total:", itemsTotal);
+}
 
 
+/* ---------------------- PV ADAPTOR TABLE ---------------------- */
 
+function populateEditPvAdaptor(pv_adaptors = []) {
+  const tbody = document.getElementById("editPvAdaptorsTable");
+  tbody.innerHTML = "";
 
+  if (!pv_adaptors || pv_adaptors.length === 0) {
+    alert("Your PV adaptor details are not communicatable");
+    return;
+  }
 
+  pv_adaptors.forEach((item) => addEditPvRow(item));
+}
 
+function addEditPvRow(item = {}) {
+  const tbody = document.getElementById("editPvAdaptorsTable");
+  if (!tbody) return;
+
+  const row = document.createElement("tr");
+  row.className = "text-sm";
+
+  row.innerHTML = `
+  <td class="px-4 py-2 border break-words">${item.slNo || ""}</td>
+  <td class="px-4 py-2 border break-words">${item.familyName|| ""}</td>
+    <td class="px-4 py-2 border break-words">${item.revNo || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.coaxialPin || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.sokCard || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.sokQty || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.rate || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.qty || ""}</td>
+    <td class="px-4 py-2 border break-words">${item.totalAmount || ""}</td>
+  `;
+
+  tbody.appendChild(row);
+}
 
 
 
@@ -5819,6 +6113,41 @@ function exportToExcel() {
       // Download file
       XLSX.writeFile(wb, 'Cost_Calculation.xlsx');
     }
+
+
+
+
+    
+  function openEditModal(id) {
+    // Fetch data from backend
+    fetch(`/edit-vk-quotation/${id}`)
+      .then(res => res.json())
+      .then(q => {
+
+        // Fill values in modal
+        document.getElementById("editId").value = q.id;
+        document.getElementById("editQuotationNumber").value = q.quotation_number;
+        document.getElementById("editQuotationDate").value = q.quotation_date;
+        document.getElementById("editReferenceNo").value = q.reference_no;
+        document.getElementById("editValidUntil").value = q.valid_until;
+        document.getElementById("editCurrency").value = q.currency;
+        document.getElementById("editPaymentTerms").value = q.payment_terms;
+        document.getElementById("editDeliveryDuration").value = q.delivery_duration;
+        document.getElementById("editCompanyName").value = q.company_name;
+        document.getElementById("editCompanyEmail").value = q.company_email;
+        document.getElementById("editCompanyGST").value = q.company_gst;
+        document.getElementById("editCompanyAddress").value = q.company_address;
+        document.getElementById("editClientName").value = q.client_name;
+        document.getElementById("editClientEmail").value = q.client_email;
+        document.getElementById("editClientPhone").value = q.client_phone;
+        document.getElementById("editNotes").value = q.notes;
+
+        // Now show the modal
+        const modal = new bootstrap.Modal(document.getElementById("editVkQuotationModal"));
+        modal.show();
+      });
+  }
+
 
 
     
