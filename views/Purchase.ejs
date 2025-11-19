@@ -473,7 +473,7 @@
 
     function populateSupplierFilter() {
       const supplierFilter = document.getElementById('supplierFilter');
-      const suppliers = [...new Set(allOrders.map(order => order.supplier).filter(Boolean))];
+      const suppliers = [...new Set(allOrders.map(order => order.supplier).filter(Boolean))].sort();
 
       suppliers.forEach(supplier => {
         const option = document.createElement('option');
