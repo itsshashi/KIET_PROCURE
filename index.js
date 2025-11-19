@@ -2,6 +2,7 @@
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
 
 import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 
 import path from "path";
@@ -19,12 +20,12 @@ import generateQuotation from "./trade.js";
 import generateVKQuotation from "./vk.js";
 import { query } from "express-validator";
 import { sendNotification } from "./routes/pushNotifications.js";
-
+const db_pass = process.env.DB_PASSWORD;
 // =============================
 // CONFIG
 // =============================
 const app = express();
-dotenv.config({ path: "SCR.env" });
+
 
 const PASSWORD = process.env.EMAIL_PASS; // Gmail app password
 const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password: "shashank@kiet15",
+  password: db_pass,
   port: 5432,
 });
 
