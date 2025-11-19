@@ -286,11 +286,7 @@ function generateQuotation(poData, filePath) {
                   //   font: "Times",
                   //   margin: [10, 0, 0, 5],
                   // },
-                  {
-                    text: `GSTIN: ${poData.company.gst}`,
-                    font: "Times",
-                    margin: [10, 0, 0, 5],
-                  },
+                  
                 ],
               },
 
@@ -438,7 +434,7 @@ function generateQuotation(poData, filePath) {
                     ],
                     [
                       {
-                        text: "Package",
+                        text: "Package and Forwarding",
                         font: "Times",
                         bold: true,
                         alignment: "left",
