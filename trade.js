@@ -600,7 +600,7 @@ function generateQuotation(poData, filePath) {
                 decoration: "underline",
               },
               {
-                text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 56011",
+                text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
                 font: "Times",
                 fontSize: 10,
                 bold: true,
