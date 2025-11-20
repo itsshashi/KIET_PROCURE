@@ -2491,7 +2491,7 @@ app.get("/approved-quotations", async (req, res) => {
         COALESCE(q.currency, 'INR') as currency,
         COALESCE(q.payment_terms, 'N/A') as paymentterms,
         COALESCE(q.delivery_duration, 'N/A') as deliveryduration,
-        COALESCE(SUM(qi.total_amount), 0) as totalamount,
+        COALESCE(q.total_amount) as totalamount,
         q.status,
         q.created_at,
         'regular' as quotation_type
@@ -2621,21 +2621,24 @@ app.get("/download-quotation/:param", async (req, res) => {
     };
 
     console.log("quotation poData:", poData);
+    
 
     // =======================================================
     //  GENERATE PDF
     // =======================================================
     const fileName = `quotation_${
-      quotation.quotation_number
+      poData.poNumber
     }_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
     console.log("📄 Generating PDF:", filePath);
+    console.log('quotation poData items:',fileName)
 
     await generateQuotation(poData, filePath);
 
     console.log("✅ PDF successfully generated, preparing download...");
-
+    res.setHeader("file-Name", fileName);
+    // res.setHeader("file-Name", fileName);
     return res.download(filePath, fileName, (err) => {
       if (err) {
         console.error("❌ Error downloading file:", err);

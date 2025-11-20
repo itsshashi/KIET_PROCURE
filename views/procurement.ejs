@@ -3297,6 +3297,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                 container.innerHTML = '<p>No approved quotations found.</p>';
                 return;
             }
+            
 
             approvedQuotations.forEach(quotation => {
                 console.log("Rendering approved quotation:", quotation);
@@ -3339,11 +3340,14 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                 if (!response.ok) throw new Error('Download failed');
 
                 const blob = await response.blob();
+                
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
+                console.log('Downloading quotation with ID:', response);
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `quotation_${quotationId}.pdf`;
+                
+                a.download = response.headers.get('file-Name');
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
