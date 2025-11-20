@@ -964,6 +964,153 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Item Description Modal Styles */
+        .popup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .popup-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 672px;
+            padding: 24px;
+            position: relative;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .closeBtn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            color: #6b7280;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .closeBtn:hover {
+            color: #374151;
+        }
+
+        #mainHeading {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        #mainHeading:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .subpointBox {
+            margin-bottom: 16px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        .subTitle {
+            display: block;
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .subTitle:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .bulletsContainer {
+            margin-bottom: 8px;
+        }
+
+        .bullet {
+            display: block;
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .bullet:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .addBulletBtn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .addBulletBtn:hover {
+            background: #2563eb;
+        }
+
+        #addSubpointBtn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        #addSubpointBtn:hover {
+            background: #059669;
+        }
+
+        #saveBtn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #saveBtn:hover {
+            background: #059669;
+        }
         /* ... (all other CSS remains exactly the same) ... */
 
         /* Trade & Service Form Styles */
@@ -1776,7 +1923,19 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                 <tbody id="itemsTableBody">
                                     <tr class="item-row">
                                         <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                                        <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                                        <td> <textarea class="item-descriptin" 
+              name="itemDescription[]" 
+              placeholder="Item or service description" 
+              rows="4" 
+              style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+    resize: vertical;
+"></textarea></td>
                                         <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
 
                                         <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
@@ -1826,6 +1985,47 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                             </div>
                             <button type="button" id="addAttachment" class="btn btn-secondary">Add Attachment</button>
                         </div>
+                        <!-- FULLSCREEN OVERLAY -->
+<div id="popupModal" class="popup-modal">
+
+   <!-- POPUP CARD -->
+   <div class="popup-card">
+
+       <!-- CLOSE BUTTON -->
+       <button type="button" class="closeBtn">
+           &times;
+       </button>
+
+       <h2 style="font-size: 24px; font-weight: 600; color: #1f2937; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">
+           Add Item Description
+       </h2>
+
+       <!-- MAIN HEADING -->
+       <label style="display: block; color: #374151; font-weight: 500; margin-bottom: 4px;">Main Heading:</label>
+       <input
+           type="text"
+           id="mainHeading"
+           placeholder="Enter main heading">
+
+       <div id="subpointsContainer"></div>
+
+       <button
+           type="button"
+           id="addSubpointBtn">
+           + Add Subpoint
+       </button>
+
+       <div style="margin-top: 24px; text-align: right;">
+           <button
+               type="button"
+               id="saveBtn">
+               Save Description
+           </button>
+       </div>
+   </div>
+</div>
+
+
 
                         <!-- Submit Buttons -->
                         <div class="form-actions">
@@ -1834,9 +2034,12 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 <button type="submit" id="sendApprovalRequest" class="btn btn-primary">Send Approval Request</button>
                             
                         </div>
+
                     </form>
                 </div>
             </div>
+            
+                  
             
                 
 
@@ -2507,6 +2710,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                             <option value="rejected">Rejected</option>
                             <option value="sent">Sent</option>
                             <option value="received">Received</option>
+
                         </select>
                     </div>
                 </div>
@@ -4870,6 +5074,88 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 document.getElementById('tradeGrandTotal').value = grandTotal.toFixed(2);
             }
+            let activeInput = null; // stores the input clicked
+
+// When clicking the item description input = OPEN POPUP
+
+
+
+// Open popup when clicking item description input
+document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("item-descriptin")) {
+        activeInput = event.target;
+        openPopup();
+    }
+});
+
+function openPopup() {
+    document.getElementById("popupModal").style.display = "block";
+    document.getElementById("mainHeading").value = "";
+    document.getElementById("subpointsContainer").innerHTML = "";
+}
+
+// Close popup
+document.querySelector(".closeBtn").onclick = () => {
+    document.getElementById("popupModal").style.display = "none";
+};
+
+window.onclick = (e) => { 
+    if (e.target === document.getElementById("popupModal")) {
+        document.getElementById("popupModal").style.display = "none";
+    }
+};
+
+// Add Subpoint
+document.getElementById("addSubpointBtn").onclick = () => {
+    const div = document.createElement("div");
+    div.classList.add("subpointBox");
+
+    div.innerHTML = `
+        <label>Subpoint Title:</label>
+        <input type="text" class="subTitle" placeholder="Enter subpoint">
+
+        <div class="bulletsContainer"></div>
+        <button type="button" class="addBulletBtn">+ Add Bullet</button>
+    `;
+
+    // Add Bullet event
+    div.querySelector(".addBulletBtn").onclick = () => {
+        const bullet = document.createElement("input");
+        bullet.type = "text";
+        bullet.placeholder = "Enter bullet";
+        bullet.classList.add("bullet");
+        div.querySelector(".bulletsContainer").appendChild(bullet);
+    };
+
+    document.getElementById("subpointsContainer").appendChild(div);
+};
+
+// SAVE
+document.getElementById("saveBtn").onclick = () => {
+    let text = "";
+    const mainHeading = document.getElementById("mainHeading").value.trim();
+
+    if (mainHeading) text += mainHeading + "\n";
+
+    document.querySelectorAll(".subpointBox").forEach(sub => {
+        const title = sub.querySelector(".subTitle").value.trim();
+
+        if (title) text += "\t" + title + "\n";
+
+        sub.querySelectorAll(".bullet").forEach(b => {
+            const value = b.value.trim();
+            if (value) text += "\t\t• " + value + "\n";
+        });
+
+        text += "\n";
+    });
+
+    if (activeInput) activeInput.value = text.trim();
+
+    document.getElementById("popupModal").style.display = "none";
+};
+
+           
         });
             
     </script>

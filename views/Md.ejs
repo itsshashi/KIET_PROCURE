@@ -21,6 +21,42 @@
     gap: 20px;
     margin-bottom: 20px;
 }
+@keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+.animate-scaleIn {
+    animation: scaleIn 0.2s ease-out;
+}
+.subpointBox input {
+    width: 100%;
+    border: 1px solid #d1d5db; /* approximate Tailwind gray-300 */
+    border-radius: 0.375rem; /* rounded-md */
+    padding: 0.5rem 0.75rem; /* py-2 px-3 */
+    margin-top: 0.25rem; /* mt-1 */
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    background: transparent;
+}
+.subpointBox input:focus {
+    outline: none;
+    border-color: #3b82f6; /* Tailwind blue-500 */
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.15); /* approximate focus:ring-2 */
+}
+.addBulletBtn {
+    margin-top: 8px;
+    background-color: #9333ea;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.addBulletBtn:hover {
+    background-color: #7e22ce;
+}
 
     .form-col {
     flex: 1;
@@ -1552,30 +1588,60 @@ select {
                             </tfoot>
                         </table>
                         <!-- Popup Modal -->
-<div id="popupModal" class="modal">
-    <div class="modal-content">
-        <span class="closeBtn">&times;</span>
+<!-- FULLSCREEN OVERLAY -->
+<div id="popupModal" 
+     class="fixed inset-0 bg-black bg-opacity-50 hidden 
+            flex items-center justify-center z-50">
+    
+    <!-- POPUP CARD -->
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 
+                relative animate-scaleIn">
+        
+        <!-- CLOSE BUTTON -->
+        <button 
+            type="button"
+            class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 
+                   text-2xl font-bold closeBtn">
+            &times;
+        </button>
 
-        <h2>Add Item Description</h2>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">
+            Add Item Description
+        </h2>
 
-        <label>Main Heading:</label>
-        <input type="text" id="mainHeading" placeholder="Enter main heading">
+        <!-- MAIN HEADING -->
+        <label class="block text-gray-700 font-medium mb-1">Main Heading:</label>
+        <input 
+            type="text" 
+            id="mainHeading"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 
+                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+            placeholder="Enter main heading">
+        
+        <div id="subpointsContainer" class="space-y-4"></div>
 
-        <hr>
+        <button 
+            type="button" 
+            id="addSubpointBtn"
+            class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg 
+                   hover:bg-blue-700 transition">
+            + Add Subpoint
+        </button>
 
-        <div id="subpointsContainer"></div>
-
-        <button id="addSubpointBtn" class="addBtn">+ Add Subpoint</button>
-
-        <br><br>
-        <button id="saveBtn" class="saveBtn">Save Description</button>
+        <div class="mt-6 text-right">
+            <button 
+                type="button"
+                id="saveBtn"
+                class="bg-green-600 text-white px-6 py-2 rounded-lg shadow 
+                       hover:bg-green-700 transition">
+                Save Description
+            </button>
+        </div>
     </div>
 </div>
 
-                        <button type="button" id="addItem" class="btn btn-secondary">Add Item</button>
-                    </div>
-                    <!-- Summary Section -->
-                    
+
+
 
           
 
@@ -1635,7 +1701,19 @@ select {
                 newRow.className = 'item-row';
                 newRow.innerHTML = `
                     <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                    <td><textarea class="item-description" 
+              name="itemDescription[]" 
+              placeholder="Item or service description" 
+              rows="4" 
+              style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+    resize: vertical;
+"></textarea></td>
                     <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
                     
                     <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
@@ -6221,17 +6299,19 @@ function exportToExcel() {
   let activeInput = null; // stores the input clicked
 
 // When clicking the item description input = OPEN POPUP
+
+
+
+// Open popup when clicking item description input
 document.addEventListener("click", function(event) {
     if (event.target.classList.contains("item-description")) {
-        activeInput = event.target;  // store reference
+        activeInput = event.target;
         openPopup();
     }
 });
 
 function openPopup() {
     document.getElementById("popupModal").style.display = "block";
-
-    // Clear old values
     document.getElementById("mainHeading").value = "";
     document.getElementById("subpointsContainer").innerHTML = "";
 }
@@ -6240,12 +6320,14 @@ function openPopup() {
 document.querySelector(".closeBtn").onclick = () => {
     document.getElementById("popupModal").style.display = "none";
 };
-window.onclick = e => { 
-    if (e.target === document.getElementById("popupModal")) 
-        document.getElementById("popupModal").style.display = "none"; 
+
+window.onclick = (e) => { 
+    if (e.target === document.getElementById("popupModal")) {
+        document.getElementById("popupModal").style.display = "none";
+    }
 };
 
-// Add a subpoint
+// Add Subpoint
 document.getElementById("addSubpointBtn").onclick = () => {
     const div = document.createElement("div");
     div.classList.add("subpointBox");
@@ -6255,15 +6337,16 @@ document.getElementById("addSubpointBtn").onclick = () => {
         <input type="text" class="subTitle" placeholder="Enter subpoint">
 
         <div class="bulletsContainer"></div>
-        <button class="addBulletBtn">+ Add Bullet</button>
+        <button type="button" class="addBulletBtn">+ Add Bullet</button>
     `;
 
+    // Add Bullet event
     div.querySelector(".addBulletBtn").onclick = () => {
-        const b = document.createElement("input");
-        b.type = "text";
-        b.placeholder = "Enter bullet";
-        b.classList.add("bullet");
-        div.querySelector(".bulletsContainer").appendChild(b);
+        const bullet = document.createElement("input");
+        bullet.type = "text";
+        bullet.placeholder = "Enter bullet";
+        bullet.classList.add("bullet");
+        div.querySelector(".bulletsContainer").appendChild(bullet);
     };
 
     document.getElementById("subpointsContainer").appendChild(div);
@@ -6272,34 +6355,29 @@ document.getElementById("addSubpointBtn").onclick = () => {
 // SAVE
 document.getElementById("saveBtn").onclick = () => {
     let text = "";
-    const mainHeading = document.getElementById("mainHeading").value;
+    const mainHeading = document.getElementById("mainHeading").value.trim();
 
-    // MAIN HEADING
-    text += mainHeading + "\n";
+    if (mainHeading) text += mainHeading + "\n";
 
-    // SUBHEADINGS + BULLETS
     document.querySelectorAll(".subpointBox").forEach(sub => {
-        const title = sub.querySelector(".subTitle").value;
+        const title = sub.querySelector(".subTitle").value.trim();
 
-        // Subheading under main heading
-        text += "\t" + title + "\n";
-    
+        if (title) text += "\t" + title + "\n";
 
-
-        // Bullets under subheading
         sub.querySelectorAll(".bullet").forEach(b => {
-            text += "    \t• " + b.value + "\n";
+            const value = b.value.trim();
+            if (value) text += "\t\t• " + value + "\n";
         });
 
-        text += "\n"; // spacing after each group
+        text += "\n";
     });
 
-    // Fill into correct input
     if (activeInput) activeInput.value = text.trim();
 
-    // Close popup
     document.getElementById("popupModal").style.display = "none";
 };
+
+
 
 
     
