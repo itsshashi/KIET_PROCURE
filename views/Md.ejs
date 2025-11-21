@@ -1235,21 +1235,9 @@ select {
     <div id="new_trade" class="tab-content">
      <form id="quotationForm" enctype="multipart/form-data">
       <div class="form-section">
-                        <h2 class="section-title">Quotation Information</h2>
+                        <h2 class="section-title">Quotation Information-TRADE AND SERVICES</h2>
                         <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="quotationType">TRADE AND SERVICES</label>
-                                    <input type="text" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-" value="TRADE & SERVICES" readonly>
-                                </div>
-                            </div>
+                            
                             <div class="form-col">
                                 <div class="form-group">
                                     <label for="quotationNumber" class="required">Quotation Number</label>
@@ -1282,31 +1270,7 @@ select {
                                     <div class="error-message" id="quotationDateError">Please select a valid date</div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="referenceNo">Reference Number</label>
-                                    <div style="display: flex; gap: 10px;">
-                                        <input type="text" id="referenceNo" name="referenceNo" readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;
-                                        
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                        <button type="button" id="generateReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <!-- Empty column for balance -->
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
+                             <div class="form-col">
                                 <div class="form-group">
                                     <label for="validUntil" class="required">Valid Until</label>
                                     <input type="date" id="validUntil" name="validUntil" required style="
@@ -1320,120 +1284,96 @@ select {
                                     <div class="error-message" id="validUntilError">Please select a valid date</div>
                                 </div>
                             </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="currency" class="required">Currency</label>
-                                   <select id="currency" name="currency" required
-  style="
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    padding: 0.5rem 2.5rem 0.5rem 1rem;
-    font-size: 1rem;
-    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23333%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276,9 12,15 18,9%27/%3e%3c/svg%3e');
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1rem;
-    width: 100%;
-    max-width: 300px;
-  ">
-  <option value="" disabled selected>Select Currency</option>
-  <option value="INR">INR</option>
-  <option value="USD">USD</option>
-  <option value="EUR">EUR</option>
-  <option value="GBP">GBP</option>
-</select>
+                        </div>
+                       
+                        
+                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                    <div class="error-message" id="currencyError">Please select a currency</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="paymentTerms">Payment Terms</label>
-                                    <input type="text" id="paymentTerms" name="paymentTerms" placeholder="e.g., 50% advance, 50% on delivery" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="deliveryDuration">Delivery Duration</label>
-                                    <input type="text" id="deliveryDuration" name="deliveryDuration" placeholder="e.g., 2-4 weeks" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="gst">GST</label>
-                                    <input type="text" id="gst" name="gst" placeholder="GST" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="packaging">Packaging</label>
-                                    <input type="text" id="packaging" name="packaging" placeholder="Packaging" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="insurance">Insurance</label>
-                                    <input type="text" id="insurance" name="insurance" placeholder="Insurance" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="deliveryTerms">Delivery Terms</label>
-                                    <input type="text" id="deliveryTerms" name="deliveryTerms" placeholder="Delivery Terms" style="
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;
-">
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
+    <!-- Currency -->
+    <div>
+        <label for="currency" class="block text-sm font-medium text-gray-700 mb-1 required">
+            Currency
+        </label>
+
+        <div class="relative">
+            <select id="currency" name="currency" required
+                class="w-full p-3 pr-10 border border-gray-300 rounded-lg text-base bg-white 
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer appearance-none">
+                <option value="" disabled selected>Select Currency</option>
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+            </select>
+
+            <!-- Custom dropdown arrow -->
+            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" 
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                     viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="text-red-500 text-sm mt-1 hidden" id="currencyError">
+            Please select a currency
+        </div>
+    </div>
+
+    <!-- Payment Terms -->
+    <div>
+        <label for="paymentTerms" class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+        <input type="text" id="paymentTerms" name="paymentTerms" 
+            placeholder="e.g., 50% advance, 50% on delivery"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+    <!-- Delivery Duration -->
+    <div>
+        <label for="deliveryDuration" class="block text-sm font-medium text-gray-700 mb-1">Delivery Duration</label>
+        <input type="text" id="deliveryDuration" name="deliveryDuration"
+            placeholder="e.g., 2-4 weeks"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+</div>
+
+
+<!-- Second Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+
+    <!-- GST -->
+    <div>
+        <label for="gst" class="block text-sm font-medium text-gray-700 mb-1">GST</label>
+        <input type="text" id="gst" name="gst" placeholder="GST"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+    <!-- Packaging -->
+    <div>
+        <label for="packaging" class="block text-sm font-medium text-gray-700 mb-1">Packaging</label>
+        <input type="text" id="packaging" name="packaging" placeholder="Packaging"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+    <!-- Insurance -->
+    <div>
+        <label for="insurance" class="block text-sm font-medium text-gray-700 mb-1">Insurance</label>
+        <input type="text" id="insurance" name="insurance" placeholder="Insurance"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+    <!-- Delivery Terms -->
+    <div>
+        <label for="deliveryTerms" class="block text-sm font-medium text-gray-700 mb-1">Delivery Terms</label>
+        <input type="text" id="deliveryTerms" name="deliveryTerms" placeholder="Delivery Terms"
+            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+
+</div>
+
+                    </div> <!-- End of Quotation Information Section -- DOUBLT>-->
 
                     <!-- Client Information Section -->
                     <div class="form-section">
@@ -1655,6 +1595,7 @@ select {
 
 
 </form>
+</div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
             // Generate Quotation Number
