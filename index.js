@@ -47,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:'Shashank@KIET1519',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -4504,6 +4504,7 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
     );
     const quotationNumber = quotationNumberResult.rows[0].quotation_number;
     console.log("Generated quotation number:", quotationNumber);
+    console.log("quotation req body items:", req.body);
 
     // Extract fields from form
     const {
@@ -4523,6 +4524,10 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
       clientPhone,
       clientCompany,
       clientAddress,
+      gst,
+      packaging,
+      insurance,
+      deliveryTerms,
 
       notes,
     } = req.body;
@@ -4589,11 +4594,11 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
         valid_until, currency, payment_terms, delivery_duration,
         company_name, company_email, company_gst, company_address,
         client_name, client_email, client_phone, client_company, client_address,
-        total_amount, notes, status, created_by
+        total_amount, notes, status, created_by,gstterms,packaging,insurance,deliveryterms
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18,
-        $19, $20, $21
+        $19, $20, $21, $22, $23, $24, $25
       )
       RETURNING id
     `;
@@ -4616,11 +4621,14 @@ app.post("/md/trade_generation", upload.none(), async (req, res) => {
       clientPhone,
       clientCompany,
       clientAddress,
-
       totalAmount,
       notes,
       "approved",
       req.session?.user?.email || null,
+      gst,
+      packaging,
+      insurance,
+      deliveryTerms,
     ];
 
     const quotationResult = await client.query(quotationQuery, quotationValues);
