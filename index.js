@@ -47,9 +47,10 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password: db_pass,
+  password:"Shashank@KIET1519",
   port: 5432,
 });
+app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
 
 
 // =============================
