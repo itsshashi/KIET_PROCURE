@@ -47,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:"Shashank@KIET1519",
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -5077,6 +5077,84 @@ app.post("/regenerate-vk-pdf/:id", async (req, res) => {
     });
   }
 });
+
+app.get("/view-quotation/:param", async (req, res) => {
+  try {
+    const { param } = req.params;
+    const isNumeric = /^\d+$/.test(param);
+
+    const quotationResult = await pool.query(
+      `SELECT * FROM quotations WHERE ${isNumeric ? "id" : "quotation_number"} = $1 LIMIT 1`,
+      [param]
+    );
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).json({ error: "Quotation not found" });
+    }
+
+    const quotation = quotationResult.rows[0];
+
+    // Fetch items
+    const itemsQuery = `
+      SELECT part_no, description, hsn_code, quantity, unit, unit_price, total_amount
+      FROM quotation_items
+      WHERE quotation_id = $1
+      ORDER BY id ASC;
+    `;
+    const items = (await pool.query(itemsQuery, [quotation.id])).rows || [];
+
+    // Build poData
+    const poData = {
+      poNumber: quotation.quotation_number,
+      date: quotation.quotation_date ? quotation.quotation_date.toLocaleDateString("en-GB") : "",
+      expected_date: quotation.valid_until ? quotation.valid_until.toLocaleDateString("en-GB") : "",
+      termsOfPayment: quotation.payment_terms || "",
+      currency: quotation.currency || "INR",
+      requester: { name: quotation.client_name || "" },
+      reference_no: quotation.reference_no,
+      company: {
+        name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: quotation.company_email || "info@kiet.com",
+        gst: quotation.company_gst || "29AAFCK6528DIZG",
+        address:
+          quotation.company_address ||
+          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
+        logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
+      },
+      supplier: {
+        name: quotation.client_name,
+        address: quotation.client_address || "",
+        duration: quotation.delivery_duration || "",
+        contact: quotation.client_phone || "",
+      },
+      gstterms: quotation.gst || "Extra 18%",
+      insurance: quotation.insurance || "N/A",
+      delivery_terms: quotation.delivery_terms || "Ex-Works / DAP",
+      packaging: quotation.packaging || "Standard Export Packaging extra",
+      line: path.join(process.cwd(), "public/images/line.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+      items,
+    };
+
+    const fileName = `quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateQuotation(poData, filePath);
+
+    // === 🔥 OPEN PDF IN BROWSER INSTEAD OF DOWNLOADING ===
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${fileName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /view-quotation:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
