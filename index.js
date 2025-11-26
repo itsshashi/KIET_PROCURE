@@ -5796,6 +5796,81 @@ app.post("/preview-vk", upload.none(), async (req, res) => {
   }
 });
 
+app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, error: "Not authenticated" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { id } = req.params;
+
+    // ---- Parse PV ADAPTORS ----
+    let pvAdaptors = [];
+    if (Array.isArray(req.body.pvQty)) {
+      req.body.pvQty.forEach((qty, index) => {
+        pvAdaptors.push({
+          slNo: index + 1,
+          qty: parseFloat(qty) || 0,
+          familyName: req.body.pvFamilyName[index] || "",
+          revNo: req.body.pvRevNo[index] || "",
+          coaxialPin: req.body.pvCoaxialPin[index] || "",
+          sokCard: req.body.pvSokCard[index] || "",
+          sokQty: parseFloat(req.body.pvSokQty[index]) || 0,
+          rate: parseFloat(req.body.pvRate[index]) || 0,
+          totalAmount: (
+            (parseFloat(qty) || 0) *
+            (parseFloat(req.body.pvRate[index]) || 0)
+          ).toFixed(2),
+        });
+      });
+    }
+
+    // ---- Calculate total ----
+    const totalAmount = pvAdaptors.reduce(
+      (sum, item) => sum + parseFloat(item.totalAmount),
+      0
+    );
+    console.log('vk revision rev', req.body.quotation_rev)
+    console.log("Total Amount:", totalAmount);
+    console.log("PV Adaptors:", pvAdaptors);
+
+    // ---- UPDATE ONLY PV ADAPTORS ----
+    await client.query(
+      `
+      UPDATE vk_quotations SET
+       
+        pv_adaptors = $1,
+        total_amount = $2,
+        updated_at = CURRENT_TIMESTAMP,quotation_numb=$3
+      WHERE id = $4
+      `,
+      [JSON.stringify(pvAdaptors), totalAmount,req.body.quotation_rev, id]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "PV Adaptor details updated successfully",
+      quotationId: id,
+      totalAmount
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error updating VK quotation:", error);
+    res.status(500).json({ success: false, error: "Update failed" });
+  } finally {
+    client.release();
+  }
+});
+
+
+
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
