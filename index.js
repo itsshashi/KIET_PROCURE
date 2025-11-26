@@ -47,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:"Shashank@KIET1519",
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -1006,25 +1006,133 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       from: "NO-reply@kietsindia.com",
       to: "purchase@kietsindia.com",
       subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
-      text: `
-Hello Purchase Team,
+     
+                   html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
 
-A new order has been raised and requires your approval.
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
 
-📌 Order Details:
-- Order Number: ${purchaseOrderNumber}
-- Supplier: ${supplierName}
-- Requester: ${orderedBy}
-- Date: ${new Date().toLocaleDateString()}
-- Total Amount: ₹${totalAmount}
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear Purchase team,</strong></p>
 
-👉 Please review and approve the order here:
-https://kietprocure.com
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new Purchase Order has been prepared and is now awaiting your Purchase approval.<br>
+      Please find the summary details below for your reference:
+    </p>
 
-Best regards,
-Procurement Team
-KIET TECHNOLOGIES PVT LTD,
-            `,
+    <table cellpadding="10" cellspacing="0" 
+       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Order Number:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${purchaseOrderNumber}</td>
+      </tr>
+    
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Supplier Name:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${supplierName}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${orderedBy}</td>
+      </tr>
+       <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Total Amount:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${totalAmount}</td>
+      </tr>
+
+      <tr>
+        <td><strong>Submission Date:</strong></td>
+        <td>${new Date().toLocaleDateString()}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
+  `,
+            
       attachments: [
         {
           filename: "lg.jpg", // your image file name
@@ -1433,26 +1541,131 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
       from: "No-reply@kietsindia.com",
       to: "chandrashekaraiah.r@kietsindia.com",
       subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
-      text: `
-Hello,
+   
+  html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
 
-The order ${
-        rows[0].purchase_order_number
-      } has been approved in Purchase.com and now requires your attention for final approval.
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
 
-📌 Order Details:
-- Order Number: ${rows[0].purchase_order_number}
-- Supplier: ${rows[0].supplier_name || "N/A"}
-- Requester: ${rows[0].ordered_by || "N/A"}
-- Date: ${rows[0].order_date || new Date().toLocaleDateString()}
-- Total Amount: ₹${rows[0].total_amount || "N/A"}
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
 
-👉 Please complete the final approval here:  
-https://kietprocure.com
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new Purchase Order has been prepared and is now awaiting your Final approval.<br>
+      Please find the summary details below for your reference:
+    </p>
 
-Best regards,  
-Purchase Team
-KIET TECHNOLOGIES PVT LTD,
+    <table cellpadding="10" cellspacing="0" 
+       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Order Number:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${rows[0].purchase_order_number}</td>
+      </tr>
+    
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Supplier Name:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${rows[0].supplier_name || "N/A"}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${rows[0].ordered_by || "N/A"}</td>
+      </tr>
+       <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Total Amount:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">₹${rows[0].total_amount || "N/A"}</td>
+      </tr>
+
+      <tr>
+        <td><strong>Submission Date:</strong></td>
+        <td>${rows[0].order_date || new Date().toLocaleDateString()}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
   `,
       attachments: [
         {
@@ -3629,6 +3842,7 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
   } finally {
     // Always release the client
     try {
+      
       client.release();
     } catch (releaseError) {
       console.error("Failed to release database client:", releaseError);
@@ -3835,25 +4049,130 @@ app.post(
         from: "No-reply@kietsindia.com",
         to: "chandrashekaraiah.r@gmail.com", // MD email
         subject: `VK Quotation Approval Required: ${quotationNumber}`,
-        text: `
-Hello MD,
+    
+             html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
 
-A new VK quotation has been submitted and requires your approval.
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
 
-📋 VK Quotation Details:
-- Quotation Number: ${quotationNumberValue}
-- Type: VK
-- Client: ${clientName}
-- Submitted by: ${req.session.user ? req.session.user.email : "Unknown"}
-- Date: ${quotationDate}
-- PV Adaptors: ${pvAdaptors.length} items
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
 
-Please review and approve the VK quotation through the MD dashboard.
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
+      Please find the summary details below for your reference:
+    </p>
 
-Best regards,
-VK Quotation System
-KIET TECHNOLOGIES PVT LTD
-            `,
+    <table cellpadding="10" cellspacing="0" 
+       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Quotation Type:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">VK</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${clientName}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email :'Unknown'}</td>
+      </tr>
+      <tr>
+        <td><strong>Submission Date:</strong></td>
+        <td>${quotationDate}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
+  `,
         attachments: [
           {
             filename: "lg.jpg",
@@ -4177,24 +4496,134 @@ app.post(
         from: "No-reply@kietsindia.com",
         to: "chandrashekaraiah.r@kietsindia.com", // MD email
         subject: `Quotation Approval Required: ${quotationNumber}`,
-        text: `
-Hello MD,
+       
+              
+  html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
 
-A new quotation has been submitted and requires your approval.
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
 
-📋 Quotation Details:
-- Quotation Number: ${quotationNumber}
-- Type: ${quotationType}
-- Client: ${clientName}
-- Submitted by: ${req.session.user ? req.session.user.email : "Unknown"}
-- Date: ${quotationDate}
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
 
-Please review and approve the quotation through the MD dashboard.
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new Purchase Order has been prepared and is now awaiting your Final approval.<br>
+      Please find the summary details below for your reference:
+    </p>
 
-Best regards,
-Quotation System
-KIET TECHNOLOGIES PVT LTD
-            `,
+    <table cellpadding="10" cellspacing="0" 
+       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumber}</td>
+      </tr>
+       <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Type:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${quotationType}</td>
+      </tr>
+    
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${clientName}}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email : "Unknown"}</td>
+      </tr>
+     
+
+      <tr>
+        <td><strong>Submission Date:</strong></td>
+        <td> ${quotationDate}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
+  `,
         attachments: [
           {
             filename: "lg.jpg",
@@ -5159,6 +5588,210 @@ app.get("/view-quotation/:param", async (req, res) => {
     return res.sendFile(filePath);
   } catch (error) {
     console.error("❌ Error in /view-quotation:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/view-vk-quotation/:param", async (req, res) => {
+  try {
+    const { param } = req.params;
+    const isNumeric = /^\d+$/.test(param);
+
+    const quotationResult = await pool.query(
+      `SELECT * FROM vk_quotations WHERE ${isNumeric ? "id" : "quotation_number"} = $1 LIMIT 1`,
+      [param]
+    );
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).json({ error: "VK Quotation not found" });
+    }
+
+    const quotation = quotationResult.rows[0];
+    const kietCosts = typeof quotation.kiet_costs === "string" ? JSON.parse(quotation.kiet_costs) : (quotation.kiet_costs || []);
+const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotation.pv_adaptors) : (quotation.pv_adaptors || []);
+
+
+    const poData = {
+      company: {
+        logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
+        name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: quotation.company_email || "info@kiet.com",
+        gst: quotation.company_gst || "29AAFCK6528DIZG",
+        address: quotation.company_address || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
+      },
+      supplier: {
+        address: quotation.client_address || "",
+        contact: quotation.client_phone || "",
+        duration: quotation.delivery_duration || "",
+      },
+      clientEmail: quotation.client_email,
+      poNumber: quotation.quotation_number,
+      date: quotation.quotation_date ? quotation.quotation_date.toLocaleDateString("en-GB") : "",
+      requester: { name: quotation.client_name || "" },
+      reference_no: quotation.reference_no,
+      expected_date: quotation.valid_until ? quotation.valid_until.toLocaleDateString("en-GB") : "",
+      termsOfPayment: quotation.payment_terms || "",
+      gstterms: quotation.gstterms || "Extra 18%",
+      insurance: quotation.insurance || "N/A",
+      deliveyt: quotation.deliveryterms || "Ex-Works / DAP",
+      package: quotation.packaging || "Standard Export Packaging extra",
+      currency: quotation.currency || "INR",
+      kietCosts,
+      pvAdaptors,
+      line: path.join(process.cwd(), "public/images/line.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+    };
+
+    const fileName = `vk_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateVKQuotation(poData, filePath);
+
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /view-vk-quotation:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
+// Preview VK quotation from form data
+app.post("/preview-vk", upload.none(), async (req, res) => {
+  try {
+    const formData = req.body || {};
+
+    // Process form data similar to generate-quotation for VK
+    const quotationNumber = formData.quotationNumber || "PREVIEW";
+
+    // Process PV Wiring Adaptor Details and KIET Costs
+    let pvAdaptors = [];
+    let kietCosts = [];
+
+    if (formData["itemDescription"] && Array.isArray(formData["itemDescription"])) {
+      formData["itemDescription"].forEach((desc, index) => {
+        const cost = parseFloat(formData["priceInput"][index]) || 0;
+        const qty = parseFloat(formData["qtyInput"][index]) || 0;
+
+        kietCosts.push({
+          description: desc,
+          cost: cost,
+          qty: qty,
+          totalValue: (cost * qty).toFixed(2),
+        });
+      });
+
+      // Calculate total for user inputs
+      const kietTotal = kietCosts.reduce((sum, item) => sum + parseFloat(item.totalValue), 0).toFixed(2);
+
+      // Add total row
+      kietCosts.push({
+        description: `Total costs in ${formData.currency || "INR"} (qty of 1 No.)`,
+        cost: kietTotal,
+        qty: 1,
+        totalValue: kietTotal,
+        colSpan: 3,
+        isSummaryRow: true,
+      });
+
+      // Add additional fixed rows
+      const priceInputs = formData["priceInput"] || [];
+
+      kietCosts.push({
+        description: "Export packaging charges included",
+        cost: priceInputs[4] || "2650",
+        qty: "",
+        totalValue: priceInputs[4] || "2650",
+        colSpan: 3,
+        isSummaryRow: true,
+      });
+
+      kietCosts.push({
+        description: "Bigger box setup",
+        cost: priceInputs[5] || "",
+        qty: "",
+        totalValue: priceInputs[5] || "",
+        colSpan: 3,
+        isSummaryRow: true,
+      });
+
+      const a = Number(priceInputs[5] || 0);
+      const b = Number(priceInputs[4] || 0);
+      const c = Number(kietTotal || 0);
+
+      const total = a + b + c;
+      kietCosts.push({
+        description: "Total Cost",
+        cost: total || " ",
+        qty: "",
+        totalValue: total || "",
+        colSpan: 3,
+        isSummaryRow: true,
+      });
+    }
+
+    if (formData["pvQty"] && Array.isArray(formData["pvQty"])) {
+      formData["pvQty"].forEach((qty, index) => {
+        pvAdaptors.push({
+          slNo: index + 1,
+          qty: parseFloat(qty) || 0,
+          familyName: formData["pvFamilyName"][index] || "",
+          revNo: formData["pvRevNo"][index] || "",
+          coaxialPin: formData["pvCoaxialPin"][index] || "",
+          sokCard: formData["pvSokCard"][index] || "",
+          sokQty: parseFloat(formData["pvSokQty"][index]) || 0,
+          rate: parseFloat(formData["pvRate"][index]) || 0,
+          totalAmount: (parseFloat(qty) * parseFloat(formData["pvRate"][index] || 0)).toFixed(2),
+        });
+      });
+    }
+
+    // Prepare data for PDF
+    const poData = {
+      company: {
+        logo: path.join(__dirname, "public/images/page_logo.jpg"),
+        name: formData.companyName || "",
+        email: formData.companyEmail || "",
+        gst: formData.companyGST || "",
+        address: formData.companyAddress || "",
+      },
+      supplier: {
+        address: formData.clientAddress || "",
+        contact: formData.clientPhone || "",
+        duration: formData.deliveryDuration || "",
+      },
+      clientEmail: formData.clientEmail || "",
+      poNumber: quotationNumber,
+      date: formData.quotationDate || "",
+      requester: { name: formData.clientName || "" },
+      reference_no: formData.referenceNo || "",
+      expected_date: formData.validUntil || "",
+      termsOfPayment: formData.paymentTerms || "",
+      gstterms: formData.gst || "Extra 18%",
+      insurance: formData.insurance || "N/A",
+      deliveyt: formData.deliveryTerms || "",
+      package: formData.packaging || "",
+      currency: formData.currency || "INR",
+      kietCosts,
+      pvAdaptors,
+      line: path.join(__dirname, "public/images/line.png"),
+      signPath: path.join(__dirname, "public/images/signature.png"),
+    };
+
+    const fileName = `vk_preview_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateVKQuotation(poData, filePath);
+
+    // Open PDF in browser
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /preview-vk:", error);
     return res.status(500).json({ error: error.message });
   }
 });

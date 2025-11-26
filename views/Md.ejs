@@ -2029,20 +2029,7 @@ function resetFields() {
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-col">
-                  <div class="form-group">
-                    <label for="referenceNo">Reference Number  <span style="color: red;">*</span></label>
-                    <div style="display: flex; gap: 10px;">
-                      <input style="width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border 0.3s;" type="text" id="vkreferenceNo" name="referenceNo" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
-                      <button type="button" id="generatevkReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
-                    </div>
-                  </div>
-                </div>
+                
                 <div class="form-col">
                <div class="form-row">
                  <div class="form-col">
@@ -3316,6 +3303,9 @@ function resetFields() {
           <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotationType}')">
             <i class="fas fa-edit"></i> Edit
           </button>
+          <button class="view" onclick="viewvkQuotation(${quotation.id})">
+            <i class="fas fa-eye"></i> View
+          </button>
         </td>
       </tr>
     `;
@@ -3324,6 +3314,10 @@ function resetFields() {
   });
 
 }
+function viewvkQuotation(id) {
+  window.open(`/view-vk-quotation/${id}`, "_blank");
+}
+
 
     //render the vk approve quotations table
     async function loadVKApproveQuotations() {
