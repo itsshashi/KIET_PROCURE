@@ -29,7 +29,23 @@
     width: 100%;
     overflow-x: hidden; /* avoid horizontal scroll */
 }
-        
+.download-btn:disabled {
+  background-color: #d9534f !important; /* red */
+  border-color: #d43f3a !important;
+  cursor: not-allowed;
+  color: white !important;
+}
+
+.download-btn:disabled:hover {
+  background-color: #d9534f !important;
+  border-color: #d43f3a !important;
+}
+  
+.download-btn:not(:disabled) {
+  background-color: #28a745 !important; /* green */
+  border-color: #218838 !important;
+  color: white !important;
+}
         /* Sidebar Styles - Enhanced */
         .sidebar {
             width: 280px;
@@ -1487,59 +1503,60 @@
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <img src="images/wt_img.png" alt="Company Logo">
-            </div>
-            <h4 style="color: white; font-size: 14px; margin: 20px 15px 10px; font-weight: 600;">Create</h4>
-            <ul class="menu">
-                <li class="menu-item active" data-tab="raise-order">
-                    <i class="fas fa-plus-circle"></i> Raise Order
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <img src="images/wt_img.png" alt="Company Logo">
+        </div>
+
+        <h4 style="color: white; font-size: 14px; margin: 20px 15px 10px; font-weight: 600;">Create</h4>
+
+        <ul class="menu">
+            <li class="menu-item active" data-tab="raise-order">
+                <i class="fas fa-plus-circle"></i> Raise Order
+            </li>
+
+            <!-- Parent: Quotation -->
+            <li class="menu-item" data-tab="quotation" id="quotation-toggle">
+                <i class="fas fa-file-alt"></i> Quotation
+                <i class="fas fa-chevron-down arrow"></i>
+            </li>
+
+            <!-- Submenu -->
+            <ul class="submenu" id="quotation-submenu">
+                <li class="submenu-item" data-tab="trade-service">
+                    <i class="fas fa-handshake"></i> Trade & Service
                 </li>
-                <li class="menu-item" data-tab="quotation">
-                    <i class="fas fa-file-alt"></i> Quotation
+                <li class="submenu-item" data-tab="vk">
+                    <i class="fas fa-building"></i> VK
                 </li>
-                <ul class="submenu">
-                    <li class="submenu-item" data-tab="trade-service">
-                        <i class="fas fa-handshake"></i> Trade & Service
-                    </li>
-                    <li class="submenu-item" data-tab="vk">
-                        <i class="fas fa-building"></i> VK
-                    </li>
-                    <li class="submenu-item" data-tab="mae">
-                        <i class="fas fa-cogs"></i> MAE
-                    </li>
-                </ul>
-                
-                        <li class="submenu-item" data-tab="quotation-uploads">
-                            <i class="fas fa-upload"></i> View file Uploads
-                        </li>
-                </ul>
-                <li  class="menu-item" data-tab="status">
-                    <i class="fas fa-tasks"></i> Status
+                <li class="submenu-item" data-tab="mae">
+                    <i class="fas fa-cogs"></i> MAE
                 </li>
-
-                <li class="menu-item" data-tab="approved-quotation">
-                    <i class="fas fa-check-circle"></i> Approved Quotation
+                <li class="submenu-item" data-tab="quotation-uploads" style="display: none;">
+                    <i class="fas fa-upload"></i> View file Uploads
                 </li>
-
-                <li class="menu-item" id="logout-btn">
-                    
-
-    <form action="/logout" method="post">
-<i class="fas fa-sign-out-alt"></i>
-
-        <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
-            Logout
-        </button>
-    </form>
-</li>
-
-
             </ul>
 
-        </div>
+            <li class="menu-item" data-tab="status">
+                <i class="fas fa-tasks"></i> Status
+            </li>
+
+            <li class="menu-item" data-tab="approved-quotation">
+                <i class="fas fa-check-circle"></i> Approved Quotation
+            </li>
+
+            <li class="menu-item" id="logout-btn">
+                <form action="/logout" method="post">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+                        Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
         
         <!-- Main Content -->
         <div class="main-content">
@@ -2050,21 +2067,16 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                     <p>Create professional MAE quotations with enhanced client and company information</p>
                 </div>
                 <div class="form-container">
-                    <form id="maeQuotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
+                    <form id="maeQuotationForm" method="POST" action="/send-mae-qutation" enctype="multipart/form-data">
                         <!-- Enhanced Quotation Header -->
                         <div class="form-section">
                             <div class="form-row">
                                 <div class="form-col">
                                     <h3 style="font-size: 1.2rem; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center;">
                                         <i class="fas fa-file-contract" style="margin-right: 10px; color: #3b82f6;"></i>
-                                        Quotation Details
+                                        Quotation Details-MAE TYPE
                                     </h3>
-                                    <div class="form-group">
-                                        <label for="maeQuotationType">Quotation Type</label>
-                                        <select id="maeQuotationType" name="quotationType">
-                                            <option value="MAE">MAE</option>
-                                        </select>
-                                    </div>
+                                    
                                     <div class="form-group">
                                         <label for="maeQuotationNumber" class="required">Quotation Number</label>
                                         <div style="display: flex; gap: 10px;">
@@ -3250,6 +3262,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 
              filteredOrders.forEach(order => {
                  const card = document.createElement('div');
+                 console.log("Rendering order:", order);
                  card.className = 'status-card ' + order.status.toLowerCase();
 
                  card.innerHTML = `
@@ -3258,8 +3271,16 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                          <span class="status-badge badge-${order.status.toLowerCase()}">${order.status}</span>
                      </div>
                      <div class="status-body">
+                        
                          <p><strong>Project:</strong> ${order.projectName}</p>
                          <p><strong>Supplier:</strong> ${order.supplierName}</p>
+                         <p><strong>Amount:</strong> ${order.totalAmount}</p>
+                        <button class="btn btn-secondary download-btn"
+    ${["purchase","pending","rejected"].includes(order.status?.toLowerCase()) ? "disabled" : ""}
+    onclick="downloadPO('${order.id}')">
+    Download PO
+</button>
+
 
                  `;
 
@@ -3279,6 +3300,45 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 
              });
          }
+   async function downloadPO(orderId) {
+  try {
+    const response = await fetch(`/api/orders/${orderId}/pdf`);
+    if (!response.ok) throw new Error("Download failed");
+
+    const blob = await response.blob();
+
+    // 1️⃣ Try to get filename from header
+    let disposition =
+      response.headers.get("Content-Disposition") ||
+      response.headers.get("content-disposition");
+
+    let filename = null;
+
+    if (disposition && disposition.includes("filename=")) {
+      filename = disposition.split("filename=")[1].replace(/"/g, "");
+    }
+
+    // 2️⃣ If STILL null — generate fallback using PO number from URL/ID
+    if (!filename) {
+      filename = `PO_${orderId}.pdf`;
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error downloading PO:", error);
+    alert("Failed to download PO. Please try again.");
+  }
+}
+
+
 
         // Render approved quotations based on filter
         function renderApprovedQuotations() {

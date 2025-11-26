@@ -47,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:'Shashank@KIET1519',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -1431,6 +1431,7 @@ app.get("/status", async (req, res) => {
             supplier_gst AS "supplierGst",
             supplier_address AS "supplierAddress",
             shipping_address AS "shippingAddress",
+            total_amount AS "totalAmount",
             contact,
             single,
             urgency,
@@ -2106,6 +2107,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     // 5️⃣ Send PDF as response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    
 
     // Wait a bit for PDF generation to complete, then send file
     setTimeout(() => {
