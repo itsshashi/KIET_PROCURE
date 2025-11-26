@@ -52,20 +52,20 @@ function generatePurchaseOrder(poData, filePath) {
     const signBase64 = getBase64Image(poData.signPath);
 
     // 👉 Build the items table
-    const itemsTable = [
-      [
-        { text: "SL", bold: true },
-        { text: "Part No.", bold: true },
-        { text: "Item Description", bold: true },
-        { text: "HSN", bold: true },
-        { text: "GST%", bold: true },
-        { text: "Qty", bold: true },
-        { text: "Unit", bold: true },
-        { text: "Unit Price", bold: true },
-        { text: "Discount", bold: true },
-        { text: "Total", bold: true },
-      ],
-    ];
+   const itemsTable = [
+  [
+    { text: "SL", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Part No.", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Item Description", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "HSN", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "GST%", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Qty", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Unit", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Unit Price", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Discount", bold: true, fillColor: '#2758a8', color: 'white' },
+    { text: "Total", bold: true, fillColor: '#2758a8', color: 'white' },
+  ],
+];
 
     let subtotal = 0;
     poData.items.forEach((item, i) => {
