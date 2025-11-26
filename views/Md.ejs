@@ -2585,8 +2585,9 @@ function resetFields() {
 
       <form id="editQuotationForm" class="space-y-4">
         <div class="bg-gray-50 p-4 rounded-lg border">
-          <h3 class="text-lg font-semibold text-gray-800 mb-2" id="editQuotationProjectName">Project Name</h3>
-          <p class="text-sm text-gray-600" id="editQuotationProjectCode">Project Code</p>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2" id="editQuotationProjectName">Project Name</h3><p style="color: rgba(255, 10, 10, 0.986);">(If you want to revise this quotation kindly add rev number )</p>
+          <input  type="text" name="quotation_rev" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" id="editQuotationProjectCode">
+          <p style="display: none" class="text-sm text-gray-600" id="editQuotationid">ID</p>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-lg border mb-4">
@@ -3853,6 +3854,62 @@ function closeEditQuotation() {
 // Handle Edit Quotation Form Submission
 document.getElementById('editQuotationForm').addEventListener('submit', async function(e) {
   e.preventDefault();
+  
+  let quotation_typ=document.getElementById('editQuotationType').innerText;
+ if (quotation_typ == "VK") {
+  const rev_=document.getElementById('editQuotationProjectCode').value;
+  const quotationId = document.getElementById("editQuotationid").innerText;
+
+  // send complete form data including pv adaptors
+  const form = new FormData(document.getElementById("editQuotationForm"));
+
+  try {
+    const res = await fetch(`/update-vk-quotation_md/${quotationId}`, {
+      method: "POST",
+      body: form  // 🔥 not JSON, must be form-data because backend expects arrays
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      alert("VK quotation updated successfully! ✅");
+      closeEditQuotation();
+      location.reload();
+    } else {
+      alert("Failed to update VK quotation ❌");
+    }
+
+  } catch (error) {
+    console.error("Error updating VK quotation:", error);
+    alert("❌ Something went wrong");
+  }
+
+  return; // stop default form submit
+}
+
+
+  else{
+   const form = new FormData(this);   // get form object
+   console.log("Form Data Entries:");
+   for (let pair of form.entries()) {
+    console.log(pair[0] + ': ' + pair[1]);
+  }
+  const data = {};
+
+  // Convert form data into JSON (supports arrays like name="pvSlNo[]")
+  form.forEach((value, key) => {
+    if (key.endsWith("[]")) {
+      const cleanKey = key.replace("[]", "");
+      if (!data[cleanKey]) data[cleanKey] = [];
+      data[cleanKey].push(value);
+    } else {
+      data[key] = value;
+    }
+  });
+
+  console.log("Final form data:", data);
+
+  
+  
 
   // Collect quotation items
   const items = [];
@@ -3901,7 +3958,9 @@ document.getElementById('editQuotationForm').addEventListener('submit', async fu
     console.error('Error updating quotation:', error);
     alert('Failed to update quotation. Please try again.');
   }
+}
 });
+
 
 // Handle Edit Form Submission
 document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
@@ -4389,15 +4448,19 @@ function addEditPvRow(item = {}) {
   row.className = "text-sm";
 
   row.innerHTML = `
-  <td class="px-4 py-2 border break-words">${item.slNo || ""}</td>
-  <td class="px-4 py-2 border break-words">${item.familyName|| ""}</td>
-    <td class="px-4 py-2 border break-words">${item.revNo || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.coaxialPin || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.sokCard || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.sokQty || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.rate || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.qty || ""}</td>
-    <td class="px-4 py-2 border break-words">${item.totalAmount || ""}</td>
+  <td class="px-4 py-2 border break-words"><input type="text" name="pvSlNo[]" value="${item.slNo || ""}" class="w-full border rounded p-1 text-sm" readonly></td>
+  <td class="px-4 py-2 border break-words">
+  <textarea name="pvFamilyName[]" 
+    class="w-full h-24 border rounded p-1 text-sm resize">${item.familyName || ""}</textarea>
+</td>
+
+    <td class="px-4 py-2 border break-words"><input type="text" name="pvRevNo[]" value="${item.revNo || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="text" name="pvCoaxialPin[]" value="${item.coaxialPin || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="text" name="pvSokCard[]" value="${item.sokCard || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="number" step="0.01" name="pvSokQty[]" value="${item.sokQty || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="number" step="0.01" name="pvRate[]" value="${item.rate || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="number" step="0.01" name="pvQty[]" value="${item.qty || ""}" class="w-full border rounded p-1 text-sm"></td>
+    <td class="px-4 py-2 border break-words"><input type="number" step="0.01" name="pvTotalAmount[]" value="${item.totalAmount || ""}" class="w-full border rounded p-1 text-sm"></td>
   `;
 
   tbody.appendChild(row);
@@ -5614,7 +5677,8 @@ async function editQuotation(orderId, type) {
 
     // Populate form fields
     document.getElementById('editQuotationProjectName').textContent = order.quotationnumber || order.project || '';
-    document.getElementById('editQuotationProjectCode').textContent = order.quotationnumber || '';
+    document.getElementById('editQuotationid').textContent = order.id || '';
+    document.getElementById('editQuotationProjectCode').value = order.quotationnumber || '';
     document.getElementById('editQuotationClientCompanyName').value= order.companyname || '';
     document.getElementById('editQuotationClientCompanyAddress').textContent = order.companyaddress || '';
     document.getElementById('editQuotationClientCompanyGst').value = order.companygst || '';
