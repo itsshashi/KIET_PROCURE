@@ -369,7 +369,7 @@ function generateVKQuotation(poData, filePath) {
                   margin: [0, 0, 0, 5],
                 },
                 {
-                  text: "GSTIN: 29AAFCK6528DIZG",
+                  text: "GSTIN: 29AAFCK6528D1ZG",
                   font: "Times",
                   bold: true,
                   fontSize: 10,
