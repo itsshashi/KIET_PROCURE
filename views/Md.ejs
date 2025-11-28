@@ -3944,6 +3944,7 @@ document.getElementById('editQuotationForm').addEventListener('submit', async fu
       },
       body: JSON.stringify(formData)
     });
+    
 
     if (!response.ok) throw new Error('Failed to update quotation');
 
@@ -4187,9 +4188,12 @@ function addEditQuotationRow(product = null, slNo = null) {
     <td class="px-6 py-3 border">
       <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-part-no" value="${product ? product.part_no || '' : ''}" placeholder="Part No">
     </td>
-    <td class="px-6 py-3 border">
-      <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-description" value="${product ? product.description || '' : ''}" placeholder="Description" readonly>
-    </td>
+ <td class="px-6 py-3 border">
+  <textarea 
+    class="w-full border border-gray-300 p-1 text-sm edit-quotation-description resize" 
+    placeholder="Description"
+  >${product ? product.description || '' : ''}</textarea>
+</td>
     <td class="px-6 py-3 border">
       <input type="text" class="w-full border border-gray-300 p-1 text-sm edit-quotation-hsn" value="${product ? product.hsn_code || '' : ''}" placeholder="HSN Code">
     </td>
