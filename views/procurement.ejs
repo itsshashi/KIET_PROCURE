@@ -6,6 +6,7 @@
     <title>Order Management Dashboard</title>
     <link href="../public/images/logo.png" rel="icon" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
     <style>
      
         * {
@@ -2067,7 +2068,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                     <p>Create professional MAE quotations with enhanced client and company information</p>
                 </div>
                 <div class="form-container">
-                    <form id="maeQuotationForm" method="POST" action="/send-mae-qutation" enctype="multipart/form-data">
+                    <form id="maeQuotationForm">
                         <!-- Enhanced Quotation Header -->
                         <div class="form-section">
                             <div class="form-row">
@@ -2081,7 +2082,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                         <label for="maeQuotationNumber" class="required">Quotation Number</label>
                                         <div style="display: flex; gap: 10px;">
                                             <input type="text" id="maeQuotationNumber" name="quotationNumber" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
-                                            <button type="button" id="maeGenerateQuotationNumber" class="btn btn-secondary btn-small">Generate</button>
+                                            <button type="button" id="maeGenerateQuotationNumber" class="btn btn-primary btn-small" onclick= generate_mae()>Generate</button>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -2107,13 +2108,13 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                             <option value="EUR">EUR</option>
                                         </select>
                                     </div>
-                                    <div class="form-group">
+                                    <!-- <div class="form-group">
                                         <label for="maeReferenceNo">Reference Number</label>
                                         <div style="display: flex; gap: 10px;">
                                             <input type="text" id="maeReferenceNo" name="referenceNo" readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
                                             <button type="button" id="maeGenerateReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -2135,14 +2136,14 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                             <label for="maeCompanyName" class="required">Company Name</label>
                                             <input type="text" id="maeCompanyName" name="companyName" required placeholder="Enter company name">
                                         </div>
-                                        <div class="form-group">
+                                        <!-- <div class="form-group">
                                             <label for="maeCompanyEmail" class="required">Company Email</label>
                                             <input type="email" id="maeCompanyEmail" name="companyEmail" required placeholder="company@example.com">
                                         </div>
                                         <div class="form-group">
                                             <label for="maeCompanyGST" class="required">Company GST Number</label>
                                             <input type="text" id="maeCompanyGST" name="companyGST" required placeholder="GST number">
-                                        </div>
+                                        </div> -->
                                
                                         <div class="form-group">
                                             <label for="maeCompanyAddress" class="required">Company Address</label>
@@ -2169,7 +2170,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                             <label for="maeClientPhone" class="required">Client Phone</label>
                                             <input type="tel" id="maeClientPhone" name="clientPhone" required placeholder="+91 9876543210">
                                         </div>
-                                        <div class="form-group">
+                                        <!-- <div class="form-group">
                                             <label for="maeClientCompany">Client Company</label>
                                             <input type="text" id="maeClientCompany" name="clientCompany" placeholder="Client's company name">
                                         </div>
@@ -2180,14 +2181,16 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                         <div class="form-group">
                                             <label for="maeClientAddress" class="required">Client Address</label>
                                             <textarea id="maeClientAddress" name="clientAddress" rows="4" required placeholder="Client's full address"></textarea>
-                                        </div>
+                                        </div> -->
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <h3>MACHINE INFORMATION</h3>
 
+<textarea id="editor" name="textarea_details"></textarea>
                         <!-- MAE Technical Specifications -->
-                        <div class="form-section">
+                        <!-- <div class="form-section">
                             <h2 class="section-title">
                                 <i class="fas fa-cogs" style="margin-right: 10px;"></i>
                                 MAE Technical Specifications
@@ -2233,54 +2236,10 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                 <label for="maeTechnicalDetails">Technical Details & Features</label>
                                 <textarea id="maeTechnicalDetails" name="maeTechnicalDetails" rows="4" placeholder="Describe technical specifications, features, and capabilities"></textarea>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Enhanced Items & Pricing -->
-                        <div class="form-section">
-                            <h2 class="section-title">
-                                <i class="fas fa-list" style="margin-right: 10px;"></i>
-                                Items & Pricing Structure
-                            </h2>
-                            <table class="kiet-table">
-                                <thead>
-                                    <tr>
-                                        <th>SL No</th>
-                                        <th>Part Number</th>
-                                        <th>Description</th>
-                                        <th>HSN Code</th>
-                                        <th>Quantity</th>
-                                        <th>Unit</th>
-                                        <th>Unit Price (₹)</th>
-                                        <th>GST (%)</th>
-                                        <th>Discount (%)</th>
-                                        <th>Total Amount (₹)</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="maeItemsTableBody">
-                                    <tr class="mae-item-row">
-                                        <td>1</td>
-                                        <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                                        <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item description" required></td>
-                                        <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
-                                        <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" value="1" required></td>
-                                        <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
-                                        <td><input type="number" step="0.01" name="itemPrice[]" placeholder="Price" value="0" required></td>
-                                        <td><input type="number" step="0.01" name="itemGST[]" placeholder="GST %" value="18"></td>
-                                        <td><input type="number" step="0.01" name="itemDiscount[]" placeholder="Discount %" value="0"></td>
-                                        <td><span class="item-total">0.00</span></td>
-                                        <td><button type="button" class="btn btn-danger btn-small mae-remove-item">Remove</button></td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="total-row">
-                                        <td colspan="9" style="text-align: right; font-weight: bold;">Grand Total (₹):</td>
-                                        <td id="maeGrandTotal" style="font-weight: bold;">0.00</td>
-                                        <td><button type="button" class="btn btn-secondary" id="maeAddItem"><i class="fas fa-plus"></i> Add</button></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                        
 
                         <!-- Terms & Conditions -->
                         <div class="form-section">
@@ -2292,32 +2251,36 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                 <div class="form-col">
                                     <div class="form-group">
                                         <label for="maePaymentTerms">Payment Terms</label>
-                                        <textarea id="maePaymentTerms" name="paymentTerms" rows="3" placeholder="e.g., 50% advance, 50% on delivery"></textarea>
+                                        <input type="text" id="maePaymentTerms" name="maePaymentTerms" placeholder="e.g., 50% advance, 30% on delivery, 20% post-installation">
                                     </div>
                                     <div class="form-group">
-                                        <label for="maeDeliveryTerms">Delivery Terms</label>
-                                        <textarea id="maeDeliveryTerms" name="deliveryDuration" rows="3" placeholder="Delivery schedule and terms"></textarea>
+                                        <label for="maeGstTerms">Gst Terms</label>
+                                        <input type="text" name="maeGstTerms" placeholder="e.g., 18% Extra">
                                     </div>
                                 </div>
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="maeInstallation">Installation & Commissioning</label>
-                                        <textarea id="maeInstallation" name="maeInstallation" rows="3" placeholder="Installation requirements and charges"></textarea>
+                                        <label for="maePackaging">Packagig & Forwarding</label>
+                                        <input type="text" id="maePackaging" name="maePackaging" placeholder="e.g., Exworks ,DAP">
                                     </div>
                                     <div class="form-group">
-                                        <label for="maeSupport">After Sales Support</label>
-                                        <textarea id="maeSupport" name="maeSupport" rows="3" placeholder="Support and maintenance terms"></textarea>
+                                        <label for="maeInsurance">Insurance</label>
+                                        <input type="text" id="maeInsurance" name="maeInsurance" placeholder=" Insurance if any">
                                     </div>
+                                    
+                                    
                                 </div>
+                                <div class="form-group">
+                                        <label for="maeWarranty">Warranty</label>
+                                        <input type="text" id="maeWarranty" name="maeWarranty" placeholder=" 6 months">
+                                    </div>
+                             
                             </div>
-                            <div class="form-group">
-                                <label for="maeAdditionalNotes">Additional Notes & Special Conditions</label>
-                                <textarea id="maeAdditionalNotes" name="notes" rows="4" placeholder="Any additional terms, conditions, or special requirements"></textarea>
-                            </div>
+                            
                         </div>
 
                         <!-- Attachments Section -->
-                        <div class="form-section">
+                        <!-- <div class="form-section">
                             <h2 class="section-title">
                                 <i class="fas fa-paperclip" style="margin-right: 10px;"></i>
                                 Attachments & Documentation
@@ -2336,17 +2299,125 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                 </div>
                             </div>
                             <button type="button" id="maeAddAttachment" class="btn btn-secondary">Add Attachment</button>
-                        </div>
+                        </div> -->
 
                         <!-- Submit Actions -->
                         <div class="form-actions">
                             
-                            <button type="button" class="btn btn-warning" id="maeSendApprovalRequest" style="background-color: #ffc107; color: #212529;">Send Approval Request</button>
+                            <button type="button"  id="maeSendApprovalRequest" style="background-color: #29a802; color:white;padding:8px 10px;border-radius:5px;border:1px solid rgba(171, 202, 136, 0.884); font-size:medium;font-weight:bold">Send Approval Request</button>
                             
                         </div>
                     </form>
                 </div>
             </div>
+                     <script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const submitBtn = document.getElementById("maeSendApprovalRequest");
+    
+    // Check if button exists to prevent errors
+    if(submitBtn) {
+        submitBtn.addEventListener("click", async function (e) {
+            e.preventDefault();
+            console.log("Button clicked..."); // Debugging check
+
+            const form = document.getElementById("maeQuotationForm");
+            
+            // 1. MANUAL VALIDATION CHECK
+            // Because the button is type="button", browser validation doesn't run automatically.
+            // We force it here:
+            if (!form.checkValidity()) {
+                form.reportValidity(); // This highlights the missing required fields in Red
+                return; // Stop the script here
+            }
+
+            // 2. SAVE TINYMCE (If it exists)
+            if (typeof tinymce !== "undefined" && tinymce.get('editor')) {
+                tinymce.triggerSave();
+            }
+
+            // 3. GATHER DATA
+            const formData = new FormData(form);
+            
+            formData.append('status', 'pending');
+            
+            // Get Grand Total text
+            
+
+            // 4. VISUAL FEEDBACK (Debugging)
+            // This logs to the console (Press F12 -> Console to see)
+            console.log("--- Form Data Ready to Send ---");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ": ", pair[1]);
+            }
+
+            // 5. SUCCESS ALERT
+            // This proves the button logic ran successfully
+            alert("Validation successful! Check console for data payload.");
+
+            // 6. ACTUAL SERVER SUBMISSION (Uncomment and edit this when ready)
+        
+            try {
+                const response = await fetch('/api/sendApproval/mae', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/success-page';
+                } else {
+                    alert("Server error occurred");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to send request.");
+            }
+            
+        });
+    } else {
+        console.error("Submit button ID 'maeSendApprovalRequest' not found in DOM");
+    }
+});
+
+tinymce.init({
+    selector: '#editor',
+    height: 430,
+    plugins: 'table lists',
+    menubar: false,
+    statusbar:false,
+    toolbar: `
+      undo redo |
+      bold italic underline |
+      forecolor backcolor |
+      fontsize myLineHeight |
+      alignleft aligncenter alignright |
+      bullist numlist |
+      table
+    `,
+    setup: function (editor) {
+      editor.ui.registry.addMenuButton('myLineHeight', {
+        text: 'Line Height',
+        fetch: function (callback) {
+          callback([
+            { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
+            { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
+            { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
+            { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
+            { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
+            { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
+          ]);
+        }
+      });
+
+      // Custom command to apply style
+      editor.addCommand('mceApplyLineHeight', function (_, value) {
+        editor.formatter.register('lineheight', { inline: 'span', styles: { 'line-height': '%value' } });
+        editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
+      });
+    },
+    fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px'
+  });
+</script>
 
             <!-- VK Tab -->
             <div class="tab-content" id="vk">
@@ -3981,47 +4052,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
             });
 
             // MAE Send Approval Request
-            document.getElementById('maeSendApprovalRequest').addEventListener('click', async function() {
-                const form = document.getElementById('maeQuotationForm');
-                const formData = new FormData(form);
-
-                const items = [];
-                document.querySelectorAll('#maeItemsTableBody tr').forEach(row => {
-                    const item = {
-                        partNo: row.querySelector('input[name="itemPartNo[]"]').value,
-                        description: row.querySelector('input[name="itemDescription[]"]').value,
-                        hsn: row.querySelector('input[name="itemHSN[]"]').value,
-                        quantity: parseFloat(row.querySelector('input[name="itemQuantity[]"]').value) || 0,
-                        unit: row.querySelector('input[name="itemUnit[]"]').value,
-                        unitPrice: parseFloat(row.querySelector('input[name="itemPrice[]"]').value) || 0,
-                        gst: parseFloat(row.querySelector('input[name="itemGST[]"]').value) || 0,
-                        discount: parseFloat(row.querySelector('input[name="itemDiscount[]"]').value) || 0,
-                        total: parseFloat(row.querySelector('.item-total').textContent) || 0
-                    };
-                    items.push(item);
-                });
-
-                formData.append('items', JSON.stringify(items));
-                formData.append('status', 'pending_approval');
-
-                try {
-                    const response = await fetch('/api/send-quotation-approval', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        alert('MAE Quotation approval request sent successfully! MD will review your quotation.');
-                    } else {
-                        const error = await response.json();
-                        alert('Error sending approval request: ' + (error.message || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Error sending approval request:', error);
-                    alert('Error sending approval request. Please try again.');
-                }
-            });
+           
 
             // MAE Save Quotation
             document.getElementById('maeSaveQuotation').addEventListener('click', async function() {
@@ -5221,6 +5252,19 @@ document.getElementById("saveBtn").onclick = () => {
 
            
         });
+        async function generate_mae(){
+
+            const num= await fetch("/generate_quotation_mae");
+            if (!num.ok) throw new Error("Failed to fetch generate_quotation_mae");
+
+            let generate_qt_num = await num.json();
+            let prefix= prompt('Enter the project code to add prefix of quotation number');
+            let final_qt=prefix+"-"+generate_qt_num.quotation_number;
+            alert('generate quotation number is ' +final_qt );
+            document.querySelector('#maeQuotationNumber').value=final_qt;
+            
+            
+        }
             
     </script>
 </body>
