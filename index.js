@@ -47,7 +47,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:"Shashank@KIET1519",
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -5872,6 +5872,112 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
 });
 
 
+
+
+app.get('/generate_quotation_mae',async(req,res)=>{
+   const client = await pool.connect();
+  await client.query("BEGIN");
+   const resp=await client.query(`SELECT generate_quotation_number_mae()`)
+   res.json({quotation_number:resp.rows[0].generate_quotation_number_mae})
+   client.release()
+
+  
+});
+app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
+ const{
+  quotationNumber,
+  quotationDate,
+  validUntil,
+  currency,
+  companyName,
+  companyAddress,
+  clientName,
+  clientEmail,
+  clientPhone,
+  textarea_details,
+  maePaymentTerms,
+  maeGstTerms,
+  maeInsurance,
+  maeWarranty,
+  status
+
+ }=req.body;
+ const client = await pool.connect();
+ try{
+  await client.query("BEGIN");
+  const maeQut=`
+  INSERT INTO mae_quotations(
+  quotationNumber,
+  quotationDate,
+  validUntil,
+  currency,
+  companyName,
+  companyAddress,
+  clientName,
+  clientEmail,
+  clientPhone,
+  textarea_details,
+  maePaymentTerms,
+  maeGstTerms,
+  maeInsurance,
+  maeWarranty,
+  status
+  ) VALUES( $1, $2, $3, $4,
+      $5, $6, $7, $8, $9,
+      $10, $11, $12, $13,
+      $14, $15) RETURNING id`;
+  const maeValues=[
+    quotationNumber,
+  quotationDate,
+  validUntil,
+  currency,
+  companyName,
+  companyAddress,
+  clientName,
+  clientEmail,
+  clientPhone,
+  textarea_details,
+  maePaymentTerms,
+  maeGstTerms,
+  maeInsurance,
+  maeWarranty,
+  status
+
+  ];
+  const result=await client.query(maeQut,maeValues);
+  console.log(req.body);
+  await client.query("COMMIT");
+
+    res.status(200).json({
+      success: true,
+      id: result.rows[0].id,
+      message: "Quotation saved successfully",
+    });
+  
+
+ }
+ catch(error){
+   await client.query("ROLLBACK");
+      console.error("Error saving quotation:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to save quotation",
+        details: error.message,
+      });
+
+
+ }
+  finally {
+      client.release();
+    }
+
+
+});
+
+// app.post("/api/sendApproval/mae", upload.none(), (req, res) => {
+//   console.log("formatted data:", req.body);
+//   res.json({ message: "Received form data", data: req.body });
+// });
 
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
