@@ -5207,7 +5207,41 @@ app.get("/api/render-vk_quotations", async (req, res) => {
     FROM vk_quotations
     WHERE status = 'approved'
     ORDER BY created_at DESC;
- `);
+  `);
+  client.release();
+
+  res.json(quotationResult.rows);
+});
+
+//custom api for get approved mae quotations
+app.get("/api/render-mae_quotations", async (req, res) => {
+  const client = await pool.connect();
+
+  const quotationResult = await client.query(`
+    SELECT
+        id,
+        quotationnumber AS "quotationNumber",
+        quotationdate AS "quotationDate",
+        validuntil AS "validUntil",
+        currency,
+        companyname AS "companyName",
+        companyaddress AS "companyAddress",
+        clientname AS "clientName",
+        clientemail AS "clientEmail",
+        clientphone AS "clientPhone",
+        textarea_details AS "textareaDetails",
+        maepaymentterms AS "paymentTerms",
+        maegstterms AS "gstTerms",
+        maeinsurance AS "insurance",
+        maewarranty AS "warranty",
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+
+    FROM mae_quotations
+    WHERE status = 'pending'
+    ORDER BY created_at DESC;
+  `);
   client.release();
 
   res.json(quotationResult.rows);
@@ -5884,94 +5918,270 @@ app.get('/generate_quotation_mae',async(req,res)=>{
   
 });
 app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
- const{
-  quotationNumber,
-  quotationDate,
-  validUntil,
-  currency,
-  companyName,
-  companyAddress,
-  clientName,
-  clientEmail,
-  clientPhone,
-  textarea_details,
-  maePaymentTerms,
-  maeGstTerms,
-  maeInsurance,
-  maeWarranty,
-  status
+  const{
+   quotationNumber,
+   quotationDate,
+   validUntil,
+   currency,
+   companyName,
+   companyAddress,
+   clientName,
+   clientEmail,
+   clientPhone,
+   textarea_details,
+   maePaymentTerms,
+   maeGstTerms,
+   maeInsurance,
+   maeWarranty,
+   status
 
- }=req.body;
- const client = await pool.connect();
- try{
-  await client.query("BEGIN");
-  const maeQut=`
-  INSERT INTO mae_quotations(
-  quotationNumber,
-  quotationDate,
-  validUntil,
-  currency,
-  companyName,
-  companyAddress,
-  clientName,
-  clientEmail,
-  clientPhone,
-  textarea_details,
-  maePaymentTerms,
-  maeGstTerms,
-  maeInsurance,
-  maeWarranty,
-  status
-  ) VALUES( $1, $2, $3, $4,
-      $5, $6, $7, $8, $9,
-      $10, $11, $12, $13,
-      $14, $15) RETURNING id`;
-  const maeValues=[
-    quotationNumber,
-  quotationDate,
-  validUntil,
-  currency,
-  companyName,
-  companyAddress,
-  clientName,
-  clientEmail,
-  clientPhone,
-  textarea_details,
-  maePaymentTerms,
-  maeGstTerms,
-  maeInsurance,
-  maeWarranty,
-  status
+  }=req.body;
+  const client = await pool.connect();
+  try{
+   await client.query("BEGIN");
+   const maeQut=`
+   INSERT INTO mae_quotations(
+   quotationNumber,
+   quotationDate,
+   validUntil,
+   currency,
+   companyName,
+   companyAddress,
+   clientName,
+   clientEmail,
+   clientPhone,
+   textarea_details,
+   maePaymentTerms,
+   maeGstTerms,
+   maeInsurance,
+   maeWarranty,
+   status
+   ) VALUES( $1, $2, $3, $4,
+       $5, $6, $7, $8, $9,
+       $10, $11, $12, $13,
+       $14, $15) RETURNING id`;
+   const maeValues=[
+     quotationNumber,
+   quotationDate,
+   validUntil,
+   currency,
+   companyName,
+   companyAddress,
+   clientName,
+   clientEmail,
+   clientPhone,
+   textarea_details,
+   maePaymentTerms,
+   maeGstTerms,
+   maeInsurance,
+   maeWarranty,
+   status
 
-  ];
-  const result=await client.query(maeQut,maeValues);
-  console.log(req.body);
-  await client.query("COMMIT");
+   ];
+   const result=await client.query(maeQut,maeValues);
+   console.log(req.body);
+   await client.query("COMMIT");
 
-    res.status(200).json({
-      success: true,
-      id: result.rows[0].id,
-      message: "Quotation saved successfully",
-    });
-  
-
- }
- catch(error){
-   await client.query("ROLLBACK");
-      console.error("Error saving quotation:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to save quotation",
-        details: error.message,
-      });
+     res.status(200).json({
+       success: true,
+       id: result.rows[0].id,
+       message: "Quotation saved successfully",
+     });
 
 
- }
-  finally {
-      client.release();
+  }
+  catch(error){
+    await client.query("ROLLBACK");
+       console.error("Error saving quotation:", error);
+       res.status(500).json({
+         success: false,
+         error: "Failed to save quotation",
+         details: error.message,
+       });
+
+
+  }
+   finally {
+       client.release();
+     }
+
+
+});
+
+// Get all MAE quotations
+app.get("/api/mae-quotations", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(`
+      SELECT
+        id,
+        quotationnumber,
+        quotationdate,
+        validuntil,
+        currency,
+        companyname,
+        companyaddress,
+        clientname,
+        clientemail,
+        clientphone,
+        textarea_details,
+        maepaymentterms,
+        maegstterms,
+        maeinsurance,
+        maewarranty,
+        status,
+        created_at,
+        updated_at
+      FROM mae_quotations
+      ORDER BY created_at DESC
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching MAE quotations:", error);
+    res.status(500).json({ error: "Failed to fetch MAE quotations" });
+  } finally {
+    client.release();
+  }
+});
+
+// Get single MAE quotation by ID
+app.get("/api/mae-quotations/:id", async (req, res) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(`
+      SELECT
+        id,
+        quotationnumber,
+        quotationdate,
+        validuntil,
+        currency,
+        companyname,
+        companyaddress,
+        clientname,
+        clientemail,
+        clientphone,
+        textarea_details,
+        maepaymentterms,
+        maegstterms,
+        maeinsurance,
+        maewarranty,
+        status,
+        created_at,
+        updated_at
+      FROM mae_quotations
+      WHERE id = $1
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "MAE quotation not found" });
     }
 
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching MAE quotation:", error);
+    res.status(500).json({ error: "Failed to fetch MAE quotation" });
+  } finally {
+    client.release();
+  }
+});
 
+// Update MAE quotation
+app.put("/api/mae-quotations/:id", upload.none(), async (req, res) => {
+  const { id } = req.params;
+  const {
+    quotationNumber,
+    quotationDate,
+    validUntil,
+    currency,
+    companyName,
+    companyAddress,
+    clientName,
+    clientEmail,
+    clientPhone,
+    textarea_details,
+    maePaymentTerms,
+    maeGstTerms,
+    maeInsurance,
+    maeWarranty,
+    status
+  } = req.body;
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const updateQuery = `
+      UPDATE mae_quotations SET
+        quotationnumber = $1,
+        quotationdate = $2,
+        validuntil = $3,
+        currency = $4,
+        companyname = $5,
+        companyaddress = $6,
+        clientname = $7,
+        clientemail = $8,
+        clientphone = $9,
+        textarea_details = $10,
+        maepaymentterms = $11,
+        maegstterms = $12,
+        maeinsurance = $13,
+        maewarranty = $14,
+        status = $15,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $16
+      RETURNING *
+    `;
+
+    const values = [
+      quotationNumber,
+      quotationDate,
+      validUntil,
+      currency,
+      companyName,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      textarea_details,
+      maePaymentTerms,
+      maeGstTerms,
+      maeInsurance,
+      maeWarranty,
+      status,
+      id
+    ];
+
+    const result = await client.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "MAE quotation not found" });
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "MAE quotation updated successfully",
+      quotation: result.rows[0]
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error updating MAE quotation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update MAE quotation",
+      details: error.message
+    });
+  } finally {
+    client.release();
+  }
 });
 
 // app.post("/api/sendApproval/mae", upload.none(), (req, res) => {
