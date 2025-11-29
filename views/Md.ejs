@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -21,6 +22,153 @@
     gap: 20px;
     margin-bottom: 20px;
 }
+ .tox-statusbar__path,
+  .tox-statusbar__wordcount {
+    display: none !important;
+  }
+/* ====== MODAL BACKDROP ====== */
+#maeEditModal.modal {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+/* ====== MODAL BOX ====== */
+#maeEditModal .modal-dialog {
+  
+  max-width: 100%;
+}
+
+#maeEditModal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.35);
+  animation: slideUp 0.25s ease-in-out;
+}
+
+/* ====== HEADER ====== */
+#maeEditModal .modal-header {
+  background: #1b70c8;
+  color: white;
+  padding: 16px 20px;
+}
+
+#maeEditModal .modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .3px;
+}
+
+/* ====== BODY ====== */
+#maeEditModal .modal-body {
+  padding: 20px 25px;
+}
+
+/* Section heading inside modal */
+#maeEditModal h4 {
+  margin: 18px 0 10px;
+  font-size: 18px;
+  color: #1b70c8;
+  border-left: 4px solid #1b70c8;
+  padding-left: 8px;
+}
+
+/* Row layout */
+#maeEditModal .form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* Column width */
+#maeEditModal .form-col {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Inputs design */
+#maeEditModal input,
+#maeEditModal select,
+#maeEditModal textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 6px;
+  border: 1px solid #cfd8e3;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+#maeEditModal input:focus,
+#maeEditModal select:focus,
+#maeEditModal textarea:focus {
+  border-color: #1b70c8;
+  box-shadow: 0 0 0 2px rgba(27,112,200,0.2);
+}
+
+/* Labels */
+#maeEditModal label {
+  font-size: 14px;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #333;
+  display: block;
+}
+
+/* ====== FOOTER ====== */
+#maeEditModal .modal-footer {
+  padding: 14px 20px;
+  background: #f7f8fc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+#maeEditModal .btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  border: none;
+  transition: 0.2s;
+}
+
+#maeEditModal .btn-success {
+  background: #1c940d;
+  color: #fff;
+}
+
+#maeEditModal .btn-success:hover {
+  background: #187c0b;
+}
+
+#maeEditModal .btn-secondary {
+  background: #6b7280;
+  color: #fff;
+}
+
+#maeEditModal .btn-secondary:hover {
+  background: #555b66;
+}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes scaleIn {
     from { transform: scale(0.95); opacity: 0; }
     to   { transform: scale(1); opacity: 1; }
@@ -912,15 +1060,16 @@ select {
       <ul class="menu">
         <li class="menu-heading">PO</li>
         <li class="menu-item active" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals</li>
-        
+
         <li class="menu-item" data-tab="rejected"><i class="fas fa-times"></i> Rejected Orders</li>
         <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotations(PO)</li>
         <li class="menu-heading">QUOTATIONS</li>
         <li class="menu-item" data-tab="approved-quotations"><i class="fas fa-check-circle"></i> Approved (T & S)</li>
         <li class="menu-item" data-tab="approved-vk-quotations"><i class="fas fa-check-circle"></i>Approved (VK)</li>
+        <li class="menu-item" data-tab="mae-quotations"><i class="fas fa-file-alt"></i> MAE Quotations</li>
         <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check" style="display: none;"></i> VK APPROVAL </li>
 
-        
+
 
         
         <li class="menu-item logout">
@@ -985,13 +1134,14 @@ select {
       <button class="tab-button" onclick="switchTab('all')">All POs</button>
       <button class="tab-button" onclick="switchTab('rejected')" style="display: none;">Rejected Orders</button>
       <button class="tab-button" onclick="switchTab('quotations')" style="display: none;">All Quotations</button>
-      
+
       <button class="tab-button" onclick="switchTab('approve')">Trade & Service Approval</button>
       <button class="tab-button" onclick="switchTab('vk-approve')" style="display: none;">VK Quotation Approval</button>
       <button class="tab-button" onclick="switchTab('new-order')">New VK Quotation Generation</button>
       <button class="tab-button" onclick="switchTab('new-trade')">New Trade Quotation Generation</button>
       <button class="tab-button" onclick="switchTab('approved-quotations')" style="display: none;">Approved(T & S)</button>
       <button class="tab-button" onclick="switchTab('approved-vk-quotations')" style="display: none;">Approved (VK)</button>
+      <button class="tab-button" onclick="switchTab('mae-quotations')">MAE Quotations</button>
       <button id="costCalculationTab" class="tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300" onclick="switchTab('costCalculation')">
         <i class="fas fa-calculator mr-2"></i>Cost cal
       </button>
@@ -1126,6 +1276,164 @@ select {
         <tbody id="approvedVKQuotationsBody"></tbody>
       </table>
     </div>
+    
+
+    <!-- MAE Quotations Table -->
+    <div id="maeQuotationsTab" class="tab-content">
+      <table id="maeQuotationsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_number')">Quotation Number <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('quotation_date')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="maeQuotationsBody"></tbody>
+      </table>
+    </div>
+  <div id="maeEditModal" class="modal" style="display:none;">
+  <div class="modal-dialog" style="max-width: 100%;">
+    <div class="modal-content">
+      <form id="maeEditForm" method="POST">
+
+        <div class="modal-header">
+          <h3>Edit MAE Quotation</h3>
+        </div>
+
+        <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+
+          <input type="hidden" id="editId" name="id">
+
+          <!-- QUOTATION DETAILS -->
+          <h4>Quotation Details</h4>
+          <div class="form-row">
+            <div class="form-col">
+              <label>Quotation Number</label>
+              <input type="text" id="editmaeQuotationNumber" name="quotationNumber" readonly>
+            </div>
+            <div class="form-col">
+              <label>Quotation Date</label>
+              <input type="date" id="editmaeQuotationDate" name="quotationDate">
+            </div>
+            <div class="form-col">
+              <label>Valid Until</label>
+              <input type="date" id="editmaeValidUntil" name="validUntil">
+            </div>
+            <div class="form-col">
+              <label>Currency</label>
+              <select id="editmaeCurrency" name="currency">
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- COMPANY DETAILS -->
+          <h4>Company Profile</h4>
+          <label>Company Name</label>
+          <input type="text" id="editmaeCompanyName" name="companyName">
+
+          <label>Company Address</label>
+          <textarea id="editmaeCompanyAddress" name="companyAddress" rows="3"></textarea>
+
+          <!-- CLIENT DETAILS -->
+          <h4>Client Details</h4>
+          <label>Client Name</label>
+          <input type="text" id="editmaeClientName" name="clientName">
+
+          <label>Client Email</label>
+          <input type="email" id="editmaeClientEmail" name="clientEmail">
+
+          <label>Client Phone</label>
+          <input type="tel" id="editmaeClientPhone" name="clientPhone">
+
+          <!-- DETAILS (TINYMCE) -->
+          <h4>Details</h4>
+          <textarea id="editmaeTextareaDetails" name="textareaDetails"></textarea>
+
+          <!-- TERMS -->
+          <h4>Terms & Conditions</h4>
+          <label>Payment Terms</label>
+          <input id="editmaePaymentTerms" name="paymentTerms">
+
+          <label>GST Terms</label>
+          <input id="editmaeGSTTerms" name="gstTerms">
+
+          <label>Insurance</label>
+          <input id="editmaeInsurance" name="insurance">
+
+          <label>Warranty</label>
+          <input id="editmaeWarranty" name="warranty">
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Update</button>
+          <button type="button" class="btn btn-secondary" onclick="closeMaeModal()">Close</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  tinymce.init({
+  selector: '#editmaeTextareaDetails',
+  height: 350,
+  menubar: false,
+  statusbar: true,
+  branding:false,
+  promotion: false,
+  plugins: 'lists table',
+  toolbar:
+    'undo redo | bold italic underline | fontsizeselect | alignleft aligncenter alignright | bullist numlist | table',
+
+  setup: function (editor) {
+    let typingTimer;
+    let customDiv;
+
+    editor.on('init', function () {
+      const statusBar = editor.getContainer().querySelector('.tox-statusbar');
+
+      if (statusBar) {
+        customDiv = document.createElement('div');
+        customDiv.style.padding = '5px 8px';
+        customDiv.style.fontSize = '13px';
+        customDiv.style.marginLeft = '10px';
+        customDiv.style.color = '#0078FF';
+        customDiv.innerHTML = "✨BUILD BY KIET TECHNOLOGIES  Status: Ready";
+
+        statusBar.appendChild(customDiv);
+      }
+    });
+
+    editor.on('keydown', function () {
+      if (customDiv) customDiv.innerHTML = "⌨️ Typing…";
+
+      clearTimeout(typingTimer);
+    });
+
+    editor.on('keyup', function () {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        if (customDiv) customDiv.innerHTML = "✨ Status: Idle";
+      }, 1500);
+    });
+  }
+});
+
+});
+
+</script>
+
 
     <!-- Approve Quotation Table -->
     <div id="approveTab" class="tab-content">
@@ -2900,6 +3208,7 @@ function resetFields() {
       document.getElementById('rejectedTab').style.display = tab === 'rejected' ? 'block' : 'none';
       document.getElementById('approvedQuotationsTab').style.display = tab === 'approved-quotations' ? 'block' : 'none';
       document.getElementById('approvedVKQuotationsTab').style.display = tab === 'approved-vk-quotations' ? 'block' : 'none';
+      document.getElementById('maeQuotationsTab').style.display = tab === 'mae-quotations' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       // Load data
@@ -2924,12 +3233,15 @@ function resetFields() {
       } else if (tab === 'vk-approve') {
         document.getElementById("filtersSection").style.display="none";
         loadVKApproveQuotations();
+      } else if (tab === 'mae-quotations') {
+        document.getElementById("filtersSection").style.display="none";
+        loadMAEQuotations();
       } else if (tab === "costCalculation"){
         console.log("cost calculations tab is opened")
         document.getElementById('costCalculationContent').style.display="block";
         loadCostOrders();
       }
-       else {
+      else {
         loadAllQuotations();
         document.getElementById("filtersSection").style.display="none";
       }
@@ -3315,8 +3627,56 @@ function resetFields() {
   });
 
 }
+
+// Render MAE Quotations table
+function renderMAEQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.quotationNumber}</td>
+        <td>${quotation.companyName}</td>
+        <td>${quotation.clientName}</td>
+        <td>${quotation.createdBy|| 'N/A'}</td>
+        <td>${new Date(quotation.createdAt).toLocaleDateString()}</td>
+        <td>₹${quotation.totalAmount ? quotation.totalAmount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="editMae(${quotation.id},'MAE')">
+            <i class="fas fa-eye"></i> View
+          </button>
+           <button class="view" onclick="editMae(${quotation.id})">
+    <i class="fas fa-edit"></i> Edit
+  </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+}
 function viewvkQuotation(id) {
   window.open(`/view-vk-quotation/${id}`, "_blank");
+}
+
+// Load MAE Quotations
+async function loadMAEQuotations() {
+  try {
+    const res = await fetch('/api/render-mae_quotations');
+    const allOrders = await res.json();
+    console.log('all orders',allOrders);
+    console.log('MAE Quotations:', allOrders);
+    let quotations = allOrders.filter(order => order.status == 'pending');
+    console.log('quotation each',quotations);
+    renderMAEQuotations(quotations, 'maeQuotationsBody');
+  } catch (err) {
+    console.error('Failed to load MAE quotations:', err);
+    document.getElementById('maeQuotationsBody').innerHTML = '<tr><td colspan="9">Failed to load MAE quotations</td></tr>';
+  }
 }
 
 
@@ -6393,6 +6753,80 @@ document.getElementById("saveBtn").onclick = () => {
   function viewApprovedTs(qno) {
     window.open(`/view-quotation/${qno}`, "_blank");
   }
+async function editMae(id) {
+  try {
+    const res = await fetch(`/api/mae-quotations/${id}`);
+    const q = await res.json();
+    console.log('details for edit',q)
+
+    // Fill form values
+    document.getElementById("editId").value = q.id;
+    document.getElementById("editmaeQuotationNumber").value = q.quotationnumber || "";
+    document.getElementById("editmaeQuotationDate").value = q.quotationdate?.split("T")[0] || "";
+    document.getElementById("editmaeValidUntil").value = q.validuntil?.split("T")[0] || "";
+    document.getElementById("editmaeCurrency").value = q.currency || "INR";
+
+    document.getElementById("editmaeCompanyName").value = q.companyname || "";
+    document.getElementById("editmaeCompanyAddress").value = q.companyaddress || "";
+
+    document.getElementById("editmaeClientName").value = q.clientname || "";
+    document.getElementById("editmaeClientEmail").value = q.clientemail || "";
+    document.getElementById("editmaeClientPhone").value = q.clientphone || "";
+    document.getElementById("editmaePaymentTerms").value = q. maepaymentterms || "";
+    document.getElementById("editmaeGSTTerms").value = q.maegstterms || "";
+    document.getElementById("editmaeInsurance").value = q.maeinsurance || "";
+    document.getElementById("editmaeWarranty").value = q.maewarranty || "";
+
+
+
+  if (typeof tinymce !== "undefined") {
+  setTimeout(() => {
+    tinymce.get("editmaeTextareaDetails")?.setContent(q.textarea_details || "");
+  }, 200);
+}
+
+
+    // Show modal
+    document.getElementById("maeEditModal").style.display = "block";
+
+  } catch (err) {
+    console.error("Edit error:", err);
+    alert("Failed to load quotation details.");
+  }
+}
+
+document.getElementById("maeEditForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (typeof tinymce !== "undefined") tinymce.triggerSave(); // save editors into textarea values
+
+  const id = document.getElementById("editId").value;
+  const formData = new FormData(e.target);
+  const body = Object.fromEntries(formData.entries());
+
+  //try {
+  //  const res = await fetch(`/api/mae_quotations/${id}`, {
+  //    method: "PUT",
+  //    headers: { "Content-Type": "application/json" },
+  //    body: JSON.stringify(body)
+  //  });
+//
+  //  if (!res.ok) throw new Error("Update failed");
+//
+  //  alert("Quotation updated successfully!");
+  //  closeMaeModal();
+  //  loadMAEQuotations(); // reload the quotations list
+//
+  //} catch (err) {
+  //  console.error(err);
+  //  alert("Failed to update quotation.");
+  //}
+  console.log(JSON.stringify(body));
+});
+function closeMaeModal() {
+  document.getElementById("maeEditModal").style.display = "none";
+}
+
 
 
     
