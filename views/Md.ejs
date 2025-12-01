@@ -1067,6 +1067,7 @@ select {
         <li class="menu-item" data-tab="approved-quotations"><i class="fas fa-check-circle"></i> Approved (T & S)</li>
         <li class="menu-item" data-tab="approved-vk-quotations"><i class="fas fa-check-circle"></i>Approved (VK)</li>
         <li class="menu-item" data-tab="mae-quotations"><i class="fas fa-file-alt"></i> MAE Quotations</li>
+        <li class="menu-item" data-tab="approved-mae-quotations"><i class="fas fa-check-circle"></i> Approved MAE Quotations</li>
         <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check" style="display: none;"></i> VK APPROVAL </li>
 
 
@@ -1142,6 +1143,7 @@ select {
       <button class="tab-button" onclick="switchTab('approved-quotations')" style="display: none;">Approved(T & S)</button>
       <button class="tab-button" onclick="switchTab('approved-vk-quotations')" style="display: none;">Approved (VK)</button>
       <button class="tab-button" onclick="switchTab('mae-quotations')">MAE Quotations</button>
+      <button class="tab-button" onclick="switchTab('approved-mae-quotations')">Approved MAE Quotations</button>
       <button id="costCalculationTab" class="tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300" onclick="switchTab('costCalculation')">
         <i class="fas fa-calculator mr-2"></i>Cost cal
       </button>
@@ -1297,6 +1299,27 @@ select {
         <tbody id="maeQuotationsBody"></tbody>
       </table>
     </div>
+
+    <!-- Approved MAE Quotations Table -->
+    <div id="approvedMAEQuotationsTab" class="tab-content">
+      <table id="approvedMAEQuotationsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_number')">Quotation Number <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
+            <th>Quotation Raiser</th>
+            <th onclick="sortTable('quotation_date')">Date <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('total_amount')">Total Amount <i class="fas fa-sort"></i></th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="approvedMAEQuotationsBody"></tbody>
+      </table>
+    </div>
+
   <div id="maeEditModal" class="modal" style="display:none;">
   <div class="modal-dialog" style="max-width: 100%;">
     <div class="modal-content">
@@ -3209,6 +3232,7 @@ function resetFields() {
       document.getElementById('approvedQuotationsTab').style.display = tab === 'approved-quotations' ? 'block' : 'none';
       document.getElementById('approvedVKQuotationsTab').style.display = tab === 'approved-vk-quotations' ? 'block' : 'none';
       document.getElementById('maeQuotationsTab').style.display = tab === 'mae-quotations' ? 'block' : 'none';
+      document.getElementById('approvedMAEQuotationsTab').style.display = tab === 'approved-mae-quotations' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       // Load data
@@ -3236,6 +3260,9 @@ function resetFields() {
       } else if (tab === 'mae-quotations') {
         document.getElementById("filtersSection").style.display="none";
         loadMAEQuotations();
+      } else if (tab === 'approved-mae-quotations') {
+        document.getElementById("filtersSection").style.display="none";
+        loadApprovedMAEQuotations();
       } else if (tab === "costCalculation"){
         console.log("cost calculations tab is opened")
         document.getElementById('costCalculationContent').style.display="block";
@@ -3633,7 +3660,13 @@ function renderMAEQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
 
+  const isApprovedTab = tbodyId === 'approvedMAEQuotationsBody';
+
   quotations.forEach(quotation => {
+    const approveButton = isApprovedTab ? '' : `<button class="approve" onclick="updateMAEQuotationStatus(${quotation.id}, 'approved')">
+            <i class="fas fa-check"></i> Approve
+          </button>`;
+
     const row = `
       <tr>
         <td>${quotation.id}</td>
@@ -3651,6 +3684,7 @@ function renderMAEQuotations(quotations, tbodyId) {
            <button class="view" onclick="editMae(${quotation.id})">
     <i class="fas fa-edit"></i> Edit
   </button>
+          ${approveButton}
         </td>
       </tr>
     `;
@@ -3676,6 +3710,57 @@ async function loadMAEQuotations() {
   } catch (err) {
     console.error('Failed to load MAE quotations:', err);
     document.getElementById('maeQuotationsBody').innerHTML = '<tr><td colspan="9">Failed to load MAE quotations</td></tr>';
+  }
+}
+
+// Render MAE Quotations Table
+function renderMAEQuotations(quotations, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = "";
+
+  quotations.forEach(quotation => {
+    const row = `
+      <tr>
+        <td>${quotation.id}</td>
+        <td>${quotation.quotationnumber}</td>
+        <td>${quotation.companyname}</td>
+        <td>${quotation.clientname}</td>
+        <td>${quotation.created_by || 'N/A'}</td>
+        <td>${new Date(quotation.quotationdate).toLocaleDateString()}</td>
+        <td>₹${quotation.totalamount ? quotation.totalamount.toLocaleString() : '0.00'}</td>
+        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
+        <td class="actions">
+          <button class="view" onclick="viewMAEQuotation('${quotation.quotationnumber}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <button class="approve" onclick="updateMAEQuotationStatus(${quotation.id}, 'approved')">
+            <i class="fas fa-check"></i> Approve
+          </button>
+        </td>
+      </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+}
+
+// View MAE Quotation PDF
+function viewMAEQuotation(quotationNumber) {
+  window.open(`/view-mae-quotation/${quotationNumber}`, "_blank");
+}
+
+// Load Approved MAE Quotations
+async function loadApprovedMAEQuotations() {
+  try {
+    const res = await fetch('/api/render-mae_quotations');
+    const allOrders = await res.json();
+    console.log('All MAE Quotations:', allOrders);
+    let quotations = allOrders.filter(order => order.status == 'approved');
+    console.log('Approved MAE Quotations:', quotations);
+    renderMAEQuotations(quotations, 'approvedMAEQuotationsBody');
+  } catch (err) {
+    console.error('Failed to load approved MAE quotations:', err);
+    document.getElementById('approvedMAEQuotationsBody').innerHTML = '<tr><td colspan="9">Failed to load approved MAE quotations</td></tr>';
   }
 }
 
@@ -4132,6 +4217,45 @@ if (res.ok) {
 } else {
   const err = await res.json();
   console.log(`❌ Frontend: Quotation update failed`, err);
+  alert(`❌ Failed: ${err.error || 'Unknown error'}`);
+}
+} catch (error) {
+console.error(`❌ Frontend: Network error`, error);
+alert(`❌ Network error: ${error.message}`);
+}
+}
+
+// Update MAE quotation status
+async function updateMAEQuotationStatus(id, status) {
+console.log(`🔄 Frontend: Updating MAE quotation status for id=${id}, status=${status}`);
+
+try {
+const endpoint = `/api/mae-quotations/${id}/${status}`;
+console.log(`🔄 Frontend: Sending request to ${endpoint}`);
+
+const res = await fetch(endpoint, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ status })
+});
+
+console.log(`🔄 Frontend: Response received, status: ${res.status}`);
+
+if (res.ok) {
+  const data = await res.json();
+  console.log(`✅ Frontend: MAE quotation update successful`, data);
+
+  alert(`✅ MAE Quotation ${id} ${status} successfully!`);
+
+  // Reload the MAE quotations tab
+  if (currentTab === "mae-quotations") {
+    loadMAEQuotations();
+  } else if (currentTab === "approved-mae-quotations") {
+    loadApprovedMAEQuotations();
+  }
+} else {
+  const err = await res.json();
+  console.log(`❌ Frontend: MAE quotation update failed`, err);
   alert(`❌ Failed: ${err.error || 'Unknown error'}`);
 }
 } catch (error) {
