@@ -18,6 +18,7 @@ import cors from "cors";
 import bcrypt from "bcrypt";
 import generateQuotation from "./trade.js";
 import generateVKQuotation from "./vk.js";
+import generateMAEQuotation from "./mae.js";
 import { query } from "express-validator";
 import { sendNotification } from "./routes/pushNotifications.js";
 const db_pass = process.env.DB_PASSWORD;
@@ -5239,7 +5240,7 @@ app.get("/api/render-mae_quotations", async (req, res) => {
         updated_at AS "updatedAt"
 
     FROM mae_quotations
-    WHERE status = 'pending'
+    
     ORDER BY created_at DESC;
   `);
   client.release();
@@ -5693,6 +5694,63 @@ const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotat
   }
 });
 
+app.get("/view-mae-quotation/:param", async (req, res) => {
+  try {
+    const { param } = req.params;
+    const isNumeric = /^\d+$/.test(param);
+
+    const quotationResult = await pool.query(
+      `SELECT * FROM mae_quotations WHERE ${isNumeric ? "id" : "quotationnumber"} = $1 LIMIT 1`,
+      [param]
+    );
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).json({ error: "MAE Quotation not found" });
+    }
+
+    const quotation = quotationResult.rows[0];
+    console.log('quotation details is down there',quotation);
+
+    const poData = {
+      company: {
+        logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
+        name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: quotation.clientemail || "info@kiet.com",
+        gst: "29AAFCK6528D1ZG", // Fixed GST as per mae.js
+        contact:quotation.clientPhone || " ",
+        address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+      },
+      poNumber: quotation.quotationnumber,
+      date: quotation.quotationdate ? new Date(quotation.quotationdate).toLocaleDateString("en-GB") : "",
+      expected_date: quotation.validuntil ? new Date(quotation.validuntil).toLocaleDateString("en-GB") : "",
+      termsOfPayment: quotation.maepaymentterms || "",
+      currency: quotation.currency || "INR",
+      requester: { name: quotation.clientname || "" },
+      clientEmail: quotation.clientemail || "",
+      textareaDetails: quotation.textarea_details || "",
+      gstterms: quotation.maegstterms || "",
+      insurance: quotation.maeinsurance || "",
+      machine:quotation.subject||"",
+      warranty: quotation.maewarranty || "",
+      line: path.join(process.cwd(), "public/images/line.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+        };
+
+    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateMAEQuotation(poData, filePath);
+
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /view-mae-quotation:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Preview VK quotation from form data
 app.post("/preview-vk", upload.none(), async (req, res) => {
@@ -5933,7 +5991,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
-   status
+   status,
+   subject
 
   }=req.body;
   const client = await pool.connect();
@@ -5955,7 +6014,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
-   status
+   status,
+   subject
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
@@ -5975,7 +6035,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
-   status
+   status,
+   subject
 
    ];
    const result=await client.query(maeQut,maeValues);
@@ -6188,6 +6249,99 @@ app.put("/api/mae-quotations/:id", upload.none(), async (req, res) => {
 //   console.log("formatted data:", req.body);
 //   res.json({ message: "Received form data", data: req.body });
 // });
+
+// Get approved MAE quotations
+app.get("/api/mae-quotations/approved", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `
+      SELECT
+        id,
+        quotationnumber AS "quotationNumber",
+        quotationdate AS "quotationDate",
+        validuntil AS "validUntil",
+        currency,
+        companyname AS "companyName",
+        companyaddress AS "companyAddress",
+        clientname AS "clientName",
+        clientemail AS "clientEmail",
+        clientphone AS "clientPhone",
+        textarea_details AS "textareaDetails",
+        maepaymentterms AS "paymentTerms",
+        maegstterms AS "gstTerms",
+        maeinsurance AS "insurance",
+        maewarranty AS "warranty",
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt"
+      FROM mae_quotations
+      WHERE status::text = $1
+      ORDER BY created_at DESC
+      `,
+      ["approved"]
+    );
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+  console.error("SQL ERROR:", error);   // <-- log full error
+  res.status(500).json({ error: error.message });
+}
+
+  finally {
+    client.release();
+  }
+});
+
+// Update MAE quotation status (approve/reject)
+app.put("/api/mae-quotations/:id/:status", async (req, res) => {
+  const { id, status } = req.params;
+
+  if (!["approved", "rejected"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Update the status
+    const updateQuery = `
+      UPDATE mae_quotations
+      SET status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `;
+
+    const result = await client.query(updateQuery, [status, id]);
+
+    if (result.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "MAE quotation not found" });
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: `MAE quotation ${status} successfully`,
+      quotation: result.rows[0]
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error updating MAE quotation status:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update MAE quotation status",
+      details: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
 
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
