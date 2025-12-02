@@ -48,7 +48,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:"Shashank@KIET1519",
+  password:db_pass,
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -6364,7 +6364,7 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
     clientName,
     clientEmail,
     clientPhone,
-    textarea_details,
+    textareaDetails,
     maePaymentTerms,
     maeGstTerms,
     maeInsurance,
@@ -6399,7 +6399,7 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
       clientName,
       clientEmail,
       clientPhone,
-      textarea_details,
+      textareaDetails,
       maePaymentTerms,
       maeGstTerms,
       maeInsurance,

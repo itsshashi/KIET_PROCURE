@@ -1,6 +1,16 @@
 import PdfPrinter from "pdfmake";
 import fs from "fs";
-import { ToWords } from "to-words";
+import { ToWords } from "to-words";import { JSDOM } from "jsdom";
+
+// Create a fake browser environment for html-to-pdfmake
+const dom = new JSDOM("<!DOCTYPE html>");
+global.window = dom.window;
+global.document = dom.window.document;
+import htmlToPdfmake from "html-to-pdfmake";
+
+
+
+
 
 
 
@@ -60,6 +70,55 @@ function generateMAEQuotation(poData, filePath) {
   return new Promise((resolve, reject) => {
     const logoBase64 = getBase64Image(poData.company.logo);
     const signBase64 = getBase64Image(poData.signPath);
+const { window } = new JSDOM("<!DOCTYPE html>");
+global.window = window;
+global.document = window.document;
+
+// ---- inside generateMAEQuotation() ----
+
+function buildMaeContent(textareaDetails) {
+  // CASE A: null / empty → simple text, NO htmlToPdfmake
+  if (!textareaDetails || textareaDetails.trim() === "") {
+    return [{ text: "No details provided", italics: true, fontSize: 10 }];
+  }
+
+  // Some rows in your DB seem to be stored like: '<table ...</table>'
+  // (with extra quotes). Strip them if present.
+  let html = textareaDetails.trim();
+  if (html.startsWith("'") && html.endsWith("'")) {
+    html = html.slice(1, -1);
+  }
+
+  // Optional: small sanitizing to avoid completely empty rows
+  html = html.replace(/<tr>\s*<\/tr>/g, "");
+
+  let nodes = htmlToPdfmake(html);
+
+  // FIX: normalize tables so no row has undefined cells
+  function normalizeTables(arr) {
+    if (!Array.isArray(arr)) return;
+    arr.forEach(node => {
+      if (node.table && Array.isArray(node.table.body)) {
+        const body = node.table.body;
+        const maxCols = Math.max(...body.map(r => r.length));
+        node.table.body = body.map(row => {
+          const newRow = row.slice();
+          for (let i = 0; i < maxCols; i++) {
+            if (typeof newRow[i] === "undefined") {
+              newRow[i] = { text: "" }; // fill missing cell
+            }
+          }
+          return newRow;
+        });
+      }
+      if (node.stack) normalizeTables(node.stack);
+    });
+  }
+
+  normalizeTables(nodes);
+  return nodes;
+}
+const maeContent = buildMaeContent(poData.textareaDetails);
 
     const currencySymbol = getCurrencySymbol(poData.currency);
 
@@ -539,7 +598,7 @@ function generateMAEQuotation(poData, filePath) {
     { text: "Thanking you,", margin: [0, 15, 0, 5] },
     { text: "With best regards,", margin: [0, 0, 0, 18] },
 
-    { text: `For ${poData.companyOfficialName || "KIET Technologies Private Limited"}`, bold: true, margin: [0, 0, 0, 30] },
+    { text: `For ${poData.companyOfficialName ||""}`, bold: true, margin: [0, 0, 0, 30] },
 
     // Signature
     signBase64
@@ -578,24 +637,23 @@ function generateMAEQuotation(poData, filePath) {
         { text: "", pageBreak: "before" },
 
         // MAE Details Section
-        {
-          text: "Material Acquisition Estimate (MAE) Details",
-          font: "Times",
-          bold: true,
-          fontSize: 14,
-          margin: [0, 20, 0, 10],
-        },
-        {
-          canvas: [
-            { type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 },
-          ],
-        },
-        {
-          text: poData.textareaDetails || "No details provided",
-          font: "Times",
-          margin: [0, 15, 0, 15],
-          
-        },
+       {
+  text: "Material Acquisition Estimate (MAE) Details",
+  font: "Times",
+  bold: true,
+  fontSize: 14,
+  margin: [0, 20, 0, 10],
+},
+{
+  canvas: [
+    { type: "line", x1: 0, y1: 0, x2: 510, y2: 0, lineWidth: 1 },
+  ],
+},
+{
+  margin: [0, 15, 0, 15],
+  stack: maeContent,   // <-- NOT "text:", use the converted content
+},
+
 
         // Totals Table (if applicable)
         poData.totalAmount ? {
