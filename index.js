@@ -46,7 +46,7 @@ if (!fs.existsSync(qtUploadsDir)) {
 
 const pool = new Pool({
   user: "postgres",
-  host: "13.234.3.0",
+  host: "127.0.0.1",
   database: "mydb",
   password:"Shashank@KIET1519",
   port: 5432,
