@@ -46,9 +46,9 @@ if (!fs.existsSync(qtUploadsDir)) {
 
 const pool = new Pool({
   user: "postgres",
-  host: "127.0.0.1",
+  host: "127.0.0.0",
   database: "mydb",
-  password:"Shashank@KIET1519",
+  password:db_pass,
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -1190,6 +1190,11 @@ app.post("/logout", (req, res) => {
 // Forgot password
 app.get("/forgot", (req, res) =>
   res.sendFile(path.join(__dirname, "public/forgot.html"))
+);
+
+// Success page route
+app.get("/success-page", (req, res) =>
+  res.sendFile(path.join(__dirname, "public/sucess_.html"))
 );
 
 app.post("/forgot-password", async (req, res) => {
@@ -6021,7 +6026,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
-       $14, $15, $16) RETURNING id`;
+       $14, $15, $16,$17) RETURNING id`;
    const maeValues=[
      quotationNumber,
    quotationDate,
