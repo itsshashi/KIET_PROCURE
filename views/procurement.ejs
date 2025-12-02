@@ -2067,6 +2067,8 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                     <h3>MAE Quotation</h3>
                     <p>Create professional MAE quotations with enhanced client and company information</p>
                 </div>
+                <input type="hidden" name="createdBy" id="maeCreatedBy">
+
                 <div class="form-container">
                     <form id="maeQuotationForm">
                         <!-- Enhanced Quotation Header -->
@@ -2323,6 +2325,8 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 document.addEventListener("DOMContentLoaded", function() {
 
     const submitBtn = document.getElementById("maeSendApprovalRequest");
+    const userEmail = document.querySelector(".user-info span")?.textContent.trim() || "";
+    document.getElementById("maeCreatedBy").value = userEmail;
     
     // Check if button exists to prevent errors
     if(submitBtn) {

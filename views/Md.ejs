@@ -4065,12 +4065,13 @@ function renderMAEQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
 
-  const isApprovedTab = tbodyId === 'approvedMAEQuotationsBody';
-
   quotations.forEach(quotation => {
-    const approveButton = isApprovedTab ? '' : `<button class="approve" onclick="updateMAEQuotationStatus(${quotation.id}, 'approved')">
-            <i class="fas fa-check"></i> Approve
-          </button>`;
+    const approveBtn =
+      quotation.status === "approved"
+        ? ""  // hide approve button if already approved
+        : `<button class="approve" onclick="updateMAEQuotationStatus(${quotation.id}, 'approved')">
+             <i class="fas fa-check"></i> Approve
+           </button>`;
 
     const row = `
       <tr>
@@ -4078,26 +4079,26 @@ function renderMAEQuotations(quotations, tbodyId) {
         <td>${quotation.quotationNumber}</td>
         <td>${quotation.companyName}</td>
         <td>${quotation.clientName}</td>
-        <td>${quotation.createdBy|| 'N/A'}</td>
-        <td>${new Date(quotation.createdAt).toLocaleDateString()}</td>
-        <td>₹${quotation.totalAmount ? quotation.totalAmount.toLocaleString() : '0.00'}</td>
+        <td>${quotation.created_by || 'N/A'}</td>
+        <td>${new Date(quotation.quotationDate).toLocaleDateString()}</td>
+        <td>₹ See Inside quote</td>
         <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
         <td class="actions">
-          <button class="view" onclick="editMae(${quotation.id},'MAE')">
+          <button class="view" onclick="viewMAEQuotation('${quotation.id}')">
             <i class="fas fa-eye"></i> View
           </button>
-           <button class="view" onclick="editMae(${quotation.id})">
-    <i class="fas fa-edit"></i> Edit
-  </button>
-          ${approveButton}
+          <button class="view" onclick="editMae(${quotation.id}, 'MAE')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          ${approveBtn}
         </td>
       </tr>
     `;
 
     tbody.insertAdjacentHTML("beforeend", row);
   });
-
 }
+
 function viewvkQuotation(id) {
   window.open(`/view-vk-quotation/${id}`, "_blank");
 }
@@ -4119,35 +4120,7 @@ async function loadMAEQuotations() {
 }
 
 // Render MAE Quotations Table
-function renderMAEQuotations(quotations, tbodyId) {
-  const tbody = document.getElementById(tbodyId);
-  tbody.innerHTML = "";
 
-  quotations.forEach(quotation => {
-    const row = `
-      <tr>
-        <td>${quotation.id}</td>
-        <td>${quotation.quotationnumber}</td>
-        <td>${quotation.companyname}</td>
-        <td>${quotation.clientname}</td>
-        <td>${quotation.created_by || 'N/A'}</td>
-        <td>${new Date(quotation.quotationdate).toLocaleDateString()}</td>
-        <td>₹${quotation.totalamount ? quotation.totalamount.toLocaleString() : '0.00'}</td>
-        <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
-        <td class="actions">
-          <button class="view" onclick="viewMAEQuotation('${quotation.quotationnumber}')">
-            <i class="fas fa-eye"></i> View
-          </button>
-          <button class="approve" onclick="updateMAEQuotationStatus(${quotation.id}, 'approved')">
-            <i class="fas fa-check"></i> Approve
-          </button>
-        </td>
-      </tr>
-    `;
-
-    tbody.insertAdjacentHTML("beforeend", row);
-  });
-}
 
 // View MAE Quotation PDF
 function viewMAEQuotation(quotationNumber) {

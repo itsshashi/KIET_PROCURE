@@ -2813,12 +2813,12 @@ app.get("/download-quotation/:param", async (req, res) => {
       },
       reference_no: quotation.reference_no,
       company: {
-        name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
-        email: quotation.company_email || "info@kiet.com",
-        gst: quotation.company_gst || "29AAFCK6528DIZG",
+        name: quotation.company_name || "",
+        email: quotation.company_email || "",
+        gst: quotation.company_gst || "",
         address:
           quotation.company_address ||
-          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
+          " ",
         logo: path.join(process.cwd(), "public", "images", "page_logo.jpg"),
       },
       supplier: {
@@ -5237,7 +5237,8 @@ app.get("/api/render-mae_quotations", async (req, res) => {
         maewarranty AS "warranty",
         status,
         created_at AS "createdAt",
-        updated_at AS "updatedAt"
+        updated_at AS "updatedAt",
+        created_by 
 
     FROM mae_quotations
     
@@ -5992,7 +5993,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeInsurance,
    maeWarranty,
    
-   subject
+   subject,
+   createdBy
 
   }=req.body;
   const client = await pool.connect();
@@ -6015,7 +6017,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeInsurance,
    maeWarranty,
    status,
-   subject
+   subject,created_by
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
@@ -6036,7 +6038,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeInsurance,
    maeWarranty,
    "pending",
-   subject
+   subject,
+   createdBy
 
    ];
    const result=await client.query(maeQut,maeValues);
@@ -6093,7 +6096,8 @@ app.get("/api/mae-quotations", async (req, res) => {
         maewarranty,
         status,
         created_at,
-        updated_at
+        updated_at,
+        created_by
       FROM mae_quotations
       ORDER BY created_at DESC
     `);
@@ -6132,7 +6136,8 @@ app.get("/api/mae-quotations/:id", async (req, res) => {
         maewarranty,
         status,
         created_at,
-        updated_at
+        updated_at,
+        created_by
       FROM mae_quotations
       WHERE id = $1
     `, [id]);
@@ -6275,7 +6280,8 @@ app.get("/api/mae-quotations/approved", async (req, res) => {
         maewarranty AS "warranty",
         status,
         created_at AS "createdAt",
-        updated_at AS "updatedAt"
+        updated_at AS "updatedAt",
+        created_by
       FROM mae_quotations
       WHERE status::text = $1
       ORDER BY created_at DESC
