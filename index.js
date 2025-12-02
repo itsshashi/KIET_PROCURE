@@ -5991,7 +5991,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
-   status,
+   
    subject
 
   }=req.body;
@@ -6035,7 +6035,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
-   status,
+   "pending",
    subject
 
    ];
@@ -6337,6 +6337,117 @@ app.put("/api/mae-quotations/:id/:status", async (req, res) => {
       success: false,
       error: "Failed to update MAE quotation status",
       details: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
+
+
+
+app.post("/md/mae_generation", upload.none(), async (req, res) => {
+  const {
+    quotationNumber,
+    quotationDate,
+    validUntil,
+    currency,
+    companyName,
+    companyAddress,
+    clientName,
+    clientEmail,
+    clientPhone,
+    textarea_details,
+    maePaymentTerms,
+    maeGstTerms,
+    maeInsurance,
+    maeWarranty,
+    subject
+  } = req.body;
+
+  console.log(req.body);
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const maeQut = `
+      INSERT INTO mae_quotations (
+        quotationNumber, quotationDate, validUntil, currency,
+        companyName, companyAddress, clientName, clientEmail,
+        clientPhone, textarea_details, maePaymentTerms, maeGstTerms,
+        maeInsurance, maeWarranty, status, subject
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16
+      ) RETURNING *`;
+
+    const maeValues = [
+      quotationNumber,
+      quotationDate,
+      validUntil,
+      currency,
+      companyName,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      textarea_details,
+      maePaymentTerms,
+      maeGstTerms,
+      maeInsurance,
+      maeWarranty,
+      "approved",
+      subject
+    ];
+
+    const result = await client.query(maeQut, maeValues);
+    const quotation = result.rows[0];
+
+    await client.query("COMMIT");
+
+    // ⏬ AFTER SAVE → GENERATE PDF
+    const poData = {
+      company: {
+        logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
+        name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: quotation.clientemail || "info@kiet.com",
+        gst: "29AAFCK6528D1ZG",
+        contact: quotation.clientphone || "",
+        address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+      },
+      poNumber: quotation.quotationnumber,
+      date: quotation.quotationdate ? new Date(quotation.quotationdate).toLocaleDateString("en-GB") : "",
+      expected_date: quotation.validuntil ? new Date(quotation.validuntil).toLocaleDateString("en-GB") : "",
+      termsOfPayment: quotation.maepaymentterms || "",
+      currency: quotation.currency || "INR",
+      requester: { name: quotation.clientname || "" },
+      clientEmail: quotation.clientemail || "",
+      textareaDetails: quotation.textarea_details || "",
+      gstterms: quotation.maegstterms || "",
+      insurance: quotation.maeinsurance || "",
+      machine: quotation.subject || "",
+      warranty: quotation.maewarranty || "",
+      line: path.join(process.cwd(), "public/images/line.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+    };
+
+    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateMAEQuotation(poData, filePath);
+
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+    return res.sendFile(filePath);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ Error in MAE generation:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to save quotation",
+      details: error.message,
     });
   } finally {
     client.release();
