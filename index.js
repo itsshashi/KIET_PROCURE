@@ -46,9 +46,9 @@ if (!fs.existsSync(qtUploadsDir)) {
 
 const pool = new Pool({
   user: "postgres",
-  host: "127.0.0.0",
+  host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:"Shashank@KIET1519",
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -5896,6 +5896,52 @@ app.post("/preview-vk", upload.none(), async (req, res) => {
   }
 });
 
+app.post("/preview", upload.none(), async (req, res) => {
+  try {
+    const formData = req.body || {};
+
+    // Prepare data for MAE PDF generation
+    const poData = {
+      company: {
+        logo: path.join(__dirname, "public/images/page_logo.jpg"),
+        name: formData.companyName || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: formData.clientEmail || "info@kiet.com",
+        gst: "29AAFCK6528D1ZG",
+        contact: formData.clientPhone || "",
+        address: formData.companyAddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+      },
+      poNumber: formData.quotationNumber || "PREVIEW",
+      date: formData.quotationDate || "",
+      expected_date: formData.validUntil || "",
+      termsOfPayment: formData.maePaymentTerms || "",
+      currency: formData.currency || "INR",
+      requester: { name: formData.clientName || "" },
+      clientEmail: formData.clientEmail || "",
+      textareaDetails: formData.textareaDetails || "",
+      gstterms: formData.maeGstTerms || "",
+      insurance: formData.maeInsurance || "",
+      machine: formData.subject || "",
+      warranty: formData.maeWarranty || "",
+      line: path.join(__dirname, "public/images/line.png"),
+      signPath: path.join(__dirname, "public/images/signature.png"),
+    };
+
+    const fileName = `mae_preview_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateMAEQuotation(poData, filePath);
+
+    // Open PDF in browser for preview
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /preview:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ success: false, error: "Not authenticated" });
@@ -6464,6 +6510,28 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
     client.release();
   }
 });
+// =============================
+// TINYMCE IMAGE UPLOAD ROUTE
+// =============================
+app.post("/upload_image", upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // 🔥 USE YOUR LIVE DOMAIN HERE (must include https://)
+    const BASE_URL = "httpd://kietsindia.com";
+
+    const fileURL = `${BASE_URL}/uploads/${req.file.filename}`;
+
+    return res.json({ location: fileURL }); // 👈 TinyMCE expects {location:"url"}
+  } catch (error) {
+    console.error("❌ TinyMCE Upload Error:", error);
+    return res.status(500).json({ error: "Image upload failed" });
+  }
+});
+
+
 
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available

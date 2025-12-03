@@ -22,6 +22,14 @@
             height: 100vh;
             
         }
+        #previewFrame {
+    pointer-events: auto;
+}
+#previewModal {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
         
   .container {
     display: flex;
@@ -318,6 +326,35 @@
             margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
             border: 1px solid #f1f5f9;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .sub-tab {
+            padding: 10px 20px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .sub-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .sub-tab:hover {
+            background: #e2e8f0;
+        }
+
+        .sub-tab.active:hover {
+            background: #2563eb;
         }
         
         .status-cards {
@@ -2067,6 +2104,14 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                     <h3>MAE Quotation</h3>
                     <p>Create professional MAE quotations with enhanced client and company information</p>
                 </div>
+                <div id="previewModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999;">
+    <button onclick="document.getElementById('previewModal').style.display='none'"
+        style="position:absolute; top:10px; right:10px; font-size:20px;">❌</button>
+
+    <iframe id="previewFrame" style="width:90%; height:90%; margin:3% auto; display:block; border:none;"
+            oncontextmenu="return false;"></iframe>
+</div>
+
                 <input type="hidden" name="createdBy" id="maeCreatedBy">
 
                 <div class="form-container">
@@ -2083,7 +2128,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                                     <div class="form-group">
                                         <label for="maeQuotationNumber" class="required">Quotation Number</label>
                                         <div style="display: flex; gap: 10px;">
-                                            <input type="text" id="maeQuotationNumber" name="quotationNumber" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
+                                            <input type="text" id="maeQuotationNumber" name="quotationNumber" required readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
                                             <button type="button" id="maeGenerateQuotationNumber" class="btn btn-primary btn-small" onclick= generate_mae()>Generate</button>
                                         </div>
                                     </div>
@@ -2316,7 +2361,8 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                         <div class="form-actions">
                             
                             <button type="button"  id="maeSendApprovalRequest" style="background-color: #29a802; color:white;padding:8px 10px;border-radius:5px;border:1px solid rgba(171, 202, 136, 0.884); font-size:medium;font-weight:bold">Send Approval Request</button>
-                            
+                             <button type="button" onclick=saveDraft() style="background-color: #eff160; color:white;padding:8px 10px;border-radius:5px;border:1px solid rgba(113, 117, 108, 0.884); font-size:medium;font-weight:bold">Save(Draft)</button>
+                            <button type="button" onclick=previewmae() style="background-color: #1d8cd6; color:white;padding:8px 10px;border-radius:5px;border:1px solid rgba(171, 202, 136, 0.884); font-size:medium;font-weight:bold">Preview</button>
                         </div>
                     </form>
                 </div>
@@ -2324,112 +2370,189 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                      <script>
 document.addEventListener("DOMContentLoaded", function() {
 
+    const form = document.getElementById("maeQuotationForm");
     const submitBtn = document.getElementById("maeSendApprovalRequest");
     const userEmail = document.querySelector(".user-info span")?.textContent.trim() || "";
+
+    // Set createdBy
     document.getElementById("maeCreatedBy").value = userEmail;
-    
-    // Check if button exists to prevent errors
+
+    /* ---------------------------------------------------
+       1️⃣ RESTORE SAVED DRAFT WHEN PAGE LOADS
+    ---------------------------------------------------- */
+     function restoreDraft() {
+  const saved = localStorage.getItem("maeForm");
+  if (!saved) return;
+  const data = JSON.parse(saved);
+
+  Object.keys(data).forEach(key => {
+      const field = document.querySelector(`[name="${key}"]`);
+      if (field) field.value = data[key];
+  });
+
+  // For TinyMCE field
+  if (data.textarea_details && typeof tinymce !== "undefined" && tinymce.get("editor")) {
+      tinymce.get("editor").setContent(data.textarea_details);
+  }
+
+  console.log("Draft Fully Restored");
+}
+
+    /* 🔹 Restore TinyMCE content after init (if exists) */
+    setTimeout(() => {
+        const savedDraft = localStorage.getItem("maeForm");
+        if (!savedDraft) return;
+        const data = JSON.parse(savedDraft);
+        if (data.textarea_details && typeof tinymce !== "undefined" && tinymce.get("editor")) {
+            tinymce.get("editor").setContent(data.textarea_details);
+        }
+    }, 800);
+
+    /* ---------------------------------------------------
+       3️⃣ SAVE DRAFT FUNCTION (button calls this)
+    ---------------------------------------------------- */
+    window.saveDraft = function () {
+    // Save TinyMCE value into its textarea
+    if (typeof tinymce !== "undefined" && tinymce.get("editor")) {
+        tinymce.triggerSave();
+    }
+
+    const form = document.getElementById("maeQuotationForm");
+    let data = {};
+
+    // Save ALL fields - company, quotation, client, terms, everything
+    form.querySelectorAll("input, select, textarea").forEach(field => {
+        if (field.name) data[field.name] = field.value;
+    });
+
+    localStorage.setItem("maeForm", JSON.stringify(data));
+    alert("Draft Saved!");
+};
+
+    /* ---------------------------------------------------
+       3️⃣ FINAL SUBMIT BUTTON LOGIC
+    ---------------------------------------------------- */
     if(submitBtn) {
         submitBtn.addEventListener("click", async function (e) {
             e.preventDefault();
-            console.log("Button clicked..."); // Debugging check
+            console.log("Submit button clicked");
 
-            const form = document.getElementById("maeQuotationForm");
-            
-            // 1. MANUAL VALIDATION CHECK
-            // Because the button is type="button", browser validation doesn't run automatically.
-            // We force it here:
+            // force HTML required validation
             if (!form.checkValidity()) {
-                form.reportValidity(); // This highlights the missing required fields in Red
-                return; // Stop the script here
+                form.reportValidity();
+                return;
             }
 
-            // 2. SAVE TINYMCE (If it exists)
+            // TinyMCE save
             if (typeof tinymce !== "undefined" && tinymce.get('editor')) {
                 tinymce.triggerSave();
             }
 
-            // 3. GATHER DATA
             const formData = new FormData(form);
-            
-            formData.append('status', 'pending');
-            
-            // Get Grand Total text
-            
+            formData.append("status", "pending");
+            formData.append("createdBy", document.getElementById("maeCreatedBy").value);
 
-            // 4. VISUAL FEEDBACK (Debugging)
-            // This logs to the console (Press F12 -> Console to see)
-            console.log("--- Form Data Ready to Send ---");
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ": ", pair[1]);
-            }
+            console.log("--- Sending Form Data ---");
+            for (let pair of formData.entries()) console.log(pair[0] + ": ", pair[1]);
 
-            // 5. SUCCESS ALERT
-            // This proves the button logic ran successfully
-            alert("Validation successful! Check console for data payload.");
-
-            // 6. ACTUAL SERVER SUBMISSION (Uncomment and edit this when ready)
-        
             try {
                 const response = await fetch('/api/sendApproval/mae', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (response.ok) {
-                    window.location.href = '/success-page';
+                    // 🧹 Clear draft after successful submit
+                    localStorage.removeItem("maeForm");
+                    alert("Approval Request Sent Successfully!");
+                    window.location.href = "/success-page";
                 } else {
-                    alert("Server error occurred");
+                    alert("Server Error!");
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Failed to send request.");
+                alert("Failed to send request!");
             }
-            
         });
+
     } else {
-        console.error("Submit button ID 'maeSendApprovalRequest' not found in DOM");
+        console.error("Submit button not found: #maeSendApprovalRequest");
     }
+
 });
 
 tinymce.init({
-    selector: '#editor',
-    height: 430,
-    plugins: 'table lists',
-    menubar: false,
-    statusbar:false,
-    toolbar: `
-      undo redo |
-      bold italic underline |
-      forecolor backcolor |
-      fontsize myLineHeight |
-      alignleft aligncenter alignright |
-      bullist numlist |
-      table
-    `,
-    setup: function (editor) {
-      editor.ui.registry.addMenuButton('myLineHeight', {
-        text: 'Line Height',
-        fetch: function (callback) {
-          callback([
-            { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
-            { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
-            { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
-            { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
-            { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
-            { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
-          ]);
-        }
-      });
+  selector: '#editor',
+  height: 430,
+  plugins: 'table lists image code',
+  menubar: false,
+  statusbar: false,
+  toolbar: `
+    undo redo |
+    bold italic underline |
+    forecolor backcolor |
+    fontsize myLineHeight |
+    alignleft aligncenter alignright |
+    bullist numlist |
+    table image code
+  `,
+  
+  // IMAGE UPLOAD
+  images_upload_url: "/upload_image",
+images_upload_handler: function (blobInfo) {
+  let formData = new FormData();
+  formData.append("image", blobInfo.blob(), blobInfo.filename());
 
-      // Custom command to apply style
-      editor.addCommand('mceApplyLineHeight', function (_, value) {
-        editor.formatter.register('lineheight', { inline: 'span', styles: { 'line-height': '%value' } });
-        editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
+  return fetch("/upload_image", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.location) {
+        // TinyMCE will show this message automatically
+        throw new Error("Invalid upload response — `location` missing");
+      }
+      return data.location;   // <-- TinyMCE inserts this into editor
+    })
+    .catch(err => {
+      console.error("Upload failed", err);
+      throw err; // TinyMCE will display it
+    });
+}
+
+,
+
+  // FONT SIZE DROPDOWN
+  fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px',
+
+  // CUSTOM LINE HEIGHT MENU
+  setup: function (editor) {
+    editor.ui.registry.addMenuButton('myLineHeight', {
+      text: 'Line Height',
+      fetch: function (callback) {
+        callback([
+          { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
+          { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
+          { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
+          { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
+          { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
+          { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
+        ]);
+      }
+    });
+
+    // Apply custom line height
+    editor.addCommand('mceApplyLineHeight', function (_, value) {
+      editor.formatter.register('lineheight', {
+        inline: 'span',
+        styles: { 'line-height': '%value' }
       });
-    },
-    fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px'
-  });
+      editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
+    });
+  }
+});
+
 </script>
 
             <!-- VK Tab -->
@@ -2751,14 +2874,9 @@ tinymce.init({
                     <h3>Approved Quotations</h3>
                     <p>Download your approved quotations</p>
                 </div>
-                <div class="status-filters">
-                    <div class="form-group">
-                        <label for="approvedFilter">Filter by Status:</label>
-                        <select class="form-control" id="approvedFilter">
-                            <option value="all">All Approved</option>
-                            <option value="approved">Approved</option>
-                        </select>
-                    </div>
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-filter="all">All Approved</button>
+                    <button class="sub-tab" data-filter="mae">MAE Approved</button>
                 </div>
 
                 <div class="status-cards" id="approvedCardsContainer">
@@ -3429,11 +3547,12 @@ tinymce.init({
             const container = document.getElementById('approvedCardsContainer');
             container.innerHTML = '';
 
-            const filter = document.getElementById('approvedFilter').value.toLowerCase();
+            const activeFilter = document.querySelector('.sub-tab.active').dataset.filter;
 
             const filteredQuotations = approvedQuotations.filter(quotation => {
-                if (filter === 'all') return true;
-                return quotation.status.toLowerCase() === filter;
+                if (activeFilter === 'all') return true;
+                if (activeFilter === 'mae') return quotation.quotationnumber && quotation.quotationnumber.startsWith('MAE-');
+                return true;
             });
             console.log("Filtered approved quotations:", filteredQuotations);
 
@@ -5278,6 +5397,38 @@ document.getElementById("saveBtn").onclick = () => {
             
             
         }
+async function previewmae() {
+    const form = document.getElementById("maeQuotationForm");
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch("/preview", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Preview failed");
+
+        const blob = await response.blob();
+        const pdfUrl = URL.createObjectURL(blob);
+
+        // Load preview into iframe modal
+        const iframe = document.getElementById("previewFrame");
+        iframe.src = pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
+
+        document.getElementById("previewModal").style.display = "block";
+    } catch (err) {
+        console.error("Preview Error:", err);
+    }
+}
+document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "p")) {
+        e.preventDefault();
+    }
+});
+
+
+
             
     </script>
 </body>
