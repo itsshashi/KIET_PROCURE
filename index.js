@@ -1042,7 +1042,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     }).catch(err => console.error("⚠ Email error:", err));
 
     // 🔹 Final response
-    res.sendFile('sucess.html');
+    res.sendFile(path.join(__dirname, "public/sucess_o.html"));
 
 
   } catch (err) {
