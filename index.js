@@ -1042,12 +1042,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     }).catch(err => console.error("⚠ Email error:", err));
 
     // 🔹 Final response
-    res.send(`
-  <script>
-    alert("Purchase order raised successfully");
-    window.location.reload();
-  </script>
-`);
+    res.sendFile('sucess.html');
 
 
   } catch (err) {
