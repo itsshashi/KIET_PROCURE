@@ -6414,7 +6414,7 @@ app.post("/upload_image", upload.single("image"), (req, res) => {
     }
 
     // 🔥 USE YOUR LIVE DOMAIN HERE (must include https://)
-    const BASE_URL = "http://localhost:3000";
+    const BASE_URL = "https://kietprocure.com";
 
     const fileURL = `${BASE_URL}/uploads/${req.file.filename}`;
 
