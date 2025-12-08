@@ -26,6 +26,7 @@
     pointer-events: auto;
 }
 #previewModal {
+    user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
 }
@@ -2369,34 +2370,41 @@ document.getElementById("supplierName").addEventListener("blur", async function 
             </div>
                      <script>
 document.addEventListener("DOMContentLoaded", function() {
+    
 
     const form = document.getElementById("maeQuotationForm");
     const submitBtn = document.getElementById("maeSendApprovalRequest");
     const userEmail = document.querySelector(".user-info span")?.textContent.trim() || "";
 
     // Set createdBy
-    document.getElementById("maeCreatedBy").value = userEmail;
+    //document.getElementById("maeCreatedBy").value = userEmail;
 
     /* ---------------------------------------------------
        1️⃣ RESTORE SAVED DRAFT WHEN PAGE LOADS
     ---------------------------------------------------- */
-     function restoreDraft() {
-  const saved = localStorage.getItem("maeForm");
-  if (!saved) return;
-  const data = JSON.parse(saved);
+     
 
-  Object.keys(data).forEach(key => {
-      const field = document.querySelector(`[name="${key}"]`);
-      if (field) field.value = data[key];
-  });
+    function restoreDraft() {
+      const saved = localStorage.getItem("maeForm");
+      if (!saved) return;
+      const data = JSON.parse(saved);
 
-  // For TinyMCE field
-  if (data.textarea_details && typeof tinymce !== "undefined" && tinymce.get("editor")) {
-      tinymce.get("editor").setContent(data.textarea_details);
-  }
+      Object.keys(data).forEach(key => {
+          const field = document.querySelector(`[name="${key}"]`);
+          if (field) field.value = data[key];
+      });
 
-  console.log("Draft Fully Restored");
-}
+      if (data.textarea_details && typeof tinymce !== "undefined" && tinymce.get("editor")) {
+          tinymce.get("editor").setContent(data.textarea_details);
+      }
+
+      console.log("Draft Fully Restored");
+    }
+
+    /* ⬅️ You forgot this */
+    restoreDraft();
+
+
 
     /* 🔹 Restore TinyMCE content after init (if exists) */
     setTimeout(() => {
@@ -2424,6 +2432,7 @@ document.addEventListener("DOMContentLoaded", function() {
     form.querySelectorAll("input, select, textarea").forEach(field => {
         if (field.name) data[field.name] = field.value;
     });
+    console.log("maeform ", JSON.stringify(data));
 
     localStorage.setItem("maeForm", JSON.stringify(data));
     alert("Draft Saved!");
@@ -5399,13 +5408,20 @@ document.getElementById("saveBtn").onclick = () => {
         }
 async function previewmae() {
     const form = document.getElementById("maeQuotationForm");
+    if (tinymce.get("editor")) {
+        tinymce.triggerSave();
+    }
+    
     const formData = new FormData(form);
+    console.log('oke dfs',formData)
 
     try {
         const response = await fetch("/preview", {
             method: "POST",
             body: formData
+            
         });
+        console.log('response',response);
 
         if (!response.ok) throw new Error("Preview failed");
 
