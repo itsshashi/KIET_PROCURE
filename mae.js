@@ -543,7 +543,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
 {
   text: [
     { text: "We hereby assure you that all data and information furnished by ", bold: false },
-    { text: poData.poNumber?.split("-")[0] || "", bold: true },
+    { text:  poData.company.name|| "", bold: true },
     { text: " shall be treated with the highest level of confidentiality.", bold: false }
   ],
   margin: [0, 10, 10, 5],
@@ -568,16 +568,15 @@ const maeContent = buildMaeContent(poData.textareaDetails);
     { text: `Subject: Quotation for Design, Development, Manufacturing, Supply, and Installation of  ${poData.machine || ""}`, bold: true, decoration: "underline", margin: [0, 0, 0, 6] },
     { text: `Ref: ${poData.reference || ""}`, italics: true, margin: [0, 0, 0, 14] },
 
-    {
-      text:
-        "We would like to thank you for the opportunity to submit our techno-commercial proposal for the design, development, manufacturing, supply, and installation of the CRI Body AOI. " +
-        "We trust that our technical concept meets your requirements. However, should you have any queries, we would be pleased to clarify them. " +
-        "We assure you of our best service and attention at all times.",
-      margin: [0, 0, 0, 14],
-      alignment: "justify",
-      lineHeight: 1.5
-    },
-
+{
+  text: `
+We would like to thank you for the opportunity to submit our techno-commercial proposal for the design, development, manufacturing, supply, and installation of the ${poData.machine || " "}.We trust that our technical concept meets your requirements. However, should you have any queries, we would be pleased to clarify them.We assure you of our best service and attention at all times.
+`,
+  margin: [0, 0, 0, 14],
+  alignment: "justify",
+  lineHeight: 1.5
+}
+,
     {
       text:
         "The following pages capture our detailed understanding of the systems based on various discussions held with your team. " +
@@ -598,7 +597,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
     { text: "Thanking you,", margin: [0, 15, 0, 5] },
     { text: "With best regards,", margin: [0, 0, 0, 18] },
 
-    { text: `For ${poData.companyOfficialName ||""}`, bold: true, margin: [0, 0, 0, 30] },
+    { text: `KIET TECHNOLOGIES PRIVATE LIMITED`, bold: true, margin: [0, 0, 0, 30] },
 
     // Signature
     signBase64
