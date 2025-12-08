@@ -868,14 +868,11 @@ const safeUpload = (req, res, next) => {
 };
 
 app.post("/order_raise", safeUpload, async (req, res) => {
-  console.log("Starting order_raise request");
+  console.log("▶ /order_raise called");
 
-  // 🔹 Session check
+  // 🔹 1. Session validation
   if (!req.session.user) {
-    return res.status(401).json({
-      success: false,
-      error: "Not authenticated",
-    });
+    return res.status(401).json({ success: false, error: "Not authenticated" });
   }
 
   const {
@@ -894,53 +891,65 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     termsOfPayment,
   } = req.body;
 
-  let products;
+  // 🔹 2. Build products array (since frontend sends each field as an array)
+  let products = [];
   try {
-    products = JSON.parse(req.body.products || "[]");
-    // console.log("Products parsed:", products.length);
-  } catch (parseErr) {
-    return res.status(400).json({
-      success: false,
-      error: "Invalid products data",
-    });
+    if (Array.isArray(req.body.partNo)) {
+      for (let i = 0; i < req.body.partNo.length; i++) {
+        products.push({
+          partNo: req.body.partNo[i],
+          description: req.body.description[i],
+          hsn: req.body.hsn[i],
+          quantity: req.body.quantity[i],
+          unitPrice: req.body.unitPrice[i],
+          gst: req.body.gst[i],
+          unit: req.body.unit[i],
+          discount: req.body.discount[i],
+        });
+      }
+    }
+  } catch (err) {
+    return res.status(400).json({ success: false, error: "Invalid product fields" });
   }
+
+  console.log("🔥 Products:", products);
 
   const orderedBy = req.session.user.email;
   const quotationFile = req.file ? [req.file.filename] : [];
-  // console.log("Quotation file:", quotationFile);
-
   const contact = phone;
   const single = singleSupplier === "on";
 
   try {
-    console.log("About to begin transaction");
+    console.log("▶ BEGIN TRANSACTION");
     await pool.query("BEGIN");
 
+    // 🔹 Generate PO number
     const purchaseOrderNumber = await generatePurchaseOrderNumber();
-    console.log("PO number generated:", purchaseOrderNumber);
 
+    // 🔹 Calculate total
     let totalAmount = 0;
-    for (let p of products) {
-      const unitPrice = parseFloat(p.unitPrice);
-      const discount = parseFloat(p.discount);
-      const quantity = parseInt(p.quantity);
-      const gst = parseFloat(p.gst);
+    products.forEach((p) => {
+      const unitPrice = parseFloat(p.unitPrice) || 0;
+      const discount = parseFloat(p.discount) || 0;
+      const quantity = parseInt(p.quantity) || 0;
+      const gst = parseFloat(p.gst) || 0;
 
-      const itemTotal = quantity * unitPrice;
-      const discounted = itemTotal - discount;
-      const gstAmount = discounted * (gst / 100);
+      const amount = quantity * unitPrice;
+      const afterDiscount = amount - discount;
+      const gstAmt = afterDiscount * (gst / 100);
 
-      totalAmount += discounted + gstAmount;
-    }
-    console.log("Total calculated:", totalAmount);
+      totalAmount += afterDiscount + gstAmt;
+    });
 
-    console.log("About to insert order");
-    const orderResult = await pool.query(
+    // 🔹 Insert purchase order
+    const orderInsert = await pool.query(
       `INSERT INTO purchase_orders
-        (project_name, project_code_number, purchase_order_number, supplier_name,
-         supplier_gst, supplier_address, shipping_address, urgency, date_required, notes,
-         ordered_by, quotation_file, total_amount, reference_no, contact, single, terms_of_payment)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id`,
+      (project_name, project_code_number, purchase_order_number, supplier_name,
+       supplier_gst, supplier_address, shipping_address, urgency, date_required,
+       notes, ordered_by, quotation_file, total_amount, reference_no, contact,
+       single, terms_of_payment)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+      RETURNING id`,
       [
         projectName,
         projectCodeNumber,
@@ -961,16 +970,16 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         termsOfPayment,
       ]
     );
-    console.log("Order inserted");
 
-    const orderId = orderResult.rows[0].id;
+    const orderId = orderInsert.rows[0].id;
 
-    console.log("About to insert items");
+    // 🔹 Insert items
     for (let p of products) {
       await pool.query(
         `INSERT INTO purchase_order_items
-          (purchase_order_id, part_no, description, hsn_code, quantity, unit_price, gst, project_name, discount, unit)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        (purchase_order_id, part_no, description, hsn_code, quantity,
+         unit_price, gst, project_name, discount, unit)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [
           orderId,
           p.partNo,
@@ -987,187 +996,71 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     }
 
     await pool.query("COMMIT");
-    console.log("Transaction committed");
+    console.log("✔ DB Transaction committed");
 
-    // 🔹 Send email (keep your existing code)
-    const transporte = nodemailer.createTransport({
+    // 🔹 Send email
+    const transporter = nodemailer.createTransport({
       host: "smtp.office365.com",
       port: 587,
-      secure: false, // STARTTLS
-      auth: {
-        user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
+      secure: false,
+      auth: { user: "No-reply@kietsindia.com", pass: "Kiets@2025$1" },
+      tls: { rejectUnauthorized: false },
     });
 
-    const mailOptions = {
-      from: "NO-reply@kietsindia.com",
+    transporter.sendMail({
+      from: "No-reply@kietsindia.com",
       to: "purchase@kietsindia.com",
-      subject: `New Order Raised: Approval Required for Order ${purchaseOrderNumber}`,
-     
-                   html: `
-   
-     
-    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
+      subject: `New Purchase Order Raised — ${purchaseOrderNumber}`,
+      html: `
+        <div style="font-family: Arial; padding: 10px;">
+          <p><strong>Dear Purchase Team,</strong></p>
+          <p>A new Purchase Order has been raised. Below are the details:</p>
 
-  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+          <table cellpadding="6" style="width:100%; border-collapse:collapse;">
+            <tr><td><b>Order Number</b></td><td>${purchaseOrderNumber}</td></tr>
+            <tr><td><b>Supplier</b></td><td>${supplierName}</td></tr>
+            <tr><td><b>Total Amount</b></td><td>${totalAmount}</td></tr>
+            <tr><td><b>Raised By</b></td><td>${orderedBy}</td></tr>
+            <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+          </table>
 
-    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear Purchase team,</strong></p>
+          <div style="text-align:center; margin:30px;">
+            <a href="https://kietprocure.com/" style="background:#0056b3;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;">
+              View Order
+            </a>
+          </div>
 
-    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
-      We wish to notify you that a new Purchase Order has been prepared and is now awaiting your Purchase approval.<br>
-      Please find the summary details below for your reference:
-    </p>
-
-    <table cellpadding="10" cellspacing="0" 
-       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
-
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Order Number:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${purchaseOrderNumber}</td>
-      </tr>
-    
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Supplier Name:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${supplierName}</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${orderedBy}</td>
-      </tr>
-       <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Total Amount:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${totalAmount}</td>
-      </tr>
-
-      <tr>
-        <td><strong>Submission Date:</strong></td>
-        <td>${new Date().toLocaleDateString()}</td>
-      </tr>
-    </table>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://kietprocure.com/"
-        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
-        Review Quotation
-      </a>
-    </div>
-  
-
-    
-  
-  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
-      <img src="cid:logoImage" alt="Company Logo"
-        style="width: 90px; height: auto; margin-bottom: 10px;" />
-
-      <div style="font-size: 16px; font-weight: bold; color: #000;">
-        KIET TECHNOLOGIES PVT LTD
-      </div>
-
-      <div style="font-size: 13px; margin-top: 5px;">
-        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
-      </div>
-
-      <div style="font-size: 13px; margin-top: 5px;">
-        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
-        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
-      </div>
-
-      <!-- Social Icons -->
-      <div style="margin-top: 12px;">
-        <a href="https://facebook.com" style="margin: 0 6px;">
-          <img src="cid:fbIcon" width="22" />
-        </a>
-        <a href="https://linkedin.com/company" style="margin: 0 6px;">
-          <img src="cid:lkIcon" width="22" />
-        </a>
-        <a href="https://instagram.com" style="margin: 0 6px;">
-          <img src="cid:igIcon" width="22" />
-        </a>
-        <a href="https://kietsindia.com" style="margin: 0 6px;">
-          <img src="cid:webIcon" width="22" />
-        </a>
-      </div>
-
-      <div style="font-size: 11px; color: #777; margin-top: 15px;">
-        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
-      </div>
-    </div>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-
-
-
-    </div>
-</div>
-
-
-    
-
-   
-    
-  `,
-            
+          <div style="text-align:center; border-top:1px solid #ccc; padding-top:15px;">
+            <img src="cid:logoImage" width="120" />
+            <p style="font-size:12px; color:#777;">© 2025 KIET TECHNOLOGIES PVT LTD</p>
+          </div>
+        </div>
+      `,
       attachments: [
-        {
-          filename: "lg.jpg", // your image file name
-          path: "public/images/lg.jpg", // local path to the image
-          cid: "logoImage", // same cid as in <img src="cid:logoImage">
-        },
+        { filename: "lg.jpg", path: "public/images/lg.jpg", cid: "logoImage" },
       ],
-    };
+    }).catch(err => console.error("⚠ Email error:", err));
 
-    try {
-      const info = await transporte.sendMail(mailOptions);
-      console.log("✅ Email sent to purchase orders:", info.response);
-    } catch (err) {
-      console.error("❌ Email failed:", err);
-    }
-
-    // 🔹 Success JSON
+    // 🔹 Final response
     return res.json({
       success: true,
-      message: "✅ Order inserted successfully",
+      message: "Purchase order raised successfully",
       purchaseOrderNumber,
-      orderedBy,
-      file: quotationFile,
+      orderId,
       totalAmount,
     });
+
   } catch (err) {
-    await pool.query("ROLLBACK");
-    console.error("❌ Error inserting order:", err);
+    console.error("❌ ERROR:", err);
+    await pool.query("ROLLBACK").catch(() => {});
     return res.status(500).json({
       success: false,
-      error: `Failed to insert order: ${err.message || "Unknown error"}`,
+      error: "Failed to raise purchase order",
+      detail: err.message,
     });
   }
 });
+
 
 // 🔹 Global error handler (keeps JSON output always)
 app.use((err, req, res, next) => {
@@ -5899,6 +5792,7 @@ app.post("/preview-vk", upload.none(), async (req, res) => {
 app.post("/preview", upload.none(), async (req, res) => {
   try {
     const formData = req.body || {};
+    console.log("formdatat",formData)
 
     // Prepare data for MAE PDF generation
     const poData = {
@@ -5917,7 +5811,7 @@ app.post("/preview", upload.none(), async (req, res) => {
       currency: formData.currency || "INR",
       requester: { name: formData.clientName || "" },
       clientEmail: formData.clientEmail || "",
-      textareaDetails: formData.textareaDetails || "",
+      textareaDetails: formData.textarea_details || "",
       gstterms: formData.maeGstTerms || "",
       insurance: formData.maeInsurance || "",
       machine: formData.subject || "",
@@ -6520,7 +6414,7 @@ app.post("/upload_image", upload.single("image"), (req, res) => {
     }
 
     // 🔥 USE YOUR LIVE DOMAIN HERE (must include https://)
-    const BASE_URL = "https://kietprocure.com";
+    const BASE_URL = "http://localhost:3000";
 
     const fileURL = `${BASE_URL}/uploads/${req.file.filename}`;
 
