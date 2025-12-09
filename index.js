@@ -5716,7 +5716,8 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
 
   } catch (error) {
     console.error("❌ Error in /download-mae-quotation:", error);
-    return res.status(500).json({ error: "Something went wrong while downloading" });
+    return res.status(500).json({ error: error.message, stack: error.stack });
+
   }
 });
 
