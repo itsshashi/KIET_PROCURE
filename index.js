@@ -5697,14 +5697,10 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     if (!fs.existsSync(quotationFolder)) {
       fs.mkdirSync(quotationFolder, { recursive: true });
     }
+// ✅ Just save directly into qt_uploads
+const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+const filePath = path.join(qtUploadsDir, fileName);
 
-    const maeFolder = path.join(qtUploadsDir, "mae_quotation_KIET");
-if (!fs.existsSync(maeFolder)) {
-  fs.mkdirSync(maeFolder, { recursive: true });
-}
-
-const fileName = `${poData.poNumber}_${Date.now()}.pdf`;
-const filePath = path.join(maeFolder, fileName);
 
 // Generate the PDF
 await generateMAEQuotation(poData, filePath);
