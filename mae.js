@@ -100,9 +100,11 @@ function buildMaeContent(textareaDetails) {
     
 
 // convert all ArialMT variations to Arial
-html = html.replace(/font-family\s*:\s*["']?ArialMT["']?/gi, 'font-family: Arial')
-           .replace(/font-family\s*:\s*["']?Arial Mt["']?/gi, 'font-family: Arial')
-           .replace(/font-family\s*:\s*["']?Arial MT["']?/gi, 'font-family: Arial');
+
+
+// Force all font-family declarations to Times
+html = html.replace(/font-family\s*:[^;]+;/gi, 'font-family: Times;');
+
 
   if (html.startsWith("'") && html.endsWith("'")) {
     html = html.slice(1, -1);
