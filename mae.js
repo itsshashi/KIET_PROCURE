@@ -97,9 +97,13 @@ function buildMaeContent(textareaDetails) {
   // Some rows in your DB seem to be stored like: '<table ...</table>'
   // (with extra quotes). Strip them if present.
   let html = textareaDetails.trim();
-    html = html
-  .replace(/font-family:\s*ArialMt/gi, 'font-family: Arial')
-  .replace(/font-family:\s*Arial/gi, 'font-family: Arial');
+    
+
+// convert all ArialMT variations to Arial
+html = html.replace(/font-family\s*:\s*["']?ArialMT["']?/gi, 'font-family: Arial')
+           .replace(/font-family\s*:\s*["']?Arial Mt["']?/gi, 'font-family: Arial')
+           .replace(/font-family\s*:\s*["']?Arial MT["']?/gi, 'font-family: Arial');
+
   if (html.startsWith("'") && html.endsWith("'")) {
     html = html.slice(1, -1);
   }
