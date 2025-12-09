@@ -5647,12 +5647,12 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
 
 // Download MAE quotation PDF
 
+
 app.get("/download-mae-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
     const isNumeric = /^\d+$/.test(param);
 
-    // Fetch quotation
     const column = isNumeric ? "id" : "quotationnumber";
     const quotationResult = await pool.query(
       `SELECT * FROM mae_quotations WHERE ${column} = $1 LIMIT 1`,
@@ -5665,7 +5665,6 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
 
     const q = quotationResult.rows[0];
 
-    // Construct data for PDF
     const poData = {
       company: {
         logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
@@ -5693,31 +5692,30 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       signPath: path.join(process.cwd(), "public/images/signature.png")
     };
 
-    // Ensure upload directory exists
-    if (!fs.existsSync(qtUploadsDir)) {
-      fs.mkdirSync(qtUploadsDir, { recursive: true });
+    // Create subfolder for quotation
+    const quotationFolder = path.join(baseUploadsDir, "mae_quotation_KIET");
+    if (!fs.existsSync(quotationFolder)) {
+      fs.mkdirSync(quotationFolder, { recursive: true });
     }
 
-    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
-    const filePath = path.join(qtUploadsDir, fileName);
+    const fileName = `${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(quotationFolder, fileName);
 
-    // Generate PDF - ensure completion using promise
-    await new Promise((resolve, reject) => {
-      generateMAEQuotation(poData, filePath)
-        .then(resolve)
-        .catch(reject);
-    });
+    // Generate PDF
+    await generateMAEQuotation(poData, filePath);
 
-    // Download PDF and delete after sending
-    return res.download(filePath, fileName, (err) => {
-      if (err) console.error("Download error:", err);
-      fs.unlink(filePath, () => {}); // Silent cleanup
+    // Send file
+    return res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("SendFile Error:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      fs.unlink(filePath, () => {}); // delete after success
     });
 
   } catch (error) {
     console.error("❌ Error in /download-mae-quotation:", error);
-    return res.status(500).json({ error: error.message, stack: error.stack });
-
+    return res.status(500).json({ error: error.message });
   }
 });
 
