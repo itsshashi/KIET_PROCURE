@@ -5693,10 +5693,7 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     };
 
     // Create subfolder for quotation
-    const quotationFolder = path.join(baseUploadsDir, "mae_quotation_KIET");
-    if (!fs.existsSync(quotationFolder)) {
-      fs.mkdirSync(quotationFolder, { recursive: true });
-    }
+   
 // ✅ Just save directly into qt_uploads
 const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
 const filePath = path.join(qtUploadsDir, fileName);
