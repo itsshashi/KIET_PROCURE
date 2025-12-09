@@ -5698,20 +5698,26 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       fs.mkdirSync(quotationFolder, { recursive: true });
     }
 
-    const fileName = `${poData.poNumber}_${Date.now()}.pdf`;
-    const filePath = path.join(quotationFolder, fileName);
+    const maeFolder = path.join(qtUploadsDir, "mae_quotation_KIET");
+if (!fs.existsSync(maeFolder)) {
+  fs.mkdirSync(maeFolder, { recursive: true });
+}
 
-    // Generate PDF
-    await generateMAEQuotation(poData, filePath);
+const fileName = `${poData.poNumber}_${Date.now()}.pdf`;
+const filePath = path.join(maeFolder, fileName);
 
-    // Send file
-    return res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("SendFile Error:", err);
-        return res.status(500).json({ error: err.message });
-      }
-      fs.unlink(filePath, () => {}); // delete after success
-    });
+// Generate the PDF
+await generateMAEQuotation(poData, filePath);
+
+// Send the PDF for download
+return res.sendFile(filePath, (err) => {
+  if (err) {
+    console.error("SendFile Error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+  fs.unlink(filePath, () => {}); // delete after download
+});
+
 
   } catch (error) {
     console.error("❌ Error in /download-mae-quotation:", error);
