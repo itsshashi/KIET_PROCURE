@@ -88,14 +88,15 @@ function buildMaeContent(textareaDetails) {
   if (!textareaDetails || textareaDetails.trim() === "") {
     return [{ text: "No details provided", italics: true, fontSize: 10 }];
   }
-  html = html
-  .replace(/font-family:\s*ArialMt/gi, 'font-family: Arial')
-  .replace(/font-family:\s*Arial/gi, 'font-family: Arial');
+
 
 
   // Some rows in your DB seem to be stored like: '<table ...</table>'
   // (with extra quotes). Strip them if present.
   let html = textareaDetails.trim();
+    html = html
+  .replace(/font-family:\s*ArialMt/gi, 'font-family: Arial')
+  .replace(/font-family:\s*Arial/gi, 'font-family: Arial');
   if (html.startsWith("'") && html.endsWith("'")) {
     html = html.slice(1, -1);
   }
