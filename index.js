@@ -5692,31 +5692,28 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       signPath: path.join(process.cwd(), "public/images/signature.png")
     };
 
-    // Create subfolder for quotation
-   
-// ✅ Just save directly into qt_uploads
-const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
-const filePath = path.join(qtUploadsDir, fileName);
+    // Save inside qt_uploads without subfolders
+    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
 
+    // Generate PDF
+    await generateMAEQuotation(poData, filePath);
 
-// Generate the PDF
-await generateMAEQuotation(poData, filePath);
-
-// Send the PDF for download
-return res.sendFile(filePath, (err) => {
-  if (err) {
-    console.error("SendFile Error:", err);
-    return res.status(500).json({ error: err.message });
-  }
-  fs.unlink(filePath, () => {}); // delete after download
-});
-
+    // Send file for download
+    return res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("SendFile Error:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      fs.unlink(filePath, () => {}); // remove file after successful download
+    });
 
   } catch (error) {
     console.error("❌ Error in /download-mae-quotation:", error);
     return res.status(500).json({ error: error.message });
   }
 });
+
 
 
 // Preview VK quotation from form data
