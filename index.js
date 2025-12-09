@@ -48,7 +48,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:db_pass,
+  password:'Shashank@KIET1519',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -5646,13 +5646,16 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
 });
 
 // Download MAE quotation PDF
+
 app.get("/download-mae-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
     const isNumeric = /^\d+$/.test(param);
 
+    // Fetch quotation
+    const column = isNumeric ? "id" : "quotationnumber";
     const quotationResult = await pool.query(
-      `SELECT * FROM mae_quotations WHERE ${isNumeric ? "id" : "quotationnumber"} = $1 LIMIT 1`,
+      `SELECT * FROM mae_quotations WHERE ${column} = $1 LIMIT 1`,
       [param]
     );
 
@@ -5660,46 +5663,60 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       return res.status(404).json({ error: "MAE Quotation not found" });
     }
 
-    const quotation = quotationResult.rows[0];
+    const q = quotationResult.rows[0];
 
+    // Construct data for PDF
     const poData = {
       company: {
         logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
-        name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
-        email: quotation.clientemail || "info@kiet.com",
+        name: q.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: q.clientemail || "info@kiet.com",
         gst: "29AAFCK6528D1ZG",
-        contact: quotation.clientphone || " ",
-        address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+        contact: q.clientphone || "",
+        address:
+          q.companyaddress ||
+          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111"
       },
-      poNumber: quotation.quotationnumber,
-      date: quotation.quotationdate ? new Date(quotation.quotationdate).toLocaleDateString("en-GB") : "",
-      expected_date: quotation.validuntil ? new Date(quotation.validuntil).toLocaleDateString("en-GB") : "",
-      termsOfPayment: quotation.maepaymentterms || "",
-      currency: quotation.currency || "INR",
-      requester: { name: quotation.clientname || "" },
-      clientEmail: quotation.clientemail || "",
-      textareaDetails: quotation.textarea_details || "",
-      gstterms: quotation.maegstterms || "",
-      insurance: quotation.maeinsurance || "",
-      machine: quotation.subject || "",
-      warranty: quotation.maewarranty || "",
+      poNumber: q.quotationnumber,
+      date: q.quotationdate ? new Date(q.quotationdate).toLocaleDateString("en-GB") : "",
+      expected_date: q.validuntil ? new Date(q.validuntil).toLocaleDateString("en-GB") : "",
+      termsOfPayment: q.maepaymentterms || "",
+      currency: q.currency || "INR",
+      requester: { name: q.clientname || "" },
+      clientEmail: q.clientemail || "",
+      machine: q.subject || "",
+      warranty: q.maewarranty || "",
+      gstterms: q.maegstterms || "",
+      textareaDetails: q.textarea_details || "",
+      insurance: q.maeinsurance || "",
       line: path.join(process.cwd(), "public/images/line.png"),
-      signPath: path.join(process.cwd(), "public/images/signature.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png")
     };
+
+    // Ensure upload directory exists
+    if (!fs.existsSync(qtUploadsDir)) {
+      fs.mkdirSync(qtUploadsDir, { recursive: true });
+    }
 
     const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
-    await generateMAEQuotation(poData, filePath);
+    // Generate PDF - ensure completion using promise
+    await new Promise((resolve, reject) => {
+      generateMAEQuotation(poData, filePath)
+        .then(resolve)
+        .catch(reject);
+    });
 
-    // Set headers for download
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.setHeader("Content-Type", "application/pdf");
+    // Download PDF and delete after sending
+    return res.download(filePath, fileName, (err) => {
+      if (err) console.error("Download error:", err);
+      fs.unlink(filePath, () => {}); // Silent cleanup
+    });
 
-    return res.sendFile(filePath);
   } catch (error) {
     console.error("❌ Error in /download-mae-quotation:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Something went wrong while downloading" });
   }
 });
 
