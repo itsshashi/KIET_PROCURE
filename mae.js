@@ -42,13 +42,16 @@ const fonts = {
     italics: "fonts/Ubuntu-Italic.ttf",
     bolditalics: "fonts/Ubuntu-BoldItalic.ttf",
   },
+ 
   Arial: {
-    normal: "fonts/ArialMT.ttf",       // NEW FILE CREATED
+    normal: "fonts/arial.ttf",
     bold: "fonts/arialbd.ttf",
     italics: "fonts/ariali.ttf",
     bolditalics: "fonts/arialbi.ttf",
   }
+  
 };
+
 
 
 const printer = new PdfPrinter(fonts);
