@@ -48,6 +48,14 @@ const fonts = {
     italics: "fonts/ariali.ttf",
     bolditalics: "fonts/arialbi.ttf",
   },
+  
+  ArialMt: {
+    normal: 'ArialMT.ttf',
+    bold: 'Arial-BoldMT.ttf',
+    italics: 'Arial-ItalicMT.ttf',
+    bolditalics: 'Arial-BoldItalicMT.ttf'
+  },
+
 };
 
 const printer = new PdfPrinter(fonts);
