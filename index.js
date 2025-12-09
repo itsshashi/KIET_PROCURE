@@ -48,7 +48,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:"Shashank@KIET1519",
+  password:db_pass,
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -1952,7 +1952,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       reference_no: order.reference_no,
       date: new Date(order.created_at).toLocaleDateString(),
       expected_date: order.date_required
-        ? new Date(order.date_required).toLocaleDateString("en-GB")
+        ? new Date(order.date_required).toLocaleDateString()
         : "N/A",
       delivery_through: order.delevery_by,
       projectcode: order.project_code_number,
@@ -5628,7 +5628,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
-        };
+    };
 
     const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
@@ -5641,6 +5641,64 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
     return res.sendFile(filePath);
   } catch (error) {
     console.error("❌ Error in /view-mae-quotation:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Download MAE quotation PDF
+app.get("/download-mae-quotation/:param", async (req, res) => {
+  try {
+    const { param } = req.params;
+    const isNumeric = /^\d+$/.test(param);
+
+    const quotationResult = await pool.query(
+      `SELECT * FROM mae_quotations WHERE ${isNumeric ? "id" : "quotationnumber"} = $1 LIMIT 1`,
+      [param]
+    );
+
+    if (quotationResult.rows.length === 0) {
+      return res.status(404).json({ error: "MAE Quotation not found" });
+    }
+
+    const quotation = quotationResult.rows[0];
+
+    const poData = {
+      company: {
+        logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
+        name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
+        email: quotation.clientemail || "info@kiet.com",
+        gst: "29AAFCK6528D1ZG",
+        contact: quotation.clientphone || " ",
+        address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
+      },
+      poNumber: quotation.quotationnumber,
+      date: quotation.quotationdate ? new Date(quotation.quotationdate).toLocaleDateString("en-GB") : "",
+      expected_date: quotation.validuntil ? new Date(quotation.validuntil).toLocaleDateString("en-GB") : "",
+      termsOfPayment: quotation.maepaymentterms || "",
+      currency: quotation.currency || "INR",
+      requester: { name: quotation.clientname || "" },
+      clientEmail: quotation.clientemail || "",
+      textareaDetails: quotation.textarea_details || "",
+      gstterms: quotation.maegstterms || "",
+      insurance: quotation.maeinsurance || "",
+      machine: quotation.subject || "",
+      warranty: quotation.maewarranty || "",
+      line: path.join(process.cwd(), "public/images/line.png"),
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+    };
+
+    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    const filePath = path.join(qtUploadsDir, fileName);
+
+    await generateMAEQuotation(poData, filePath);
+
+    // Set headers for download
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("❌ Error in /download-mae-quotation:", error);
     return res.status(500).json({ error: error.message });
   }
 });
@@ -6418,6 +6476,9 @@ app.post("/upload_image", upload.single("image"), (req, res) => {
     console.error("❌ TinyMCE Upload Error:", error);
     return res.status(500).json({ error: "Image upload failed" });
   }
+});
+app.get('/dc_approve',(req,res)=>{
+  res.render('dc.ejs');
 });
 
 
