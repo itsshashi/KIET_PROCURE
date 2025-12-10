@@ -155,7 +155,7 @@ function generatePurchaseOrder(poData, filePath) {
                   { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
 
                   { text: "Invoice address:", font: "Times", bold: true, margin: [10, 5, 0, 5] },
-                  { text: poData.invoiceTo, font: "Times", margin: [10, 0, 0, 5] },
+                  { text: poData.invoiceTo, font: "Times", margin: [10, 0, 0, 5],lineHeight:1.5 },
 
                   { canvas: [{ type: "line", x1: 10, y1: 0, x2: 250, y2: 0, lineWidth: 1 }] },
 
