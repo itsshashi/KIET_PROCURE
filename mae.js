@@ -470,6 +470,21 @@ const maeContent = buildMaeContent(poData.textareaDetails);
                           fontSize: 9,
                         },
                       ],
+                       [
+                        {
+                          text: "Packaging & Forwarding",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.packaging || "",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
                     ],
                   },
                   layout: {

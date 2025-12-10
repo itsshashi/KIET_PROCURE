@@ -5625,6 +5625,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       textareaDetails: quotation.textarea_details || "",
       gstterms: quotation.maegstterms || "",
       insurance: quotation.maeinsurance || "",
+      packaging: quotation.packaging || "",
       machine:quotation.subject||"",
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
@@ -5688,6 +5689,7 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       warranty: q.maewarranty || "",
       gstterms: q.maegstterms || "",
       textareaDetails: q.textarea_details || "",
+      packaging:q.maepackaging || " ",
       insurance: q.maeinsurance || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png")
@@ -5880,6 +5882,7 @@ app.post("/preview", upload.none(), async (req, res) => {
       textareaDetails: formData.textarea_details || "",
       gstterms: formData.maeGstTerms || "",
       insurance: formData.maeInsurance || "",
+      packaging:formData.maePackaging || " ",
       machine: formData.subject || "",
       warranty: formData.maeWarranty || "",
       line: path.join(__dirname, "public/images/line.png"),
@@ -6003,11 +6006,13 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeGstTerms,
    maeInsurance,
    maeWarranty,
+   maePackaging,
    
    subject,
    createdBy
 
   }=req.body;
+  console.log(req.body);
   const client = await pool.connect();
   try{
    await client.query("BEGIN");
@@ -6029,10 +6034,11 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeWarranty,
    status,
    subject,created_by
+   ,maepackaging
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
-       $14, $15, $16,$17) RETURNING id`;
+       $14, $15, $16,$17,$18) RETURNING id`;
    const maeValues=[
      quotationNumber,
    quotationDate,
@@ -6050,7 +6056,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeWarranty,
    "pending",
    subject,
-   createdBy
+   createdBy,
+   maePackaging
 
    ];
    const result=await client.query(maeQut,maeValues);
@@ -6215,12 +6222,12 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
           },
         ],
       };
-      try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Approval request email sent to MD:", info.response);
-      } catch (err) {
-        console.error("❌ Email failed:", err);
-      }
+      // try {
+      //   const info = await transporter.sendMail(mailOptions);
+      //   console.log("✅ Approval request email sent to MD:", info.response);
+      // } catch (err) {
+      //   console.error("❌ Email failed:", err);
+      // }
 
 
   }
@@ -6426,49 +6433,48 @@ app.put("/api/mae-quotations/:id", upload.none(), async (req, res) => {
 // });
 
 // Get approved MAE quotations
-app.get("/api/mae-quotations/approved", async (req, res) => {
+app.get("/api/mae-quotations/get/approved/:by", async (req, res) => {
+  console.log('lparams',req.params);
+  const user= req.params.by;
   const client = await pool.connect();
 
   try {
-    const result = await client.query(
-      `
+    const result = await client.query(`
       SELECT
         id,
-        quotationnumber AS "quotationNumber",
-        quotationdate AS "quotationDate",
-        validuntil AS "validUntil",
+        quotationnumber ,
+        quotationdate ,
+        validuntil ,
         currency,
-        companyname AS "companyName",
-        companyaddress AS "companyAddress",
-        clientname AS "clientName",
-        clientemail AS "clientEmail",
-        clientphone AS "clientPhone",
-        textarea_details AS "textareaDetails",
-        maepaymentterms AS "paymentTerms",
-        maegstterms AS "gstTerms",
-        maeinsurance AS "insurance",
-        maewarranty AS "warranty",
+        companyname,
+        companyaddress, 
+        clientname ,
+        clientemail, 
+        clientphone ,
+        textarea_details ,
+        maepaymentterms as paymentterms ,
+        maegstterms ,
+        maeinsurance ,
+        maewarranty ,
         status,
-        created_at AS "createdAt",
-        updated_at AS "updatedAt",
+        created_at,
+        updated_at,
         created_by
       FROM mae_quotations
-      WHERE status::text = $1
+      WHERE LOWER(status::text) = 'approved' and created_by= $1
       ORDER BY created_at DESC
-      `,
-      ["approved"]
-    );
+    `,[user]
+);
 
     res.status(200).json(result.rows);
   } catch (error) {
-  console.error("SQL ERROR:", error);   // <-- log full error
-  res.status(500).json({ error: error.message });
-}
-
-  finally {
+    console.error("SQL ERROR:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
     client.release();
   }
 });
+
 
 // Update MAE quotation status (approve/reject)
 app.put("/api/mae-quotations/:id/:status", async (req, res) => {
@@ -6539,7 +6545,8 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
     maeGstTerms,
     maeInsurance,
     maeWarranty,
-    subject
+    subject,
+    maePackaging
   } = req.body;
 
   console.log(req.body);
@@ -6553,7 +6560,7 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
         quotationNumber, quotationDate, validUntil, currency,
         companyName, companyAddress, clientName, clientEmail,
         clientPhone, textarea_details, maePaymentTerms, maeGstTerms,
-        maeInsurance, maeWarranty, status, subject
+        maeInsurance, maeWarranty, status, subject,maepackaging
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8,
         $9, $10, $11, $12, $13, $14, $15, $16
@@ -6575,7 +6582,8 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
       maeInsurance,
       maeWarranty,
       "approved",
-      subject
+      subject,
+      maePackaging
     ];
 
     const result = await client.query(maeQut, maeValues);
@@ -6604,6 +6612,7 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
       gstterms: quotation.maegstterms || "",
       insurance: quotation.maeinsurance || "",
       machine: quotation.subject || "",
+      packaging:quotation.maepackaging || "",
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Challan Application</title>
+    <link href="../public/images/logo.png" rel="icon" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 0 25px rgba(30, 64, 175, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .logo {
+            padding: 25px 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            background: rgba(30, 58, 138, 0.3);
+        }
+
+        .logo img {
+            max-width: 200px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .menu-item {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            position: relative;
+            overflow: visible;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .menu-item i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            margin-bottom: 30px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tab-header h3 {
+            font-size: 24px;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .tab-header p {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 24px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .product-table th {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 16px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .product-table td {
+            padding: 14px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            background: white;
+        }
+
+        .product-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-table input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .product-table input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: #f8fafc;
+            cursor: pointer;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #3b82f6;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .required::after {
+            content: ' *';
+            color: #ef4444;
+        }
+
+        .textarea-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 0;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .product-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .user-info {
+                align-self: flex-end;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <img src="images/wt_img.png" alt="Company Logo">
+            </div>
+
+            <h4 style="color: white; font-size: 14px; margin: 20px 15px 10px; font-weight: 600;">Delivery Challan</h4>
+
+            <ul class="menu">
+                <li class="menu-item active" data-tab="delivery-challan">
+                    <i class="fas fa-truck"></i> Delivery Challan
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+             
+             
+
+            <!-- Delivery Challan Tab -->
+            <div class="tab-content active" id="delivery-challan">
+                <div class="tab-header">
+                    <h3>Create Delivery Challan</h3>
+                    <p>Fill in the details below to create a delivery challan</p>
+                </div>
+
+                <form id="deliveryChallanForm" method="POST" action="/submit-delivery-challan">
+                    <!-- Challan Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Delivery Challan Information</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="challanNumber" class="required">Challan Number</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" class="form-control" id="challanNumber" name="challanNumber" required readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
+                                    <button type="button" id="generateChallanNumber" class="btn btn-secondary">Generate</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="challanDate" class="required">Challan Date</label>
+                                <input type="date" class="form-control" id="challanDate" name="challanDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="deliveryDate" class="required">Delivery Date</label>
+                                <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="poNumber">Purchase Order Number</label>
+                                <input type="text" class="form-control" id="poNumber" name="poNumber" placeholder="Reference PO Number">
+                            </div>
+                            <div class="form-group">
+                                <label for="vehicleNumber">Vehicle Number</label>
+                                <input type="text" class="form-control" id="vehicleNumber" name="vehicleNumber" placeholder="Vehicle registration number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Consignor Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Consignor Information (From)</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consignorName" class="required">Company Name</label>
+                                <input type="text" class="form-control" id="consignorName" name="consignorName" required value="KIET TECHNOLOGIES PVT.LTD">
+                            </div>
+                            <div class="form-group">
+                                <label for="consignorGST">GST Number</label>
+                                <input type="text" class="form-control" id="consignorGST" name="consignorGST" placeholder="GST Number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consignorAddress" class="required">Address</label>
+                            <textarea class="form-control textarea-control" id="consignorAddress" name="consignorAddress" rows="3" required>51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Consignee Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Consignee Information (To)</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consigneeName" class="required">Company Name</label>
+                                <input type="text" class="form-control" id="consigneeName" name="consigneeName" required placeholder="Customer company name">
+                            </div>
+                            <div class="form-group">
+                                <label for="consigneeGST">GST Number</label>
+                                <input type="text" class="form-control" id="consigneeGST" name="consigneeGST" placeholder="GST Number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consigneeAddress" class="required">Delivery Address</label>
+                            <textarea class="form-control textarea-control" id="consigneeAddress" name="consigneeAddress" rows="3" required placeholder="Complete delivery address"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consigneeContact">Contact Person</label>
+                                <input type="text" class="form-control" id="consigneeContact" name="consigneeContact" placeholder="Contact person name">
+                            </div>
+                            <div class="form-group">
+                                <label for="consigneePhone">Phone Number</label>
+                                <input type="tel" class="form-control" id="consigneePhone" name="consigneePhone" placeholder="+91 9876543210">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item Details Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Item Details</h2>
+                        <table class="product-table" id="itemTable">
+                            <thead>
+                                <tr>
+                                    <th>SL No</th>
+                                    <th>Part No</th>
+                                    <th>Description</th>
+                                    <th>HSN Code</th>
+                                    <th>Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                                    <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                                    <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                                    <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                                    <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                                    <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                                    <td>
+                                        <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary" id="addItemRow"><i class="fas fa-plus"></i> Add Item</button>
+                    </div>
+
+                    <!-- Terms & Conditions Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Terms & Conditions</h2>
+                        <div class="form-group">
+                            <label for="terms">Terms & Conditions</label>
+                            <textarea class="form-control textarea-control" id="terms" name="terms" rows="4" placeholder="Enter delivery terms and conditions">1. Goods once delivered will not be taken back.
+2. Any damage during transit is not our responsibility.
+3. Please check the goods at the time of delivery.
+4. This is a computer generated delivery challan.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea class="form-control textarea-control" id="notes" name="notes" rows="2" placeholder="Any additional notes"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Generate Delivery Challan</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date as default for challan date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('challanDate').value = today;
+
+            // Setup item table functionality
+            setupItemTable();
+
+            // Generate Challan Number
+            document.getElementById('generateChallanNumber').addEventListener('click', function() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const challanNumber = `DC-${year}${month}${day}-${randomNum}`;
+                document.getElementById('challanNumber').value = challanNumber;
+            });
+        });
+
+        // Setup item table functionality
+        function setupItemTable() {
+            // Add event listener for adding new rows
+            document.getElementById('addItemRow').addEventListener('click', addItemRow);
+
+            // Add initial event listeners to first row
+            addRowEventListeners(document.querySelectorAll('#itemTable tbody tr')[0]);
+        }
+
+        // Add a new row to the item table
+        function addItemRow() {
+            const tbody = document.querySelector('#itemTable tbody');
+            const rowCount = tbody.querySelectorAll('tr').length;
+            const newRow = document.createElement('tr');
+
+            newRow.innerHTML = `
+                <td>${rowCount + 1}</td>
+                <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td>
+                    <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+
+            tbody.appendChild(newRow);
+            addRowEventListeners(newRow);
+            updateRowNumbers();
+        }
+
+        // Add event listeners to a table row
+        function addRowEventListeners(row) {
+            // Delete row
+            row.querySelector('.delete-row').addEventListener('click', function() {
+                if (document.querySelectorAll('#itemTable tbody tr').length > 1) {
+                    row.remove();
+                    updateRowNumbers();
+                } else {
+                    alert('You must have at least one item in your delivery challan.');
+                }
+            });
+        }
+
+        // Update row numbers in the table
+        function updateRowNumbers() {
+            document.querySelectorAll('#itemTable tbody tr').forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        }
+
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+                document.getElementById('deliveryChallanForm').reset();
+                // Reset item table to initial state
+                resetItemTable();
+                // Reset challan date
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('challanDate').value = today;
+            }
+        }
+
+        // Reset item table to initial state
+        function resetItemTable() {
+            const tbody = document.querySelector('#itemTable tbody');
+            tbody.innerHTML = '';
+
+            // Add initial row
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>1</td>
+                <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td>
+                    <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+
+            tbody.appendChild(newRow);
+            addRowEventListeners(newRow);
+        }
+    </script>
+</body>
+</html>

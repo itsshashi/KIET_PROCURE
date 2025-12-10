@@ -3011,10 +3011,22 @@ images_upload_handler: function (blobInfo) {
         
         let orders = [];
         let approvedQuotations = [];
+        let maeapprovedQuotations =[];
 
-        async function fetchApprovedQuotations() {
+        async function fetchApprovedQuotations(filter = 'all') {
             try {
-                const res = await fetch("/approved-quotations");
+                let endpoint = "/approved-quotations";
+                if (filter === 'mae') {
+                    const creat=document.querySelector('#maeCreatedBy').value;
+                    
+
+                    
+                    
+                    endpoint = `/api/mae-quotations/get/approved/${creat}`;
+;
+                }
+
+                const res = await fetch(endpoint);
                 if (!res.ok) throw new Error("Failed to fetch approved quotations");
 
                 const contentType = res.headers.get("content-type");
@@ -3024,7 +3036,7 @@ images_upload_handler: function (blobInfo) {
 
                 approvedQuotations = await res.json();
                 console.log("✅ Approved quotations fetched:", approvedQuotations);
-                renderApprovedQuotations();
+                renderApprovedQuotations(filter);
             } catch (err) {
                 console.error("❌ Error fetching approved quotations:", err);
                 document.getElementById("approvedCardsContainer").innerHTML =
@@ -3069,7 +3081,15 @@ images_upload_handler: function (blobInfo) {
 
             // Setup filter handlers
             document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
-            document.getElementById('approvedFilter').addEventListener('change', renderApprovedQuotations);
+
+            // Setup sub-tab handlers for approved quotations
+            document.querySelectorAll('.sub-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    fetchApprovedQuotations(this.dataset.filter);
+                });
+            });
 
             // Form submission handling - UPDATED FOR FILE UPLOAD
             const orderForm = document.getElementById("orderForm");
@@ -3167,7 +3187,8 @@ images_upload_handler: function (blobInfo) {
 
                     // 👉 When switching to Approved Quotation tab, fetch approved quotations
                     if (this.dataset.tab === 'approved-quotation') {
-                        fetchApprovedQuotations();
+                        const activeFilter = document.querySelector('.sub-tab.active').dataset.filter || 'all';
+                        fetchApprovedQuotations(activeFilter);
                     }
                 }
             });
@@ -3552,18 +3573,20 @@ images_upload_handler: function (blobInfo) {
 
 
         // Render approved quotations based on filter
-        function renderApprovedQuotations() {
+        function renderApprovedQuotations(filter = 'all') {
             const container = document.getElementById('approvedCardsContainer');
             container.innerHTML = '';
 
-            const activeFilter = document.querySelector('.sub-tab.active').dataset.filter;
+            let filteredQuotations = approvedQuotations;
+            if (filter === 'mae') {
+                // For MAE filter, the data is already fetched from MAE-specific endpoint
+                filteredQuotations = approvedQuotations;
+            } else if (filter === 'all') {
+                // For all, we might need to fetch from general endpoint or combine
+                // For now, keep as is since we fetch from general endpoint for 'all'
+            }
 
-            const filteredQuotations = approvedQuotations.filter(quotation => {
-                if (activeFilter === 'all') return true;
-                if (activeFilter === 'mae') return quotation.quotationnumber && quotation.quotationnumber.startsWith('MAE-');
-                return true;
-            });
-            console.log("Filtered approved quotations:", filteredQuotations);
+            console.log("Rendering approved quotations for filter:", filter, "Data:", filteredQuotations);
 
             if (filteredQuotations.length === 0) {
                 container.innerHTML = '<p>No approved quotations found.</p>';
