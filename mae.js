@@ -569,7 +569,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
   ],
   margin: [0, 10, 10, 5],
   alignment: "justify",
-  fontSize: 12,
+  fontSize: 8,
   font: "Times",
   lineHeight: 1.35,
 },
