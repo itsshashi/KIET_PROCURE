@@ -6215,6 +6215,12 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
           },
         ],
       };
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("✅ Approval request email sent to MD:", info.response);
+      } catch (err) {
+        console.error("❌ Email failed:", err);
+      }
 
 
   }
