@@ -569,7 +569,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
   text:
     "All product specifications, functional requirements, product features, and the technologies implemented to achieve those functionalities described in this document are strictly confidential and proprietary to KIET Technologies Private Limited. No information, either partially or fully, may be disclosed, copied, or shared with any third party without prior written approval from KIET Technologies Private Limited, Bengaluru.",
   font: "Times",
-  margin: [0, 5, 10, 12],
+  margin: [0, 5, 10, 5],
   alignment: "justify",
   fontSize: 12,
   italics: true,

@@ -3677,7 +3677,18 @@ images_upload_handler: function (blobInfo) {
                 a.style.display = 'none';
                 a.href = url;
                 
-                a.download = response.headers.get('file-Name');
+               const disposition = response.headers.get('Content-Disposition');
+                let filename = "quotation.pdf"; // fallback
+
+                if (disposition && disposition.includes("filename=")) {
+                    filename = disposition
+                        .split("filename=")[1]
+                        .replace(/"/g, "")
+                        .trim();
+                }
+
+                a.download = filename;
+
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

@@ -5664,8 +5664,10 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     if (quotationResult.rows.length === 0) {
       return res.status(404).json({ error: "MAE Quotation not found" });
     }
+    
 
     const q = quotationResult.rows[0];
+    console.log("hjk",q)
 
     const poData = {
       company: {
@@ -5696,21 +5698,42 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     };
 
     // Save inside qt_uploads without subfolders
-    const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
+    // Remove null, undefined, or empty values
+let safeNumber = poData.poNumber;
+
+// If null/undefined/empty → use ID or a random short code
+if (!safeNumber) {
+  safeNumber = q.id ? `ID-${q.id}` : `AUTO-${Date.now()}`;
+}
+
+const fileName = `mae_quotation_${safeNumber}_${Date.now()}.pdf`;
+
     const filePath = path.join(qtUploadsDir, fileName);
+
+    // Make sure directory exists
+    if (!fs.existsSync(qtUploadsDir)) {
+      fs.mkdirSync(qtUploadsDir, { recursive: true });
+    }
+
+    // --- 4) GENERATE PDF ---
+    await generateMAEQuotation(poData, filePath);
+
+    // --- 5) STREAM FILE (Inline Preview Mode) ---
     res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
     res.setHeader("Content-Type", "application/pdf");
 
-    // Generate PDF
-    await generateMAEQuotation(poData, filePath);
-
-    // Send file for download
-    return res.sendFile(filePath, (err) => {
+    res.sendFile(filePath, async (err) => {
       if (err) {
         console.error("SendFile Error:", err);
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: "Failed to send the PDF." });
       }
-      fs.unlink(filePath, () => {}); // remove file after successful download
+
+      // --- 6) CLEAN UP TEMP FILE ---
+      try {
+        await fs.promises.unlink(filePath);
+      } catch (e) {
+        console.warn("Could not remove temp PDF:", e.message);
+      }
     });
 
   } catch (error) {
