@@ -529,7 +529,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
 {
   text: "The Idea Factory Limited is rated **CRISIL SME–6**, indicating a high level of creditworthiness compared to other SMEs.",
   font: "Times",
-  margin: [0, 25, 10, 12],
+  margin: [0, 10, 10, 12],
   alignment: "justify",
   fontSize: 12,
   lineHeight: 1.4,
@@ -543,7 +543,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
 {
   text: "Confidential",
   font: "Times",
-  margin: [0, 25, 10, 6],
+  margin: [0, 10, 10, 6],
   alignment: "left",
   fontSize: 12,
   bold: true,
