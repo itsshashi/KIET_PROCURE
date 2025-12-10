@@ -5698,6 +5698,8 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     // Save inside qt_uploads without subfolders
     const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
 
     // Generate PDF
     await generateMAEQuotation(poData, filePath);
