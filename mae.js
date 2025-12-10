@@ -567,7 +567,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
     { text:  poData.company.name|| "", bold: true },
     { text: " shall be treated with the highest level of confidentiality.", bold: false }
   ],
-  margin: [0, 10, 10, 5],
+  margin: [0, 5, 10, 5],
   alignment: "justify",
   fontSize: 8,
   font: "Times",
