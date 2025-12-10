@@ -1965,7 +1965,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
 
       shipTo: order.shipping_address,
       invoiceTo:
-        "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078",
+        "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078\n CIN: U29253KA2014PTC076845 \N GSTIN: 29AAFCK6528D1ZG ",
       goodsRecipient: "Kiet-ATPLog1",
 
       termsOfPayment: order.terms_of_payment,
