@@ -3620,11 +3620,23 @@ images_upload_handler: function (blobInfo) {
                 `;
 
                 container.appendChild(card);
-
-                // Add download functionality
+                 if (filter === 'mae') {
+                // For MAE filter, the data is already fetched from MAE-specific endpoint
+               card.querySelector('.download-btn').addEventListener('click', function() {
+                    downloadQuotationmae(quotation.id);
+                // For now, keep as is since we fetch from general endpoint for 'all'
+                 });
+            } else if (filter === 'all') {
+                // For all, we might need to fetch from general endpoint or combine
                 card.querySelector('.download-btn').addEventListener('click', function() {
                     downloadQuotation(quotation.id);
-                });
+                // For now, keep as is since we fetch from general endpoint for 'all'
+                 });
+            }
+
+                // Add download functionality
+                
+               
             });
         }
 
@@ -3652,6 +3664,30 @@ images_upload_handler: function (blobInfo) {
                 alert('Failed to download quotation. Please try again.');
             }
         }
+        async function downloadQuotationmae(quotationId) {
+            try {
+                const response = await fetch(`/download-mae-quotation/${quotationId}`);
+                if (!response.ok) throw new Error('Download failed');
+
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                console.log('Downloading quotation with ID:', response);
+                a.style.display = 'none';
+                a.href = url;
+                
+                a.download = response.headers.get('file-Name');
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Error downloading quotation:', error);
+                alert('Failed to download quotation. Please try again.');
+            }
+        }
+
 
         // Load quotation uploads
         async function loadQuotationUploads() {
