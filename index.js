@@ -1481,7 +1481,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
     <div style="text-align: center; margin: 30px 0;">
       <a href="https://kietprocure.com/"
         style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
-        Review Quotation
+        Review Purchase Order
       </a>
     </div>
   
@@ -5597,6 +5597,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       `SELECT * FROM mae_quotations WHERE ${isNumeric ? "id" : "quotationnumber"} = $1 LIMIT 1`,
       [param]
     );
+    
 
     if (quotationResult.rows.length === 0) {
       return res.status(404).json({ error: "MAE Quotation not found" });
@@ -6061,6 +6062,159 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
        id: result.rows[0].id,
        message: "Quotation saved successfully",
      });
+  const transporter = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: "Kiets@2025$1",
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+      const mailOptions = {
+        from: "No-reply@kietsindia.com",
+        to: "chandrashekaraiah.r@kietsindia.com", // MD email
+        subject: `Quotation Approval Required: ${quotationNumber}`,
+       
+              
+  html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
+
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
+
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new Purchase Order has been prepared and is now awaiting your Final approval.<br>
+      Please find the summary details below for your reference:
+    </p>
+
+    <table cellpadding="10" cellspacing="0" 
+       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumber}</td>
+      </tr>
+       <tr>
+        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Type:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${companyName}</td>
+      </tr>
+    
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${clientName}}</td>
+      </tr>
+      <tr>
+        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+        <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email : "Unknown"}</td>
+      </tr>
+     
+
+      <tr>
+        <td><strong>Submission Date:</strong></td>
+        <td> ${quotationDate}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation(MAE)
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
+  `,
+        attachments: [
+          {
+            filename: "lg.jpg",
+            path: "public/images/lg.jpg",
+            cid: "logoImage",
+          },
+        ],
+      };
 
 
   }
