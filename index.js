@@ -1,5 +1,6 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
+import generateDeliveryChallan from "./dc.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -1042,7 +1043,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     }).catch(err => console.error("⚠ Email error:", err));
 
     // 🔹 Final response
-    res.sendFile(path.join(__dirname, "public/sucess_o.html"));
+    return res.json({ success: true, message: "✅ Order submitted successfully" });
+
 
 
   } catch (err) {
@@ -2025,6 +2027,99 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
   } catch (err) {
     console.error("❌ Error generating PDF:", err.stack || err);
     res.status(500).json({ error: err.message || "Failed to generate PDF" });
+  }
+});
+
+app.get("/api/dc/:id/pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1️⃣ Fetch delivery challan details from DB
+    const dcResult = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id = $1",
+      [id]
+    );
+
+    if (dcResult.rows.length === 0) {
+      return res.status(404).json({ error: "Delivery Challan not found" });
+    }
+    const dc = dcResult.rows[0];
+
+    // Fetch delivery challan items
+    const itemsResult = await pool.query(
+      "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
+      [id]
+    );
+
+    const items = itemsResult.rows.map((row) => ({
+      part_no: row.part_no,
+      description: row.description,
+      hsn: row.hsn,
+      quantity: row.quantity,
+      unit: row.unit || "pcs",
+      remarks: row.remarks,
+    }));
+
+    // 2️⃣ Prepare dcData object
+    const dcData = {
+      challanNo: dc.challan_no,
+      challanDate: new Date(dc.challan_date).toLocaleDateString(),
+      deliveryDate: dc.delivery_date ? new Date(dc.delivery_date).toLocaleDateString() : "N/A",
+      vehicleNo: dc.vehicle_no,
+      consignor: {
+        name: dc.consignor_name,
+        address: dc.consignor_address,
+        gst: dc.consignor_gst,
+      },
+      consignee: {
+        name: dc.consignee_name,
+        address: dc.consignee_address,
+        gst: dc.consignee_gst,
+        contact: dc.consignee_contact,
+        phone: dc.consignee_phone,
+      },
+      reason: dc.reason,
+      items: items, // from DB query delivery_challan_items
+      type:dc.dc_type,
+
+      signPath: "public/images/signature.png",
+      company: { logo: "public/images/lg.jpg" },
+      line: "public/images/line.png",
+    };
+
+    // 3️⃣ Generate unique filename
+    const timestamp = Date.now();
+    const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // 4️⃣ Generate PDF
+    generateDeliveryChallan(dcData, filePath);
+
+    // 5️⃣ Send PDF as response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    // Wait a bit for PDF generation to complete, then send file
+    setTimeout(() => {
+      if (fs.existsSync(filePath)) {
+        res.sendFile(filePath, (err) => {
+          if (err) {
+            console.error("Error sending DC PDF:", err);
+            res.status(500).json({ error: "Failed to send DC PDF" });
+          } else {
+            // Optionally delete the file after sending
+            // fs.unlinkSync(filePath);
+          }
+        });
+      } else {
+        res
+          .status(500)
+          .json({ error: "DC PDF generation failed - file not found" });
+      }
+    }, 1000); // Wait 1 second for PDF generation
+  } catch (err) {
+    console.error("❌ Error generating DC PDF:", err.stack || err);
+    res.status(500).json({ error: err.message || "Failed to generate DC PDF" });
   }
 });
 
@@ -6687,6 +6782,262 @@ app.post("/upload_image", upload.single("image"), (req, res) => {
 app.get('/dc_approve',(req,res)=>{
   res.render('dc.ejs');
 });
+app.get("/generate-challan-no", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT generate_dc_challan_no() AS challan_no");
+        res.json({ success: true, challan_no: result.rows[0].challan_no });
+    } catch (err) {
+        res.json({ success: false, message: err.message });
+    }
+});
+app.post("/submit-delivery-challan", async (req, res) => {
+    try {
+        const data = req.body;
+        const requester = req.session.user ? req.session.user.email : null;
+
+        // Insert the challan
+        const result = await pool.query(
+            `INSERT INTO delivery_challan
+            (challan_no, challan_date, delivery_date, vehicle_no,
+             consignor_name, consignor_gst, consignor_address,
+             consignee_name, consignee_gst, consignee_address,
+             consignee_contact, consignee_phone, reason,
+             dc_type, expiry_date, escalation_status,
+             manager_email, approval_status, requester)
+
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+                     $14,$15,$16,$17,'pending',$18)
+             RETURNING id`,
+            [
+                data.challanNumber,
+                data.challanDate,
+                data.deliveryDate,
+                data.vehicleNumber,
+
+                data.consignorName,
+                data.consignorGST,
+                data.consignorAddress,
+
+                data.consigneeName,
+                data.consigneeGST,
+                data.consigneeAddress,
+                data.consigneeContact,
+                data.consigneePhone,
+                data.reason,
+
+                data.dcType,
+                data.expiryDate || null,
+                data.escalationStatus || "NORMAL",
+
+                data.managerEmail,
+                requester
+            ]
+        );
+
+        const challan_id = result.rows[0].id;
+
+        // Insert item rows
+        for (let i = 0; i < data.partNo.length; i++) {
+            await pool.query(
+                `INSERT INTO delivery_challan_items 
+                (challan_id, part_no, description, hsn, quantity, unit, remarks)
+                VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                [
+                    challan_id,
+                    data.partNo[i],
+                    data.description[i],
+                    data.hsn[i],
+                    data.quantity[i],
+                    data.unit[i],
+                    data.remarks[i]
+                ]
+            );
+        }
+
+        // Send approval email to manager
+        const approvalLink = `https://kietprocure.com/approve-dc/${challan_id}`;
+        const transporter = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: "Kiets@2025$1",
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+        await transporter.sendMail({
+            from: "No-reply@kietsindia.com",
+            to: data.managerEmail,
+            subject: "Delivery Challan Approval Required",
+            html: `
+                <h3>A Delivery Challan requires your approval</h3>
+                <p><strong>Challan No:</strong> ${data.challanNumber}</p>
+                <a href="${approvalLink}"
+                    style="padding:10px 20px; background:#28a745; color:white; text-decoration:none;">
+                APPROVE DC</a>
+            `
+        });
+
+        res.json({ success: true, challan_no: data.challanNumber });
+
+    } catch (err) {
+        console.error(err);
+        res.json({ success: false, message: err.message });
+    }
+});
+app.get("/approve-dc/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Update DC status
+        await pool.query(
+            `UPDATE delivery_challan
+             SET
+                approval_status='approved',
+                approved_at=NOW(),
+                approved_by=manager_email
+             WHERE id=$1`,
+            [id]
+        );
+
+        // Get DC details including requester
+        const dcResult = await pool.query(
+            "SELECT * FROM delivery_challan WHERE id = $1",
+            [id]
+        );
+
+        if (dcResult.rows.length === 0) {
+            return res.status(404).send("DC not found");
+        }
+
+        const dc = dcResult.rows[0];
+        const requesterEmail = dc.requester;
+
+        if (!requesterEmail) {
+            return res.send(`
+                <h1 style="color:green; font-family:sans-serif;">
+                    ✔ Delivery Challan Approved Successfully!
+                </h1>
+                <p>Note: No requester email found to send PDF.</p>
+            `);
+        }
+
+        // Get DC items
+        const itemsResult = await pool.query(
+            "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
+            [id]
+        );
+
+        const items = itemsResult.rows.map((row) => ({
+            part_no: row.part_no,
+            description: row.description,
+            hsn: row.hsn,
+            quantity: row.quantity,
+            unit: row.unit || "pcs",
+            remarks: row.remarks,
+        }));
+
+        // Prepare DC data for PDF
+        const dcData = {
+            challanNo: dc.challan_no,
+            challanDate: new Date(dc.challan_date).toLocaleDateString(),
+            deliveryDate: dc.delivery_date ? new Date(dc.delivery_date).toLocaleDateString() : "N/A",
+            vehicleNo: dc.vehicle_no,
+            consignor: {
+                name: dc.consignor_name,
+                address: dc.consignor_address,
+                gst: dc.consignor_gst,
+            },
+            consignee: {
+                name: dc.consignee_name,
+                address: dc.consignee_address,
+                gst: dc.consignee_gst,
+                contact: dc.consignee_contact,
+                phone: dc.consignee_phone,
+            },
+            reason: dc.reason,
+            items: items,
+            type: dc.dc_type,
+            signPath: "public/images/signature.png",
+            company: { logo: "public/images/lg.jpg" },
+            line: "public/images/line.png",
+        };
+
+        // Generate PDF
+        const timestamp = Date.now();
+        const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
+        const filePath = path.join(uploadsDir, fileName);
+
+        generateDeliveryChallan(dcData, filePath);
+
+        // Wait for PDF generation
+        setTimeout(async () => {
+            if (fs.existsSync(filePath)) {
+                // Send email with PDF to requester
+                const transporter = nodemailer.createTransport({
+                    host: "smtp.office365.com",
+                    port: 587,
+                    secure: false,
+                    auth: {
+                        user: "No-reply@kietsindia.com",
+                        pass: "Kiets@2025$1",
+                    },
+                    tls: { rejectUnauthorized: false },
+                });
+
+                await transporter.sendMail({
+                    from: "No-reply@kietsindia.com",
+                    to: requesterEmail,
+                    subject: `Delivery Challan Approved - ${dc.challan_no}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2 style="color: #28a745;">Delivery Challan Approved</h2>
+                            <p>Dear User,</p>
+                            <p>Your Delivery Challan <strong>${dc.challan_no}</strong> has been approved.</p>
+                            <p>Please find the PDF attached.</p>
+                            <br>
+                            <p>Best regards,<br>KIET Technologies Team</p>
+                        </div>
+                    `,
+                    attachments: [
+                        {
+                            filename: fileName,
+                            path: filePath,
+                            contentType: 'application/pdf'
+                        }
+                    ]
+                });
+
+                // Clean up file after sending
+                fs.unlinkSync(filePath);
+
+                res.send(`
+                    <h1 style="color:green; font-family:sans-serif;">
+                        ✔ Delivery Challan Approved Successfully!
+                    </h1>
+                    <p>PDF has been sent to the requester.</p>
+                `);
+            } else {
+                res.send(`
+                    <h1 style="color:green; font-family:sans-serif;">
+                        ✔ Delivery Challan Approved Successfully!
+                    </h1>
+                    <p>Note: PDF generation failed, but approval was successful.</p>
+                `);
+            }
+        }, 2000); // Wait 2 seconds for PDF generation
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error approving DC");
+    }
+});
+
+
 
 
 

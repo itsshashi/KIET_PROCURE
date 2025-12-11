@@ -469,10 +469,7 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group">
-                                <label for="poNumber">Purchase Order Number</label>
-                                <input type="text" class="form-control" id="poNumber" name="poNumber" placeholder="Reference PO Number">
-                            </div>
+                           
                             <div class="form-group">
                                 <label for="vehicleNumber">Vehicle Number</label>
                                 <input type="text" class="form-control" id="vehicleNumber" name="vehicleNumber" placeholder="Vehicle registration number">
@@ -548,11 +545,11 @@
                                 <tr>
                                     <td>1</td>
                                     <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
-                                    <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                                    <td><textarea type="text" class="form-control" name="description[]" placeholder="Item Description" required></textarea></td>
                                     <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
                                     <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                                     <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
-                                    <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                                    <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks/Approx amt"></td>
                                     <td>
                                         <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
                                     </td>
@@ -564,17 +561,11 @@
 
                     <!-- Terms & Conditions Section -->
                     <div class="form-section">
-                        <h2 class="section-title">Terms & Conditions</h2>
+                        <h2 class="section-title">Reason</h2>
+                       
                         <div class="form-group">
-                            <label for="terms">Terms & Conditions</label>
-                            <textarea class="form-control textarea-control" id="terms" name="terms" rows="4" placeholder="Enter delivery terms and conditions">1. Goods once delivered will not be taken back.
-2. Any damage during transit is not our responsibility.
-3. Please check the goods at the time of delivery.
-4. This is a computer generated delivery challan.</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="notes">Additional Notes</label>
-                            <textarea class="form-control textarea-control" id="notes" name="notes" rows="2" placeholder="Any additional notes"></textarea>
+                            
+                            <textarea class="form-control textarea-control" id="notes" name="reason" rows="2" placeholder="Reason(if any ) : "></textarea>
                         </div>
                     </div>
 

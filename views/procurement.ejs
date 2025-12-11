@@ -1577,6 +1577,10 @@
                 </li>
             </ul>
 
+            <li class="menu-item" data-tab="delivery-challan">
+                    <i class="fas fa-truck"></i> Delivery Challan
+                </li>
+
             <li class="menu-item" data-tab="status">
                 <i class="fas fa-tasks"></i> Status
             </li>
@@ -1775,7 +1779,248 @@ document.getElementById("supplierName").addEventListener("blur", async function 
         console.error("Error fetching supplier:", error);
       }
     });
-    </script>           
+    </script>  
+     <div class="tab-content" id="delivery-challan">
+                <div class="tab-header">
+                    <h3>Create Delivery Challan</h3>
+                    <p>Fill in the details below to create a delivery challan</p>
+                </div>
+
+                <form id="deliveryChallanForm" method="POST" action="/submit-delivery-challan">
+                    <!-- Challan Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Delivery Challan Information</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="challanNumber" class="required">Challan Number</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" class="form-control" id="challanNumber" name="challanNumber" required readonly style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
+                                    <button type="button" id="generateChallanNumber" class="btn btn-secondary">Generate</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+    <label for="dcType" class="required">DC Type</label>
+    <select class="form-control" id="dcType" name="dcType" required>
+        <option value="normal">Non ReturnableDC</option>
+        <option value="returnable">Returnable DC</option>
+    </select>
+</div>
+
+<div class="form-group" id="expiryContainer" style="display:none;">
+    <label for="expiryDate" class="required">Expiry Date (For Returnable DC)</label>
+    <input type="date" class="form-control" id="expiryDate" name="expiryDate">
+</div>
+
+
+
+                            <div class="form-group">
+                                <label for="challanDate" class="required">Challan Date</label>
+                                <input type="date" class="form-control" id="challanDate" name="challanDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="deliveryDate" class="required">Delivery Date</label>
+                                <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                           
+                            <div class="form-group">
+                                <label for="vehicleNumber">Vehicle Number</label>
+                                <input type="text" class="form-control" id="vehicleNumber" name="vehicleNumber" placeholder="Vehicle registration number">
+                            </div>
+                            <div class="form-group">
+    <label for="managerEmail" class="required">Approver Email</label>
+    <select class="form-control selectpicker" data-live-search="true" id="managerEmail" name="managerEmail" required>
+  <option value="manager1@company.com">rajesh.km@kietsindia.com</option>
+  <option value="manager2@company.com">kumar.p@kietsindia.com</option>
+  <option value="manager3@company.com">chandrashekaraiah.r@kietsindia.com</option>
+  <option value="shashank@kietsindia.com">test</option>
+</select>
+
+</div>
+                        </div>
+                    </div>
+
+                    <!-- Consignor Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Consignor Information (From)</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consignorName" class="required">Company Name</label>
+                                <input type="text" class="form-control" id="consignorName" name="consignorName" required value="KIET TECHNOLOGIES PVT.LTD">
+                            </div>
+                            <div class="form-group">
+                                <label for="consignorGST">GST Number</label>
+                                <input type="text" class="form-control" id="consignorGST" name="consignorGST" placeholder="GST Number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consignorAddress" class="required">Address</label>
+                            <textarea class="form-control textarea-control" id="consignorAddress" name="consignorAddress" rows="3" required>51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Consignee Information Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Consignee Information (To)</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consigneeName" class="required">Company Name</label>
+                                <input type="text" class="form-control" id="consigneeName" name="consigneeName" required placeholder="Customer company name">
+                            </div>
+                            <div class="form-group">
+                                <label for="consigneeGST">GST Number</label>
+                                <input type="text" class="form-control" id="consigneeGST" name="consigneeGST" placeholder="GST Number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consigneeAddress" class="required">Delivery Address</label>
+                            <textarea class="form-control textarea-control" id="consigneeAddress" name="consigneeAddress" rows="3" required placeholder="Complete delivery address"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="consigneeContact">Contact Person</label>
+                                <input type="text" class="form-control" id="consigneeContact" name="consigneeContact" placeholder="Contact person name">
+                            </div>
+                            <div class="form-group">
+                                <label for="consigneePhone">Phone Number</label>
+                                <input type="tel" class="form-control" id="consigneePhone" name="consigneePhone" placeholder="+91 9876543210">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item Details Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Item Details</h2>
+                        <table class="product-table" id="itemTable">
+                            <thead>
+                                <tr>
+                                    <th>SL No</th>
+                                    <th>Part No</th>
+                                    <th>Description</th>
+                                    <th>HSN Code</th>
+                                    <th>Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                                    <td><textarea type="text" class="form-control" name="description[]" placeholder="Item Description" required></textarea></td>
+                                    <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                                    <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                                    <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                                    <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks/Approx amt"></td>
+                                    <td>
+                                        <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary" id="addItemRow"><i class="fas fa-plus"></i> Add Item</button>
+                    </div>
+
+                    <!-- Terms & Conditions Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">Reason</h2>
+                       
+                        <div class="form-group">
+                            
+                            <textarea class="form-control textarea-control" id="notes" name="reason" rows="2" placeholder="Reason(if any ) : "></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn" id="generate_challan">Generate Delivery Challan</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+                    </div>
+                </form>
+            </div>
+            <script>
+            
+
+const dcType = document.getElementById("dcType");
+const expiryContainer = document.getElementById("expiryContainer");
+const expiryDate = document.getElementById("expiryDate");
+const escalationContainer = document.getElementById("escalationContainer");
+const escalationStatus = document.getElementById("escalationStatus");
+
+// SHOW/HIDE expiry for returnable DC
+dcType.addEventListener("change", () => {
+    if (dcType.value === "returnable") {
+        expiryContainer.style.display = "block";
+        escalationContainer.style.display = "block";
+    } else {
+        expiryContainer.style.display = "none";
+        escalationContainer.style.display = "none";
+        expiryDate.value = "";
+        escalationStatus.value = "";
+    }
+});
+
+// SET escalation status
+expiryDate.addEventListener("change", () => {
+    const today = new Date();
+    const exp = new Date(expiryDate.value);
+    const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+
+    if (diff < 0) {
+        escalationStatus.value = `EXPIRED (${Math.abs(diff)} days ago)`;
+        escalationStatus.style.color = "red";
+    } else if (diff <= 5) {
+        escalationStatus.value = `DUE SOON (Expires in ${diff} days)`;
+        escalationStatus.style.color = "orange";
+    } else {
+        escalationStatus.value = "NORMAL";
+        escalationStatus.style.color = "green";
+    }
+});
+
+// GENERATE CHALLAN NUMBER
+document.getElementById("generateChallanNumber").addEventListener("click", async () => {
+    const res = await fetch("/generate-challan-no");
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("challanNumber").value = data.challan_no;
+    }
+});
+
+// SUBMIT FORM
+document.getElementById("deliveryChallanForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const json = Object.fromEntries(formData.entries());
+
+    // Collect item table rows (arrays)
+    json.partNo = formData.getAll("partNo[]");
+    json.description = formData.getAll("description[]");
+    json.hsn = formData.getAll("hsn[]");
+    json.quantity = formData.getAll("quantity[]");
+    json.unit = formData.getAll("unit[]");
+    json.remarks = formData.getAll("remarks[]");
+
+    const res = await fetch("/submit-delivery-challan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+        alert("Delivery Challan Created: " + data.challan_no);
+    } else {
+        alert("Error: " + data.message);
+    }
+});
+
+
+                
+            </script>         
 
             <!-- Trade & Service Tab -->
             <div class="tab-content" id="trade-service">
@@ -3183,6 +3428,9 @@ images_upload_handler: function (blobInfo) {
                     // 👉 When switching to Status tab, fetch fresh orders
                     if (this.dataset.tab === 'status') {
                         fetchOrders();
+                    }
+                    if (this.dataset.tab === 'delivery-challan'){
+                        console.log("delivery challan is pressed")
                     }
 
                     // 👉 When switching to Approved Quotation tab, fetch approved quotations
