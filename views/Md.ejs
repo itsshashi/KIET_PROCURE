@@ -4125,8 +4125,16 @@ async function loadMAEQuotations() {
 
 // View MAE Quotation PDF
 function viewMAEQuotation(quotationNumber) {
-  
+    if (!quotationNumber) {
+        alert("Invalid quotation number!");
+        return;
+    }
+
+    // Opens the PDF in a new tab
+    const url = `/view-mae-quotation/${quotationNumber}`;
+    window.open(url, "_blank");
 }
+
 
 // Load Approved MAE Quotations
 async function loadApprovedMAEQuotations() {
