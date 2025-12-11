@@ -1948,6 +1948,93 @@ const expiryContainer = document.getElementById("expiryContainer");
 const expiryDate = document.getElementById("expiryDate");
 const escalationContainer = document.getElementById("escalationContainer");
 const escalationStatus = document.getElementById("escalationStatus");
+ function setupItemTable() {
+            // Add event listener for adding new rows
+            document.getElementById('addItemRow').addEventListener('click', addItemRow);
+
+            // Add initial event listeners to first row
+            addRowEventListeners(document.querySelectorAll('#itemTable tbody tr')[0]);
+        }
+
+        // Add a new row to the item table
+        function addItemRow() {
+            const tbody = document.querySelector('#itemTable tbody');
+            const rowCount = tbody.querySelectorAll('tr').length;
+            const newRow = document.createElement('tr');
+
+            newRow.innerHTML = `
+                <td>${rowCount + 1}</td>
+                <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td>
+                    <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+
+            tbody.appendChild(newRow);
+            addRowEventListeners(newRow);
+            updateRowNumbers();
+        }
+
+        // Add event listeners to a table row
+        function addRowEventListeners(row) {
+            // Delete row
+            row.querySelector('.delete-row').addEventListener('click', function() {
+                if (document.querySelectorAll('#itemTable tbody tr').length > 1) {
+                    row.remove();
+                    updateRowNumbers();
+                } else {
+                    alert('You must have at least one item in your delivery challan.');
+                }
+            });
+        }
+
+        // Update row numbers in the table
+        function updateRowNumbers() {
+            document.querySelectorAll('#itemTable tbody tr').forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        }
+
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+                document.getElementById('deliveryChallanForm').reset();
+                // Reset item table to initial state
+                resetItemTable();
+                // Reset challan date
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('challanDate').value = today;
+            }
+        }
+
+        // Reset item table to initial state
+        function resetItemTable() {
+            const tbody = document.querySelector('#itemTable tbody');
+            tbody.innerHTML = '';
+
+            // Add initial row
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>1</td>
+                <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                <td><input type="text" class="form-control" name="description[]" placeholder="Item Description" required></td>
+                <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td>
+                    <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+
+            tbody.appendChild(newRow);
+            addRowEventListeners(newRow);
+        }
 
 // SHOW/HIDE expiry for returnable DC
 dcType.addEventListener("change", () => {
