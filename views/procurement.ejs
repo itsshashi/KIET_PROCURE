@@ -1948,13 +1948,13 @@ const expiryContainer = document.getElementById("expiryContainer");
 const expiryDate = document.getElementById("expiryDate");
 const escalationContainer = document.getElementById("escalationContainer");
 const escalationStatus = document.getElementById("escalationStatus");
- function setupItemTable() {
+
             // Add event listener for adding new rows
             document.getElementById('addItemRow').addEventListener('click', addItemRow);
 
             // Add initial event listeners to first row
             addRowEventListeners(document.querySelectorAll('#itemTable tbody tr')[0]);
-        }
+        
 
         // Add a new row to the item table
         function addItemRow() {
@@ -1969,7 +1969,7 @@ const escalationStatus = document.getElementById("escalationStatus");
                 <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
                 <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                 <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
-                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks/Approx Cost"></td>
                 <td>
                     <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
                 </td>
@@ -2026,7 +2026,7 @@ const escalationStatus = document.getElementById("escalationStatus");
                 <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
                 <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
                 <td><input type="text" class="form-control" name="unit[]" placeholder="Unit" value="Nos"></td>
-                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks"></td>
+                <td><input type="text" class="form-control" name="remarks[]" placeholder="Remarks/Approx Cost"></td>
                 <td>
                     <button type="button" class="action-btn delete-row"><i class="fas fa-trash"></i></button>
                 </td>
