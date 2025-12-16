@@ -353,7 +353,7 @@
 
   async function loadOrders() {
     try {
-      const response = await fetch('/api/orders/search/filter?status=approved', { credentials: 'include' });
+      const response = await fetch('/api/orders/search/filter?status=sent', { credentials: 'include' });
       if (!response.ok) return showToast("Failed to load orders", true);
 
       const orderIds = await response.json();
