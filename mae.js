@@ -696,7 +696,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
 },
 {
   margin: [0, 15, 0, 15],
-  
+  lineHeight: 1.4,
   stack: maeContent,   // <-- NOT "text:", use the converted content
 },
 
