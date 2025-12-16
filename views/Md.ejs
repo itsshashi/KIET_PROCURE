@@ -1522,20 +1522,39 @@ select {
 
 <script>
   // Initialize TinyMCE for MAE form
-  document.addEventListener("DOMContentLoaded", () => {
- tinymce.init({
-  selector: '#maeTextareaDetails',
-  height: 350,
-  menubar: false,
-  statusbar: true,
-  branding: false,
-  promotion: false,
-  plugins: 'lists table image',
-  toolbar:
-    'undo redo | bold italic underline | fontsizeselect | alignleft aligncenter alignright | bullist numlist | table | image',
+ document.addEventListener("DOMContentLoaded", () => {
+  tinymce.init({
+    selector: '#maeTextareaDetails',
+    height: 350,
+    menubar: false,
+    statusbar: true,
+    branding: false,
+    promotion: false,
 
-  automatic_uploads: true,
-  images_upload_url: '/upload',
+    plugins: 'lists table image lineheight',
+    toolbar:
+      'undo redo | fontfamily fontsizeselect lineheight | ' +
+      'bold italic underline | alignleft aligncenter alignright | ' +
+      'bullist numlist | table | image',
+
+    font_family_formats:
+      'Arial=arial,helvetica,sans-serif;' +
+      'Times New Roman=times new roman,times,serif;' +
+      'Courier New=courier new,courier,monospace;' +
+      'Georgia=georgia,palatino,serif;' +
+      'Verdana=verdana,geneva,sans-serif',
+
+    lineheight_formats: '0.5 1 1.2 1.4 1.6 1.8 2',
+
+    content_style: `
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        
+      }
+    `,
+
+    automatic_uploads: true,
+    images_upload_url: '/upload',
 
   images_upload_handler: function (blobInfo, progress) {
     return new Promise((resolve, reject) => {
