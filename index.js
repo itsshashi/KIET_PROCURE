@@ -5708,7 +5708,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
         name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.clientemail || "info@kiet.com",
         gst: "29AAFCK6528D1ZG", // Fixed GST as per mae.js
-        contact:quotation.clientPhone || " ",
+        contact:quotation.clientphone || " ",
         address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
       },
       poNumber: quotation.quotationnumber,
