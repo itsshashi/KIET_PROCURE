@@ -1532,6 +1532,7 @@ select {
     promotion: false,
 
     plugins: 'lists table image lineheight',
+    lineheight_formats: '0 0.5 1 1.2 1.4',
     toolbar:
       'undo redo | fontfamily fontsizeselect lineheight | ' +
       'bold italic underline | alignleft aligncenter alignright | ' +
@@ -1544,11 +1545,12 @@ select {
       'Georgia=georgia,palatino,serif;' +
       'Verdana=verdana,geneva,sans-serif',
 
-    lineheight_formats: '0.5 1 1.2 1.4 1.6 1.8 2',
+     
 
     content_style: `
       body {
         font-family: Arial, Helvetica, sans-serif;
+        line-height:0.5;
         
       }
     `,
