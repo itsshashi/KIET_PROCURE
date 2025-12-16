@@ -471,7 +471,8 @@ const maeContent = buildMaeContent(poData.textareaDetails);
           ],
         },
          {
-  text: "Document Reference:",
+  text: `Document Reference: ${poData.poNumber || " "
+  }`,
   font: "Times",
   margin: [0, 30, 10, 6],
   alignment: "left",
@@ -562,7 +563,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
     { text: `Kind Attention: ${poData.requester.name || ""}`, bold: true, margin: [0, 0, 0, 12] },
 
     { text: `Subject: Quotation for Design, Development, Manufacturing, Supply, and Installation of  ${poData.machine || ""}`, bold: true, decoration: "underline", margin: [0, 0, 0, 6] },
-    { text: `Ref: ${poData.reference || ""}`, italics: true, margin: [0, 0, 0, 14] },
+    { text: `Ref: ${poData.reference || "Email"}`, italics: true, margin: [0, 0, 0, 14] },
 
 {
   text: `
