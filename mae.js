@@ -271,11 +271,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
                       margin: [10, 0, 0, 5],
                     },
 
-                    {
-                      text: `GSTIN: ${poData.company.gst}`,
-                      font: "Times",
-                      margin: [10, 0, 0, 5],
-                    },
+                    
                   ],
                 },
                 // RIGHT CELL
@@ -443,7 +439,7 @@ const maeContent = buildMaeContent(poData.textareaDetails);
                           fontSize: 9,
                         },
                         {
-                          text: poData.packaging || "",
+                          text: poData.packaging || "Included",
                           font: "Times",
                           alignment: "right",
                           fontSize: 9,
