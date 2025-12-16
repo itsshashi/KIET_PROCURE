@@ -89,13 +89,11 @@ function buildMaeContent(textareaDetails) {
 
   let html = textareaDetails.trim();
 
-  // 🔹 CLEAN HAPPENS HERE (BEFORE htmlToPdfmake)
   html = html
-    .replace(/font\s*:[^;"]+;?/gi, "")       // remove font shorthand
-    .replace(/font-size\s*:[^;"]+;?/gi, "")  // remove font-size
-    .replace(/line-height\s*:[^;"]+;?/gi, "")// remove line-height
-    .replace(/<p>(&nbsp;|\s)*<\/p>/gi, "");  // remove empty <p>
-
+  .replace(/font\s*:[^;"]+;?/gi, "")
+  .replace(/font-family\s*:[^;"]+;?/gi, "")   // 👈 removes Calibri
+  .replace(/font-size\s*:[^;"]+;?/gi, "")
+  .replace(/line-height\s*:[^;"]+;?/gi, "");
   // ⬇️ ONLY AFTER CLEANING
   let nodes = htmlToPdfmake(html);
 
