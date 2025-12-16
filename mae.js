@@ -87,35 +87,37 @@ global.document = window.document;
 // ---- inside generateMAEQuotation() ----
 
 function buildMaeContent(textareaDetails) {
-  // CASE A: null / empty → simple text, NO htmlToPdfmake
+  // CASE A: null / empty
   if (!textareaDetails || textareaDetails.trim() === "") {
     return [{ text: "No details provided", italics: true, fontSize: 10 }];
   }
 
-
-
-  // Some rows in your DB seem to be stored like: '<table ...</table>'
-  // (with extra quotes). Strip them if present.
   let html = textareaDetails.trim();
-    
 
-// convert all ArialMT variations to Arial
-
-
-// Force all font-family declarations to Times
-html = html.replace(/font-family\s*:[^;]+;/gi, 'font-family: Times;');
-
-
+  // Strip wrapping quotes if DB stored "'<table>...</table>'"
   if (html.startsWith("'") && html.endsWith("'")) {
     html = html.slice(1, -1);
   }
 
-  // Optional: small sanitizing to avoid completely empty rows
-  html = html.replace(/<tr>\s*<\/tr>/g, "");
+  // 🔴 CRITICAL CLEANUP (THIS FIXES YOUR ERROR)
+  html = html
+    // remove CSS shorthand font
+    .replace(/font\s*:[^;"]+;?/gi, "")
+    // remove font-size
+    .replace(/font-size\s*:[^;"]+;?/gi, "")
+    // remove line-height
+    .replace(/line-height\s*:[^;"]+;?/gi, "")
+    // normalize font-family (optional)
+    .replace(/font-family\s*:[^;"]+;?/gi, "")
+    // remove empty paragraphs (&nbsp;)
+    .replace(/<p>(&nbsp;|\s)*<\/p>/gi, "")
+    // remove empty table rows
+    .replace(/<tr>\s*<\/tr>/gi, "");
 
+  // Convert HTML → pdfmake
   let nodes = htmlToPdfmake(html);
 
-  // FIX: normalize tables so no row has undefined cells
+  // Normalize tables (your existing logic, kept)
   function normalizeTables(arr) {
     if (!Array.isArray(arr)) return;
     arr.forEach(node => {
@@ -126,7 +128,7 @@ html = html.replace(/font-family\s*:[^;]+;/gi, 'font-family: Times;');
           const newRow = row.slice();
           for (let i = 0; i < maxCols; i++) {
             if (typeof newRow[i] === "undefined") {
-              newRow[i] = { text: "" }; // fill missing cell
+              newRow[i] = { text: "" };
             }
           }
           return newRow;
@@ -137,8 +139,16 @@ html = html.replace(/font-family\s*:[^;]+;/gi, 'font-family: Times;');
   }
 
   normalizeTables(nodes);
-  return nodes;
+
+  // 🔴 FORCE PDF STYLES (FINAL AUTHORITY)
+  return nodes.map(node => ({
+    ...node,
+    font: "Times",
+    fontSize: 9,
+    lineHeight: 0.2
+  }));
 }
+
 const maeContent = buildMaeContent(poData.textareaDetails);
 
     const currencySymbol = getCurrencySymbol(poData.currency);
