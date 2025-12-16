@@ -85,69 +85,25 @@ global.window = window;
 global.document = window.document;
 
 // ---- inside generateMAEQuotation() ----
-
 function buildMaeContent(textareaDetails) {
-  // CASE A: null / empty
-  if (!textareaDetails || textareaDetails.trim() === "") {
-    return [{ text: "No details provided", italics: true, fontSize: 10 }];
-  }
 
   let html = textareaDetails.trim();
 
-  // Strip wrapping quotes if DB stored "'<table>...</table>'"
-  if (html.startsWith("'") && html.endsWith("'")) {
-    html = html.slice(1, -1);
-  }
-
-  // 🔴 CRITICAL CLEANUP (THIS FIXES YOUR ERROR)
+  // 🔹 CLEAN HAPPENS HERE (BEFORE htmlToPdfmake)
   html = html
-    // remove CSS shorthand font
-    .replace(/font\s*:[^;"]+;?/gi, "")
-    // remove font-size
-    .replace(/font-size\s*:[^;"]+;?/gi, "")
-    // remove line-height
-    .replace(/line-height\s*:[^;"]+;?/gi, "")
-    // normalize font-family (optional)
-    .replace(/font-family\s*:[^;"]+;?/gi, "")
-    // remove empty paragraphs (&nbsp;)
-    .replace(/<p>(&nbsp;|\s)*<\/p>/gi, "")
-    // remove empty table rows
-    .replace(/<tr>\s*<\/tr>/gi, "");
+    .replace(/font\s*:[^;"]+;?/gi, "")       // remove font shorthand
+    .replace(/font-size\s*:[^;"]+;?/gi, "")  // remove font-size
+    .replace(/line-height\s*:[^;"]+;?/gi, "")// remove line-height
+    .replace(/<p>(&nbsp;|\s)*<\/p>/gi, "");  // remove empty <p>
 
-  // Convert HTML → pdfmake
+  // ⬇️ ONLY AFTER CLEANING
   let nodes = htmlToPdfmake(html);
 
-  // Normalize tables (your existing logic, kept)
-  function normalizeTables(arr) {
-    if (!Array.isArray(arr)) return;
-    arr.forEach(node => {
-      if (node.table && Array.isArray(node.table.body)) {
-        const body = node.table.body;
-        const maxCols = Math.max(...body.map(r => r.length));
-        node.table.body = body.map(row => {
-          const newRow = row.slice();
-          for (let i = 0; i < maxCols; i++) {
-            if (typeof newRow[i] === "undefined") {
-              newRow[i] = { text: "" };
-            }
-          }
-          return newRow;
-        });
-      }
-      if (node.stack) normalizeTables(node.stack);
-    });
-  }
-
-  normalizeTables(nodes);
-
-  // 🔴 FORCE PDF STYLES (FINAL AUTHORITY)
-  return nodes.map(node => ({
-    ...node,
-    font: "Times",
-    fontSize: 9,
-    lineHeight: 0.2
-  }));
+  return nodes;
 }
+
+
+
 
 const maeContent = buildMaeContent(poData.textareaDetails);
 
@@ -696,7 +652,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
 },
 {
   margin: [0, 15, 0, 15],
-  lineHeight: 1.4,
+
   stack: maeContent,   // <-- NOT "text:", use the converted content
 },
 
