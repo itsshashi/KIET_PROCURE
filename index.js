@@ -369,9 +369,9 @@ app.get("/api/orders", async (req, res) => {
   const referer = req.get("referer") || "";
 
   // Allow only requests from your domain
-  if (!referer.startsWith("https://kietprocure.com")) {
-    return res.status(403).json({ error: "Access denied" });
-  }
+  // if (!referer.startsWith("https://kietprocure.com")) {
+  //   return res.status(403).json({ error: "Access denied" });
+  // }
 
   try {
     const { rows } = await pool.query(`
