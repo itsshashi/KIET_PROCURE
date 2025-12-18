@@ -308,6 +308,33 @@ app.post("/api/generate-grn", async (req, res) => {
     res.status(500).json({ error: "Failed to generate GRN" });
   }
 });
+app.post("/api/generate-grn-local", async (req, res) => {
+  try {
+    // const { order_id } = req.body;
+    // if (!order_id) {
+    //   return res.status(400).json({ error: "order_id is required" });
+    // }
+    // console.log('order_id',order_id);
+
+    // const orderId = parseInt(order_id);
+    // if (isNaN(orderId)) {
+    //   return res.status(400).json({ error: "Invalid order_id" });
+    // }
+
+    // Get supplier name for the order
+    const grnResult = await pool.query(
+      "SELECT generate_grn() AS grn_number")
+
+    
+    const grn=grnResult.rows[0].grn_number;
+    
+
+    res.json({ grn });
+  } catch (err) {
+    console.error("Error generating GRN:", err);
+    res.status(500).json({ error: "Failed to generate GRN" });
+  }
+});
 
 // server.js
 app.get("/api/company", async (req, res) => {
@@ -680,6 +707,47 @@ app.get("/api/inventory-orders", async (req, res) => {
             WHERE status IN ('sent', 'received')
             ORDER BY created_at DESC
         `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get delivery challans for inventory view
+app.get("/api/delivery-challans", async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        id,
+        challan_no,
+        challan_date,
+        expiry_date,
+        dc_type,
+        approval_status,
+        consignee_name,
+        reason
+      FROM delivery_challan
+      WHERE approval_status = 'approved'
+      ORDER BY challan_date DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get items for a specific delivery challan
+app.get("/api/delivery-challan/:id/items", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await pool.query(`
+      SELECT part_no, description, hsn, quantity, unit, remarks
+      FROM delivery_challan_items
+      WHERE challan_id = $1
+      ORDER BY id
+    `, [id]);
     res.json(rows);
   } catch (err) {
     console.error(err);
