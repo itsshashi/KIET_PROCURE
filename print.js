@@ -265,7 +265,7 @@ function generatePurchaseOrder(poData, filePath) {
             
             [
               { text: "Grand Total(*included with Gst*)", bold: true },
-              { text: grandTotal.toFixed(2), bold: true, alignment: "right" },
+              { text:` ${poData.currency + grandTotal.toFixed(2)}`, bold: true, alignment: "right" },
             ],
           ],
         },
@@ -277,7 +277,8 @@ function generatePurchaseOrder(poData, filePath) {
       {
         text: [
           { text: "Amount in words: ", font: "Times", italics: true },
-          { text: toWordsInstance.convert(grandTotal.toFixed(2)), font: "Times", italics: true, bold: true },
+          
+          { text:` ${poData.currency+toWordsInstance.convert(grandTotal.toFixed(2))}`, font: "Times", italics: true, bold: true },
         ],
       },
 

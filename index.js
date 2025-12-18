@@ -958,6 +958,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     phone,
     singleSupplier,
     termsOfPayment,
+    currency
   } = req.body;
 
   // 🔹 2. Build products array (since frontend sends each field as an array)
@@ -1016,8 +1017,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       (project_name, project_code_number, purchase_order_number, supplier_name,
        supplier_gst, supplier_address, shipping_address, urgency, date_required,
        notes, ordered_by, quotation_file, total_amount, reference_no, contact,
-       single, terms_of_payment)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       single, terms_of_payment,currency)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
       RETURNING id`,
       [
         projectName,
@@ -1037,6 +1038,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         contact,
         single,
         termsOfPayment,
+        currency
       ]
     );
 
@@ -2032,6 +2034,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
         plant: "Aaryan Tech Park", // fixed or from DB
         email: order.ordered_by_email || "example@mail.com",
       },
+      currency:order.currency || "INR",
 
       shipTo: order.shipping_address,
       invoiceTo: `KIET TECHNOLOGIES PVT.LTD, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078
