@@ -7037,6 +7037,54 @@ app.get("/approve-dc/:id", async (req, res) => {
     }
 });
 
+app.post("/submit-inventory_local", upload.single("invoice_local"), async (req, res) => {
+  try {
+    const {
+      management_type,
+      order_id,
+      grn,
+      shopName,
+      totalCost,
+      addditionInfo,
+      purchasedBy
+    } = req.body;
+    console.log('req.body',req.body);
+
+    // Check if invoice file is uploaded
+    const invoiceFile = req.file ? req.file.filename : null;
+
+    // Insert local purchase entry into local_inventory_entries table
+    const insertQuery = `
+            INSERT INTO local_inventory_entries
+            (purchase_order_id, grn_number, invoice_file, shop_name, total_cost,additional_info, purchaser)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+        `;
+
+    const values = [
+      order_id
+      , grn
+      , invoiceFile
+      , shopName
+      , totalCost
+      , addditionInfo
+      , purchasedBy
+    ];
+
+    const { rows } = await pool.query(insertQuery, values);
+
+    res.json({
+      success: true,
+      message: "Local purchase entry submitted successfully",
+      entry: rows[0],
+    });
+  } catch (error) {
+    console.error("Error submitting local purchase entry:", error);
+    res.status(500).json({ success: false, error: "Failed to submit local purchase entry" });
+  }
+});
+
+
 
 
 
