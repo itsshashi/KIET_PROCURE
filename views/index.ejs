@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="msvalidate.01" content="F8F8B9E9842BDC08841272531D31DA5C" />
   <meta name="description" content="KIETPROCURE is an automated procurement platform by KIET Technologies Pvt Ltd—streamlining requisitions, approvals, and supplier coordination for smarter, faster purchasing.">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 
 
   <title>KIET_PROCUREMENT</title>
@@ -248,10 +251,55 @@ body {
 
 <!-- ✅ Show message alert if exists -->
 <% if (locals.message) { %>
-  <script>
-    alert("<%= message %>");
-  </script>
+<script>
+  alert("<%= message %>");
+
+</script>
+
 <% } %>
+  <script>
+(function () {
+  // Always reset history to login
+  function stayHere() {
+    window.location.replace("/");
+  }
+
+  // Back / forward navigation
+  window.addEventListener("popstate", stayHere);
+
+  // BFCache restore (Chrome, Edge, Mobile)
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) stayHere();
+  });
+})();
+</script>
+<script>
+
+
+  
+  (function () {
+    // Push a dummy state so back button has nowhere to go
+    window.history.pushState(null, "", window.location.href);
+
+    // Handle back button
+    window.addEventListener("popstate", function () {
+      window.history.pushState(null, "", window.location.href);
+    });
+
+    // Handle browser BFCache (Chrome / Edge / Mobile)
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) {
+        window.history.pushState(null, "", window.location.href);
+      }
+    });
+  })();
+  window.addEventListener("pageshow", function () {
+  // Always stay on login page
+  if (window.location.pathname !== "/") {
+    window.location.replace("/");
+  }
+});
+</script>
 
 <script src="script.js"></script>
 </body>

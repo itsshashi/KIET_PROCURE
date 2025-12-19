@@ -26,6 +26,46 @@
   background-color: yellow;
 }
 
+.submenu {
+  display: none;
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.menu-heading.clickable {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.menu-heading.clickable::after {
+  content: "▸";
+  float: right;
+}
+
+.menu-heading.open::after {
+  content: "▾";
+}
+
+.menu-heading {
+  color: white;
+  font-size: 1rem; /* or whatever size you prefer */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between icon and text */
+  cursor: pointer;
+}
+.menu-heading i {
+  font-size: 1.2rem;
+}
+
+.menu-heading.active {
+background-color: rgba(52, 152, 219, 0.8);
+color: white;
+}
+
+
+
+
 /* ------- SCOPE ONLY TO MAE QUOTATION FORM ------- */
 #new_mae #maeQuotationForm {
   font-family: "Poppins", sans-serif;
@@ -113,8 +153,8 @@
 #new_mae #maeQuotationForm .btn {
   cursor: pointer;
   border-radius: 6px;
-  padding: 10px 16px;
-  font-size: 15px;
+  padding: 6px 10px;
+  font-size: 12px;
   border: none;
   transition: 0.25s;
   display: inline-flex;
@@ -272,10 +312,10 @@
 }
 
 #maeEditModal .btn {
-  padding: 8px 18px;
+  padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 12px;
   border: none;
   transition: 0.2s;
 }
@@ -334,9 +374,9 @@
     margin-top: 8px;
     background-color: #9333ea;
     color: white;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 12px;
     transition: background-color 0.3s;
     border: none;
     cursor: pointer;
@@ -373,7 +413,7 @@
 }
 .addBtn, .saveBtn {
     margin-top: 10px;
-    padding: 8px 14px;
+    padding: 6px 10px;
     cursor: pointer;
 }
 .subpointBox {
@@ -512,6 +552,7 @@
         color: #334155;
         line-height: 1.6;
         max-width: 100%;
+        font-size: 12px;
     }
 
     .container {
@@ -533,8 +574,11 @@
         color: white;
         padding: 0;
         box-shadow: 0 0 25px rgba(44, 62, 80, 0.2);
-        position: relative;
-        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
         z-index: 10;
         flex-shrink: 0;
     }
@@ -548,15 +592,15 @@
 
   
 .btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
+padding: 6px 12px;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 12px;
+transition: background 0.3s;
+text-decoration: none;
+display: inline-block;
+text-align: center;
 }
 input:focus, select:focus, textarea:focus {
     outline: none;
@@ -606,8 +650,8 @@ select {
 }
 
 .btn-small {
-    padding: 8px 12px;
-    font-size: 14px;
+   padding: 6px 10px;
+   font-size: 12px;
 }
 
 
@@ -623,7 +667,7 @@ select {
     }
 
     .logo {
-        padding: 25px 25px 20px;
+        padding: 20px 10px 20px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         margin-bottom: 15px;
         display: flex;
@@ -646,7 +690,7 @@ select {
     }
 
     .logo img {
-        max-width: 220px;
+        max-width: 180px;
         height: auto;
         border-radius: 8px;
         
@@ -679,6 +723,7 @@ select {
         font-weight: 500;
         position: relative;
         overflow: hidden;
+        color: #bdc3c7;
     }
 
     .menu-item::before {
@@ -697,7 +742,8 @@ select {
     }
 
     .menu-item:hover, .menu-item.active {
-        background-color: rgba(255, 255, 255, 0.15);
+        background-color: rgba(52, 152, 219, 0.6);
+        color: white;
         transform: translateX(5px);
     }
 
@@ -711,6 +757,7 @@ select {
     .main-content {
         flex: 1;
         padding: 30px;
+        margin-left: 280px;
         overflow-y: auto;
         background: #f8fafc;
     }
@@ -760,6 +807,22 @@ select {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
+    .logout-btn {
+      background: none;
+      border: none;
+      color:white;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bolder;
+      padding: 5px;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(231, 76, 60, 0.1);
+    }
+
     .user-avatar {
       width: 42px;
       height: 42px;
@@ -791,6 +854,7 @@ select {
         transition: left 0.3s ease;
       }
 
+
       .sidebar.show {
         left: 0;
       }
@@ -805,6 +869,7 @@ select {
 
       .main-content {
         padding: 20px;
+        margin-left:0;
       }
     }
 
@@ -826,6 +891,7 @@ select {
 
       .main-content {
         padding: 10px;
+        margin-left: 0;
         width: 100%;
         overflow-x: auto;
       }
@@ -855,7 +921,7 @@ select {
       .card {
         min-width: unset;
         width: 100%;
-        padding: 15px;
+        padding: 10px;
       }
 
       .tabs {
@@ -970,14 +1036,14 @@ select {
 
       /* Button responsive */
       .btn {
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 6px 12px;
+        font-size: 12px;
       }
 
       .btn-small {
-        padding: 6px 10px;
-        font-size: 12px;
-      }
+         padding: 4px 8px;
+         font-size: 11px;
+     }
 
       /* Attachment responsive */
       .attachment-item {
@@ -1071,7 +1137,7 @@ select {
       min-width: 200px;
       background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
       color: #2c3e50;
-      padding: 20px;
+      padding: 10px;
       border-radius: 12px;
       text-align: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -1121,14 +1187,14 @@ select {
     /* Tabs */
     .tabs { margin-bottom: 20px; }
     .tab-button {
-      padding: 10px 20px;
+      padding: 8px 8px;
       border: none;
       background: #ecf0f1;
       color: #0c0d0e;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
-      border-radius: 8px 8px 0 0;
+      border-radius: 4px 4px 0 0;
       transition: all 0.2s ease;
     }
     .tab-button.active {
@@ -1190,36 +1256,104 @@ select {
 <body>
   <div class=" container">
     <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <img src="images/page_logo.jpg" alt="Company Logo">
-        <button class="sidebar-close" onclick="toggleSidebar()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <ul class="menu">
-        <li class="menu-heading">PO</li>
-        <li class="menu-item active" data-tab="pending"><i class="fas fa-clock"></i> Pending Approvals</li>
+   <div class="sidebar">
+  <div class="logo">
+    <img src="images/page_logo.jpg" alt="Company Logo">
+    <button class="sidebar-close" onclick="toggleSidebar()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
 
-        <li class="menu-item" data-tab="rejected"><i class="fas fa-times"></i> Rejected Orders</li>
-        <li class="menu-item" data-tab="quotations"><i class="fas fa-file-alt"></i> All Quotations(PO)</li>
-        <li class="menu-heading">QUOTATIONS</li>
-        <li class="menu-item" data-tab="approved-quotations"><i class="fas fa-check-circle"></i> Approved (T & S)</li>
-        <li class="menu-item" data-tab="approved-vk-quotations"><i class="fas fa-check-circle"></i>Approved (VK)</li>
-        <li class="menu-item" data-tab="mae-quotations"><i class="fas fa-file-alt"></i> MAE Quotations</li>
-        <li class="menu-item" data-tab="approved-mae-quotations"><i class="fas fa-check-circle"></i> Approved MAE Quotations</li>
-        <li class="menu-item" data-tab="vk-approve"><i class="fas fa-check" style="display: none;"></i> VK APPROVAL </li>
+  <ul class="menu">
+
+  <!-- APPROVALS -->
+  <li class="menu-heading clickable" onclick="toggleMenu('approvals')">
+    <i class="fas fa-clock"></i>
+    <span>Approvals</span>
+  </li>
+
+  <ul class="submenu" id="approvals">
+    <li class="menu-item active" data-tab="pending">
+      <i class="fas fa-clock"></i> Pending Approvals
+    </li>
+
+    <li class="menu-item" data-tab="approve">
+      <i class="fas fa-check-circle"></i> Trade & Service Approval
+    </li>
+
+    <li class="menu-item" data-tab="vk-approve">
+      <i class="fas fa-check"></i> VK Quotation Approval
+    </li>
+
+    <li class="menu-item" data-tab="mae-quotations">
+      <i class="fas fa-file-alt"></i> MAE Quotation Approval
+    </li>
+
+    <li class="menu-item" data-tab="rejected">
+      <i class="fas fa-times"></i> Rejected Orders
+    </li>
+  </ul>
+
+  <!-- QUOTATIONS -->
+  <li class="menu-heading clickable" onclick="toggleMenu('quotations')">
+    <i class="fas fa-file-alt"></i>
+    <span>Quotations</span>
+  </li>
+
+  <ul class="submenu" id="quotations">
+    <li class="menu-item" data-tab="quotations">
+      <i class="fas fa-file-alt"></i> All Quotations (PO)
+    </li>
+
+    <li class="menu-item" data-tab="approved-quotations">
+      <i class="fas fa-check-circle"></i> Approved (T & S)
+    </li>
+
+    <li class="menu-item" data-tab="approved-vk-quotations">
+      <i class="fas fa-check-circle"></i> Approved (VK)
+    </li>
+
+    <li class="menu-item" data-tab="approved-mae-quotations">
+      <i class="fas fa-check-circle"></i> Approved MAE
+    </li>
+  </ul>
+
+  <!-- QUOTATION CREATION -->
+  <li class="menu-heading clickable" onclick="toggleMenu('quotation-creation')">
+    <i class="fas fa-plus"></i>
+    <span>Quotation Creation</span>
+  </li>
+
+  <ul class="submenu" id="quotation-creation">
+    <li class="menu-item" data-tab="new-trade">
+      <i class="fas fa-handshake"></i> Trade Generation
+    </li>
+    <li class="menu-item" data-tab="new-order">
+      <i class="fas fa-cogs"></i> VK Generation
+    </li>
+    <li class="menu-item" data-tab="new-mae">
+      <i class="fas fa-building"></i> MAE Generation
+    </li>
+  </ul>
+
+  <!-- TOOLS -->
+  <li class="menu-heading clickable" onclick="toggleMenu('tools')">
+    <i class="fas fa-tools"></i>
+    <span>Tools</span>
+  </li>
+
+  <ul class="submenu" id="tools">
+    <li class="menu-item" data-tab="costCalculation">
+      <i class="fas fa-calculator"></i> Cost Calculation
+    </li>
+  </ul>
 
 
 
-        
-        <li class="menu-item logout">
-          <form action="/logout" method="POST">
-            <button type="submit"><i class="fas fa-sign-out-alt"></i> Logout</button>
-          </form>
-        </li>
-      </ul>
-    </div>
+</ul>
+
+</div>
+
 
     <!-- Main Content -->
     <div class="main-content">
@@ -1232,9 +1366,15 @@ select {
           <h2>Purchase Orders (Final Approval)</h2>
         </div>
         <div class="user-info">
+          
           <div class="user-avatar">MD</div>
           <span id="username">MD (Admin)</span>
+         
+         <button onclick="logout()" class="logout-btn" title="Logout" style="border: 1px solid black; background-color: rgb(240, 16, 16);">Logout
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
         </div>
+         
       </div>
 
     <!-- Summary Cards -->
@@ -1270,7 +1410,7 @@ select {
     </div>
 
     <!-- Tabs -->
-    <div class="tabs">
+    <div class="tabs" style="display: none;">
       <button class="tab-button active" onclick="switchTab('pending')">Pending Approvals</button>
       <button class="tab-button" onclick="switchTab('all')">All POs</button>
       <button class="tab-button" onclick="switchTab('rejected')" style="display: none;">Rejected Orders</button>
@@ -1288,6 +1428,7 @@ select {
       <button id="costCalculationTab" class="tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300" onclick="switchTab('costCalculation')">
         <i class="fas fa-calculator mr-2"></i>Cost cal
       </button>
+      <button class="tab-button" onclick="switchTab('project-assignment')">Project Assignment</button>
 
     </div>
 
@@ -1985,8 +2126,50 @@ select {
 
 
     </div>
-    
 
+    <!-- Project Assignment Tab Content -->
+    <div id="projectAssignmentTab" class="tab-content">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 Project Assignment</h2>
+        <p class="text-sm text-gray-600">Assign projects and budgets here.</p>
+      </div>
+
+      <!-- Project Assignment Form -->
+      <div class="bg-gray-50 p-4 rounded-lg mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
+            <input type="text" id="assignProjectCode" placeholder="Enter project code..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Project Budget (₹)</label>
+            <input type="number" id="assignProjectBudget" placeholder="Enter budget amount..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+        <div class="mt-4">
+          <button onclick="assignProjectBudget()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+            <i class="fas fa-save mr-2"></i>Assign Budget
+          </button>
+        </div>
+      </div>
+
+      <!-- Assigned Projects Table -->
+      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table class="min-w-full w-full text-sm text-center">
+          <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+            <tr>
+              <th class="px-2 py-3">Project Code</th>
+              <th class="px-2 py-3">Project Name</th>
+              <th class="px-2 py-3">Assigned Budget (₹)</th>
+              <th class="px-2 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="assignedProjectsTable">
+            <!-- Rows will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- new trade order creation and approval in md.ejs -->
 
@@ -3620,6 +3803,26 @@ function resetFields() {
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
 
+      // Update sidebar menu items
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      document.querySelectorAll('.menu-heading').forEach(h => h.classList.remove('active'));
+      const menuItem = document.querySelector(`.menu-item[data-tab="${tab}"]`);
+      if (menuItem) {
+        menuItem.classList.add('active');
+        const submenu = menuItem.closest('.submenu');
+        if (submenu) {
+          const heading = submenu.previousElementSibling;
+          if (heading && heading.classList.contains('menu-heading')) {
+            heading.classList.add('active');
+            // Open the submenu if it's closed
+            if (submenu.style.display !== 'block') {
+              submenu.style.display = 'block';
+              heading.classList.add('open');
+            }
+          }
+        }
+      }
+
       // Show/hide content
       document.getElementById('pendingTab').style.display = tab === 'pending' ? 'block' : 'none';
       document.getElementById('allTab').style.display = tab === 'all' ? 'block' : 'none';
@@ -3663,6 +3866,7 @@ function resetFields() {
       document.getElementById('approvedVKQuotationsTab').style.display = tab === 'approved-vk-quotations' ? 'block' : 'none';
       document.getElementById('maeQuotationsTab').style.display = tab === 'mae-quotations' ? 'block' : 'none';
       document.getElementById('approvedMAEQuotationsTab').style.display = tab === 'approved-mae-quotations' ? 'block' : 'none';
+      document.getElementById('projectAssignmentTab').style.display = tab === 'project-assignment' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       // Load data
@@ -3697,6 +3901,8 @@ function resetFields() {
         console.log("cost calculations tab is opened")
         document.getElementById('costCalculationContent').style.display="block";
         loadCostOrders();
+      } else if (tab === 'project-assignment') {
+        document.getElementById("filtersSection").style.display="none";
       }
       else {
         loadAllQuotations();
@@ -7359,13 +7565,57 @@ document.getElementById("maeEditForm").addEventListener("submit", async (e) => {
   console.log(JSON.stringify(body));
 });
 function closeMaeModal() {
-  document.getElementById("maeEditModal").style.display = "none";
+document.getElementById("maeEditModal").style.display = "none";
 }
 
+// Project Assignment Functions
+function assignProjectBudget() {
+  const projectCode = document.getElementById('assignProjectCode').value.trim();
+  const budget = document.getElementById('assignProjectBudget').value.trim();
 
+  if (!projectCode || !budget) {
+    alert('Please enter both project code and budget.');
+    return;
+  }
 
-    
-  
+  // Add to table
+  const tbody = document.getElementById('assignedProjectsTable');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td class="px-2 py-3">${projectCode}</td>
+    <td class="px-2 py-3">Project ${projectCode}</td>
+    <td class="px-2 py-3">₹${parseFloat(budget).toLocaleString()}</td>
+    <td class="px-2 py-3">
+      <button onclick="editAssignment(this)" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</button>
+      <button onclick="deleteAssignment(this)" class="bg-red-500 text-white px-2 py-1 rounded text-xs ml-1">Delete</button>
+    </td>
+  `;
+  tbody.appendChild(row);
+
+  // Clear inputs
+  document.getElementById('assignProjectCode').value = '';
+  document.getElementById('assignProjectBudget').value = '';
+}
+
+function editAssignment(btn) {
+  alert('Edit functionality not implemented yet.');
+}
+
+function deleteAssignment(btn) {
+  btn.closest('tr').remove();
+}
+function toggleMenu(id) {
+    const menu = document.getElementById(id);
+    const heading = menu.previousElementSibling;
+
+    if (menu.style.display === "block") {
+      menu.style.display = "none";
+      heading.classList.remove("open");
+    } else {
+      menu.style.display = "block";
+      heading.classList.add("open");
+    }
+  }
 
 
   
@@ -7378,5 +7628,145 @@ function closeMaeModal() {
 
 
   </script>
+
+  <!-- Welcome Modal -->
+<div id="welcomeModal" class="modal" style="display: block; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 9999; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  
+  <div class="modal-content" style="max-width: 550px; width: 90%; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); position: relative;">
+    
+    <div style="height: 6px; background: #f1f5f9; width: 100%; position: relative;">
+      <div id="modalProgress" style="height: 100%; background: linear-gradient(90deg, #3b82f6, #2dd4bf); width: 33%; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+    </div>
+
+    <div style="padding: 40px 30px; text-align: center;">
+      <div id="stepIcon" style="font-size: 50px; margin-bottom: 20px; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.1));">✨</div>
+      
+      <h2 id="stepTitle" style="margin: 0 0 10px 0; font-size: 32px; color: #1e293b; font-weight: 800; letter-spacing: -0.5px;">Welcome to a New Look!</h2>
+      <p id="stepSubtitle" style="font-size: 16px; color: #64748b; margin-bottom: 25px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Interactive Guide</p>
+      
+      <div id="stepContent" style="font-size: 22px; color: #334155; line-height: 1.6; min-height: 120px; padding: 0 10px;">
+        </div>
+    </div>
+
+    <div style="padding: 30px; background: #f8fafc; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <button id="prevBtn" onclick="changeStep(-1)" style="padding: 14px 24px; font-size: 18px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; font-weight: 600; transition: all 0.2s; display: none;">Previous</button>
+        
+        <button id="nextBtn" onclick="changeStep(1)" style="flex-grow: 1; padding: 16px 28px; font-size: 20px; border-radius: 12px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4); transition: transform 0.2s;">
+          Next Step
+        </button>
+      </div>
+      
+      <label style="display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-size: 18px; color: #94a3b8; font-weight: 400; user-select: none;">
+        <input type="checkbox" id="dontShowAgain" style="width: 20px; height: 20px; accent-color: #3b82f6; cursor: pointer;"> 
+        Don't show this guide again
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+  const steps = [
+    { 
+      icon: "✨", 
+      title: "Welcome to a New Look!", 
+      text: "Experience the upgraded <b>KIET Purchase System</b>. Designed to be faster and more intuitive." 
+    },
+    { 
+      icon: "🧭", 
+      title: "Smart Navigation", 
+      text: "Our new <b>Sidebar Menu</b> helps you switch between Dashboard, Inventory, and Reports instantly." 
+    },
+    { 
+      icon: "⚡", 
+      title: "Quick Quotations", 
+      text: "Ready to go? Fill out the forms and generate professional quotations with <b>one click</b>." 
+    }
+  ];
+
+  let currentStep = 0;
+
+  // Initial check
+  (function() {
+    const isHidden = localStorage.getItem('hideWelcomeNewLook');
+    if (isHidden === 'true') {
+      document.getElementById('welcomeModal').style.display = 'none';
+    } else {
+      document.getElementById('welcomeModal').style.display = 'flex';
+      updateStep();
+    }
+  })();
+
+  function updateStep() {
+    const step = steps[currentStep];
+    const content = document.getElementById('stepContent');
+    const icon = document.getElementById('stepIcon');
+    
+    // Smooth Transition
+    content.style.opacity = 0;
+    icon.style.transform = "scale(0.5)";
+    
+    setTimeout(() => {
+      document.getElementById('stepTitle').innerText = step.title;
+      icon.innerText = step.icon;
+      content.innerHTML = step.text;
+      
+      content.style.opacity = 1;
+      icon.style.transform = "scale(1)";
+      
+      // Update Progress
+      const progress = ((currentStep + 1) / steps.length) * 100;
+      document.getElementById('modalProgress').style.width = progress + "%";
+
+      // Buttons
+      document.getElementById('prevBtn').style.display = currentStep === 0 ? 'none' : 'block';
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.innerText = currentStep === steps.length - 1 ? "Get Started 🚀" : "Next Step";
+      nextBtn.style.background = currentStep === steps.length - 1 ? "#10b981" : "#3b82f6";
+    }, 200);
+  }
+
+  function changeStep(delta) {
+    currentStep += delta;
+    if (currentStep >= steps.length) {
+      finishTour();
+    } else if (currentStep < 0) {
+      currentStep = 0;
+    } else {
+      updateStep();
+    }
+  }
+
+  function finishTour() {
+    if (document.getElementById('dontShowAgain').checked) {
+      localStorage.setItem('hideWelcomeNewLook', 'true');
+    }
+    
+    // Closing Animation
+    const modalContent = document.querySelector('.modal-content');
+    modalContent.style.transition = "all 0.4s ease";
+    modalContent.style.transform = "scale(0.9)";
+    modalContent.style.opacity = "0";
+    
+    setTimeout(() => {
+      document.getElementById('welcomeModal').style.display = 'none';
+    }, 400);
+  }
+  function logout() {
+    fetch('/logout', { method: 'POST' })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = '/';
+        } else {
+          alert('Logout failed. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error during logout:', error);
+        alert('An error occurred. Please try again.');
+      });
+  }
+
+</script>
 </body>
 </html>

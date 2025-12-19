@@ -1141,11 +1141,15 @@ app.use((err, req, res, next) => {
 });
 
 // Logout
+
 app.post("/logout", (req, res) => {
-  req.session.destroy((err) =>
-    err ? res.status(500).send("Could not log out") : res.redirect("/")
-  );
+  req.session.destroy(err => {
+    if (err) return res.status(500).send("Could not log out");
+    res.clearCookie("connect.sid"); // important
+    res.redirect(303, "/"); // safer after POST
+  });
 });
+
 
 // Forgot password
 app.get("/forgot", (req, res) =>
