@@ -6,13 +6,133 @@
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
-  color: #1e293b;
-  margin: 0;
-  padding: 0;
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      padding: 0;
+      box-shadow: 0 0 25px rgba(44, 62, 80, 0.2);
+      position: fixed;
+      top: 0;
+      left: -100vw;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 10;
+      flex-shrink: 0;
+      transition: left 0.3s ease;
+    }
+    tr{
+      border-left:1px solid #c7d2fe;
+      border-right: 1px solid #c7d2fe;
+    }
+    th {
+  white-space: nowrap;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
 }
+
+td{
+  font-style: "Times New Roman", Times, serif;
+  font-weight: bold;
+ 
+}
+    .sidebar.show {
+      left: 0;
+    }
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      z-index: -1;
+    }
+    .logo {
+      padding: 20px 10px 20px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: center;
+      background: rgba(44, 62, 80, 0.3);
+      position: relative;
+    }
+    .sidebar-close {
+      display: block;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
+    }
+    .logo img {
+      max-width: 180px;
+      height: auto;
+      border-radius: 8px;
+    }
+    .menu {
+      list-style: none;
+      padding: 0 15px;
+    }
+    .menu-heading {
+      padding: 16px 20px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 15px;
+    }
+    .menu-item {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+      color: #bdc3c7;
+    }
+    .menu-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+    .menu-item:hover::before {
+      left: 100%;
+    }
+    .menu-item:hover, .menu-item.active {
+      background-color: rgba(52, 152, 219, 0.6);
+      color: white;
+      transform: translateX(5px);
+    }
+    .menu-item i {
+      font-size: 1.2rem;
+      width: 24px;
+      text-align: center;
+    }
+    body {
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+    }
 
 /* Navbar */
 .navbar {
@@ -37,8 +157,79 @@
   font-weight: 600;
 }
 
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.header-logo {
+  height: 60px;
+  width: auto;
+  margin-right: 15px;
+}
+.header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #0e1829, #1d4ed8);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.logout-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bolder;
+  padding: 5px;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+}
+.project-entry-details {
+  margin: 20px;
+}
+.project-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.project-table th, .project-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
 /* Main Container */
-.container {
+.main-container {
   max-width:1700px;
   margin: 50px auto;
   padding: 25px;
@@ -92,24 +283,80 @@ thead {
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: white;
 }
+
 th, td {
-  padding: 16px 20px;
+  padding: 10px 15px;
   text-align: center;
+  border-bottom: 1px solid #c7d2fe; /* light indigo */
+  border-right: 1px solid #c7d2fe;
 }
-tr {
-  transition: background 0.2s ease, border-left 0.2s ease;
+th {
+  background-color: rgb(46, 46, 240);
+  font-weight: 600;
 }
-tr:hover {
-  background: #f1f5f9;
-  border-left: 4px solid #3b82f6;
+
+th:last-child,
+td:last-child {
+  border-right: none;
+}
+
+tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Container */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  
+  min-width: 100vw;
+  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+
+  
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  margin-left: 0;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+/* Hamburger */
+.hamburger {
+  display: block;
+  background: none;
+  border: none;
+  font-size: 30px;
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 10px;
+  
 }
 
 /* Buttons */
 .logout-btn {
-  background: #ef4444;
+  background: none;
+  border: none;
   color: white;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bolder;
+  padding: 5px;
+  border-radius: 5px;
+  transition: background 0.3s;
 }
-.logout-btn:hover { background: #dc2626; }
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
 
 .pay-btn { background: #22c55e; color: white; }
 .pay-btn:hover { background: #16a34a; }
@@ -183,49 +430,182 @@ tr:hover {
   90% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-10px); }
 }
+input,
+select {
+  width: 100%;
+  max-width: 100%;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+.form-col {
+  width: 100%;
+  min-width: 0; /* CRITICAL for grid */
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+/* Form Styles */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 25px;
+}
+
+
+.form-section {
+  margin-bottom: 35px;
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  padding: 22px;
+  background: #fafafa;
+}
+.section-title {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  border-left: 5px solid #007bff;
+  padding-left: 12px;
+}
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+  display: block;
+}
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  outline: none;
+  transition: 0.25s;
+  background: #fff;
+}
+input:focus, select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+.btn {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: none;
+  transition: 0.25s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+.btn-primary:hover {
+  background: #0069d9;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+.form-actions {
+  margin-top: 30px;
+  text-align: center;
+}
 
 
   </style>
 </head>
 <body>
-  <!-- Navbar -->
-  <div class="navbar">
-    <div class="logo">
-      <img src="images/wt_img.png" alt="Company Logo">
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <button class="sidebar-close">&times;</button>
+        <img src="images/page_logo.jpg" alt="Company Logo">
+      </div>
+      <ul class="menu">
+        <li class="menu-heading">Accounts</li>
+        <li class="menu-item active" onclick="switchTab('accounts')">
+          <i class="fas fa-calculator"></i> Account Dashboard
+        </li>
+        <li class="menu-item" onclick="switchTab('project_details')"><i class="fas fa-cogs"></i> Project Details</li>
+        <li class="menu-item" onclick="switchTab('view_projects')"><i class="fas fa-eye"></i> View Projects</li>
+        <li class="menu-item logout">
+          <form action="/logout" method="post">
+            <i class="fas fa-sign-out-alt"></i>
+            <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+              Logout
+            </button>
+          </form>
+        </li>
+      </ul>
     </div>
-    <div class="user-section">
-      <span><i class="fa fa-user"></i> accounts@kietsindia.com</span>
-      <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+    <div style="display: flex; align-items: center;">
+        <button class="hamburger">
+          <i class="fas fa-bars"></i>
+        </button>
+        <img src="images/page_logo.jpg" alt="Company Logo" class="header-logo">
+        <h2>Account Dashboard</h2>
+      </div>
+    <div class="user-info">
+      <div class="user-avatar">AC</div>
+      <span id="username">accounts@kietsindia.com</span>
+      <button onclick="logout()" class="logout-btn" title="Logout">Logout
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
   </div>
 
-  <!-- Main Container -->
-  <div class="container">
-    <h1>Account Dashboard</h1>
-    <!-- <div style="margin-bottom: 20px;">
-      <label for="poSearch">Search by PO Number:</label>
-      <input type="text" id="poSearch" placeholder="Enter PO Number" style="margin-left: 10px; padding: 5px;">
-      <button onclick="searchByPO()" style="margin-left: 10px; padding: 5px 10px;">Search</button>
-      <button onclick="clearSearch()" style="margin-left: 10px; padding: 5px 10px;">Clear</button>
-    </div> -->
-    <table>
-      <thead>
-        <tr>
-          <th>PO Number</th>
-          <th>Supplier</th>
-          <th>Amount to Pay</th>
-          <th>Terms to Pay</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="accountTableBody">
-        <!-- Data will be populated here -->
-      </tbody>
-    </table>
-    <div id="noDataMessage" style="text-align: center; margin-top: 20px; display: none;">
-      No payment details found.
-    </div>
-  </div>
+      <!-- Main Container -->
+      <div class="main-container" id="accountsTab">
+        <h1>Account Dashboard</h1>
+        <!-- <div style="margin-bottom: 20px;">
+          <label for="poSearch">Search by PO Number:</label>
+          <input type="text" id="poSearch" placeholder="Enter PO Number" style="margin-left: 10px; padding: 5px;">
+          <button onclick="searchByPO()" style="margin-left: 10px; padding: 5px 10px;">Search</button>
+          <button onclick="clearSearch()" style="margin-left: 10px; padding: 5px 10px;">Clear</button>
+        </div> -->
+        <table>
+          <thead>
+            <tr>
+              <th>PO Number</th>
+              <th>Supplier</th>
+              <th>Amount to Pay</th>
+              <th>Terms to Pay</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="accountTableBody">
+            <!-- Data will be populated here -->
+          </tbody>
+        </table>
+        <div id="noDataMessage" style="text-align: center; margin-top: 20px; display: none;">
+          No payment details found.
+        </div>
+      </div>
 
   <!-- Modal -->
   <div class="modal" id="paymentModal">
@@ -240,13 +620,172 @@ tr:hover {
   <div class="done-popup" id="donePopup">
     ✅ Payment Done Successfully!
   </div>
-  
+
   <!-- Error Popup -->
   <div class="error-popup" id="errorPopup">
     ❌ Error processing payment
   </div>
 
-  <script>
+  <!-- Project Details Tab Content -->
+  <div id="project_detailsTab" class="tab-content" style="display: none;">
+    <div class="main-container">
+      <h1>Project Details Entry</h1>
+      <form id="projectDetailsForm">
+        <div class="form-section">
+          <h2 class="section-title">📋 Project Information</h2>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="description">Description *</label>
+              <input type="text" id="description" name="description" required placeholder="Enter project description">
+            </div>
+            <div class="form-col">
+              <label for="projectCode">Project Code *</label>
+              <input type="text" id="projectCode" name="projectCode" required placeholder="Enter project code">
+            </div>
+            <div class="form-col">
+              <label for="quantity">Quantity *</label>
+              <input type="number" id="quantity" name="quantity" step="0.01" min="0" required placeholder="0.00">
+            </div>
+            <div class="form-col">
+              <label for="customer">Customer *</label>
+              <input type="text" id="customer" name="customer" required placeholder="Enter customer name">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="userName">User Name *</label>
+              <input type="text" id="userName" name="userName" required placeholder="Enter user name">
+            </div>
+            <div class="form-col">
+              <label for="currency">Currency *</label>
+              <select id="currency" name="currency" required>
+                <option value="">Select Currency</option>
+                <option value="₹">INR (₹)</option>
+                <option value="$">USD ($)</option>
+                <option value="€">EUR (€)</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2 class="section-title">📄 Purchase Order Information</h2>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="poNo">PO No *</label>
+              <input type="text" id="poNo" name="poNo" required placeholder="Enter PO number">
+            </div>
+            <div class="form-col">
+              <label for="poDate">PO Date *</label>
+              <input type="date" id="poDate" name="poDate" required>
+            </div>
+            <div class="form-col">
+              <label for="valuePerUnit">Value Per Unit (₹) *</label>
+              <input type="number" id="valuePerUnit" name="valuePerUnit" step="0.01" min="0" required placeholder="0.00">
+            </div>
+            <div class="form-col">
+              <label for="totalPoValuePending">Total PO Value Pending (₹)</label>
+              <input type="number" id="totalPoValuePending" name="totalPoValuePending" step="0.01" readonly placeholder="Auto-calculated">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2 class="section-title">🚚 Delivery Information</h2>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="deliveryStatus">Delivery Status *</label>
+              <select id="deliveryStatus" name="deliveryStatus" required>
+                <option value="">Select Status</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Delayed">Delayed</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label for="deliveryDate">Delivery Date</label>
+              <input type="date" id="deliveryDate" name="deliveryDate">
+            </div>
+            <div class="form-col">
+              <label for="invType">INV Type</label>
+              <input type="text" id="invType" name="invType" placeholder="Enter invoice type">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2 class="section-title">💰 Invoice Information</h2>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="invoiceNo">Invoice No</label>
+              <input type="text" id="invoiceNo" name="invoiceNo" placeholder="Enter invoice number">
+            </div>
+            <div class="form-col">
+              <label for="invoiceDate">Invoice Date</label>
+              <input type="date" id="invoiceDate" name="invoiceDate">
+            </div>
+            <div class="form-col">
+              <label for="baseValue">Base Value (₹)</label>
+              <input type="number" id="baseValue" name="baseValue" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="form-col">
+              <label for="totalValue">Total Value (₹)</label>
+              <input type="number" id="totalValue" name="totalValue" step="0.01" min="0" placeholder="0.00">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+          <button type="submit" class="btn btn-primary btn-lg">💾 Submit Project Details</button>
+          <button type="button" class="btn btn-secondary btn-lg" onclick="resetProjectForm()">🔄 Reset Form</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Projects Tab Content -->
+  <div id="view_projectsTab" class="tab-content" style="display: none;">
+    <div class="main-container">
+      <h1>View Projects</h1>
+      <div style="overflow-x: auto; width: 100%;">
+        <table id="view_prj" style="min-width: 1200px;border-collapse: collapse">
+          <thead>
+            <tr style="font-size: small;">
+              <th >Sl.No</th>
+              <th >Description</th>
+              <th >Project Code</th>
+              <th>Quantity</th>
+              <th>Customer</th>
+              <th>User Name</th>
+              <th>PO No</th>
+              <th>PO Date</th>
+              <th>Value Per Unit</th>
+              <th>Total PO Value Pending</th>
+              <th>Delivery Status</th>
+              <th>Delivery Date</th>
+              <th>INV Type</th>
+              <th>Invoice No</th>
+              <th>Invoice Date</th>
+              <th>Base Value</th>
+              <th>Total Value</th>
+            </tr>
+          </thead>
+          <tbody id="projectsTableBody">
+            <!-- Data will be populated here -->
+          </tbody>
+        </table>
+      </div>
+      <div id="noProjectsMessage" style="text-align: center; margin-top: 20px; display: none;">
+        No project details found.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
     let accountData = [];
     let currentOrderId = null;
 
@@ -313,6 +852,7 @@ tr:hover {
       
       accountData.forEach(item => {
         const tr = document.createElement('tr');
+        tr.className = 'account-row';
 
         // PO Number
         const poNumberTd = document.createElement('td');
@@ -505,6 +1045,217 @@ tr:hover {
       });
     }
 
+    async function fetchProjectDetails() {
+      try {
+        document.getElementById('noProjectsMessage').style.display = 'none';
+
+        const response = await fetch('/api/project-details_info', { credentials: 'include' });
+
+        if (response.status === 401) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '/';
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch project details');
+        }
+
+        const data = await response.json();
+
+        if (data.message) {
+          document.getElementById('noProjectsMessage').style.display = 'block';
+          populateProjectsTable([]);
+          return;
+        }
+
+        populateProjectsTable(data);
+      } catch (error) {
+        console.error('Error fetching project details:', error);
+        document.getElementById('noProjectsMessage').style.display = 'block';
+        populateProjectsTable([]);
+      }
+    }
+
+    function populateProjectsTable(data) {
+      const tbody = document.getElementById('projectsTableBody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        document.getElementById('noProjectsMessage').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('noProjectsMessage').style.display = 'none';
+
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+
+        // Determine row color based on status
+let rowStyles;
+switch ((item.delivery_status || '').toLowerCase()) {
+  case 'pending':
+    // Soft Amber: Warm but not alarming
+    rowStyles = 'background-color: #fffbeb; color: #92400e; border-bottom: 1px solid #fde68a;';
+    break;
+  case 'in progress':
+    // Soft Blue: Focused and active
+    rowStyles = 'background-color: #f0f9ff; color: #075985; border-bottom: 1px solid #bae6fd;';
+    break;
+  case 'completed':
+    // Soft Emerald: Positive but professional (Replaced the "pure green")
+    rowStyles = 'background-color: #f0fdf4; color: #166534; border-bottom: 1px solid #bbf7d0;';
+    break;
+  case 'delayed':
+    // Soft Rose: Noticeable but not "Error-red"
+    rowStyles = 'background-color: #fff1f2; color: #9f1239; border-bottom: 1px solid #fecdd3;';
+    break;
+  default:
+    rowStyles = 'background-color: #ffffff; color: #374151; border-bottom: 1px solid #e5e7eb;';
+}
+
+tr.style = rowStyles;
+
+
+
+// Use it in your table row
+tr.innerHTML = `
+  <td style="border-left: 1px solid #c7d2fe;">${item.id || 'N/A'}</td>
+  <td>${item.description || 'N/A'}</td>
+  <td>${item.project_code || 'N/A'}</td>
+  <td>${item.quantity || 'N/A'}</td>
+  <td>${item.customer || 'N/A'}</td>
+  <td>${item.user_name || 'N/A'}</td>
+  <td>${item.po_no || 'N/A'}</td>
+  <td>${new Date(item.po_date).toLocaleDateString('en-IN') || 'N/A'}</td>
+  <td>${item.currency}${item.value_per_unit ? parseFloat(item.value_per_unit).toFixed(2) : '0.00'}</td>
+  <td>₹${item.total_po_value_pending ? parseFloat(item.total_po_value_pending).toFixed(2) : '0.00'}</td>
+  <td>${item.delivery_status || 'N/A'}</td>
+  <td>${new Date(item.delivery_date).toLocaleDateString('en-IN') || 'N/A'}</td>
+  <td>${item.inv_type || 'N/A'}</td>
+  <td>${item.invoice_no || 'N/A'}</td>
+  <td>${new Date(item.invoice_date).toLocaleDateString('en-IN') || 'N/A'}</td>
+  <td style="white-space:no-wrap;">${item.currency}${item.base_value ? parseFloat(item.base_value).toFixed(2) : '0.00'}</td>
+  <td>${item.currency}${item.total_value ? parseFloat(item.total_value).toFixed(2) : '0.00'}</td>
+`;
+
+
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Switch tab function
+    function switchTab(tab) {
+      // Hide all tab contents
+      document.getElementById('accountsTab').style.display = 'none';
+      document.getElementById('project_detailsTab').style.display = 'none';
+      document.getElementById('view_projectsTab').style.display = 'none';
+
+      // Update menu active state
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      if (tab === 'accounts') {
+        document.querySelector('.menu-item[onclick*="accounts"]').classList.add('active');
+        document.getElementById('accountsTab').style.display = 'block';
+      } else if (tab === 'project_details') {
+        document.querySelector('.menu-item[onclick*="project_details"]').classList.add('active');
+        document.getElementById('project_detailsTab').style.display = 'block';
+      } else if (tab === 'view_projects') {
+        document.querySelector('.menu-item[onclick*="view_projects"]').classList.add('active');
+        document.getElementById('view_projectsTab').style.display = 'block';
+        fetchProjectDetails();
+      }
+    }
+
+    // Project Details Form Interactivity
+    function calculateTotalPO() {
+      const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+      const valuePerUnit = parseFloat(document.getElementById('valuePerUnit').value) || 0;
+      const total = quantity * valuePerUnit;
+      document.getElementById('totalPoValuePending').value = total.toFixed(2);
+    }
+
+    function resetProjectForm() {
+      document.getElementById('projectDetailsForm').reset();
+      calculateTotalPO(); // Reset calculation
+    }
+
+    // Add event listeners for auto-calculation
+    document.getElementById('quantity').addEventListener('input', calculateTotalPO);
+    document.getElementById('valuePerUnit').addEventListener('input', calculateTotalPO);
+
+    // Form validation and submit
+    document.getElementById('projectDetailsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Basic validation
+      const requiredFields = ['description', 'projectCode', 'quantity', 'customer', 'userName', 'poNo', 'poDate', 'valuePerUnit', 'deliveryStatus'];
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (!element.value.trim()) {
+          element.style.borderColor = 'red';
+          isValid = false;
+        } else {
+          element.style.borderColor = '#c9c9c9';
+        }
+      });
+
+      if (!isValid) {
+        showError('Please fill in all required fields.');
+        return;
+      }
+
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      console.log('Project Details Submitted:', data);
+
+      // Simulate submission
+      showSuccess('Project details submitted successfully!');
+      this.reset();
+      calculateTotalPO();
+      const responsive=fetch('/api/project-details',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+        },
+        credentials:'include',
+        body:JSON.stringify(data)
+      });
+      responsive.then((res)=>{
+        if(!res.ok){
+          throw new Error('Failed to submit project details');
+        }
+        return res.json();
+      }).then((result)=>{
+        if(result.success){
+          showSuccess('Project details submitted successfully!');
+          this.reset();
+          calculateTotalPO();
+        }else{
+          throw new Error('Submission failed');
+        }
+      }).catch((error)=>{
+        console.error('Error submitting project details:',error);
+        showError(error.message ||'Error submitting project details');
+      });
+    });
+
+    function showSuccess(message) {
+      const popup = document.getElementById('donePopup');
+      popup.innerHTML = `✅ ${message}`;
+      popup.style.display = 'block';
+      setTimeout(() => { popup.style.display = 'none'; }, 3000);
+    }
+
+    function showError(message) {
+      const popup = document.getElementById('errorPopup');
+      popup.innerHTML = `❌ ${message}`;
+      popup.style.display = 'block';
+      setTimeout(() => { popup.style.display = 'none'; }, 3000);
+    }
+
    function downloadInvoice(poNumber) {
   window.location.href = `/api/inventory-invoice/${poNumber}`;
 }
@@ -546,8 +1297,36 @@ tr:hover {
       }
     }
 
-    // Fetch account details on page load
-    window.onload = fetchAccountDetails;
+    // Toggle sidebar visibility
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('show');
+      }
+    }
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      const hamburger = document.querySelector('.hamburger');
+      const sidebarClose = document.querySelector('.sidebar-close');
+      if (hamburger) {
+        hamburger.addEventListener('click', toggleSidebar);
+      }
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', toggleSidebar);
+      }
+
+      // Close sidebar when clicking outside
+      document.addEventListener('click', function(event) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar.classList.contains('show') && !sidebar.contains(event.target) && !hamburger.contains(event.target)) {
+          toggleSidebar();
+        }
+      });
+
+      fetchAccountDetails();
+    });
+    
   </script>
 </body>
 </html>

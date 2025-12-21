@@ -25,6 +25,37 @@
 .gen{
   background-color: yellow;
 }
+.task-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+  word-wrap: break-word;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.task-email {
+  font-weight: 600;
+  color: #374151;
+}
+
+.task-desc {
+  color: #1f2937;
+}
+
+.task-time {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
 
 .submenu {
   display: none;
@@ -44,6 +75,51 @@
 
 .menu-heading.open::after {
   content: "▾";
+}
+
+.tab-dropdown {
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.tab-submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 200px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tab-submenu button {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.tab-submenu button:hover {
+  background: #f8f9fa;
+}
+
+.tab-dropdown:hover .tab-submenu {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .menu-heading {
@@ -576,11 +652,15 @@ color: white;
         box-shadow: 0 0 25px rgba(44, 62, 80, 0.2);
         position: fixed;
         top: 0;
-        left: 0;
+        left: -100vw;
         height: 100vh;
         overflow-y: auto;
         z-index: 10;
         flex-shrink: 0;
+        transition: left 0.3s ease;
+    }
+    .sidebar.show {
+        left: 0;
     }
     .section-title {
     font-size: 1.3rem;
@@ -677,7 +757,7 @@ select {
     }
 
     .sidebar-close {
-      display: none;
+      display: block;
       position: absolute;
       top: 10px;
       right: 10px;
@@ -757,7 +837,7 @@ select {
     .main-content {
         flex: 1;
         padding: 30px;
-        margin-left: 280px;
+        margin-left: 0;
         overflow-y: auto;
         background: #f8fafc;
     }
@@ -778,13 +858,13 @@ select {
     }
 
     .hamburger {
-      display: none;
+      display: block;
       background: none;
       border: none;
-      font-size: 30px;
+      font-size: 20px;
       color: #2c3e50;
       cursor: pointer;
-      padding: 10px;
+      padding: 5px 15px 5px 0px;
     }
 
     .header h2 {
@@ -930,8 +1010,8 @@ select {
 
       .tab-button {
         padding: 8px 12px;
-        font-size: 12px;
-        margin-bottom: 5px;
+        font-size: 15px;
+        
       }
 
       .filters {
@@ -1185,23 +1265,32 @@ select {
     .details { font-size: 13px; margin-top: 5px; padding: 10px; background: #f9f9f9; border-radius: 6px; line-height: 1.5; border: 1px solid #eee; }
 
     /* Tabs */
-    .tabs { margin-bottom: 20px; }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background:lightblue;
+      padding: 10px 0;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
     .tab-button {
-      padding: 8px 8px;
+      padding: 8px 12px;
       border: none;
-      background: #ecf0f1;
-      color: #0c0d0e;
+      background: transparent;
+      color: rgb(10, 10, 49);
       cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 4px 4px 0 0;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 4px;
       transition: all 0.2s ease;
+      margin: 0 5px;
+      font-family:"roboto", sans-serif;
     }
     .tab-button.active {
-      background: #2c3e50;
+      background: #3498db;
       color: #fff;
     }
-    .tab-button:hover { background: #bdc3c7; }
+    .tab-button:hover { background: #589ee4; color:white; }
 
     /* Filters */
     .filters { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
@@ -1256,121 +1345,90 @@ select {
 <body>
   <div class=" container">
     <!-- Sidebar -->
-   <div class="sidebar">
-  <div class="logo">
-    <img src="images/page_logo.jpg" alt="Company Logo">
-    <button class="sidebar-close" onclick="toggleSidebar()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <ul class="menu">
-
-  <!-- APPROVALS -->
-  <li class="menu-heading clickable" onclick="toggleMenu('approvals')">
-    <i class="fas fa-clock"></i>
-    <span>Approvals</span>
-  </li>
-
-  <ul class="submenu" id="approvals">
-    <li class="menu-item active" data-tab="pending">
-      <i class="fas fa-clock"></i> Pending Approvals
-    </li>
-
-    <li class="menu-item" data-tab="approve">
-      <i class="fas fa-check-circle"></i> Trade & Service Approval
-    </li>
-
-    <li class="menu-item" data-tab="vk-approve">
-      <i class="fas fa-check"></i> VK Quotation Approval
-    </li>
-
-    <li class="menu-item" data-tab="mae-quotations">
-      <i class="fas fa-file-alt"></i> MAE Quotation Approval
-    </li>
-
-    <li class="menu-item" data-tab="rejected">
-      <i class="fas fa-times"></i> Rejected Orders
-    </li>
-  </ul>
-
-  <!-- QUOTATIONS -->
-  <li class="menu-heading clickable" onclick="toggleMenu('quotations')">
-    <i class="fas fa-file-alt"></i>
-    <span>Quotations</span>
-  </li>
-
-  <ul class="submenu" id="quotations">
-    <li class="menu-item" data-tab="quotations">
-      <i class="fas fa-file-alt"></i> All Quotations (PO)
-    </li>
-
-    <li class="menu-item" data-tab="approved-quotations">
-      <i class="fas fa-check-circle"></i> Approved (T & S)
-    </li>
-
-    <li class="menu-item" data-tab="approved-vk-quotations">
-      <i class="fas fa-check-circle"></i> Approved (VK)
-    </li>
-
-    <li class="menu-item" data-tab="approved-mae-quotations">
-      <i class="fas fa-check-circle"></i> Approved MAE
-    </li>
-  </ul>
-
-  <!-- QUOTATION CREATION -->
-  <li class="menu-heading clickable" onclick="toggleMenu('quotation-creation')">
-    <i class="fas fa-plus"></i>
-    <span>Quotation Creation</span>
-  </li>
-
-  <ul class="submenu" id="quotation-creation">
-    <li class="menu-item" data-tab="new-trade">
-      <i class="fas fa-handshake"></i> Trade Generation
-    </li>
-    <li class="menu-item" data-tab="new-order">
-      <i class="fas fa-cogs"></i> VK Generation
-    </li>
-    <li class="menu-item" data-tab="new-mae">
-      <i class="fas fa-building"></i> MAE Generation
-    </li>
-  </ul>
-
-  <!-- TOOLS -->
-  <li class="menu-heading clickable" onclick="toggleMenu('tools')">
-    <i class="fas fa-tools"></i>
-    <span>Tools</span>
-  </li>
-
-  <ul class="submenu" id="tools">
-    <li class="menu-item" data-tab="costCalculation">
-      <i class="fas fa-calculator"></i> Cost Calculation
-    </li>
-  </ul>
-
-
-
-</ul>
-
-</div>
-
+    <div class="sidebar">
+      <div class="logo">
+        <button class="sidebar-close">&times;</button>
+        <img src="images/page_logo.jpg" alt="Company Logo">
+      </div>
+      <ul class="menu">
+        
+       
+        
+        
+        <li class="menu-heading clickable" onclick="toggleMenu('approvals')">Approvals</li>
+        <ul class="submenu" id="approvals">
+          <li class="menu-item active" data-tab="pending" onclick="switchTab('pending')">
+          <i class="fas fa-clock"></i> Purchase Orders
+        </li>
+          <li class="menu-item" data-tab="approve" onclick="switchTab('approve')">
+            <i class="fas fa-check-circle"></i> Trade & Service
+          </li>
+          <li class="menu-item" data-tab="vk-approve" onclick="switchTab('vk-approve')">
+            <i class="fas fa-check-circle"></i> VK Quotations
+          </li>
+          <li class="menu-item" data-tab="mae-quotations" onclick="switchTab('mae-quotations')">
+            <i class="fas fa-check-circle"></i> MAE Quotations
+          </li>
+        </ul>
+        <li class="menu-heading clickable" onclick="toggleMenu('approved')">Approved</li>
+        <ul class="submenu" id="approved">
+          <li class="menu-item" data-tab="approved-quotations" onclick="switchTab('approved-quotations')">
+            <i class="fas fa-check"></i> Trade & Service
+          </li>
+          <li class="menu-item" data-tab="approved-vk-quotations" onclick="switchTab('approved-vk-quotations')">
+            <i class="fas fa-check"></i> VK Quotations
+          </li>
+          <li class="menu-item" data-tab="approved-mae-quotations" onclick="switchTab('approved-mae-quotations')">
+            <i class="fas fa-check"></i> MAE Quotations
+          </li>
+          <li class="menu-item" data-tab="all" onclick="switchTab('all')">
+          <i class="fas fa-check"></i> All POs
+        </li>
+        </ul>
+        <li class="menu-heading clickable" onclick="toggleMenu('generation')">Generation</li>
+        <ul class="submenu" id="generation">
+          <li class="menu-item" data-tab="new-order" onclick="switchTab('new-order')">
+            <i class="fas fa-plus"></i> New VK Quotation
+          </li>
+          <li class="menu-item" data-tab="new-trade" onclick="switchTab('new-trade')">
+            <i class="fas fa-plus"></i> New Trade Quotation
+          </li>
+          <li class="menu-item" data-tab="new-mae" onclick="switchTab('new-mae')">
+            <i class="fas fa-plus"></i> New MAE Quotation
+          </li>
+        </ul>
+        <li class="menu-heading">Others</li>
+        <li class="menu-item" data-tab="costCalculation" onclick="switchTab('costCalculation')">
+          <i class="fas fa-calculator"></i> Cost Calculation
+        </li>
+       
+        <li class="menu-item logout">
+          <form action="/logout" method="post">
+            <i class="fas fa-sign-out-alt"></i>
+            <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
+              Logout
+            </button>
+          </form>
+        </li>
+      </ul>
+    </div>
 
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
         <div style="display: flex; align-items: center;">
-          <button class="hamburger" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-          </button>
-          <img src="images/page_logo.jpg" alt="Company Logo" class="header-logo">
-          <h2>Purchase Orders (Final Approval)</h2>
-        </div>
+            <button class="hamburger">
+              <i class="fas fa-bars"></i>
+            </button>
+            <img src="images/page_logo.jpg" alt="Company Logo" class="header-logo">
+            <h2>Purchase Orders (Final Approval)</h2>
+          </div>
         <div class="user-info">
           
           <div class="user-avatar">MD</div>
           <span id="username">MD (Admin)</span>
          
-         <button onclick="logout()" class="logout-btn" title="Logout" style="border: 1px solid black; background-color: rgb(240, 16, 16);">Logout
+         <button onclick="logout()" class="logout-btn" title="Logout" style="border: 1px solid blue; background-color: rgb(240, 16, 16);">Logout
             <i class="fas fa-sign-out-alt"></i>
           </button>
         </div>
@@ -1410,26 +1468,50 @@ select {
     </div>
 
     <!-- Tabs -->
-    <div class="tabs" style="display: none;">
-      <button class="tab-button active" onclick="switchTab('pending')">Pending Approvals</button>
-      <button class="tab-button" onclick="switchTab('all')">All POs</button>
-      <button class="tab-button" onclick="switchTab('rejected')" style="display: none;">Rejected Orders</button>
-      <button class="tab-button" onclick="switchTab('quotations')" style="display: none;">All Quotations</button>
-
-      <button class="tab-button" onclick="switchTab('approve')"style="background-color:green;">Trade & Service Approval</button>
-      <button class="tab-button" onclick="switchTab('vk-approve')" style="display: none;">VK Quotation Approval</button>
-      <button class="tab-button " onclick="switchTab('new-order')"style="background-color: lightblue;">New VK Quotation Generation</button>
-      <button class="tab-button " onclick="switchTab('new-trade')"style="background-color: lightblue;">New Trade Quotation Generation</button>
-      <button class="tab-button" onclick="switchTab('approved-quotations')" style="display: none;">Approved(T & S)</button>
-      <button class="tab-button" onclick="switchTab('approved-vk-quotations')" style="display: none;">Approved (VK)</button>
-      <button class="tab-button" onclick="switchTab('mae-quotations')" style='background-color:green;'>MAE Quotation Approval</button>
-      <button class="tab-button" onclick="switchTab('approved-mae-quotations')" style="display: none;">Approved MAE Quotations</button>
-      <button class="tab-button " onclick="switchTab('new-mae')" style="background-color: lightblue;">New MAE Generation</button>
-      <button id="costCalculationTab" class="tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300" onclick="switchTab('costCalculation')">
-        <i class="fas fa-calculator mr-2"></i>Cost cal
-      </button>
-      <button class="tab-button" onclick="switchTab('project-assignment')">Project Assignment</button>
-
+    <div class="tabs">
+      <div class="tab-dropdown">
+        <button class="tab-button">Pending Approvals</button>
+        <div class="tab-submenu">
+          <button onclick="switchTab('pending')">Purchase Orders</button>
+          <button onclick="switchTab('approve')">Trade & Service</button>
+          <button onclick="switchTab('vk-approve')">VK Quotations</button>
+          <button onclick="switchTab('mae-quotations')">MAE Quotations</button>
+        </div>
+      </div>
+      <div class="tab-dropdown">
+        <button class="tab-button">Approved Orders</button>
+        <div class="tab-submenu">
+          <button onclick="switchTab('approved-quotations')">Trade & Service</button>
+          <button onclick="switchTab('approved-vk-quotations')">VK Quotations</button>
+          <button onclick="switchTab('approved-mae-quotations')">MAE Quotations</button>
+          <button onclick="switchTab('all')">All POs</button>
+        </div>
+      </div>
+      <div class="tab-dropdown">
+        <button class="tab-button">Generation</button>
+        <div class="tab-submenu">
+          <button onclick="switchTab('new-order')">New VK Quotation</button>
+          <button onclick="switchTab('new-trade')">New Trade Quotation</button>
+          <button onclick="switchTab('new-mae')">New MAE Quotation</button>
+        </div>
+      </div>
+    
+       <div class="tab-dropdown">
+        <button class="tab-button">Tools</button>
+        <div class="tab-submenu">
+           <button onclick="switchTab('costCalculation')">Cost Calculations</button>
+      
+      </div>
+      </div>
+      <div class="tab-dropdown">
+        <button class="tab-button">Project Details</button>
+        <div class="tab-submenu">
+          <button onclick="switchTab('project-assign')">Project Assign</button>
+          <button onclick="switchTab('project-details')">Project Details</button>
+          <button onclick="switchTab('tasks-management')"><i class="fas fa-tasks">  </i> Tasks Management</button>
+          
+        </div>
+      </div>
     </div>
 
 
@@ -2128,48 +2210,83 @@ select {
     </div>
 
     <!-- Project Assignment Tab Content -->
-    <div id="projectAssignmentTab" class="tab-content">
+    <div id="project-assignTab" class="tab-content">
       <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 Project Assignment</h2>
-        <p class="text-sm text-gray-600">Assign projects and budgets here.</p>
+         <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2 hover:text-blue-600 cursor-pointer transition-colors duration-300 " style="font-weight: bolder;">
+    <span>📋</span> PROJECT DETAILS
+  </h2>
+  <p class="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-300">
+    Review comprehensive project information along with associated purchase order details.
+  </p>
       </div>
-
-      <!-- Project Assignment Form -->
-      <div class="bg-gray-50 p-4 rounded-lg mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
-            <input type="text" id="assignProjectCode" placeholder="Enter project code..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Project Budget (₹)</label>
-            <input type="number" id="assignProjectBudget" placeholder="Enter budget amount..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-        <div class="mt-4">
-          <button onclick="assignProjectBudget()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-            <i class="fas fa-save mr-2"></i>Assign Budget
-          </button>
-        </div>
-      </div>
-
-      <!-- Assigned Projects Table -->
+    
+      <!-- Project Assignments Table -->
       <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table class="min-w-full w-full text-sm text-center">
-          <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
-            <tr>
-              <th class="px-2 py-3">Project Code</th>
-              <th class="px-2 py-3">Project Name</th>
-              <th class="px-2 py-3">Assigned Budget (₹)</th>
-              <th class="px-2 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="assignedProjectsTable">
-            <!-- Rows will be populated dynamically -->
-          </tbody>
-        </table>
-      </div>
+  <table class="min-w-max w-full text-sm text-center whitespace-nowrap">
+    <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+      <tr>
+        <th class="px-4 py-3">SL NO</th>
+        <th class="px-4 py-3">DESCRIPTION</th>
+        <th class="px-4 py-3">Project Code</th>
+        <th class="px-4 py-3">Quantity</th>
+        <th class="px-4 py-3">CUSTOMER</th>
+        <th class="px-4 py-3">USER NAME</th>
+        <th class="px-4 py-3">PO NO</th>
+        <th class="px-4 py-3">PO DATE</th>
+        <th class="px-4 py-3">VALUE PER UNIT</th>
+        <th class="px-4 py-3">Total PO Value Pending</th>
+        <th class="px-4 py-3">DELIVERY STATUS</th>
+        <th class="px-4 py-3">DELIVERY DATE</th>
+        <th class="px-4 py-3">INV TYPE</th>
+        <th class="px-4 py-3">Invoice NO</th>
+        <th class="px-4 py-3">Invoice DATE</th>
+        <th class="px-4 py-3">BASE VALUE</th>
+        <th class="px-4 py-3">TOTAL VALUE</th>
+      </tr>
+    </thead>
+    <tbody id="projectAssignmentsBody">
+      <!-- Rows populated dynamically -->
+    </tbody>
+  </table>
+</div>
+
     </div>
+
+    <!-- Tasks Management Tab Content -->
+   <div id="tasks-managementTab" class="tab-content">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">📋 Daily Tasks Management</h2>
+    <p class="text-gray-600 text-sm">View and manage all daily tasks assigned to projects.</p>
+  </div>
+
+  <!-- Filter UI -->
+  <div class="flex flex-wrap gap-4 mb-4 items-end">
+    <div>
+      <label for="filterFromDate" class="block text-sm font-medium text-gray-700">From Date:</label>
+      <input type="date" id="filterFromDate" class="mt-1 p-2 border border-gray-300 rounded" />
+    </div>
+
+    <div>
+      <label for="filterAssignedTo" class="block text-sm font-medium text-gray-700">Assigned To:</label>
+      <select id="filterAssignedTo" class="mt-1 p-2 border border-gray-300 rounded">
+        <option value="">All</option>
+        <!-- Options populated dynamically -->
+      </select>
+    </div>
+  
+    <div>
+      <button onclick="loadDailyTasks()" class="px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600">Filter</button>
+    </div>
+  </div>
+
+  <!-- Chat-like container for tasks -->
+  <div id="dailyTasksBody" class="flex flex-col gap-4 max-h-[600px] overflow-y-auto p-4 bg-white shadow-lg rounded-xl border border-gray-200">
+    <!-- Tasks dynamically populated here -->
+  </div>
+</div>
+
+<!-- <script>document.addEventListener("DOMContentLoaded", loadDailyTasks);</script> -->
+
 
     <!-- new trade order creation and approval in md.ejs -->
 
@@ -2903,12 +3020,8 @@ function resetFields() {
     border-radius: 8px 8px 0 0;
     margin-bottom: 30px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <img src="/images/page_logo.jpg" alt="Company Logo" style="max-width: 200px; height: auto; margin-bottom: 20px; float: left;margin-left: 20px; border-radius: 8px;">
-          <h1 style="font-size: 2.5rem;
-    margin-bottom: 10px;
-    text-align: center; font-family:'Times New Roman', Times, serif ; font-weight:bolder"  >VK Quotation</h1>
-          <p class="subtitle" style="font-size: 1.5rem;
-    opacity: 0.9; font-family:Arial, Helvetica, sans-serif;font-weight:lighter">Create professional VK quotations for your clients</p>
+         
+         <h3 style="font-weight: bolder;font-size: xx-large;">VK QUOTATION</h3>
         </header>
 
         <div class="form-container" style="background: white;
@@ -2932,11 +3045,11 @@ function resetFields() {
     gap: 20px;
     margin-bottom: 20px;">
                 <div class="form-col" style="flex: 1;">
-                  <div class="form-group" style="margin-bottom: 20px;" >
+                  <div class="form-group" style="margin-bottom: 20px; " >
                     <label style="display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #2c3e50;" for="quotationType">Quotation Type</label>
+    color: #2c3e50;" for="quotationType" >Quotation Type</label>
                     <select style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; transition: border 0.3s; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23333\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; padding-right: 40px;"
  id="quotationType" name="quotationType">
                       <option value="VK" selected>VK</option>
@@ -3732,6 +3845,21 @@ function resetFields() {
       loadSummaryCounts();
       switchTab('pending');
 
+      // Add event listener for hamburger
+      document.querySelector('.hamburger').addEventListener('click', toggleSidebar);
+
+      // Add event listener for sidebar close button
+      document.querySelector('.sidebar-close').addEventListener('click', toggleSidebar);
+
+      // Close sidebar when clicking outside
+      document.addEventListener('click', function(event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger');
+        if (sidebar.classList.contains('show') && !sidebar.contains(event.target) && !hamburger.contains(event.target)) {
+          toggleSidebar();
+        }
+      });
+
       // Add event listeners for sidebar menu items
       document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', function() {
@@ -3749,7 +3877,11 @@ function resetFields() {
     // Toggle sidebar visibility on mobile
     function toggleSidebar() {
       const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('show');
+      if (sidebar.className.includes('show')) {
+        sidebar.className = 'sidebar';
+      } else {
+        sidebar.className = 'sidebar show';
+      }
     }
 
     // Load suppliers for filter dropdown
@@ -3866,9 +3998,12 @@ function resetFields() {
       document.getElementById('approvedVKQuotationsTab').style.display = tab === 'approved-vk-quotations' ? 'block' : 'none';
       document.getElementById('maeQuotationsTab').style.display = tab === 'mae-quotations' ? 'block' : 'none';
       document.getElementById('approvedMAEQuotationsTab').style.display = tab === 'approved-mae-quotations' ? 'block' : 'none';
-      document.getElementById('projectAssignmentTab').style.display = tab === 'project-assignment' ? 'block' : 'none';
+      document.getElementById('project-assignTab').style.display = tab === 'project-assign' ? 'block' : 'none';
+      document.getElementById('tasks-managementTab').style.display = tab === 'tasks-management' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
+      console.log(tab); // must be "project-assignment"
+
       // Load data
       if (tab === 'pending') {
         document.getElementById("filtersSection").style.display="block";
@@ -3901,9 +4036,13 @@ function resetFields() {
         console.log("cost calculations tab is opened")
         document.getElementById('costCalculationContent').style.display="block";
         loadCostOrders();
-      } else if (tab === 'project-assignment') {
-        document.getElementById("filtersSection").style.display="none";
-      }
+      } else if (tab === 'project-assign') {
+         document.getElementById("filtersSection").style.display="none";
+         loadProjectAssignments();
+      } else if (tab === 'tasks-management') {
+         document.getElementById("filtersSection").style.display="none";
+         loadDailyTasks();
+       }
       else {
         loadAllQuotations();
         document.getElementById("filtersSection").style.display="none";
@@ -4381,6 +4520,176 @@ async function loadApprovedMAEQuotations() {
   }
 }
 
+// Load Project Assignments
+async function loadProjectAssignments() {
+  try {
+    const res = await fetch('/api/project-details_info');
+    const assignments = await res.json();
+    renderProjectAssignments(assignments);
+  } catch (err) {
+    console.error('Failed to load project assignments:', err);
+    document.getElementById('projectAssignmentsBody').innerHTML = '<tr><td colspan="18">Failed to load project assignments</td></tr>';
+  }
+}
+
+// Load Daily Tasks
+// async function loadDailyTasks() {
+//   try {
+//     const res = await fetch('/api/daily-tasks');
+//     const tasks = await res.json();
+
+//     // Populate assigned to dropdown dynamically
+//     const assignedToSelect = document.getElementById('filterAssignedTo');
+//     assignedToSelect.innerHTML = '<option value="">All</option>';
+//     const uniqueAssignees = [...new Set(tasks.map(task => task.assigned_to))];
+//     uniqueAssignees.forEach(assignee => {
+//       const option = document.createElement('option');
+//       option.value = assignee;
+//       option.textContent = assignee;
+//       assignedToSelect.appendChild(option);
+//     });
+
+//     // Get filter values from UI (date input and assigned person select)
+//     const fromDate = document.getElementById('filterFromDate')?.value || null;
+//     const assignedTo = document.getElementById('filterAssignedTo')?.value || null;
+
+//     // Render tasks with filters
+//     renderDailyTasks(tasks, { fromDate, assignedTo });
+//   } catch (err) {
+//     console.error('Failed to load daily tasks:', err);
+//     document.getElementById('dailyTasksBody').innerHTML = '<div class="text-center py-8 text-gray-500">Failed to load daily tasks</div>';
+//   }
+// }
+
+// Render Project Assignments
+function renderProjectAssignments(assignments) {
+  const tbody = document.getElementById('projectAssignmentsBody');
+  tbody.innerHTML = ''; // Clear existing rows
+
+  assignments.forEach((assignment, index) => {
+    // Determine row style based on delivery_status
+   let rowStyles;
+ switch ((assignment.delivery_status || '').toLowerCase()) {
+   case 'pending':
+     rowStyles = 'background-color: #fffbeb; color: #92400e; font-weight: 600; border-bottom: 1px solid #fde68a;';
+     break;
+   case 'in progress':
+     rowStyles = 'background-color: #f0f9ff; color: #075985; font-weight: 600; border-bottom: 1px solid #bae6fd;';
+     break;
+   case 'completed':
+     rowStyles = 'background-color: #f0fdf4; color: #166534; font-weight: 600; border-bottom: 1px solid #bbf7d0;';
+     break;
+   case 'delayed':
+     rowStyles = 'background-color: #fff1f2; color: #9f1239; font-weight: 600; border-bottom: 1px solid #fecdd3;';
+     break;
+   default:
+     rowStyles = 'background-color: #ffffff; color: #374151; font-weight: 400; border-bottom: 1px solid #e5e7eb;';
+ }
+
+
+    const row = `<tr style="${rowStyles}">
+      <td>${index + 1}</td>
+      <td>${assignment.description || 'N/A'}</td>
+      <td>${assignment.project_code || 'N/A'}</td>
+      <td>${assignment.quantity || 'N/A'}</td>
+      <td>${assignment.customer || 'N/A'}</td>
+      <td>${assignment.user_name || 'N/A'}</td>
+      <td>${assignment.po_no || 'N/A'}</td>
+      <td>${new Date(assignment.po_date).toLocaleDateString('en-IN')  || 'N/A'}</td>
+      <td>${assignment.currency }${assignment.value_per_unit || 'N/A'}</td>
+      <td>${assignment.currency}${assignment.total_po_value_pending || 'N/A'}</td>
+      <td>${assignment.delivery_status || 'N/A'}</td>
+      <td>${ new Date(assignment.delivery_date).toLocaleDateString('en-IN')|| 'N/A'}</td>
+      <td>${assignment.inv_type || 'N/A'}</td>
+      <td>${assignment.invoice_no || 'N/A'}</td>
+      <td>${new Date(assignment.invoice_date).toLocaleDateString('en-IN')|| 'N/A'}</td>
+      <td>${assignment.currency }${assignment.base_value || 'N/A'}</td>
+      <td>${assignment.currency }${assignment.total_value || 'N/A'}</td>
+    </tr>`;
+
+    tbody.insertAdjacentHTML('beforeend', row);
+  });
+}
+
+// Render Daily Tasks
+// function renderDailyTasks(tasks, filterOptions = {}) {
+//   const container = document.getElementById('dailyTasksBody');
+//   container.innerHTML = ''; // Clear existing tasks
+
+//   // Destructure filter options
+//   const { fromDate, assignedTo } = filterOptions;
+
+//   // Filter tasks based on date and assigned person
+//   let filteredTasks = tasks.filter(task => {
+//     const taskDate = new Date(task.due_date);
+//     const from = fromDate ? new Date(fromDate) : null;
+//     const assignedCheck = assignedTo ? task.assigned_to === assignedTo : true;
+//     const dateCheck = from ? taskDate >= from : true;
+
+//     return dateCheck && assignedCheck;
+//   });
+
+//   // Sort tasks by due_date descending (recent first)
+//   filteredTasks.sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+
+//   if (filteredTasks.length === 0) {
+//     container.innerHTML = '<div class="text-center py-8 text-gray-500">No daily tasks found.</div>';
+//     return;
+//   }
+
+//   filteredTasks.forEach(task => {
+//     const taskCard = `
+//       <div class="task-card">
+//         <div class="task-header">
+//           <span class="task-email">${task.assigned_to || 'N/A'}</span>
+//           <span class="task-time">${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</span>
+//         </div>
+//         <div class="task-desc">${task.description || 'N/A'}</div>
+//         <div class="task-desc">Project: ${task.project || 'N/A'}</div>
+//         <div class="task-desc">Status: <span class="status-badge status-${task.status || 'pending'}">${task.status || 'pending'}</span></div>
+//         <div class="actions" style="margin-top: 10px;">
+//           <button class="view" onclick="viewTask(${task.id})">
+//             <i class="fas fa-eye"></i> View
+//           </button>
+//           <button class="approve" onclick="updateTaskStatus(${task.id}, 'completed')">
+//             <i class="fas fa-check"></i> Complete
+//           </button>
+//         </div>
+//       </div>
+//     `;
+//     container.insertAdjacentHTML('beforeend', taskCard);
+//   });
+// }
+
+// View Task Details
+// function viewTask(taskId) {
+//   // Implement view task functionality, e.g., open a modal or navigate to details
+//   alert(`Viewing task ${taskId}`);
+// }
+
+// Update Task Status
+// async function updateTaskStatus(taskId, status) {
+//   try {
+//     const res = await fetch(`/api/daily-tasks/${taskId}/status`, {
+//       method: 'PUT',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ status })
+//     });
+
+//     if (res.ok) {
+//       alert(`Task ${taskId} marked as ${status}`);
+//       loadDailyTasks(); // Reload tasks
+//     } else {
+//       alert('Failed to update task status');
+//     }
+//   } catch (error) {
+//     console.error('Error updating task status:', error);
+//     alert('Error updating task status');
+//   }
+// }
+
+
+
 
     //render the vk approve quotations table
     async function loadVKApproveQuotations() {
@@ -4693,6 +5002,8 @@ function renderApprovedQuotations(quotations, tbodyId) {
         loadAllQuotations();
       } else if (currentTab === 'rejected') {
         loadRejectedOrders();
+      } else if (currentTab === 'tasks-management') {
+        loadDailyTasks();
       }
     }
 
@@ -7766,6 +8077,104 @@ function toggleMenu(id) {
         alert('An error occurred. Please try again.');
       });
   }
+// async function loadDailyTasks() {
+//   const res = await fetch("/api/daily-tasks");
+//   const tasks = await res.json();
+
+//   const container = document.getElementById("dailyTasksBody");
+//   container.innerHTML = "";
+
+//   // Optional: sort by due_date descending (recent first)
+//   tasks.sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+
+//   tasks.forEach(task => {
+//     const div = document.createElement("div");
+//     div.classList.add("task-card");
+
+//     div.innerHTML = `
+//       <div class="task-header">
+//         <span class="task-email">${task.email}</span>
+//         <span class="task-time">${task.task_date} ${task.task_time}</span>
+//       </div>
+//       <div class="task-desc">${task.task_description}</div>
+//     `;
+
+//     container.appendChild(div);
+//   });
+// }
+
+let assignedDropdownPopulated = false; // Track if dropdown is already populated
+
+async function loadDailyTasks() {
+  try {
+    const res = await fetch('/api/daily-tasks');
+    const tasks = await res.json();
+
+    const assignedToSelect = document.getElementById('filterAssignedTo');
+    console.log('Tasks fetched:', tasks);
+
+    // Populate dropdown only once
+    if (!assignedDropdownPopulated) {
+      const uniqueAssignees = [...new Set(tasks.map(task => task.email))];
+      uniqueAssignees.forEach(assignee => {
+        const option = document.createElement('option');
+        option.value = assignee;
+        option.textContent = assignee;
+        assignedToSelect.appendChild(option);
+      });
+      assignedDropdownPopulated = true;
+    }
+
+    // Get current filter values
+    const fromDate = document.getElementById('filterFromDate')?.value || null;
+    const assignedTo = document.getElementById('filterAssignedTo')?.value || null;
+
+    // Render tasks with filters
+    renderDailyTasks(tasks, { fromDate, assignedTo });
+    console.log('Daily tasks rendered with filters:', { fromDate, assignedTo });
+  } catch (err) {
+    console.error('Failed to load daily tasks:', err);
+    document.getElementById('dailyTasksBody').innerHTML =
+      '<div class="text-center py-8 text-gray-500">Failed to load daily tasks</div>';
+  }
+}
+
+function renderDailyTasks(tasks, { fromDate, assignedTo }) {
+  const container = document.getElementById('dailyTasksBody');
+  container.innerHTML = '';
+
+  const filtered = tasks.filter(task => {
+    const matchesDate = fromDate ? task.task_date >= fromDate : true;
+    const matchesAssignee = assignedTo ? task.email === assignedTo : true;
+    return matchesDate && matchesAssignee;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML =
+      '<div class="text-center py-8 text-gray-500">No tasks found</div>';
+    return;
+  }
+
+  filtered.forEach(task => {
+    const div = document.createElement('div');
+    div.className = 'p-4 border border-gray-200 rounded-lg shadow-sm';
+  div.innerHTML = `
+  <div style="font-family: sans-serif; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; margin-bottom: 12px; background-color: #f9f9f9;">
+    <div style="display: flex; justify-content: space-between; color: #586069; font-size: 0.85rem; margin-bottom: 12px;">
+      <span><strong>Date:</strong> ${task.task_date}</span>
+      <span><strong>Committed by:</strong> ${task.email}</span>
+    </div>
+    <div style="color: #24292e;">
+      <span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: #0366d6;">Description</span>
+      <h3 style="margin: 4px 0 0 0; font-size: 1.2rem; font-weight: 500;">${task.task_description}</h3>
+    </div>
+  </div>
+`;
+    container.appendChild(div);
+  });
+}
+
+
 
 </script>
 </body>

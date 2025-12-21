@@ -6721,6 +6721,92 @@ app.put("/api/mae-quotations/:id/:status", async (req, res) => {
   }
 });
 
+// Get project assignments
+app.post("/api/project-details", async (req, res) => {
+  try {
+    const {
+      invoiceNo,
+      invoiceDate,
+      invType,
+      customer,
+      userName,
+      projectCode,
+      description,
+      poNo,
+      poDate,
+      deliveryDate,
+      deliveryStatus,
+      quantity,
+      valuePerUnit,
+      baseValue,
+      totalValue,
+      totalPoValuePending,
+      currency
+    } = req.body;
+
+    const query = `
+      INSERT INTO project_info (
+        invoice_no,
+        invoice_date,
+        inv_type,
+        customer,
+        user_name,
+        project_code,
+        description,
+        po_no,
+        po_date,
+        delivery_date,
+        delivery_status,
+        quantity,
+        value_per_unit,
+        base_value,
+        total_value,
+        total_po_value_pending,
+        currency
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+      ) RETURNING *;
+    `;
+
+    const values = [
+      invoiceNo,
+      invoiceDate,
+      invType,
+      customer,
+      userName,
+      projectCode,
+      description,
+      poNo,
+      poDate,
+      deliveryDate,
+      deliveryStatus,
+      quantity,
+      valuePerUnit,
+      baseValue,
+      totalValue,
+      totalPoValuePending,
+      currency
+    ];
+
+    const result = await pool.query(query, values);
+
+    res.status(201).json({
+      success: true,
+      message: "Invoice created successfully",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error inserting invoice",
+      error: error.message
+    });
+  }
+});
+
+
 
 
 
@@ -7161,6 +7247,96 @@ app.post("/submit-inventory_local", upload.single("invoice_local"), async (req, 
 
 
 
+function isAuthenticated(req, res, next) {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  next();
+}
+
+// GET project details
+app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
+  try {
+    // Example DB query (replace with your DB logic)
+    const result = await pool.query(`
+      SELECT
+        id,
+        description,
+        project_code,
+        quantity,
+        customer,
+        user_name,
+        po_no,
+        po_date,
+        value_per_unit,
+        total_po_value_pending,
+        delivery_status,
+        delivery_date,
+        inv_type,
+        invoice_no,
+        invoice_date,
+        base_value,
+        total_value,
+        currency
+        
+      FROM project_info
+      ORDER BY po_date DESC
+    `);
+
+    if (result.rows.length === 0) {
+      return res.json({ message: 'No projects found' });
+    }
+
+    res.json(result.rows);
+
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//post work log
+
+app.post("/api/work-log", async (req, res) => {
+  try {
+    const { email, task_description, module } = req.body;
+
+    if (!email || !task_description) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO daily_tasks
+      (email, task_description, task_date, task_time, module)
+      VALUES ($1, $2, (timezone('Asia/Kolkata', now()))::date,
+        (timezone('Asia/Kolkata', now()))::time, $3)
+      `,
+      [email, task_description, module]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.get("/api/daily-tasks", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, email, task_description, module, 
+              task_date::text, task_time::text
+       FROM daily_tasks
+       ORDER BY task_date DESC, task_time DESC`
+    );
+
+    res.json(result.rows); // returns array of tasks
+  } catch (err) {
+    console.error("Error fetching daily tasks:", err);
+    res.status(500).json({ error: "Failed to fetch tasks" });
+  }
+});
 
 
 

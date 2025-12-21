@@ -1537,10 +1537,128 @@
             margin-top: 20px;
             font-size: 18px;
         }
+.task-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.task-box {
+  background: #ffffff;
+  padding: 28px;
+  width: 420px;
+  border-radius: 14px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+  animation: popIn 0.35s ease;
+}
+
+.task-box h2 {
+  font-size: 22px;
+  color: #111827;
+  margin-bottom: 5px;
+}
+
+.task-box p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  resize: none;
+}
+
+.task-box button {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.task-box button:hover {
+  opacity: 0.95;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 
     </style>
 </head>
 <body>
+    <!-- Task Popup -->
+<!-- Task Popup -->
+<div id="taskModal" class="task-modal">
+  <div class="task-box">
+    <h2>📝 Work Declaration</h2>
+    <p>Please enter what you are going to work on.</p>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="userEmail" value="<%= user.email %>" disabled />
+    </div>
+
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="taskDate" disabled />
+    </div>
+
+    <div class="form-group">
+      <label>Task Description</label>
+      <textarea
+        id="taskDesc"
+        rows="4"
+        placeholder="Example: Vendor follow-up, PO verification, cost comparison"
+      ></textarea>
+    </div>
+
+    <button onclick="submitTask()">Submit</button>
+  </div>
+</div>
+
+
+
     <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -5860,8 +5978,56 @@ document.addEventListener("keydown", (e) => {
 });
 
 
+//submitting task
+  document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split("T")[0];
+    const email = document.getElementById("userEmail").value;
+    const storageKey = `taskSubmitted_${email}`;
 
-            
+    // 👇 Only show popup if NOT submitted today
+    if (localStorage.getItem(storageKey) !== today) {
+      document.getElementById("taskModal").style.display = "flex";
+    }
+
+    // Auto date
+    document.getElementById("taskDate").value = today;
+  });
+
+  function submitTask() {
+    const task = document.getElementById("taskDesc").value.trim();
+    if (!task) {
+      alert("Please enter your task");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const email = document.getElementById("userEmail").value;
+    const storageKey = `taskSubmitted_${email}`;
+
+    // ❌ Already submitted today
+    if (localStorage.getItem(storageKey) === today) {
+      alert("Task already submitted today");
+      return;
+    }
+
+    fetch("/api/work-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        task_description: task,
+       
+        module: "procurement"
+      })
+    })
+    .then(() => {
+      // ✅ Mark as submitted today
+      localStorage.setItem(storageKey, today);
+      document.getElementById("taskModal").style.display = "none";
+    });
+  }
+
+
     </script>
 </body>
 </html>
