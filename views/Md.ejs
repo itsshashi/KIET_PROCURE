@@ -1885,7 +1885,45 @@ select {
 });
 
 </script>
+<div class="assign_project_modal" id="assign_project_modal" style="display:none; 
+    background-color: #3568f39f; width: 300px; height: 250px; 
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    color: #0e0d0d; z-index: 1000;">
 
+  <!-- Close Button -->
+  <button id="close_modal" style="background: none; border: none; color: #fff; 
+      font-size: 20px; position: absolute; top: 10px; right: 15px; cursor: pointer;">
+    &times;
+  </button>
+
+  <!-- Modal Title -->
+  <h1 style="margin-bottom: 15px; color:white;font-weight: bold;font-size: 25px;">Assign Project</h1>
+
+  <!-- Select Dropdown -->
+  <select name="project_to" id="to" style="width: 100%; padding: 8px; border-radius: 5px; border: none;">
+    <option value="rajesh.km@kietsindia.com">Rajesh K M</option>
+    <option value="kumar.p@kietsindia.com">Kumar P</option>
+    <option value="tilak.b@kietsindia.com">Tilak B</option>
+    <option value="kathiresan.s@kietsindia.com">Kathiresan S</option>
+    <option value="darshan.nm@kietsindia.com">Darshan N M</option>
+    <option value="shashank@kietsindia.com">Shashank N</option>
+    <option value="arun.d@kietsindia.com">Arun D</option>
+    <option value="kalidass.s@kietsindia.com">Kalidass S</option>
+    <option value="purchase@kietsindia.com">Purchase Team</option>
+    <option value="jayanth.n@kietsindia.com">Jayanth</option>
+  </select>
+
+  <!-- Assign Button -->
+  <button id="assign_project_btn" style="margin-top: 20px; width: 100%; padding: 10px; 
+      background-color: #10b981; border: none; border-radius: 5px; color: #fff; cursor: pointer;">
+    Assign
+  </button>
+</div>
+
+<!-- Optional Overlay -->
+<div id="modal_overlay" style="display:none; position: fixed; top:0; left:0; 
+    width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:999;"></div>
 
     <!-- Approved Quotations Table -->
     <div id="approvedQuotationsTab" class="tab-content">
@@ -2242,6 +2280,7 @@ select {
         <th class="px-4 py-3">Invoice DATE</th>
         <th class="px-4 py-3">BASE VALUE</th>
         <th class="px-4 py-3">TOTAL VALUE</th>
+        <th class="px-4 py-3">ASSIGNED TO</th>
       </tr>
     </thead>
     <tbody id="projectAssignmentsBody">
@@ -4589,6 +4628,7 @@ function renderProjectAssignments(assignments) {
 
     const row = `<tr style="${rowStyles}">
       <td>${index + 1}</td>
+      <td id="id_project" style="display:none">${assignment.id || 'N/A'}</td>
       <td>${assignment.description || 'N/A'}</td>
       <td>${assignment.project_code || 'N/A'}</td>
       <td>${assignment.quantity || 'N/A'}</td>
@@ -4605,7 +4645,32 @@ function renderProjectAssignments(assignments) {
       <td>${new Date(assignment.invoice_date).toLocaleDateString('en-IN')|| 'N/A'}</td>
       <td>${assignment.currency }${assignment.base_value || 'N/A'}</td>
       <td>${assignment.currency }${assignment.total_value || 'N/A'}</td>
-    </tr>`;
+      <td id="assign_btn1">
+  ${
+        console.log(
+  'assigned_to =',
+  assignment.assigned_to,
+  'type =',
+  typeof assignment.assigned_to
+),
+
+    !assignment.assigned_to || assignment.assigned_to === 'null'
+      ? `<button class="btn btn-primary btn-sm"
+                 onclick="openModal(${assignment.id})">
+           Assign To
+         </button>`
+      : `<div class="flex flex-col">
+           <span class="font-semibold text-gray-800" >
+             ${assignment.assigned_to}
+           </span>
+           <span class="text-xs text-gray-500" style="font-size: 12px;">
+             assigned on : ${new Date(assignment.assigned_on).toLocaleDateString() || ''}
+           </span>
+         </div>`
+  }
+</td>
+
+      </tr>`;
 
     tbody.insertAdjacentHTML('beforeend', row);
   });
@@ -8174,6 +8239,94 @@ function renderDailyTasks(tasks, { fromDate, assignedTo }) {
   });
 }
 
+const modal1 = document.getElementById('assign_project_modal');
+  const overlay = document.getElementById('modal_overlay');
+  const closeBtn = document.getElementById('close_modal');
+  const savebtn1 =document.getElementById('assign_project_btn');
+  // const projectSelect = document.getElementById('project_code_select');
+  const projectSelect = document.getElementById('to');
+
+  // Open modal function (you can call this when needed)
+  function openModal(assignid) {
+    modal1.style.display = 'block';
+    overlay.style.display = 'block';
+    console.log("Assign ID:", assignid); // For testing
+
+    savebtn1.addEventListener('click', () => {
+    
+    const selectedValue = projectSelect.value;
+    console.log("Assigned to:", selectedValue); // For testing
+    alert("Assigned to: " + selectedValue);
+    console.log("Assign ID inside savebtn1:", assignid); // For testing
+
+    
+    
+
+    // You can also send this value to backend using fetch/ajax if needed
+    // Example:
+    // fetch('/api/assign-project', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ assigned_to: selectedValue })
+    // });
+
+    closeModal(); // Close modal after assigning
+    const assign_to_dis=document.getElementById('assign_btn1');
+    document.getElementById('assigned_to').style.display='none';
+    assign_to_dis.innerText=selectedValue;
+    assign_project(selectedValue,assignid);
+
+    
+    
+
+  });
+  }
+
+  // Close modal function
+  function closeModal() {
+    modal1.style.display = 'none';
+    overlay.style.display = 'none';
+  }
+
+
+  async function assign_project(selectedValue,current_id) {
+   try {
+        const response = await fetch('/api/assign_to', {
+            method: 'PUT',               // Use POST to send data
+            headers: {
+                'Content-Type': 'application/json' // Tell backend it's JSON
+            },
+            body: JSON.stringify({        // Send selectedValue in the body
+                selectedValue: selectedValue,
+                current_id: current_id
+                
+            })
+        });
+        console.log('request sent',current_id,selectedValue);
+
+        if (!response.ok) {
+            throw new Error('Failed to assign project');
+        }
+
+        const data = await response.json(); // Get response from backend
+        console.log('Project assigned successfully:', data);
+
+    } catch (error) {
+        console.error('Error assigning project:', error);
+    }
+}
+
+  
+    
+
+
+
+
+  // Close on clicking close button
+  closeBtn.addEventListener('click', closeModal);
+
+  // Close on clicking overlay
+  overlay.addEventListener('click', closeModal);
 
 
 </script>

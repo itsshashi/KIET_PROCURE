@@ -7277,7 +7277,9 @@ app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
         invoice_date,
         base_value,
         total_value,
-        currency
+        currency,
+        assigned_to,
+        assigned_on
         
       FROM project_info
       ORDER BY po_date DESC
@@ -7340,6 +7342,39 @@ app.get("/api/daily-tasks", async (req, res) => {
 
 
 
+app.put("/api/assign_to", async (req, res) => {
+  try {
+    const selectedValue=req.body.selectedValue;
+    console.log("req body values",req.body)
+    const id=req.body.current_id;
+    const updateQuery = `
+      UPDATE project_info SET
+        assigned_to = $1,
+        assigned_on = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `;  
+    const values = [
+      selectedValue,
+      id
+
+    ];
+    const result = await pool.query(updateQuery, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    res.json({
+      success: true,
+      message: "Project assigned successfully",
+      project: result.rows[0]
+    });
+  }
+
+  catch (error) {
+    console.error("Error in /api/assign_to:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
