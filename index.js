@@ -689,7 +689,7 @@ app.get("/api/inventory-orders", async (req, res) => {
     const { rows } = await pool.query(`
             SELECT
                 id,
-                purchase_order_number as order_id,
+                project_code_number as order_id,
                 project_name as project,
                 supplier_name as supplier,
                 supplier_gst,
