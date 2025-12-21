@@ -4739,7 +4739,7 @@ function renderProjectAssignments(assignments) {
       <td>${new Date(assignment.invoice_date).toLocaleDateString('en-IN')|| 'N/A'}</td>
       <td>${assignment.currency }${assignment.base_value || 'N/A'}</td>
       <td>${assignment.currency }${assignment.total_value || 'N/A'}</td>
-      // Inside your loop/mapping function:
+      
 <td class="assignment-cell">
   ${
     !assignment.assigned_to || assignment.assigned_to === 'null'
