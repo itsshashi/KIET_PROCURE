@@ -3869,6 +3869,92 @@ function resetFields() {
  
 
 
+  <!-- Startup Popup Modal -->
+  <div id="startupPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" style="display: none;">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-400 to-blue-200 text-white p-6 rounded-t-xl">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <i class="fas fa-rocket"></i>
+            System Updates & New Features
+          </h2>
+          <button onclick="closeStartupPopup()" class="text-white hover:text-gray-200 text-2xl font-bold">
+            &times;
+          </button>
+        </div>
+        <p class="text-blue-100 mt-2">Latest improvements to your MD Section</p>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Quick Updates -->
+        <div class="space-y-3">
+         
+          
+          <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+            <i class="fas fa-users text-purple-600"></i>
+            <div>
+              <h3 class="font-semibold text-purple-800">Project & Task Management</h3>
+              <p class="text-purple-700 text-sm">New assignment and tracking features</p>
+            </div>
+          </div>
+            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+            <i class="fas fa-calculator text-green-600"></i>
+            <div>
+              <h3 class="font-semibold text-green-800">Cost Calculation Updates</h3>
+              <p class="text-green-700 text-sm">Improved VK pricing and PV adaptor calculations</p>
+            </div>
+          </div>
+           <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+            <i class="fas fa-users text-purple-600"></i>
+            <div>
+              <h3 class="font-semibold text-purple-800">Project Assignment</h3>
+              <p class="text-purple-700 text-sm">New Project Assign Process</p>
+            </div>
+          </div>
+           <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+            <i class="fas fa-star text-blue-600"></i>
+            <div>
+              <h3 class="font-semibold text-blue-800">New MAE Quotation System</h3>
+              <p class="text-blue-700 text-sm">Enhanced quotation generation with rich text editor</p>
+            </div>
+          </div>
+          
+        
+          
+          <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+            <i class="fas fa-mobile-alt text-orange-600"></i>
+            <div>
+              <h3 class="font-semibold text-orange-800">Mobile Improvements</h3>
+              <p class="text-orange-700 text-sm">Better responsive design for all devices</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 text-center text-gray-600 text-sm">
+          <p><strong>Version 2.1.0</strong> • Released Dec 21, 2025</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-between items-center mt-6 pt-4 border-t">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="dontShowAgain" class="rounded">
+            <label for="dontShowAgain" class="text-sm text-gray-600">Don't show again</label>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="closeStartupPopup()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">
+              Close
+            </button>
+            <button onclick="viewFullChangelog()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+              <i class="fas fa-file-alt mr-2"></i>View Full Changelog
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentTab = 'pending';
     let currentPage = 1;
@@ -3883,6 +3969,11 @@ function resetFields() {
       loadSuppliers();
       loadSummaryCounts();
       switchTab('pending');
+      
+      // Show startup popup after a short delay
+      setTimeout(() => {
+        showStartupPopup();
+      }, 1500);
 
       // Add event listener for hamburger
       document.querySelector('.hamburger').addEventListener('click', toggleSidebar);
@@ -5961,6 +6052,97 @@ function addEditPvRow(item = {}) {
   }
 }
 
+  </script>
+
+  <!-- Startup Popup Functions -->
+  <script>
+    // Show startup popup
+    function showStartupPopup() {
+      // Check if user has opted to not show again
+      if (localStorage.getItem('dontShowStartupPopup') === 'true') {
+        return;
+      }
+      
+      const popup = document.getElementById('startupPopup');
+      if (popup) {
+        popup.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      }
+    }
+
+    // Close startup popup
+    function closeStartupPopup() {
+      const popup = document.getElementById('startupPopup');
+      const dontShowAgain = document.getElementById('dontShowAgain');
+      
+      if (dontShowAgain && dontShowAgain.checked) {
+        localStorage.setItem('dontShowStartupPopup', 'true');
+      }
+      
+      if (popup) {
+        popup.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scrolling
+      }
+    }
+
+    // View full changelog
+    function viewFullChangelog() {
+      // Close the popup first
+      closeStartupPopup();
+      
+      // You can implement this to show a detailed changelog
+      // For now, let's show an alert with more details
+      alert(`🎉 Full Changelog - MD Section v2.1.0
+
+📅 Release Date: December 21, 2025
+
+✨ MAJOR FEATURES:
+• Project assign process Dashboard
+  > assign projects to team members
+  > track task progress 
+  > view individual Tasks
+• New MAE Quotation module with rich text editor
+• Project assignment and task management
+• Advanced cost calculation engine
+• Mobile-responsive design improvements
+• Added Account Department field in orders
+
+🔧 IMPROVEMENTS:
+• Faster page load times
+• Better error handling
+• Enhanced security features
+• Improved user interface
+• Better mobile experience
+.
+
+🐛 BUG FIXES:
+• Fixed table sorting issues
+• Resolved PDF generation problems
+• Fixed mobile navigation issues
+• Corrected calculation errors
+
+📱 MOBILE:
+• Responsive design for all screen sizes
+• Touch-friendly interface
+• Optimized for tablets and phones
+
+For detailed technical documentation, please contact the development team.`);
+    }
+
+    // Close popup when clicking outside
+    document.addEventListener('click', function(event) {
+      const popup = document.getElementById('startupPopup');
+      if (event.target === popup) {
+        closeStartupPopup();
+      }
+    });
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeStartupPopup();
+      }
+    });
   </script>
 
   <script src="/print.js"></script>
