@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 
-import path from "path";
+import path, { parse } from "path";
 import { fileURLToPath } from "url";
 import { Pool } from "pg";
 import crypto from "crypto";
@@ -7347,15 +7347,18 @@ app.put("/api/assign_to", async (req, res) => {
     const selectedValue=req.body.selectedValue;
     console.log("req body values",req.body)
     const id=req.body.current_id;
+    const budget=parseFloat(req.body.budgetValue);
     const updateQuery = `
       UPDATE project_info SET
         assigned_to = $1,
-        assigned_on = CURRENT_TIMESTAMP
-      WHERE id = $2
+        assigned_on = CURRENT_TIMESTAMP,
+        budget= $2
+      WHERE id = $3
       RETURNING *
     `;  
     const values = [
       selectedValue,
+      budget  ,
       id
 
     ];
@@ -7375,6 +7378,28 @@ app.put("/api/assign_to", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
+
+app.get("/api/know_budget/:project_code", async (req, res) => {
+  try {
+    const project_code = req.params.project_code;
+    console.log("Project code received:", project_code);
+    const result = await pool.query(
+      `SELECT budget FROM project_info WHERE project_code = $1 ORDER BY id DESC LIMIT 1`,
+      [project_code]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    const budget = result.rows[0].budget;
+    res.json({ budget });
+  } catch (error) {
+    console.error("Error fetching budget:", error);
+    res.status(500).json({ error: "Failed to fetch budget" });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));

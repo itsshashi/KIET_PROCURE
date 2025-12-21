@@ -1914,6 +1914,9 @@ select {
     <option value="jayanth.n@kietsindia.com">Jayanth</option>
   </select>
 
+  <input type="number" name="budget" id="budget" placeholder="Enter Budget Amount" 
+      style="margin-top: 15px; width: 100%; padding: 8px; border-radius: 5px; border: none;">
+
   <!-- Assign Button -->
   <button id="assign_project_btn" style="margin-top: 20px; width: 100%; padding: 10px; 
       background-color: #10b981; border: none; border-radius: 5px; color: #fff; cursor: pointer;">
@@ -4736,26 +4739,18 @@ function renderProjectAssignments(assignments) {
       <td>${new Date(assignment.invoice_date).toLocaleDateString('en-IN')|| 'N/A'}</td>
       <td>${assignment.currency }${assignment.base_value || 'N/A'}</td>
       <td>${assignment.currency }${assignment.total_value || 'N/A'}</td>
-      <td id="assign_btn1">
+      // Inside your loop/mapping function:
+<td class="assignment-cell">
   ${
-        console.log(
-  'assigned_to =',
-  assignment.assigned_to,
-  'type =',
-  typeof assignment.assigned_to
-),
-
     !assignment.assigned_to || assignment.assigned_to === 'null'
       ? `<button class="btn btn-primary btn-sm"
-                 onclick="openModal(${assignment.id})">
+                 onclick="openModal(${assignment.id}, this)">
            Assign To
          </button>`
       : `<div class="flex flex-col">
-           <span class="font-semibold text-gray-800" >
-             ${assignment.assigned_to}
-           </span>
+           <span class="font-semibold text-gray-800">${assignment.assigned_to}</span>
            <span class="text-xs text-gray-500" style="font-size: 12px;">
-             assigned on : ${new Date(assignment.assigned_on).toLocaleDateString() || ''}
+             assigned on: ${new Date(assignment.assigned_on).toLocaleDateString()}
            </span>
          </div>`
   }
@@ -8427,42 +8422,48 @@ const modal1 = document.getElementById('assign_project_modal');
   const savebtn1 =document.getElementById('assign_project_btn');
   // const projectSelect = document.getElementById('project_code_select');
   const projectSelect = document.getElementById('to');
+  const budget=document.getElementById('budget');
+
 
   // Open modal function (you can call this when needed)
-  function openModal(assignid) {
+ // Updated function signature to accept the 'trigger' element
+function openModal(assignid, trigger) {
     modal1.style.display = 'block';
     overlay.style.display = 'block';
-    console.log("Assign ID:", assignid); // For testing
 
+    // { once: true } ensures this function only runs once per modal open
     savebtn1.addEventListener('click', () => {
-    
-    const selectedValue = projectSelect.value;
-    console.log("Assigned to:", selectedValue); // For testing
-    alert("Assigned to: " + selectedValue);
-    console.log("Assign ID inside savebtn1:", assignid); // For testing
+        const selectedValue = projectSelect.value;
+        const budgetValue=budget.value;
+        
+        if (!selectedValue) {
+            alert("Please select a project.");
+            return;
+        }
 
-    
-    
+        // 1. Identify the Table Cell (TD) where the button lives
+        const parentCell = trigger.parentElement;
 
-    // You can also send this value to backend using fetch/ajax if needed
-    // Example:
-    // fetch('/api/assign-project', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ assigned_to: selectedValue })
-    // });
+        // 2. Generate the "Assigned" HTML
+        const today = new Date().toLocaleDateString();
+        const newHtml = `
+            <div class="flex flex-col">
+                <span class="font-semibold text-gray-800">${selectedValue}</span>
+                <span class="text-xs text-gray-500" style="font-size: 12px;">
+                    assigned on : ${today}
+                </span>
+            </div>
+        `;
 
-    closeModal(); // Close modal after assigning
-    const assign_to_dis=document.getElementById('assign_btn1');
-    document.getElementById('assigned_to').style.display='none';
-    assign_to_dis.innerText=selectedValue;
-    assign_project(selectedValue,assignid);
+        // 3. Replace the button with the new text
+        parentCell.innerHTML = newHtml;
 
-    
-    
-
-  });
-  }
+        // 4. Backend & Cleanup
+        assign_project(selectedValue, assignid,budgetValue);
+        closeModal();
+        
+    }, { once: true });
+}
 
   // Close modal function
   function closeModal() {
@@ -8471,7 +8472,7 @@ const modal1 = document.getElementById('assign_project_modal');
   }
 
 
-  async function assign_project(selectedValue,current_id) {
+  async function assign_project(selectedValue,current_id,budgetValue) {
    try {
         const response = await fetch('/api/assign_to', {
             method: 'PUT',               // Use POST to send data
@@ -8480,11 +8481,12 @@ const modal1 = document.getElementById('assign_project_modal');
             },
             body: JSON.stringify({        // Send selectedValue in the body
                 selectedValue: selectedValue,
-                current_id: current_id
+                current_id: current_id,
+                budgetValue: budgetValue
                 
             })
         });
-        console.log('request sent',current_id,selectedValue);
+        // console.log('request sent',current_id,selectedValue,budgetValue);
 
         if (!response.ok) {
             throw new Error('Failed to assign project');
