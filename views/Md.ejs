@@ -2324,6 +2324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span class="font-semibold">${selectedValue}</span>
                   <span class="text-xs text-gray-500">
                       assigned on : ${today}
+                      
                   </span>
               </div>
           `;
@@ -4812,7 +4813,7 @@ function renderProjectAssignments(assignments) {
       : `<div class="flex flex-col">
            <span class="font-semibold text-gray-800">${assignment.assigned_to}</span>
            <span class="text-xs text-gray-500" style="font-size: 12px;">
-             assigned on: ${new Date(assignment.assigned_on).toLocaleDateString()}
+             assigned : ${new Date(assignment.assigned_on).toLocaleDateString()}(₹${assignment.budget})
            </span>
          </div>`
   }

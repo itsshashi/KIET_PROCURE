@@ -7279,7 +7279,8 @@ app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
         total_value,
         currency,
         assigned_to,
-        assigned_on
+        assigned_on,
+        budget
         
       FROM project_info
       ORDER BY po_date DESC
@@ -7397,6 +7398,40 @@ app.get("/api/know_budget/:project_code", async (req, res) => {
   } catch (error) {
     console.error("Error fetching budget:", error);
     res.status(500).json({ error: "Failed to fetch budget" });
+  }
+});
+app.put('/api/update-order', async (req, res) => {
+  try {
+    const { id, invoice_no, invoice_date } = req.body;
+    console.log('Update request body:', req.body);
+
+    if (!id) {
+      return res.status(400).json({ message: 'Order ID required' });
+    }
+
+    // PostgreSQL parameterized query ($1, $2, $3)
+    const sql = `
+      UPDATE project_info
+      SET
+        invoice_no = $1,
+        invoice_date = $2::date
+      WHERE id = $3
+      RETURNING *;
+    `;
+
+    const values = [invoice_no || null, invoice_date || null, id];
+
+    const result = await pool.query(sql, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    res.json({ message: 'Invoice updated successfully', order: result.rows[0] });
+
+  } catch (err) {
+    console.error('SQL Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

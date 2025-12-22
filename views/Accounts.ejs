@@ -770,6 +770,7 @@ input:focus, select:focus {
               <th>Invoice Date</th>
               <th>Base Value</th>
               <th>Total Value</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="projectsTableBody">
@@ -1117,7 +1118,7 @@ switch ((item.delivery_status || '').toLowerCase()) {
 tr.style = rowStyles;
 
 
-
+console.log('Populating row for item:', item);
 // Use it in your table row
 tr.innerHTML = `
   <td style="border-left: 1px solid #c7d2fe;">${item.id || 'N/A'}</td>
@@ -1133,11 +1134,27 @@ tr.innerHTML = `
   <td>${item.delivery_status || 'N/A'}</td>
   <td>${new Date(item.delivery_date).toLocaleDateString('en-IN') || 'N/A'}</td>
   <td>${item.inv_type || 'N/A'}</td>
-  <td>${item.invoice_no || 'N/A'}</td>
-  <td>${new Date(item.invoice_date).toLocaleDateString('en-IN') || 'N/A'}</td>
+<!-- Invoice No (editable text) -->
+  <td contenteditable="true"
+      data-field="invoice_no"
+      style="background:#eef2ff;">
+    ${item.invoice_no || ''}
+  </td>
+
+  <!-- Invoice Date (editable date) -->
+  <td>
+    <input type="date"
+           data-field="invoice_date"
+           value="${item.invoice_date ? item.invoice_date.split('T')[0] : ''}"
+           style="background:#eef2ff;border:1px solid #c7d2fe;">
+  </td>  
+   
   <td style="white-space:no-wrap;">${item.currency}${item.base_value ? parseFloat(item.base_value).toFixed(2) : '0.00'}</td>
   <td>${item.currency}${item.total_value ? parseFloat(item.total_value).toFixed(2) : '0.00'}</td>
-`;
+
+<td>
+    <button class="btn btn-primary save-btn">Save</button>
+  </td>  `;
 
 
 
@@ -1326,6 +1343,55 @@ tr.innerHTML = `
 
       fetchAccountDetails();
     });
+
+    async function saveRow(updatedData) {
+  try {
+    const res = await fetch('/api/update-order', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to update');
+    }
+
+    const result = await res.json();
+    console.log(result);
+
+  } catch (error) {
+    console.error('Save failed:', error);
+    alert('Failed to save invoice details ❌');
+  }
+}
+
+  const tbody = document.getElementById('projectsTableBody');
+tbody.addEventListener('click', function (e) {
+  if (!e.target.classList.contains('save-btn')) return;
+
+  const tr = e.target.closest('tr');
+
+  // Sl.No / ID (make sure first column contains ID)
+  const id = tr.children[0].innerText.trim();
+
+  const updatedData = { id };
+
+  tr.querySelectorAll('[data-field]').forEach(el => {
+    const field = el.dataset.field;
+
+    updatedData[field] =
+      el.tagName === 'INPUT' || el.tagName === 'SELECT'
+        ? el.value
+        : el.innerText.trim();
+  });
+
+  saveRow(updatedData);
+  alert('Invoice details saved successfully! ✅');
+});
+
+  
+
+
     
   </script>
 </body>
