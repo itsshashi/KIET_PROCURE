@@ -2293,6 +2293,68 @@ select {
 </div>
 
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {   
+
+  const modal1 = document.getElementById('assign_project_modal');
+  const overlay = document.getElementById('modal_overlay');
+  const closeBtn = document.getElementById('close_modal');
+  const savebtn1 = document.getElementById('assign_project_btn');
+  const projectSelect = document.getElementById('to');
+  const budget = document.getElementById('budget');
+
+  function openModal(assignid, trigger) {
+      modal1.style.display = 'block';
+      overlay.style.display = 'block';
+
+      savebtn1.addEventListener('click', () => {
+          const selectedValue = projectSelect.value;
+          const budgetValue = budget.value;
+
+          if (!selectedValue) {
+              alert("Please select a project.");
+              return;
+          }
+
+          const parentCell = trigger.parentElement;
+          const today = new Date().toLocaleDateString();
+
+          parentCell.innerHTML = `
+              <div class="flex flex-col">
+                  <span class="font-semibold">${selectedValue}</span>
+                  <span class="text-xs text-gray-500">
+                      assigned on : ${today}
+                  </span>
+              </div>
+          `;
+
+          assign_project(selectedValue, assignid, budgetValue);
+          closeModal();
+      }, { once: true });
+  }
+
+  function closeModal() {
+      modal1.style.display = 'none';
+      overlay.style.display = 'none';
+  }
+
+  async function assign_project(selectedValue, current_id, budgetValue) {
+      await fetch('/api/assign_to', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selectedValue, current_id, budgetValue })
+      });
+  }
+
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', closeModal);
+
+  // 🔥 THIS IS THE FIX
+  window.openModal = openModal;
+
+});
+</script>
+
 
     <!-- Tasks Management Tab Content -->
    <div id="tasks-managementTab" class="tab-content">
@@ -8415,102 +8477,6 @@ function renderDailyTasks(tasks, { fromDate, assignedTo }) {
     container.appendChild(div);
   });
 }
-
-const modal1 = document.getElementById('assign_project_modal');
-  const overlay = document.getElementById('modal_overlay');
-  const closeBtn = document.getElementById('close_modal');
-  const savebtn1 =document.getElementById('assign_project_btn');
-  // const projectSelect = document.getElementById('project_code_select');
-  const projectSelect = document.getElementById('to');
-  const budget=document.getElementById('budget');
-
-
-  // Open modal function (you can call this when needed)
- // Updated function signature to accept the 'trigger' element
-function openModal(assignid, trigger) {
-    modal1.style.display = 'block';
-    overlay.style.display = 'block';
-
-    // { once: true } ensures this function only runs once per modal open
-    savebtn1.addEventListener('click', () => {
-        const selectedValue = projectSelect.value;
-        const budgetValue=budget.value;
-        
-        if (!selectedValue) {
-            alert("Please select a project.");
-            return;
-        }
-
-        // 1. Identify the Table Cell (TD) where the button lives
-        const parentCell = trigger.parentElement;
-
-        // 2. Generate the "Assigned" HTML
-        const today = new Date().toLocaleDateString();
-        const newHtml = `
-            <div class="flex flex-col">
-                <span class="font-semibold text-gray-800">${selectedValue}</span>
-                <span class="text-xs text-gray-500" style="font-size: 12px;">
-                    assigned on : ${today}
-                </span>
-            </div>
-        `;
-
-        // 3. Replace the button with the new text
-        parentCell.innerHTML = newHtml;
-
-        // 4. Backend & Cleanup
-        assign_project(selectedValue, assignid,budgetValue);
-        closeModal();
-        
-    }, { once: true });
-}
-
-  // Close modal function
-  function closeModal() {
-    modal1.style.display = 'none';
-    overlay.style.display = 'none';
-  }
-
-
-  async function assign_project(selectedValue,current_id,budgetValue) {
-   try {
-        const response = await fetch('/api/assign_to', {
-            method: 'PUT',               // Use POST to send data
-            headers: {
-                'Content-Type': 'application/json' // Tell backend it's JSON
-            },
-            body: JSON.stringify({        // Send selectedValue in the body
-                selectedValue: selectedValue,
-                current_id: current_id,
-                budgetValue: budgetValue
-                
-            })
-        });
-        // console.log('request sent',current_id,selectedValue,budgetValue);
-
-        if (!response.ok) {
-            throw new Error('Failed to assign project');
-        }
-
-        const data = await response.json(); // Get response from backend
-        console.log('Project assigned successfully:', data);
-
-    } catch (error) {
-        console.error('Error assigning project:', error);
-    }
-}
-
-  
-    
-
-
-
-
-  // Close on clicking close button
-  closeBtn.addEventListener('click', closeModal);
-
-  // Close on clicking overlay
-  overlay.addEventListener('click', closeModal);
 
 
 </script>
