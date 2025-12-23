@@ -2389,6 +2389,76 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- Tasks dynamically populated here -->
   </div>
 </div>
+<script>let assignedDropdownPopulated = false; // Track if dropdown is already populated
+
+async function loadDailyTasks() {
+  try {
+    const res = await fetch('/api/daily-tasks');
+    const tasks = await res.json();
+
+    const assignedToSelect = document.getElementById('filterAssignedTo');
+    console.log('Tasks fetched:', tasks);
+
+    // Populate dropdown only once
+    if (!assignedDropdownPopulated) {
+      const uniqueAssignees = [...new Set(tasks.map(task => task.email))];
+      uniqueAssignees.forEach(assignee => {
+        const option = document.createElement('option');
+        option.value = assignee;
+        option.textContent = assignee;
+        assignedToSelect.appendChild(option);
+      });
+      assignedDropdownPopulated = true;
+    }
+
+    // Get current filter values
+    const fromDate = document.getElementById('filterFromDate')?.value || null;
+    const assignedTo = document.getElementById('filterAssignedTo')?.value || null;
+
+    // Render tasks with filters
+    renderDailyTasks(tasks, { fromDate, assignedTo });
+    console.log('Daily tasks rendered with filters:', { fromDate, assignedTo });
+  } catch (err) {
+    console.error('Failed to load daily tasks:', err);
+    document.getElementById('dailyTasksBody').innerHTML =
+      '<div class="text-center py-8 text-gray-500">Failed to load daily tasks</div>';
+  }
+}
+
+function renderDailyTasks(tasks, { fromDate, assignedTo }) {
+  const container = document.getElementById('dailyTasksBody');
+  container.innerHTML = '';
+
+  const filtered = tasks.filter(task => {
+    const matchesDate = fromDate ? task.task_date >= fromDate : true;
+    const matchesAssignee = assignedTo ? task.email === assignedTo : true;
+    return matchesDate && matchesAssignee;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML =
+      '<div class="text-center py-8 text-gray-500">No tasks found</div>';
+    return;
+  }
+
+  filtered.forEach(task => {
+    const div = document.createElement('div');
+    div.className = 'p-4 border border-gray-200 rounded-lg shadow-sm';
+  div.innerHTML = `
+  <div style="font-family: sans-serif; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; margin-bottom: 12px; background-color: #f9f9f9;">
+    <div style="display: flex; justify-content: space-between; color: #586069; font-size: 0.85rem; margin-bottom: 12px;">
+      <span><strong>Date:</strong> ${task.task_date}</span>
+      <span><strong>Committed by:</strong> ${task.email}</span>
+    </div>
+    <div style="color: #24292e;">
+      <span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: #0366d6;">Description</span>
+      <h3 style="margin: 4px 0 0 0; font-size: 1.2rem; font-weight: 500;">${task.task_description}</h3>
+    </div>
+  </div>
+`;
+    container.appendChild(div);
+  });
+}</script>
 
 <!-- <script>document.addEventListener("DOMContentLoaded", loadDailyTasks);</script> -->
 
@@ -4196,6 +4266,7 @@ function resetFields() {
       document.getElementById('approvedMAEQuotationsTab').style.display = tab === 'approved-mae-quotations' ? 'block' : 'none';
       document.getElementById('project-assignTab').style.display = tab === 'project-assign' ? 'block' : 'none';
       document.getElementById('tasks-managementTab').style.display = tab === 'tasks-management' ? 'block' : 'none';
+      // document.getElementById('project-detailsTab').style.display = tab === 'project-details' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       console.log(tab); // must be "project-assignment"
@@ -8408,76 +8479,7 @@ function toggleMenu(id) {
 //   });
 // }
 
-let assignedDropdownPopulated = false; // Track if dropdown is already populated
 
-async function loadDailyTasks() {
-  try {
-    const res = await fetch('/api/daily-tasks');
-    const tasks = await res.json();
-
-    const assignedToSelect = document.getElementById('filterAssignedTo');
-    console.log('Tasks fetched:', tasks);
-
-    // Populate dropdown only once
-    if (!assignedDropdownPopulated) {
-      const uniqueAssignees = [...new Set(tasks.map(task => task.email))];
-      uniqueAssignees.forEach(assignee => {
-        const option = document.createElement('option');
-        option.value = assignee;
-        option.textContent = assignee;
-        assignedToSelect.appendChild(option);
-      });
-      assignedDropdownPopulated = true;
-    }
-
-    // Get current filter values
-    const fromDate = document.getElementById('filterFromDate')?.value || null;
-    const assignedTo = document.getElementById('filterAssignedTo')?.value || null;
-
-    // Render tasks with filters
-    renderDailyTasks(tasks, { fromDate, assignedTo });
-    console.log('Daily tasks rendered with filters:', { fromDate, assignedTo });
-  } catch (err) {
-    console.error('Failed to load daily tasks:', err);
-    document.getElementById('dailyTasksBody').innerHTML =
-      '<div class="text-center py-8 text-gray-500">Failed to load daily tasks</div>';
-  }
-}
-
-function renderDailyTasks(tasks, { fromDate, assignedTo }) {
-  const container = document.getElementById('dailyTasksBody');
-  container.innerHTML = '';
-
-  const filtered = tasks.filter(task => {
-    const matchesDate = fromDate ? task.task_date >= fromDate : true;
-    const matchesAssignee = assignedTo ? task.email === assignedTo : true;
-    return matchesDate && matchesAssignee;
-  });
-
-  if (filtered.length === 0) {
-    container.innerHTML =
-      '<div class="text-center py-8 text-gray-500">No tasks found</div>';
-    return;
-  }
-
-  filtered.forEach(task => {
-    const div = document.createElement('div');
-    div.className = 'p-4 border border-gray-200 rounded-lg shadow-sm';
-  div.innerHTML = `
-  <div style="font-family: sans-serif; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; margin-bottom: 12px; background-color: #f9f9f9;">
-    <div style="display: flex; justify-content: space-between; color: #586069; font-size: 0.85rem; margin-bottom: 12px;">
-      <span><strong>Date:</strong> ${task.task_date}</span>
-      <span><strong>Committed by:</strong> ${task.email}</span>
-    </div>
-    <div style="color: #24292e;">
-      <span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: #0366d6;">Description</span>
-      <h3 style="margin: 4px 0 0 0; font-size: 1.2rem; font-weight: 500;">${task.task_description}</h3>
-    </div>
-  </div>
-`;
-    container.appendChild(div);
-  });
-}
 
 
 </script>
