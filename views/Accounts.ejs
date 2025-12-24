@@ -712,6 +712,11 @@ input:focus, select:focus {
               <label for="invType">INV Type</label>
               <input type="text" id="invType" name="invType" placeholder="Enter invoice type">
             </div>
+            <div class="form-col">
+              <label for="po">Upload PO</label>
+              <input type="file" name="po_upload" id="po_upload" accept=".pdf,.doc,.docx,.jpg,.png">
+              <span style="font-size: 12px; color: #666;">Accepted formats: PDF, DOC, JPG, PNG</span>
+            </div>
           </div>
         </div>
 
@@ -1202,62 +1207,70 @@ tr.innerHTML = `
     document.getElementById('valuePerUnit').addEventListener('input', calculateTotalPO);
 
     // Form validation and submit
-    document.getElementById('projectDetailsForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    document.getElementById('projectDetailsForm')
+  .addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-      // Basic validation
-      const requiredFields = ['description', 'projectCode', 'quantity', 'customer', 'userName', 'poNo', 'poDate', 'valuePerUnit', 'deliveryStatus'];
-      let isValid = true;
+    // Required field validation
+    const requiredFields = [
+      'description',
+      'projectCode',
+      'quantity',
+      'customer',
+      'userName',
+      'poNo',
+      'poDate',
+      'valuePerUnit',
+      'deliveryStatus'
+    ];
 
-      requiredFields.forEach(field => {
-        const element = document.getElementById(field);
-        if (!element.value.trim()) {
-          element.style.borderColor = 'red';
-          isValid = false;
-        } else {
-          element.style.borderColor = '#c9c9c9';
-        }
+    let isValid = true;
+
+    requiredFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.style.borderColor = 'red';
+        isValid = false;
+      } else {
+        el.style.borderColor = '#c9c9c9';
+      }
+    });
+
+    if (!isValid) {
+      showError('Please fill in all required fields.');
+      return;
+    }
+
+    // ✅ Use FormData directly (supports file upload)
+    const formData = new FormData(this);
+
+    try {
+      const response = await fetch('/api/project-details', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData   // ❗ NO headers here
       });
 
-      if (!isValid) {
-        showError('Please fill in all required fields.');
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to submit project details');
       }
 
-      const formData = new FormData(this);
-      const data = Object.fromEntries(formData);
-      console.log('Project Details Submitted:', data);
+      const result = await response.json();
 
-      // Simulate submission
+      if (!result.success) {
+        throw new Error(result.message || 'Submission failed');
+      }
+
       showSuccess('Project details submitted successfully!');
       this.reset();
       calculateTotalPO();
-      const responsive=fetch('/api/project-details',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-        },
-        credentials:'include',
-        body:JSON.stringify(data)
-      });
-      responsive.then((res)=>{
-        if(!res.ok){
-          throw new Error('Failed to submit project details');
-        }
-        return res.json();
-      }).then((result)=>{
-        if(result.success){
-          showSuccess('Project details submitted successfully!');
-          this.reset();
-          calculateTotalPO();
-        }else{
-          throw new Error('Submission failed');
-        }
-      }).catch((error)=>{
-        console.error('Error submitting project details:',error);
-        showError(error.message ||'Error submitting project details');
-      });
-    });
+
+    } catch (error) {
+      console.error('Error submitting project details:', error);
+      showError(error.message || 'Error submitting project details');
+    }
+  });
+
 
     function showSuccess(message) {
       const popup = document.getElementById('donePopup');

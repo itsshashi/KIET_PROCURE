@@ -1507,7 +1507,7 @@ select {
         <button class="tab-button">Project Details</button>
         <div class="tab-submenu">
           <button onclick="switchTab('project-assign')">Project Assign</button>
-          <button onclick="switchTab('project-details')">Project Details</button>
+          <button onclick="switchTab('project-info')">Project Info</button>
           <button onclick="switchTab('tasks-management')"><i class="fas fa-tasks">  </i> Tasks Management</button>
           
         </div>
@@ -2293,6 +2293,106 @@ select {
 </div>
 
     </div>
+
+    <!-- Project Info Tab Content -->
+    <div id="project-infoTab" class="tab-content">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <span>📋</span> PROJECT INFORMATION
+        </h2>
+        <p class="text-sm text-gray-600">
+          Complete project overview with budget tracking and assignment details.
+        </p>
+      </div>
+
+      <!-- Project Summary Cards -->
+      <div class="summary-cards" id="projectSummaryCards">
+        <div class="card">
+          <i class="fas fa-folder-open"></i>
+          <div class="card-content">
+            <h3 id="totalProjects">0</h3>
+            <p>Total Projects</p>
+          </div>
+        </div>
+        <div class="card">
+          <i class="fas fa-users"></i>
+          <div class="card-content">
+            <h3 id="assignedProjects">0</h3>
+            <p>Assigned Projects</p>
+          </div>
+        </div>
+        <div class="card">
+          <i class="fas fa-money-bill-wave"></i>
+          <div class="card-content">
+            <h3 id="totalBudget">₹0.00</h3>
+            <p>Total Budget</p>
+          </div>
+        </div>
+        <div class="card">
+          <i class="fas fa-piggy-bank"></i>
+          <div class="card-content">
+            <h3 id="remainingBudget">₹0.00</h3>
+            <p>Remaining Budget</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Filter Section -->
+      <div class="filters">
+        <div class="filter-row">
+          <input type="text" id="projectSearchInput" placeholder="Search by Project Code, Description, or Assigned To..." onkeyup="applyProjectFilters()">
+          <select id="assigneeFilter" onchange="applyProjectFilters()">
+            <option value="All Assignees">All Assignees</option>
+          </select>
+          <select id="statusFilter" onchange="applyProjectFilters()">
+            <option value="All Statuses">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Delayed">Delayed</option>
+          </select>
+          <button onclick="clearProjectFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Project Information Table -->
+      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table class="min-w-max w-full text-sm text-center whitespace-nowrap">
+          <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+            <tr>
+              <th onclick="sortProjectTable('id')">ID <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('project_code')">Project Code <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('description')">Description <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('customer')">Customer <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_to')">Assigned To <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('budget')">Budget (₹) <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('remaining_budget')">Remaining Budget (₹) <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('delivery_status')">Status <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_on')">Assigned On <i class="fas fa-sort"></i></th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="projectInfoBody">
+            <!-- Rows populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Project Details Modal -->
+      <div id="projectDetailsModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 800px;">
+          <div class="modal-header">
+            <h2>Project Details</h2>
+            <span class="close" onclick="closeProjectDetailsModal()">&times;</span>
+          </div>
+          <div class="modal-body" id="projectDetailsContent">
+            <!-- Project details will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
 document.addEventListener('DOMContentLoaded', () => {   
 
@@ -4266,7 +4366,7 @@ function resetFields() {
       document.getElementById('approvedMAEQuotationsTab').style.display = tab === 'approved-mae-quotations' ? 'block' : 'none';
       document.getElementById('project-assignTab').style.display = tab === 'project-assign' ? 'block' : 'none';
       document.getElementById('tasks-managementTab').style.display = tab === 'tasks-management' ? 'block' : 'none';
-      // document.getElementById('project-detailsTab').style.display = tab === 'project-details' ? 'block' : 'none';
+      document.getElementById('project-infoTab').style.display = tab === 'project-info' ? 'block' : 'none';
       document.getElementById("filtersSection").style.display="block";
       document.getElementById('costCalculationContent').style.display="none";
       console.log(tab); // must be "project-assignment"
@@ -4889,6 +4989,12 @@ function renderProjectAssignments(assignments) {
          </div>`
   }
 </td>
+<td>
+  <button class="btn btn-secondary btn-sm"
+          onclick="open_po(${assignment.id})"> 
+    View PO
+  </button> 
+</td>
 
       </tr>`;
 
@@ -4973,6 +5079,21 @@ function renderProjectAssignments(assignments) {
 //   }
 // }
 
+function open_po(id) {
+  fetch(`/api/project-po/${id}`)
+    .then(res => {
+      if (!res.ok) throw new Error('PO not available');
+      return res.json();
+    })
+    .then(data => {
+      // Open file in new tab
+      window.open('/' + data.po_file, '_blank');
+    })
+    .catch(err => {
+      console.error(err);
+      alert('PO file not found');
+    });
+}
 
 
 

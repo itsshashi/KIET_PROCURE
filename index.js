@@ -6722,90 +6722,97 @@ app.put("/api/mae-quotations/:id/:status", async (req, res) => {
 });
 
 // Get project assignments
-app.post("/api/project-details", async (req, res) => {
-  try {
-    const {
-      invoiceNo,
-      invoiceDate,
-      invType,
-      customer,
-      userName,
-      projectCode,
-      description,
-      poNo,
-      poDate,
-      deliveryDate,
-      deliveryStatus,
-      quantity,
-      valuePerUnit,
-      baseValue,
-      totalValue,
-      totalPoValuePending,
-      currency
-    } = req.body;
-
-    const query = `
-      INSERT INTO project_info (
-        invoice_no,
-        invoice_date,
-        inv_type,
+app.post(
+  "/api/project-details",
+  upload.single('po_upload'),   // 👈 matches input name
+  async (req, res) => {
+    try {
+      const {
+        invoiceNo,
+        invoiceDate,
+        invType,
         customer,
-        user_name,
-        project_code,
+        userName,
+        projectCode,
         description,
-        po_no,
-        po_date,
-        delivery_date,
-        delivery_status,
+        poNo,
+        poDate,
+        deliveryDate,
+        deliveryStatus,
         quantity,
-        value_per_unit,
-        base_value,
-        total_value,
-        total_po_value_pending,
+        valuePerUnit,
+        baseValue,
+        totalValue,
+        totalPoValuePending,
         currency
-      ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
-      ) RETURNING *;
-    `;
+      } = req.body;
 
-    const values = [
-      invoiceNo,
-      invoiceDate,
-      invType,
-      customer,
-      userName,
-      projectCode,
-      description,
-      poNo,
-      poDate,
-      deliveryDate,
-      deliveryStatus,
-      quantity,
-      valuePerUnit,
-      baseValue,
-      totalValue,
-      totalPoValuePending,
-      currency
-    ];
+      const poFilePath = req.file ? req.file.path : null;
 
-    const result = await pool.query(query, values);
+      const query = `
+        INSERT INTO project_info (
+          invoice_no,
+          invoice_date,
+          inv_type,
+          customer,
+          user_name,
+          project_code,
+          description,
+          po_no,
+          po_date,
+          delivery_date,
+          delivery_status,
+          quantity,
+          value_per_unit,
+          base_value,
+          total_value,
+          total_po_value_pending,
+          currency,
+          po_file
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+        ) RETURNING *;
+      `;
 
-    res.status(201).json({
-      success: true,
-      message: "Invoice created successfully",
-      data: result.rows[0]
-    });
+      const values = [
+        invoiceNo || null,
+        invoiceDate || null,
+        invType || null,
+        customer,
+        userName,
+        projectCode,
+        description,
+        poNo,
+        poDate,
+        deliveryDate || null,
+        deliveryStatus,
+        quantity,
+        valuePerUnit,
+        baseValue || null,
+        totalValue || null,
+        totalPoValuePending || null,
+        currency,
+        poFilePath
+      ];
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Error inserting invoice",
-      error: error.message
-    });
+      const result = await pool.query(query, values);
+
+      res.status(201).json({
+        success: true,
+        message: "Project details inserted successfully",
+        data: result.rows[0]
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Error inserting project details",
+        error: error.message
+      });
+    }
   }
-});
-
+);
 
 
 
@@ -7432,6 +7439,37 @@ app.put('/api/update-order', async (req, res) => {
   } catch (err) {
     console.error('SQL Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+app.get('/api/project-po/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'SELECT po_file FROM project_info WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0 || !result.rows[0].po_file) {
+      return res.status(404).json({
+        success: false,
+        message: 'PO file not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      po_file: result.rows[0].po_file
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching PO file'
+    });
   }
 });
 
