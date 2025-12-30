@@ -630,123 +630,169 @@ input:focus, select:focus {
   <div id="project_detailsTab" class="tab-content" style="display: none;">
     <div class="main-container">
       <h1>Project Details Entry</h1>
-      <form id="projectDetailsForm">
-        <div class="form-section">
-          <h2 class="section-title">📋 Project Information</h2>
-          <div class="form-row">
-            <div class="form-col">
-              <label for="description">Description *</label>
-              <input type="text" id="description" name="description" required placeholder="Enter project description">
-            </div>
-            <div class="form-col">
-              <label for="projectCode">Project Code *</label>
-              <input type="text" id="projectCode" name="projectCode" required placeholder="Enter project code">
-            </div>
-            <div class="form-col">
-              <label for="quantity">Quantity *</label>
-              <input type="number" id="quantity" name="quantity" step="0.01" min="0" required placeholder="0.00">
-            </div>
-            <div class="form-col">
-              <label for="customer">Customer *</label>
-              <input type="text" id="customer" name="customer" required placeholder="Enter customer name">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-col">
-              <label for="userName">User Name *</label>
-              <input type="text" id="userName" name="userName" required placeholder="Enter user name">
-            </div>
-            <div class="form-col">
-              <label for="currency">Currency *</label>
-              <select id="currency" name="currency" required>
-                <option value="">Select Currency</option>
-                <option value="₹">INR (₹)</option>
-                <option value="$">USD ($)</option>
-                <option value="€">EUR (€)</option>
-              </select>
-            </div>
+      <div id="projectDetailsTableContainer">
+        <table id="projectDetailsTable" style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden;">
+          <thead>
+            <tr style="background: linear-gradient(135deg, #2563eb, #3b82f6); color: white;">
+              <th style="padding: 10px 15px; text-align: left; border-bottom: 1px solid #c7d2fe;">Field</th>
+              <th style="padding: 10px 15px; text-align: left; border-bottom: 1px solid #c7d2fe;">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">📋 Project Information</td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Description *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="description" required placeholder="Enter project description" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Project Code *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="projectCode" required placeholder="Enter project code" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Quantity *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="number" id="quantity" step="0.01" min="0" required placeholder="0.00" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Customer *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="customer" required placeholder="Enter customer name" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">User Name *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="userName" required placeholder="Enter user name" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Currency *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><select id="currency" required style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"><option value="">Select Currency</option><option value="₹">INR (₹)</option><option value="$">USD ($)</option><option value="€">EUR (€)</option></select></td></tr>
 
-          </div>
-        </div>
+            <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">📄 Purchase Order Information</td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">PO No *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="poNo" required placeholder="Enter PO number" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">PO Date *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="date" id="poDate" required style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Value Per Unit (₹) *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="number" id="valuePerUnit" step="0.01" min="0" required placeholder="0.00" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Total PO Value Pending (₹)</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="number" id="totalPoValuePending" step="0.01" readonly placeholder="Auto-calculated" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
 
-        <div class="form-section">
-          <h2 class="section-title">📄 Purchase Order Information</h2>
-          <div class="form-row">
-            <div class="form-col">
-              <label for="poNo">PO No *</label>
-              <input type="text" id="poNo" name="poNo" required placeholder="Enter PO number">
-            </div>
-            <div class="form-col">
-              <label for="poDate">PO Date *</label>
-              <input type="date" id="poDate" name="poDate" required>
-            </div>
-            <div class="form-col">
-              <label for="valuePerUnit">Value Per Unit (₹) *</label>
-              <input type="number" id="valuePerUnit" name="valuePerUnit" step="0.01" min="0" required placeholder="0.00">
-            </div>
-            <div class="form-col">
-              <label for="totalPoValuePending">Total PO Value Pending (₹)</label>
-              <input type="number" id="totalPoValuePending" name="totalPoValuePending" step="0.01" readonly placeholder="Auto-calculated">
-            </div>
-          </div>
-        </div>
+            <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">🚚 Delivery Information</td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Delivery Status *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><select id="deliveryStatus" required style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"><option value="">Select Status</option><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Delayed">Delayed</option></select></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Delivery Date</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="date" id="deliveryDate" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">INV Type</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="invType" placeholder="Enter invoice type" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Upload PO</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="file" id="po_upload" accept=".pdf,.doc,.docx,.jpg,.png" style="width: 100%; padding: 8px;"><br><span style="font-size: 12px; color: #666;">Accepted formats: PDF, DOC, JPG, PNG</span></td></tr>
 
-        <div class="form-section">
-          <h2 class="section-title">🚚 Delivery Information</h2>
-          <div class="form-row">
-            <div class="form-col">
-              <label for="deliveryStatus">Delivery Status *</label>
-              <select id="deliveryStatus" name="deliveryStatus" required>
-                <option value="">Select Status</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="Delayed">Delayed</option>
-              </select>
-            </div>
-            <div class="form-col">
-              <label for="deliveryDate">Delivery Date</label>
-              <input type="date" id="deliveryDate" name="deliveryDate">
-            </div>
-            <div class="form-col">
-              <label for="invType">INV Type</label>
-              <input type="text" id="invType" name="invType" placeholder="Enter invoice type">
-            </div>
-            <div class="form-col">
-              <label for="po">Upload PO</label>
-              <input type="file" name="po_upload" id="po_upload" accept=".pdf,.doc,.docx,.jpg,.png">
-              <span style="font-size: 12px; color: #666;">Accepted formats: PDF, DOC, JPG, PNG</span>
-            </div>
-          </div>
-        </div>
+            <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">💰 Invoice Information</td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Invoice No</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="invoiceNo" placeholder="Enter invoice number" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Invoice Date</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="date" id="invoiceDate" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Base Value (₹)</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="number" id="baseValue" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Total Value (₹)</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="number" id="totalValue" step="0.01" min="0" placeholder="0.00" onclick="calTotalValue()" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
 
-        <div class="form-section">
-          <h2 class="section-title">💰 Invoice Information</h2>
-          <div class="form-row">
-            <div class="form-col">
-              <label for="invoiceNo">Invoice No</label>
-              <input type="text" id="invoiceNo" name="invoiceNo" placeholder="Enter invoice number">
-            </div>
-            <div class="form-col">
-              <label for="invoiceDate">Invoice Date</label>
-              <input type="date" id="invoiceDate" name="invoiceDate">
-            </div>
-            <div class="form-col">
-              <label for="baseValue">Base Value (₹)</label>
-              <input type="number" id="baseValue" name="baseValue" step="0.01" min="0" placeholder="0.00">
-            </div>
-            <div class="form-col">
-              <label for="totalValue">Total Value (₹)</label>
-              <input type="number" id="totalValue" name="totalValue" step="0.01" min="0" placeholder="0.00" onclick="calTotalValue()">
-            </div>
-          </div>
-        </div>
+            
+          </tbody>
+        </table>
+        <!-- ================= PROJECT ITEMS SECTION ================= -->
+<div id="projectItemsSection"
+     class="main-container"
+     style="margin-top:40px; background:white; border-radius:12px; padding:20px;">
+
+  <h1 style="margin-bottom:20px;">📦 Project Items</h1>
+
+  <table id="itemsTable"
+         style="width:100%;
+                border-collapse:collapse;
+                background:white;
+                border-radius:10px;
+                overflow:hidden;">
+
+    <thead>
+      <tr style="background:linear-gradient(135deg, #16a34a, #22c55e); color:white;">
+        <th style="padding:10px;">Item Name</th>
+        <th style="padding:10px;">Quantity</th>
+        <th style="padding:10px;">Unit Price</th>
+        <th style="padding:10px;">Total</th>
+        <th style="padding:10px;">Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <!-- Dynamic rows added via JS -->
+    </tbody>
+  </table>
+
+  <div style="margin-top:15px; display:flex; gap:15px;">
+    <button type="button"
+            class="btn btn-secondary"
+            onclick="addItemRow()">
+      ➕ Add Item
+    </button>
+
+    <button type="button"
+            class="btn btn-danger"
+            onclick="clearItems()">
+      🧹 Clear Items
+    </button>
+  </div>
+
+</div>
+<script>
+  let itemIndex = 0;
+
+  function addItemRow() {
+    const tbody = document.querySelector('#itemsTable tbody');
+
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td style="padding:8px;">
+        <input type="text"
+               name="items[${itemIndex}][item_name]"
+               placeholder="Item name"
+               required
+               style="width:100%; padding:6px;">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number"
+               name="items[${itemIndex}][quantity]"
+               min="0"
+               step="1"
+               oninput="calculateRowTotal(this)"
+               required
+               style="width:100%; padding:6px;">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number"
+               name="items[${itemIndex}][unit_price]"
+               min="0"
+               step="0.01"
+               oninput="calculateRowTotal(this)"
+               required
+               style="width:100%; padding:6px;">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number"
+               name="items[${itemIndex}][total]"
+               readonly
+               style="width:100%; padding:6px; background:#f3f4f6;">
+      </td>
+
+      <td style="padding:8px; text-align:center;">
+        <button type="button"
+                class="btn btn-danger btn-sm"
+                onclick="removeRow(this)">
+          ❌
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+    itemIndex++;
+  }
+
+  function calculateRowTotal(el) {
+    const row = el.closest('tr');
+    const qty = row.querySelector('[name*="[quantity]"]').value || 0;
+    const price = row.querySelector('[name*="[unit_price]"]').value || 0;
+    row.querySelector('[name*="[total]"]').value = (qty * price).toFixed(2);
+  }
+
+  function removeRow(btn) {
+    btn.closest('tr').remove();
+  }
+
+  function clearItems() {
+    document.querySelector('#itemsTable tbody').innerHTML = '';
+    itemIndex = 0;
+  }
+</script>
+
+<!-- ================= END PROJECT ITEMS SECTION ================= -->
 
         <div class="form-actions" style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
-          <button type="submit" class="btn btn-primary btn-lg">💾 Submit Project Details</button>
+          <button type="button" id="submitProjectDetails" class="btn btn-primary btn-lg">💾 Submit Project Details</button>
           <button type="button" class="btn btn-secondary btn-lg" onclick="resetProjectForm()">🔄 Reset Form</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -1198,8 +1244,10 @@ tr.innerHTML = `
     }
 
     function resetProjectForm() {
-      document.getElementById('projectDetailsForm').reset();
-      calculateTotalPO(); // Reset calculation
+      document.querySelectorAll('#projectDetailsTable input, #projectDetailsTable select').forEach(el => {
+        el.value = '';
+      });
+      calculateTotalPO();
     }
 
     // Add event listeners for auto-calculation
@@ -1207,69 +1255,68 @@ tr.innerHTML = `
     document.getElementById('valuePerUnit').addEventListener('input', calculateTotalPO);
 
     // Form validation and submit
-    document.getElementById('projectDetailsForm')
-  .addEventListener('submit', async function (e) {
-    e.preventDefault();
+  document.getElementById('submitProjectDetails')
+  .addEventListener('click', async () => {
 
-    // Required field validation
-    const requiredFields = [
-      'description',
-      'projectCode',
-      'quantity',
-      'customer',
-      'userName',
-      'poNo',
-      'poDate',
-      'valuePerUnit',
-      'deliveryStatus'
-    ];
+    const formData = new FormData();
 
-    let isValid = true;
+    // 🔹 project fields
+    formData.append('customer', customer.value);
+    formData.append('userName', userName.value);
+    formData.append('projectCode', projectCode.value);
+    formData.append('description', description.value);
+    formData.append('quantity', quantity.value);
+    formData.append('valuePerUnit', valuePerUnit.value);
+    formData.append('deliveryStatus', deliveryStatus.value);
+    formData.append('poNo', poNo.value);
+    formData.append('poDate', poDate.value);
+    formData.append('currency', currency.value);
 
-    requiredFields.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) {
-        el.style.borderColor = 'red';
-        isValid = false;
-      } else {
-        el.style.borderColor = '#c9c9c9';
-      }
-    });
-
-    if (!isValid) {
-      showError('Please fill in all required fields.');
-      return;
+    // 🔹 file
+    const fileInput = document.getElementById('po_upload');
+    if (fileInput.files.length > 0) {
+      formData.append('po_upload', fileInput.files[0]);
     }
 
-    // ✅ Use FormData directly (supports file upload)
-    const formData = new FormData(this);
+    // 🔹 COLLECT PROJECT ITEMS (THIS WAS MISSING)
+    const items = [];
+    document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+      items.push({
+        item_name: row.querySelector('[name*="[item_name]"]').value,
+        quantity: row.querySelector('[name*="[quantity]"]').value,
+        unit_price: row.querySelector('[name*="[unit_price]"]').value,
+        total: row.querySelector('[name*="[total]"]').value
+      });
+    });
+
+    // 🔹 append items as JSON
+    formData.append('items', JSON.stringify(items));
+
+    // 🔍 DEBUG (DO NOT SKIP)
+    console.log('Items:', items);
 
     try {
-      const response = await fetch('/api/project-details', {
+      const response = await fetch('/api/project-details_', {
         method: 'POST',
-        credentials: 'include',
-        body: formData   // ❗ NO headers here
+        body: formData
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit project details');
-      }
 
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.message || 'Submission failed');
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed');
       }
 
-      showSuccess('Project details submitted successfully!');
-      this.reset();
-      calculateTotalPO();
+      showSuccess('Project + items saved successfully');
+      resetProjectForm();
 
-    } catch (error) {
-      console.error('Error submitting project details:', error);
-      showError(error.message || 'Error submitting project details');
+    } catch (err) {
+      console.error(err);
+      showError(err.message);
     }
   });
+
+
 
 
     function showSuccess(message) {
