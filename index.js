@@ -7474,5 +7474,99 @@ app.get('/api/project-po/:id', async (req, res) => {
 });
 
 
+app.post(
+  "/api/project-details_",
+  upload.single('po_upload'),
+  async (req, res) => {
+    console.log('RAW BODY:', req.body);
+console.log('RAW ITEMS FIELD:', req.body.items);
+console.log('TYPE OF ITEMS:', typeof req.body.items);
+
+
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const {
+        customer,
+        userName,
+        projectCode,
+        description,
+        quantity,
+        valuePerUnit,
+        deliveryStatus,
+        poNo,
+        poDate,
+        currency,
+        items
+      } = req.body;
+
+      // 1️⃣ Insert project
+      const projectResult = await client.query(
+        `INSERT INTO project_info
+         (customer, user_name, project_code, description, quantity,
+          value_per_unit, delivery_status, po_no, po_date, currency)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         RETURNING id`,
+        [
+          customer,
+          userName,
+          projectCode,
+          description,
+          quantity,
+          valuePerUnit,
+          deliveryStatus,
+          poNo,
+          poDate,
+          currency
+        ]
+      );
+
+      const projectId = projectResult.rows[0].id;
+
+      // 2️⃣ Insert items (OPTIONAL)
+      const parsedItems = items ? JSON.parse(items) : [];
+      console.log('Parsed items:', parsedItems);
+
+      for (const item of parsedItems) {
+        await client.query(
+          `INSERT INTO project_items
+           (project_id, item_name, quantity, unit_price, total)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [
+            projectId,
+            item.item_name,
+            item.quantity,
+            item.unit_price,
+            item.total
+          ]
+        );
+      }
+
+      await client.query('COMMIT');
+
+      res.status(201).json({
+        success: true,
+        projectId,
+        itemsInserted: parsedItems.length
+      });
+
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));
