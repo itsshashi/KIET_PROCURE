@@ -22,6 +22,8 @@
       flex-shrink: 0;
       transition: left 0.3s ease;
     }
+
+    
     tr{
       border-left:1px solid #c7d2fe;
       border-right: 1px solid #c7d2fe;
@@ -33,8 +35,8 @@
 }
 
 td{
-  font-style: "Times New Roman", Times, serif;
-  font-weight: bold;
+  
+  font-weight: 300;
  
 }
     .sidebar.show {
@@ -934,6 +936,7 @@ input:focus, select:focus {
         const supplierTd = document.createElement('td');
         supplierTd.setAttribute('data-label', 'Supplier');
         supplierTd.textContent = item.supplier_name || 'N/A';
+        supplierTd.width = '250px';
         tr.appendChild(supplierTd);
 
         // Amount
@@ -946,6 +949,7 @@ input:focus, select:focus {
         const termsTd = document.createElement('td');
         termsTd.setAttribute('data-label', 'Terms to Pay');
         termsTd.textContent = item.terms_of_payment || 'N/A';
+        termsTd.width = '180px';
         tr.appendChild(termsTd);
 
         // Action buttons

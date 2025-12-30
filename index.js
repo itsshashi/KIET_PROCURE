@@ -1289,7 +1289,7 @@ app.get("/api/account-details", async (req, res) => {
         ie.supplier_ifsc_code
       FROM purchase_orders po
       LEFT JOIN inventory_entries ie ON po.id = ie.purchase_order_id
-      WHERE po.status IN ( 'inventory_processed')
+      WHERE po.status IN ( 'inventory_processed', 'sent' )
     `;
     let params = [];
     let paramCount = 0;
@@ -7506,8 +7506,8 @@ console.log('TYPE OF ITEMS:', typeof req.body.items);
       const projectResult = await client.query(
         `INSERT INTO project_info
          (customer, user_name, project_code, description, quantity,
-          value_per_unit, delivery_status, po_no, po_date, currency)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          value_per_unit, delivery_status, po_no, po_date, currency,inv_type)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
          RETURNING id`,
         [
           customer,
@@ -7519,7 +7519,8 @@ console.log('TYPE OF ITEMS:', typeof req.body.items);
           deliveryStatus,
           poNo,
           poDate,
-          currency
+          currency,
+          req.body.inv_type
         ]
       );
 
@@ -7565,6 +7566,38 @@ console.log('TYPE OF ITEMS:', typeof req.body.items);
     }
   }
 );
+
+app.get('/api/project-items/:projectId', async (req, res) => {
+  const { projectId } = req.params;
+
+  // safety check
+  if (!projectId || isNaN(projectId)) {
+    return res.status(400).json({ message: 'Invalid project ID' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         id,
+         item_name,
+         quantity,
+         unit_price,
+         total
+       FROM project_items
+       WHERE project_id = $1
+       ORDER BY id ASC`,
+      [projectId]
+    );
+
+    // Always return array (frontend expects array)
+    res.json(rows);
+
+  } catch (err) {
+    console.error('Error fetching project items:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
 
