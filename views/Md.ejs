@@ -2260,6 +2260,18 @@ select {
     Review comprehensive project information along with associated purchase order details.
   </p>
       </div>
+      <!-- Items Modal -->
+<div id="itemsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:20px; border-radius:8px; width:600px; max-height:80vh; overflow:auto;">
+    <h3>Project Items</h3>
+    <div id="itemsDetails"></div>
+
+    <div style="text-align:right; margin-top:15px;">
+      <button class="btn btn-secondary btn-sm" onclick="closeItemsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
     
       <!-- Project Assignments Table -->
       <div class="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -4991,10 +5003,14 @@ function renderProjectAssignments(assignments) {
   }
 </td>
 <td>
-  <button class="btn btn-secondary btn-sm"
-          onclick="open_po(${assignment.id})"> 
-    View PO
-  </button> 
+   <button class="btn btn-secondary btn-sm"
+           onclick="open_po(${assignment.id})">
+     View PO
+   </button>
+   <button class="btn btn-danger btn-sm"
+           onclick="view_items(${assignment.id})">
+     View Items
+   </button>
 </td>
 
       </tr>`;
@@ -5095,6 +5111,7 @@ function open_po(id) {
       alert('PO file not found');
     });
 }
+
 
 
 
@@ -6246,6 +6263,65 @@ function updateSummaryTotals() {
   summaryRows[3].children[1].textContent = "₹ " + finalTotal.toFixed(2);
 
   console.log("Export Charge:", exportCharge, "Box Charge:", boxCharge, "Items Total:", itemsTotal);
+}
+// ✅ View items for a project
+async function view_items(projectId) {
+  try {
+    const response = await fetch(`/api/project-items/${projectId}`, {
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch project items');
+    }
+
+    const items = await response.json();
+    const container = document.getElementById('itemsDetails');
+
+    // No items case
+    if (!items || items.length === 0) {
+      container.innerHTML = '<p style="color:#666;">No items found for this project.</p>';
+    } else {
+      let html = `
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#2563eb; color:white;">
+              <th style="padding:8px;">Item Name</th>
+              <th style="padding:8px;">Quantity</th>
+              <th style="padding:8px;">Unit Price</th>
+              <th style="padding:8px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      items.forEach(item => {
+        html += `
+          <tr>
+            <td style="padding:8px; border-bottom:1px solid #ddd;">${item.item_name || '-'}</td>
+            <td style="padding:8px; border-bottom:1px solid #ddd;">${item.quantity || 0}</td>
+            <td style="padding:8px; border-bottom:1px solid #ddd;">${item.unit_price || 0}</td>
+            <td style="padding:8px; border-bottom:1px solid #ddd;">${item.total || 0}</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Show modal
+    document.getElementById('itemsModal').style.display = 'flex';
+
+  } catch (err) {
+    console.error(err);
+    showError('Unable to load project items');
+  }
+}
+
+// ✅ Close modal
+function closeItemsModal() {
+  document.getElementById('itemsModal').style.display = 'none';
 }
 
 

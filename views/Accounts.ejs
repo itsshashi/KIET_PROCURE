@@ -626,6 +626,15 @@ input:focus, select:focus {
     ❌ Error processing payment
   </div>
 
+  <!-- Items Modal -->
+  <div class="modal" id="itemsModal">
+    <div class="modal-content">
+      <h2>Project Items</h2>
+      <div id="itemsDetails"></div>
+      <button class="close-btn" onclick="closeItemsModal()">Close</button>
+    </div>
+  </div>
+
   <!-- Project Details Tab Content -->
   <div id="project_detailsTab" class="tab-content" style="display: none;">
     <div class="main-container">
@@ -656,7 +665,13 @@ input:focus, select:focus {
             <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">🚚 Delivery Information</td></tr>
             <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Delivery Status *</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><select id="deliveryStatus" required style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"><option value="">Select Status</option><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Delayed">Delayed</option></select></td></tr>
             <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Delivery Date</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="date" id="deliveryDate" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
-            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">INV Type</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="text" id="invType" placeholder="Enter invoice type" style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;"></td></tr>
+            <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">INV Type</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><select id="invType"
+        style="width: 100%; padding: 8px; border: 1px solid #c9c9c9; border-radius: 4px;">
+  <option value="">Select Invoice Type</option>
+  <option value="Goods">Goods</option>
+  <option value="Services">Services</option>
+</select>
+</td></tr>
             <tr><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;">Upload PO</td><td style="padding: 10px 15px; border-bottom: 1px solid #c7d2fe;"><input type="file" id="po_upload" accept=".pdf,.doc,.docx,.jpg,.png" style="width: 100%; padding: 8px;"><br><span style="font-size: 12px; color: #666;">Accepted formats: PDF, DOC, JPG, PNG</span></td></tr>
 
             <tr style="background: #fafafa;"><td colspan="2" style="padding: 15px; font-weight: 600; color: #333; border-left: 5px solid #007bff;">💰 Invoice Information</td></tr>
@@ -689,6 +704,7 @@ input:focus, select:focus {
         <th style="padding:10px;">Unit Price</th>
         <th style="padding:10px;">Total</th>
         <th style="padding:10px;">Action</th>
+
       </tr>
     </thead>
 
@@ -801,6 +817,7 @@ input:focus, select:focus {
     <div class="main-container">
       <h1>View Projects</h1>
       <div style="overflow-x: auto; width: 100%;">
+        
         <table id="view_prj" style="min-width: 1200px;border-collapse: collapse">
           <thead>
             <tr style="font-size: small;">
@@ -822,6 +839,7 @@ input:focus, select:focus {
               <th>Base Value</th>
               <th>Total Value</th>
               <th>Action</th>
+              <th>Items</th>
             </tr>
           </thead>
           <tbody id="projectsTableBody">
@@ -1205,7 +1223,10 @@ tr.innerHTML = `
 
 <td>
     <button class="btn btn-primary save-btn">Save</button>
-  </td>  `;
+    
+  </td> 
+  <td>
+    <button class="btn btn-secondary view-items-btn" onclick="viewItems(${item.id})">View Items</button></td> `;
 
 
 
@@ -1268,6 +1289,7 @@ tr.innerHTML = `
     formData.append('quantity', quantity.value);
     formData.append('valuePerUnit', valuePerUnit.value);
     formData.append('deliveryStatus', deliveryStatus.value);
+    formData.append('inv_type', invType.value);
     formData.append('poNo', poNo.value);
     formData.append('poDate', poDate.value);
     formData.append('currency', currency.value);
@@ -1454,6 +1476,32 @@ function calTotalValue() {
   // Add any additional calculations if needed
   document.getElementById('totalValue').value = baseValue.toFixed(2)*1.18;
 };
+
+async function viewItems(projectId) {
+  try {
+    const response = await fetch(`/api/project-items/${projectId}`, { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch items');
+    const items = await response.json();
+    if (items.length === 0) {
+      document.getElementById('itemsDetails').innerHTML = '<p>No items found for this project.</p>';
+    } else {
+      let html = '<table><thead><tr><th>Item Name</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>';
+      items.forEach(item => {
+        html += `<tr><td>${item.item_name}</td><td>${item.quantity}</td><td>${item.unit_price}</td><td>${item.total}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('itemsDetails').innerHTML = html;
+    }
+    document.getElementById('itemsModal').style.display = 'flex';
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    showError('Failed to load items');
+  }
+}
+
+function closeItemsModal() {
+  document.getElementById('itemsModal').style.display = 'none';
+}
 
 
 
