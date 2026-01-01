@@ -1297,7 +1297,13 @@ tr.innerHTML = `
     formData.append('poNo', poNo.value);
     formData.append('poDate', poDate.value);
     formData.append('currency', currency.value);
-
+    formData.append('baseValue', baseValue.value);
+    formData.append('totalValue', totalValue.value);
+    formData.append('totalPoValuePending', totalPoValuePending.value);
+    formData.append('deliveryDate', deliveryDate.value) || '';
+    formData.append('invoiceNo', invoiceNo.value) || '';
+    formData.append('invoiceDate', invoiceDate.value) || '';
+    
     // 🔹 file
     const fileInput = document.getElementById('po_upload');
     if (fileInput.files.length > 0) {

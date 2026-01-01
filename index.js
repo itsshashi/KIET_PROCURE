@@ -6746,6 +6746,7 @@ app.post(
         totalPoValuePending,
         currency
       } = req.body;
+      
 
       const poFilePath = req.file ? req.file.path : null;
 
@@ -6796,6 +6797,9 @@ app.post(
       ];
 
       const result = await pool.query(query, values);
+      console.log('Inserted project details:', result.rows[0]);
+      console.log('PO file path:', poFilePath);
+      console.log('Request body:', req.body);
 
       res.status(201).json({
         success: true,
@@ -7482,8 +7486,11 @@ app.post(
 console.log('RAW ITEMS FIELD:', req.body.items);
 console.log('TYPE OF ITEMS:', typeof req.body.items);
 
+const poFilePath = req.file ? req.file.path : null;
+
 
     const client = await pool.connect();
+
 
     try {
       await client.query('BEGIN');
@@ -7499,15 +7506,20 @@ console.log('TYPE OF ITEMS:', typeof req.body.items);
         poNo,
         poDate,
         currency,
-        items
+        items,
+        baseValue,
+        totalValue,
+        totalPoValuePending,
+        invoiceNo,
+        invoiceDate
       } = req.body;
 
       // 1️⃣ Insert project
       const projectResult = await client.query(
         `INSERT INTO project_info
          (customer, user_name, project_code, description, quantity,
-          value_per_unit, delivery_status, po_no, po_date, currency,inv_type)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          value_per_unit, delivery_status, po_no, po_date, currency,inv_type,po_file,base_value,total_value,total_po_value_pending, invoice_no, invoice_date)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
          RETURNING id`,
         [
           customer,
@@ -7520,7 +7532,13 @@ console.log('TYPE OF ITEMS:', typeof req.body.items);
           poNo,
           poDate,
           currency,
-          req.body.inv_type
+          req.body.inv_type,
+          poFilePath,
+          baseValue,
+          totalValue,
+          totalPoValuePending,
+          invoiceNo ,
+          invoiceDate
         ]
       );
 
@@ -7595,6 +7613,34 @@ app.get('/api/project-items/:projectId', async (req, res) => {
   } catch (err) {
     console.error('Error fetching project items:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get("/assigned-projects/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      `SELECT id,
+        description,
+        project_code,
+        budget,
+        assigned_to,
+        assigned_on,
+        delivery_status,
+        delivery_date
+
+
+       FROM project_info
+       WHERE assigned_to = $1
+       ORDER BY po_date DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB error" });
   }
 });
 

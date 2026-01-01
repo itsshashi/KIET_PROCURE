@@ -25,6 +25,56 @@
         #previewFrame {
     pointer-events: auto;
 }
+
+
+/* Container for all cards */
+#assignedProjectsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Individual project card */
+.project-card {
+  border: 1px solid #ccc;       /* Simple border */
+  border-radius: 8px;           /* Slightly rounded corners */
+  padding: 12px;
+  width: 280px;                 /* Fixed width for consistency */
+  background-color: #f9f9f9;   /* Light background */
+}
+
+/* Card headings */
+.project-card h4 {
+  font-size: 16px;
+  margin: 0 0 6px 0;
+  color: #333;
+}
+
+/* Card paragraphs */
+.project-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Status badge */
+.project-card .status {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #fff;
+}
+
+/* Simple status colors */
+.status.pending { background-color: #f39c12; }    /* Orange */
+.status.completed { background-color: #27ae60; }  /* Green */
+.status.inprogress { background-color: #2980b9; } /* Blue */
+.status.overdue { background-color: #c0392b; }    /* Red */
+
+
+
 #previewModal {
     user-select: none;
     -webkit-user-select: none;
@@ -1707,6 +1757,10 @@
                 <i class="fas fa-check-circle"></i> Approved Quotation
             </li>
 
+            <li class="menu-item" data-tab="assigned-project">
+                <i class="fas fa-project-diagram"></i> Assigned Project
+            </li>
+
             <li class="menu-item" id="logout-btn">
                 <form action="/logout" method="post">
                     <i class="fas fa-sign-out-alt"></i>
@@ -3387,6 +3441,59 @@ images_upload_handler: function (blobInfo) {
                 </div>
             </div>
 
+            <!-- Assigned Project Tab -->
+            <div class="tab-content" id="assigned-project">
+                <div class="tab-header">
+                    <h3>Assigned Projects</h3>
+                    <p>View projects assigned to you for procurement</p>
+                </div>
+                <div class="status-cards" id="assignedProjectsContainer">
+                    <!-- Assigned projects will be dynamically generated -->
+                </div>
+            </div><script>
+document.addEventListener("DOMContentLoaded", loadAssignedProjects);
+
+async function loadAssignedProjects() {
+  const userId = encodeURIComponent("rajesh.km@kietsindia.com");
+  const container = document.querySelector("#assigned-project #assignedProjectsContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`/assigned-projects/${userId}`);
+    const data = await res.json();
+    container.innerHTML = "";
+
+    if (!data.length) {
+      container.innerHTML = "<p>No assigned projects</p>";
+      return;
+    }
+
+    data.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "project-card";
+      card.innerHTML = `
+        <h4>${p.description || '-'}</h4>
+        <p><b>Project Code:</b> ${p.project_code || '-'}</p>
+        <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
+        <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
+        <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+        <span class="status ${p.delivery_status?.toLowerCase() || ''}">${p.delivery_status || '-'}</span>
+      `;
+      container.appendChild(card);
+    });
+
+    console.log("Cards in DOM:", document.querySelectorAll(".project-card").length);
+  } catch (err) {
+    console.error("Failed to load assigned projects:", err);
+    container.innerHTML = "<p>Error loading projects</p>";
+  }
+}
+
+
+
+</script>
+
+
             <!-- Quotation Uploads Tab -->
             <div class="tab-content" id="quotation-uploads">
                 <div class="tab-header">
@@ -3512,10 +3619,9 @@ images_upload_handler: function (blobInfo) {
                 let endpoint = "/approved-quotations";
                 if (filter === 'mae') {
                     const creat=document.querySelector('#maeCreatedBy').value;
-                    
 
-                    
-                    
+
+
                     endpoint = `/api/mae-quotations/get/approved/${creat}`;
 ;
                 }
@@ -3537,6 +3643,26 @@ images_upload_handler: function (blobInfo) {
                 "<p>Could not load your approved quotations.</p>";
             }
         }
+
+        // async function fetchAssignedProjects() {
+        //     try {
+        //         const res = await fetch("/assigned-projects");
+        //         if (!res.ok) throw new Error("Failed to fetch assigned projects");
+
+        //         const contentType = res.headers.get("content-type");
+        //         if (!contentType || !contentType.includes("application/json")) {
+        //             throw new Error("Server returned non-JSON response");
+        //         }
+
+        //         const assignedProjects = await res.json();
+        //         console.log("✅ Assigned projects fetched:", assignedProjects);
+        //         renderAssignedProjects(assignedProjects);
+        //     } catch (err) {
+        //         console.error("❌ Error fetching assigned projects:", err);
+        //         document.getElementById("assignedProjectsContainer").innerHTML =
+        //         "<p>Could not load your assigned projects.</p>";
+        //     }
+        // }
 
         async function fetchOrders() {
             try {
@@ -3687,6 +3813,10 @@ images_upload_handler: function (blobInfo) {
                         const activeFilter = document.querySelector('.sub-tab.active').dataset.filter || 'all';
                         fetchApprovedQuotations(activeFilter);
                     }
+                    if (this.dataset.tab ==='assigned-project'){
+                        loadAssignedProjects();
+                    }
+                   
                 }
             });
         });
@@ -3736,7 +3866,9 @@ images_upload_handler: function (blobInfo) {
                     document.getElementById('quotation-uploads').classList.add('active');
                     document.querySelector('[data-tab="quotation"]').classList.add('active');
                     loadQuotationUploads(); // Load uploads when tab is opened
+                    
                 }
+               
             });
         });
         
