@@ -7486,7 +7486,10 @@ app.post(
 console.log('RAW ITEMS FIELD:', req.body.items);
 console.log('TYPE OF ITEMS:', typeof req.body.items);
 
-const poFilePath = req.file ? req.file.path : null;
+const poFilePath = req.file
+  ? `/uploads/${req.file.filename}`
+  : null;
+
 
 
     const client = await pool.connect();
