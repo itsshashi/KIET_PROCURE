@@ -3454,7 +3454,10 @@ images_upload_handler: function (blobInfo) {
 document.addEventListener("DOMContentLoaded", loadAssignedProjects);
 
 async function loadAssignedProjects() {
-  const userId = encodeURIComponent("rajesh.km@kietsindia.com");
+  
+  const valu=document.querySelector(".user-info span")?.textContent.trim() || "";
+  const userId = encodeURIComponent(valu);
+  
   const container = document.querySelector("#assigned-project #assignedProjectsContainer");
   if (!container) return;
 
