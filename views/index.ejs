@@ -253,7 +253,7 @@ body {
 
 <div style="display: flex; gap: 10px;">
    <button type="submit" class="login-btn">Login</button>
-      <button type="button" class="login-btn_attendance" style=" color:rgb(71, 97, 136);" onclick="alert('attendence is pressed')">Attendance</button>
+      <button type="button" class="login-btn_attendance" style=" color:rgb(71, 97, 136);" onclick="window.location.href='/attendance'">Attendance</button>
 </div>
      
     </form>
@@ -315,6 +315,11 @@ body {
     window.location.replace("/");
   }
 });
+async function attendence() {
+  const response = await fetch('/attendence');
+
+  
+}
 </script>
 
 <script src="script.js"></script>

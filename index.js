@@ -7648,7 +7648,9 @@ app.get("/assigned-projects/:userId", async (req, res) => {
 });
 
 
-
+app.get("/attendance",(req,res)=>{
+  res.render('attendence');
+})
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));

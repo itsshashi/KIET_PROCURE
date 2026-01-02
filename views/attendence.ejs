@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Attendance Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-present { background: #d1fae5; color: #065f46; }
+    .status-absent { background: #fee2e2; color: #b91c1c; }
+    .status-late { background: #fef3c7; color: #d97706; }
+  </style>
+</head>
+<body class="bg-blue-100 p-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+      <!-- Top bar -->
+      <div class="flex justify-between items-center mb-3">
+        <!-- Logo -->
+        <div>
+          <img src="images/page_logo.png" alt="Company_logo" class="h-20">
+        </div>
+
+        <!-- Right side: user + logout -->
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-2 text-gray-600">
+            <i class="fas fa-user-circle text-2xl"></i>
+            <span class="text-sm font-medium" id="userEmail">user@kietsindia.com</span>
+          </div>
+          <form action="/logout" method="POST">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+              <i class="fas fa-sign-out-alt"></i>
+              Logout
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Page Title -->
+      <h1 class="text-3xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">
+        <i class="fas fa-calendar-check text-green-600"></i>
+        <span>Attendance Management</span>
+      </h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <!-- Mark Attendance Section -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Mark Today's Attendance</h2>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <form id="attendanceForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input type="date" id="attendanceDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Time In</label>
+              <input type="time" id="timeIn" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Time Out (Optional)</label>
+              <input type="time" id="timeOut" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="md:col-span-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea id="attendanceNotes" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" placeholder="Any additional notes..."></textarea>
+            </div>
+            <div class="md:col-span-3 flex justify-end">
+              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                <i class="fas fa-check"></i>
+                Mark Attendance
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Attendance History -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Attendance History</h2>
+
+        <!-- Filters -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+              <input type="date" id="fromDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+              <input type="date" id="toDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-end">
+              <button onclick="filterAttendance()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <i class="fas fa-search mr-2"></i>Filter
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+          <table class="min-w-full w-full text-sm text-center">
+            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+              <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Time In</th>
+                <th class="px-4 py-3">Time Out</th>
+                <th class="px-4 py-3">Hours Worked</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable" class="divide-y divide-gray-200">
+              <!-- Attendance records will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', function() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('attendanceDate').value = today;
+      document.getElementById('fromDate').value = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0];
+      document.getElementById('toDate').value = today;
+
+      loadAttendanceHistory();
+    });
+
+    // Handle attendance form submission
+    document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const attendanceData = {
+        date: document.getElementById('attendanceDate').value,
+        timeIn: document.getElementById('timeIn').value,
+        timeOut: document.getElementById('timeOut').value || null,
+        notes: document.getElementById('attendanceNotes').value
+      };
+
+      try {
+        const response = await fetch('/api/attendance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(attendanceData)
+        });
+
+        if (!response.ok) throw new Error('Failed to mark attendance');
+
+        alert('Attendance marked successfully! ✅');
+        document.getElementById('attendanceForm').reset();
+        document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+        loadAttendanceHistory();
+
+      } catch (error) {
+        console.error('Error marking attendance:', error);
+        alert('Failed to mark attendance. Please try again.');
+      }
+    });
+
+    // Load attendance history
+    async function loadAttendanceHistory() {
+      try {
+        const response = await fetch('/api/attendance');
+        if (!response.ok) throw new Error('Failed to fetch attendance history');
+
+        const attendanceRecords = await response.json();
+        renderAttendanceTable(attendanceRecords);
+
+      } catch (error) {
+        console.error('Error loading attendance history:', error);
+        document.getElementById('attendanceTable').innerHTML =
+          '<tr><td colspan="6" class="text-center py-8 text-red-500">Failed to load attendance history. Please try again.</td></tr>';
+      }
+    }
+
+    // Filter attendance
+    function filterAttendance() {
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+
+      if (!fromDate || !toDate) {
+        alert('Please select both from and to dates.');
+        return;
+      }
+
+      loadAttendanceHistory(); // In a real app, you'd pass filters to the API
+    }
+
+    // Render attendance table
+    function renderAttendanceTable(records) {
+      const tbody = document.getElementById('attendanceTable');
+      tbody.innerHTML = '';
+
+      if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No attendance records found.</td></tr>';
+        return;
+      }
+
+      records.forEach(record => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+
+        const timeIn = new Date(`1970-01-01T${record.timeIn}`);
+        const timeOut = record.timeOut ? new Date(`1970-01-01T${record.timeOut}`) : null;
+        const hoursWorked = timeOut ? ((timeOut - timeIn) / (1000 * 60 * 60)).toFixed(2) : 'N/A';
+
+        let status = 'present';
+        let statusText = 'Present';
+        if (timeIn.getHours() > 9 || (timeIn.getHours() === 9 && timeIn.getMinutes() > 30)) {
+          status = 'late';
+          statusText = 'Late';
+        }
+
+        tr.innerHTML = `
+          <td class="px-4 py-3">${formatDate(record.date)}</td>
+          <td class="px-4 py-3">${record.timeIn}</td>
+          <td class="px-4 py-3">${record.timeOut || 'N/A'}</td>
+          <td class="px-4 py-3">${hoursWorked}</td>
+          <td class="px-4 py-3">
+            <span class="status-badge status-${status}">${statusText}</span>
+          </td>
+          <td class="px-4 py-3">${record.notes || ''}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  </script>
+</body>
+</html>
