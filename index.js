@@ -7487,7 +7487,7 @@ console.log('RAW ITEMS FIELD:', req.body.items);
 console.log('TYPE OF ITEMS:', typeof req.body.items);
 
 const poFilePath = req.file
-  ? `/uploads/${req.file.filename}`
+  ? `uploads/${req.file.filename}`
   : null;
 
 
