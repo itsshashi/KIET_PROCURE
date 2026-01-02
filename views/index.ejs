@@ -144,10 +144,23 @@ body {
 .login-btn {
   margin-top: 20px;
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #7babe9, #0a3d62);
+  background: linear-gradient(135deg, #7cdda8, #0c910c);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+.login-btn_attendance {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f1fa79, #e4ee5b);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -238,8 +251,11 @@ body {
   </i>
 </div>
 
-
-      <button type="submit" class="login-btn">Login</button>
+<div style="display: flex; gap: 10px;">
+   <button type="submit" class="login-btn">Login</button>
+      <button type="button" class="login-btn_attendance" style=" color:rgb(71, 97, 136);" onclick="alert('attendence is pressed')">Attendance</button>
+</div>
+     
     </form>
 
     <div class="options">
