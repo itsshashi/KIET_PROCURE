@@ -7649,7 +7649,7 @@ app.get("/assigned-projects/:userId", async (req, res) => {
 
 
 app.get("/attendance",(req,res)=>{
-  res.render('attendence');
+  res.render('attendence.ejs');
 })
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
