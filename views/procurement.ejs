@@ -34,6 +34,27 @@
   gap: 12px;
   margin-top: 20px;
 }
+#incompleteProjectsModal {
+  display: none; /* hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.task-box {
+  background: #f10a0a;
+  color:white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  text-align: center;
+}
+
 
 /* Individual project card */
 .project-card {
@@ -1729,7 +1750,17 @@
 
     <button onclick="submitTask()">Submit</button>
   </div>
+  <div id="incompleteProjectsModal" class="task-modal">
+  <div class="task-box" style="background: red; ">
+    <h2 style="color:white;">⚠️ Incomplete Assigned Projects</h2>
+    <p style="color:white;">You have assigned projects that are not yet completed. Please review and complete them.</p>
+    <button onclick="closeIncompleteProjectsModal()">Close</button>
+  </div>
 </div>
+</div>
+
+<!-- Incomplete Projects Popup -->
+
 
 
 
@@ -3478,10 +3509,9 @@ images_upload_handler: function (blobInfo) {
 document.addEventListener("DOMContentLoaded", loadAssignedProjects);
 
 async function loadAssignedProjects() {
-  
-  const valu=document.querySelector(".user-info span")?.textContent.trim() || "";
+  const valu = document.querySelector(".user-info span")?.textContent.trim() || "";
   const userId = encodeURIComponent(valu);
-  
+
   const container = document.querySelector("#assigned-project #assignedProjectsContainer");
   if (!container) return;
 
@@ -3495,78 +3525,56 @@ async function loadAssignedProjects() {
       return;
     }
 
+    // Flag to check for incomplete projects
+    let hasIncomplete = false;
+
     data.forEach(p => {
-  const card = document.createElement("div");
+      const card = document.createElement("div");
 
-  const statusClass =
-    p.project_status?.toLowerCase() === "completed"
-      ? "card-completed"
-      : "card-pending";
+      const statusClass =
+        p.project_status?.toLowerCase() === "completed"
+          ? "card-completed"
+          : "card-pending";
 
-  card.className = `project-card ${statusClass}`;
+      // Check if this project is incomplete
+      if (p.project_status?.toLowerCase() !== "completed") {
+        hasIncomplete = true;
+      }
 
-  card.innerHTML = `
-    <h4>${p.description || '-'}</h4>
-    <p><b>Project Code:</b> ${p.project_code || '-'}</p>
-    <p><b>PO No:</b> ${p.po_no || '-'}</p>
-    <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
-    <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
-    <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
-    <p><b>Target date:</b> ${
-      p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"
-    }</p>
-    <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
-
-
-    <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
-      ${
-    // ✅ Only show button if project_status is NOT "Completed"
-    p.project_status?.toLowerCase() !== "completed"
-      ? `<p><button class="btn btn-success btn-complete">Completed</button></p>`
-      : ""  // hide button if completed
-  }
-  `;
+      card.className = `project-card ${statusClass}`;
+      card.innerHTML = `
+        <h4>${p.description || '-'}</h4>
+        <p><b>Project Code:</b> ${p.project_code || '-'}</p>
+        <p><b>PO No:</b> ${p.po_no || '-'}</p>
+        <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
+        <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
+        <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+        <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
+        <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
+        <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
+        ${
+          p.project_status?.toLowerCase() !== "completed"
+            ? `<p><button class="btn btn-success btn-complete">Completed</button></p>`
+            : ""
+        }
+      `;
 
       container.appendChild(card);
-
-       const completeBtn = card.querySelector(".btn-complete");
-  if (completeBtn) {
-    completeBtn.addEventListener("click", async () => {
-      try {
-        // 1️⃣ Send update to server
-        const res = await fetch('/api/mark_project_completed', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project_id: p.id }) // send project ID
-        });
-
-        if (!res.ok) throw new Error("Failed to update project status");
-        card.classList.add("card-completed");
-
-        // 2️⃣ Update UI
-        // const statusText = card.querySelector(".project-status-text");
-        // statusText.textContent = "Completed";
-        // Remove button
-        completeBtn.remove();
-
-        // Optional: change card background
-        // card.style.backgroundColor = "#22c55e"; // green
-        // card.style.color = "#fff";
-
-      } catch (err) {
-        console.error(err);
-        alert("Failed to mark project as completed. Try again.");
-      }
     });
-  }
-});
-    
 
-    console.log("Cards in DOM:", document.querySelectorAll(".project-card").length);
+    // ✅ Show modal if there is at least one incomplete project
+    if (hasIncomplete) {
+      document.getElementById("incompleteProjectsModal").style.display = "block";
+    }
   } catch (err) {
-    console.error("Failed to load assigned projects:", err);
-    container.innerHTML = "<p>Error loading projects</p>";
+    console.error(err);
+    container.innerHTML = "<p>Error loading projects.</p>";
   }
+}
+
+// Function to close the modal
+function closeIncompleteProjectsModal() {
+  document.getElementById("incompleteProjectsModal").style.display = "none";
 }
 
 
@@ -4344,10 +4352,16 @@ async function loadAssignedProjects() {
             }
 
                 // Add download functionality
-                
-               
-            });
-        }
+                });
+            
+              }
+            
+            function closeIncompleteProjectsModal() {
+            
+              document.getElementById("incompleteProjectsModal").style.display = "none";
+            
+            }
+            
 
         // Function to download quotation
         async function downloadQuotation(quotationId) {
