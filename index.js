@@ -7291,7 +7291,9 @@ app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
         currency,
         assigned_to,
         assigned_on,
-        budget
+        budget,
+        target_date,
+        project_status
         
       FROM project_info
       ORDER BY po_date DESC
@@ -7360,17 +7362,20 @@ app.put("/api/assign_to", async (req, res) => {
     console.log("req body values",req.body)
     const id=req.body.current_id;
     const budget=parseFloat(req.body.budgetValue);
+    const target=req.body.target;
     const updateQuery = `
       UPDATE project_info SET
         assigned_to = $1,
         assigned_on = CURRENT_TIMESTAMP,
-        budget= $2
-      WHERE id = $3
+        budget= $2,
+        target_date=$3
+      WHERE id = $4
       RETURNING *
     `;  
     const values = [
       selectedValue,
       budget  ,
+      target,
       id
 
     ];
@@ -7631,7 +7636,10 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         assigned_to,
         assigned_on,
         delivery_status,
-        delivery_date
+        delivery_date,
+        target_date,
+        po_no,
+        project_status
 
 
        FROM project_info
@@ -7651,6 +7659,21 @@ app.get("/assigned-projects/:userId", async (req, res) => {
 app.get("/attendance",(req,res)=>{
   res.render('attendence.ejs');
 })
+
+app.put("/api/mark_project_completed", async (req, res) => {
+  const { project_id } = req.body;
+  try {
+    await pool.query(
+      "UPDATE project_info SET project_status = 'Completed' WHERE id = $1",
+      [project_id]
+    );
+    res.status(200).json({ message: "Project marked completed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update project" });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available
 app.listen(PORT, () => console.log(`🚀 Server running on port! ${PORT}`));

@@ -44,6 +44,30 @@
   background-color: #f9f9f9;   /* Light background */
 }
 
+.project-card {
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+}
+
+/* 🟢 Completed */
+.card-completed {
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+/* 🟡 Not completed */
+.card-pending {
+  background-color: #fde047;
+  color: #000000;
+}
+
 /* Card headings */
 .project-card h4 {
   font-size: 16px;
@@ -3472,18 +3496,71 @@ async function loadAssignedProjects() {
     }
 
     data.forEach(p => {
-      const card = document.createElement("div");
-      card.className = "project-card";
-      card.innerHTML = `
-        <h4>${p.description || '-'}</h4>
-        <p><b>Project Code:</b> ${p.project_code || '-'}</p>
-        <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
-        <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
-        <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
-        <span class="status ${p.delivery_status?.toLowerCase() || ''}">${p.delivery_status || '-'}</span>
-      `;
+  const card = document.createElement("div");
+
+  const statusClass =
+    p.project_status?.toLowerCase() === "completed"
+      ? "card-completed"
+      : "card-pending";
+
+  card.className = `project-card ${statusClass}`;
+
+  card.innerHTML = `
+    <h4>${p.description || '-'}</h4>
+    <p><b>Project Code:</b> ${p.project_code || '-'}</p>
+    <p><b>PO No:</b> ${p.po_no || '-'}</p>
+    <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
+    <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
+    <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+    <p><b>Target date:</b> ${
+      p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"
+    }</p>
+    <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
+
+
+    <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
+      ${
+    // ✅ Only show button if project_status is NOT "Completed"
+    p.project_status?.toLowerCase() !== "completed"
+      ? `<p><button class="btn btn-success btn-complete">Completed</button></p>`
+      : ""  // hide button if completed
+  }
+  `;
+
       container.appendChild(card);
+
+       const completeBtn = card.querySelector(".btn-complete");
+  if (completeBtn) {
+    completeBtn.addEventListener("click", async () => {
+      try {
+        // 1️⃣ Send update to server
+        const res = await fetch('/api/mark_project_completed', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_id: p.id }) // send project ID
+        });
+
+        if (!res.ok) throw new Error("Failed to update project status");
+        card.classList.add("card-completed");
+
+        // 2️⃣ Update UI
+        // const statusText = card.querySelector(".project-status-text");
+        // statusText.textContent = "Completed";
+        // Remove button
+        completeBtn.remove();
+
+        // Optional: change card background
+        // card.style.backgroundColor = "#22c55e"; // green
+        // card.style.color = "#fff";
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to mark project as completed. Try again.");
+      }
     });
+  }
+});
+    
 
     console.log("Cards in DOM:", document.querySelectorAll(".project-card").length);
   } catch (err) {
