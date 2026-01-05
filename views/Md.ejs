@@ -2346,13 +2346,7 @@ select {
             <p>Total Budget</p>
           </div>
         </div>
-        <div class="card">
-          <i class="fas fa-piggy-bank"></i>
-          <div class="card-content">
-            <h3 id="remainingBudget">₹0.00</h3>
-            <p>Remaining Budget</p>
-          </div>
-        </div>
+        
       </div>
 
       <!-- Search and Filter Section -->
@@ -2385,10 +2379,9 @@ select {
               <th onclick="sortProjectTable('assigned_to')">Assigned To <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('budget')">Budget (₹) <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th>
-              <th onclick="sortProjectTable('remaining_budget')">Remaining Budget (₹) <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('delivery_status')">Status <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('assigned_on')">Assigned On <i class="fas fa-sort"></i></th>
-              <th>Actions</th>
+              
             </tr>
           </thead>
           <tbody id="projectInfoBody">
@@ -2396,6 +2389,67 @@ select {
           </tbody>
         </table>
       </div>
+      <script>
+document.addEventListener("DOMContentLoaded", fetchProjects);
+
+async function fetchProjects() {
+  try {
+    const response = await fetch("/api/projects");   // your backend API
+    const projects = await response.json();
+      updateSummaryCards(projects);
+
+
+    const tbody = document.getElementById("projectInfoBody");
+    tbody.innerHTML = "";
+
+    projects.forEach(p => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${p.id}</td>
+        <td>${p.project_code}</td>
+        <td>${p.description}</td>
+        <td>${p.customer}(${p.user_name})</td>
+        <td>${p.assigned_to}</td>
+        <td>₹${Number(p.budget).toFixed(2)}</td>
+        <td>₹${Number(p.total_value).toFixed(2)}</td>
+        
+        <td>${p.delivery_status}</td>
+        <td>${new Date(p.assigned_on).toLocaleDateString()}</td>
+        
+      `;
+
+      tbody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+  }
+}
+
+function updateSummaryCards(projects) {
+  // Total Projects
+  document.getElementById("totalProjects").textContent = projects.length;
+
+  // Assigned Projects (non-empty assigned_to)
+  const assignedCount = projects.filter(
+    p => p.assigned_to && p.assigned_to.trim() !== ""
+  ).length;
+  document.getElementById("assignedProjects").textContent = assignedCount;
+
+  // Total Budget (sum of base_value / budget)
+  const totalBudget = projects.reduce(
+    (sum, p) => sum + Number(p.budget || 0),
+    0
+  );
+
+  document.getElementById("totalBudget").textContent =
+    `₹${totalBudget.toFixed(2)}`;
+}
+
+
+</script>
+
 
       <!-- Project Details Modal -->
       <div id="projectDetailsModal" class="modal" style="display:none;">
