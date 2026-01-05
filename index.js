@@ -1,6 +1,8 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
 import generateDeliveryChallan from "./dc.js";
+import { loadModels, getDescriptor, distance } from "./face.js";
+import fetch from "node-fetch";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -44,7 +46,8 @@ const qtUploadsDir = path.join(__dirname, "qt_uploads");
 if (!fs.existsSync(qtUploadsDir)) {
   fs.mkdirSync(qtUploadsDir, { recursive: true });
 }
-
+await loadModels();
+console.log("✅ Face models loaded");
 const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
@@ -7656,9 +7659,11 @@ app.get("/assigned-projects/:userId", async (req, res) => {
 });
 
 
-app.get("/attendance",(req,res)=>{
-  res.render('attendence.ejs');
-})
+app.get("/attendance", (req, res) => {
+  res.render("attendence", {
+    user: req.session.user
+  });
+});
 
 app.put("/api/mark_project_completed", async (req, res) => {
   const { project_id } = req.body;
@@ -7673,6 +7678,108 @@ app.put("/api/mark_project_completed", async (req, res) => {
     res.status(500).json({ error: "Failed to update project" });
   }
 });
+
+app.post("/api/register-face", async (req, res) => {
+  try {
+    const { empId, name, image } = req.body;
+    console.log("Received:", empId, name, image?.substring(0,50));
+
+    const desc = await getDescriptor(image);
+    if (!desc) return res.json({ success: false, message: "No face detected" });
+
+    await pool.query(
+      `INSERT INTO employees (emp_id, name)
+       VALUES ($1,$2)
+       ON CONFLICT (emp_id) DO NOTHING`,
+      [empId, name]
+    );
+
+    await pool.query(
+      `INSERT INTO face_data (emp_id, face_descriptor)
+       VALUES ($1,$2)
+       ON CONFLICT (emp_id) DO UPDATE SET face_descriptor = EXCLUDED.face_descriptor`,
+      [empId, JSON.stringify(desc)]
+    );
+
+    res.json({ success: true, message: "Face registered successfully ✅" });
+  } catch (err) {
+    console.error("Register face error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* SCAN ATTENDANCE */
+app.post("/api/scan", async (req, res) => {
+  const scanDesc = await getDescriptor(req.body.image);
+  const location=req.body.location;
+  
+  if (!scanDesc) return res.json({ success: false });
+
+  const faces = await pool.query("SELECT emp_id, face_descriptor FROM face_data");
+
+  let matched = null;
+  let min = 0.6;
+
+  for (const f of faces.rows) {
+    const d = distance(scanDesc, f.face_descriptor);
+    if (d < min) {
+      min = d;
+      matched = f.emp_id;
+    }
+  }
+
+  if (!matched) return res.json({ success: false });
+
+  const now = new Date();
+  const status = now.getHours() > 9 ? "Late" : "Present";
+
+  await pool.query(
+    `INSERT INTO attendance (emp_id, date, time_in, status,lat, lng)
+     VALUES ($1,CURRENT_DATE,CURRENT_TIME,$2,$3,$4)
+     ON CONFLICT (emp_id,date) DO NOTHING`,
+    [matched, status,location.lat,location.lng]
+  );
+
+  res.json({ success: true, empId: matched, status });
+});
+
+/* HISTORY */
+async function getLocationName(lat, lng) {
+  if (!lat || !lng) return null;
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "FaceAttendanceApp/1.0" } // required by Nominatim
+    });
+    const data = await res.json();
+    return data.display_name;
+  } catch (err) {
+    console.error("Reverse geocoding error:", err);
+    return null;
+  }
+}
+
+app.get("/api/history", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT emp_id, date, time_in, status, lat, lng
+       FROM attendance ORDER BY date DESC`
+    );
+
+    // Map lat/lng to human-readable locations
+    const rows = await Promise.all(result.rows.map(async r => {
+      const location = await getLocationName(r.lat, r.lng);
+      return { ...r, location };
+    }));
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Error fetching history:", err);
+    res.status(500).json({ error: "Failed to fetch attendance history" });
+  }
+});
+
 
 
 const PORT = process.env.PORT || 3000; // use Render's PORT if available

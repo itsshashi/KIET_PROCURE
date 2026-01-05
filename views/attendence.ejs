@@ -1,254 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Attendance Management</title>
+  <title>Face Attendance</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-present { background: #d1fae5; color: #065f46; }
-    .status-absent { background: #fee2e2; color: #b91c1c; }
-    .status-late { background: #fef3c7; color: #d97706; }
-  </style>
 </head>
 <body class="bg-blue-100 p-6">
-  <div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-      <!-- Top bar -->
-      <div class="flex justify-between items-center mb-3">
-        <!-- Logo -->
-        <div>
-          <img src="images/page_logo.png" alt="Company_logo" class="h-20">
-        </div>
 
-        <!-- Right side: user + logout -->
-        <div class="flex items-center gap-6">
-          <div class="flex items-center gap-2 text-gray-600">
-            <i class="fas fa-user-circle text-2xl"></i>
-            <span class="text-sm font-medium" id="userEmail">user@kietsindia.com</span>
-          </div>
-          <form action="/logout" method="POST">
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-              <i class="fas fa-sign-out-alt"></i>
-              Logout
-            </button>
-          </form>
-        </div>
-      </div>
+<div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
 
-      <!-- Page Title -->
-      <h1 class="text-3xl font-bold text-gray-800 text-center flex items-center justify-center gap-2">
-        <i class="fas fa-calendar-check text-green-600"></i>
-        <span>Attendance Management</span>
-      </h1>
-    </div>
+<h1 class="text-3xl font-bold text-center mb-6">📷 Face Attendance</h1>
 
-    <!-- Main Content -->
-    <div class="bg-white shadow-md rounded-lg p-6">
-      <!-- Mark Attendance Section -->
-      <div class="mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Mark Today's Attendance</h2>
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <form id="attendanceForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <input type="date" id="attendanceDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Time In</label>
-              <input type="time" id="timeIn" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Time Out (Optional)</label>
-              <input type="time" id="timeOut" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="md:col-span-3">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea id="attendanceNotes" rows="3" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500" placeholder="Any additional notes..."></textarea>
-            </div>
-            <div class="md:col-span-3 flex justify-end">
-              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-                <i class="fas fa-check"></i>
-                Mark Attendance
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+<div class="grid grid-cols-2 gap-6">
 
-      <!-- Attendance History -->
-      <div>
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Attendance History</h2>
+<!-- REGISTER -->
+<div class="text-center">
+  <h2 class="font-semibold mb-2">Register Face</h2>
+  <input id="empId" placeholder="Employee ID" class="border p-2 w-full mb-2">
+  <input id="name" placeholder="Name" class="border p-2 w-full mb-2">
+  <video id="v1" autoplay class="mx-auto border"></video>
+<canvas id="c1" width="320" height="240" class="hidden"></canvas>
 
-        <!-- Filters -->
-        <div class="bg-gray-50 p-4 rounded-lg mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-              <input type="date" id="fromDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-              <input type="date" id="toDate" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex items-end">
-              <button onclick="filterAttendance()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700">
-                <i class="fas fa-search mr-2"></i>Filter
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Attendance Table -->
-        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-          <table class="min-w-full w-full text-sm text-center">
-            <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
-              <tr>
-                <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Time In</th>
-                <th class="px-4 py-3">Time Out</th>
-                <th class="px-4 py-3">Hours Worked</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Notes</th>
-              </tr>
-            </thead>
-            <tbody id="attendanceTable" class="divide-y divide-gray-200">
-              <!-- Attendance records will be populated here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+ <button
+  type="button"
+  onclick="register()"
+  class="bg-green-600 text-white px-4 py-2 rounded">
+  Register Attendance
+</button>
 
-  <script>
-    // Set today's date as default
-    document.addEventListener('DOMContentLoaded', function() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('attendanceDate').value = today;
-      document.getElementById('fromDate').value = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0];
-      document.getElementById('toDate').value = today;
 
-      loadAttendanceHistory();
-    });
+</div>
 
-    // Handle attendance form submission
-    document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
+<!-- SCAN -->
+<div class="text-center">
+  <h2 class="font-semibold mb-2">Scan Attendance</h2>
+  <video id="v2" autoplay class="mx-auto border"></video>
+  <canvas id="c2" width="320" height="240" class="hidden"></canvas>
+  <button onclick="scan()" class="bg-green-600 text-white px-4 py-2 mt-2">
+    Scan
+  </button>
+  <p id="status" class="mt-2"></p>
+</div>
 
-      const attendanceData = {
-        date: document.getElementById('attendanceDate').value,
-        timeIn: document.getElementById('timeIn').value,
-        timeOut: document.getElementById('timeOut').value || null,
-        notes: document.getElementById('attendanceNotes').value
-      };
+</div>
 
-      try {
-        const response = await fetch('/api/attendance', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(attendanceData)
-        });
+<hr class="my-6">
 
-        if (!response.ok) throw new Error('Failed to mark attendance');
+<table class="w-full text-center border">
+  <thead class="bg-gray-200">
+    <tr>
+      <th>Emp ID</th><th>Date</th><th>Time</th><th>Status</th><th>location</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
 
-        alert('Attendance marked successfully! ✅');
-        document.getElementById('attendanceForm').reset();
-        document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
-        loadAttendanceHistory();
+</div>
 
-      } catch (error) {
-        console.error('Error marking attendance:', error);
-        alert('Failed to mark attendance. Please try again.');
-      }
-    });
+<script>
 
-    // Load attendance history
-    async function loadAttendanceHistory() {
-      try {
-        const response = await fetch('/api/attendance');
-        if (!response.ok) throw new Error('Failed to fetch attendance history');
+const empId = document.getElementById("empId");
+const nameInput = document.getElementById("name");
+const status = document.getElementById("status");
+const rows = document.getElementById("rows");
 
-        const attendanceRecords = await response.json();
-        renderAttendanceTable(attendanceRecords);
+const v1 = document.getElementById("v1");
+const v2 = document.getElementById("v2");
 
-      } catch (error) {
-        console.error('Error loading attendance history:', error);
-        document.getElementById('attendanceTable').innerHTML =
-          '<tr><td colspan="6" class="text-center py-8 text-red-500">Failed to load attendance history. Please try again.</td></tr>';
-      }
-    }
+// Start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(s => { v1.srcObject = s; v2.srcObject = s; });
 
-    // Filter attendance
-    function filterAttendance() {
-      const fromDate = document.getElementById('fromDate').value;
-      const toDate = document.getElementById('toDate').value;
+// Helper: get current location
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return resolve({ lat: null, lng: null });
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      err => resolve({ lat: null, lng: null })
+    );
+  });
+}
 
-      if (!fromDate || !toDate) {
-        alert('Please select both from and to dates.');
-        return;
-      }
+// REGISTER FACE + LOCATION
+async function register() {
+  if (!empId.value || !nameInput.value) {
+    alert("Enter Employee ID and Name");
+    return;
+  }
 
-      loadAttendanceHistory(); // In a real app, you'd pass filters to the API
-    }
+  const loc = await getLocation(); // get location
 
-    // Render attendance table
-    function renderAttendanceTable(records) {
-      const tbody = document.getElementById('attendanceTable');
-      tbody.innerHTML = '';
+  const c = document.getElementById("c1");
+  const ctx = c.getContext("2d");
+  ctx.drawImage(v1, 0, 0, 320, 240);
 
-      if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No attendance records found.</td></tr>';
-        return;
-      }
+  const res = await fetch("/api/register-face", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      empId: empId.value,
+      name: nameInput.value,
+      image: c.toDataURL("image/jpeg"),
+      location: loc // send lat & lng
+    })
+  });
 
-      records.forEach(record => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50';
+  const data = await res.json();
+  alert(data.message);
+}
 
-        const timeIn = new Date(`1970-01-01T${record.timeIn}`);
-        const timeOut = record.timeOut ? new Date(`1970-01-01T${record.timeOut}`) : null;
-        const hoursWorked = timeOut ? ((timeOut - timeIn) / (1000 * 60 * 60)).toFixed(2) : 'N/A';
+// SCAN + LOCATION
+async function scan() {
+  const loc = await getLocation(); // get location
 
-        let status = 'present';
-        let statusText = 'Present';
-        if (timeIn.getHours() > 9 || (timeIn.getHours() === 9 && timeIn.getMinutes() > 30)) {
-          status = 'late';
-          statusText = 'Late';
-        }
+  const c = document.getElementById("c2");
+  c.getContext("2d").drawImage(v2,0,0,320,240);
 
-        tr.innerHTML = `
-          <td class="px-4 py-3">${formatDate(record.date)}</td>
-          <td class="px-4 py-3">${record.timeIn}</td>
-          <td class="px-4 py-3">${record.timeOut || 'N/A'}</td>
-          <td class="px-4 py-3">${hoursWorked}</td>
-          <td class="px-4 py-3">
-            <span class="status-badge status-${status}">${statusText}</span>
-          </td>
-          <td class="px-4 py-3">${record.notes || ''}</td>
-        `;
+  const r = await fetch("/api/scan", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      image: c.toDataURL(),
+      location: loc // send lat & lng
+    })
+  });
 
-        tbody.appendChild(tr);
-      });
-    }
+  const d = await r.json();
+  status.innerText = d.success
+    ? `✅ ${d.empId} (${d.status}) at [${loc.lat?.toFixed(5)}, ${loc.lng?.toFixed(5)}]`
+    : "❌ Not recognized";
 
-    // Format date
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    }
-  </script>
+  load();
+}
+
+// LOAD ATTENDANCE HISTORY
+
+async function load() {
+  const r = await fetch("/api/history");
+  const data = await r.json();
+
+  rows.innerHTML = data.map(x =>
+    `<tr class="border-t">
+      <td>${x.emp_id}</td>
+      <td>${x.date}</td>
+      <td>${x.time_in}</td>
+      <td>${x.status}</td>
+      <td>${x.location || '-'}</td>
+    </tr>`
+  ).join("");
+}
+
+load();
+
+</script>
+
+
+
 </body>
 </html>
