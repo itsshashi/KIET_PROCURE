@@ -415,6 +415,7 @@
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Challan No</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Date</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Consignee</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Email(requester)</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Type</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Expiry Date</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Days to Return</th>
@@ -531,6 +532,8 @@
             <td style="padding: 12px; color: #374151;">${challan.challan_no}</td>
             <td style="padding: 12px; color: #374151;">${challanDate}</td>
             <td style="padding: 12px; color: #374151;">${challan.consignee_name}</td>
+            <td style="padding: 12px; color: #374151;">${challan.requester}</td>
+
             <td style="padding: 12px; color: #374151;">${challan.dc_type}</td>
             <td style="padding: 12px; color: #374151;">${expiryDate}</td>
             <td style="padding: 12px; color: #374151; ${daysToReturn !== 'N/A' && daysToReturn < 0 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 5 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 10 ? 'background-color: #d97706; color: white;' : 'background-color: #16a34a; color: white;'}">${daysToReturn}</td>

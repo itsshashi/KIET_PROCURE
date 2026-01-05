@@ -729,7 +729,8 @@ app.get("/api/delivery-challans", async (req, res) => {
         dc_type,
         approval_status,
         consignee_name,
-        reason
+        reason,
+        requester
       FROM delivery_challan
       WHERE approval_status = 'approved'
       ORDER BY challan_date DESC
