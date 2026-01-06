@@ -3634,6 +3634,14 @@ function closeIncompleteProjectsModal() {
               name="who"
               placeholder="Enter your name"
               required>
+               <input
+              type="text"
+              class="form-control"
+              id="prj_cd"
+              name="project_code"
+              placeholder="Enter Project code"
+              required>
+              
           </div>
 
           <p class="text-muted">
@@ -3663,8 +3671,9 @@ document.getElementById("processForm").addEventListener("submit", async function
 
   const process = document.getElementById("process").value;
   const who = document.getElementById("who").value;
+  const prj_code=document.getElementById("prj_cd").value;
 
-  console.log(process, who);
+  console.log(process, who,prj_code);
 
   try {
     const response = await fetch("/process/store", {
@@ -3672,7 +3681,7 @@ document.getElementById("processForm").addEventListener("submit", async function
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ process, who })
+      body: JSON.stringify({ process, who,prj_code })
     });
 
     const result = await response.json();

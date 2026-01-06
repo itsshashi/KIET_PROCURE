@@ -2572,6 +2572,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <!-- ===================== PROCESS HISTORY (NEW SECTION) ===================== -->
+<div class="flex gap-4 mb-4 items-end">
+  <div>
+    <label for="filterProjectCode" class="block text-sm font-medium text-gray-700">
+      Project Code
+    </label>
+    <select id="filterProjectCode"
+      class="mt-2 p-4 border border-gray-300 rounded" style="padding-left: 20px;">
+      <option value="">All</option>
+    </select>
+  </div>
+
+  <div>
+    <button onclick="loadProcessHistory()"
+      class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+      Filter
+    </button>
+  </div>
+</div>
 
 <div class="mt-12">
   <div class="mb-6">
@@ -2584,9 +2602,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <thead class="bg-gray-100 border-b">
         <tr>
           <th class="px-4 py-3 text-left">#</th>
+          <th class="px-4 py-3 text-left">Project code</th>
+
           <th class="px-4 py-3 text-left">Process</th>
           <th class="px-4 py-3 text-left">Done By</th>
           <th class="px-4 py-3 text-left">Date & Time</th>
+          
         </tr>
       </thead>
       <tbody id="processTableBody"></tbody>
@@ -2665,53 +2686,97 @@ function renderDailyTasks(tasks, { fromDate, assignedTo }) {
     container.appendChild(div);
   });
 }
+
+let processProjectDropdownPopulated = false;
+let allProcessData = [];
+
 async function loadProcessHistory() {
   try {
     const res = await fetch('/process/view/json');
-    const processes = await res.json();
+    const data = await res.json();
 
-    const tbody = document.getElementById('processTableBody');
-    tbody.innerHTML = '';
+    allProcessData = data;
 
-    if (!processes.length) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="4" class="text-center py-6 text-gray-500">
-            No process records found
-          </td>
-        </tr>`;
-      return;
+    const projectSelect = document.getElementById('filterProjectCode');
+
+    // Populate dropdown only once
+    if (!processProjectDropdownPopulated) {
+      const uniqueProjects = [
+  ...new Set(
+    data
+      .map(p => p.project_code)
+      .filter(code => code && code.trim() !== '')
+      .map(code => code.trim())
+  )
+];
+
+
+      uniqueProjects.forEach(code => {
+        if (!code) return;
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = code;
+        projectSelect.appendChild(opt);
+      });
+
+      processProjectDropdownPopulated = true;
     }
 
-    processes.forEach((p, index) => {
-      const row = document.createElement('tr');
-      row.className = 'border-b hover:bg-gray-50';
-
-      row.innerHTML = `
-        <td class="px-4 py-3">${index + 1}</td>
-        <td class="px-4 py-3">${p.process}</td>
-        <td class="px-4 py-3 font-medium">${p.who}</td>
-        <td class="px-4 py-3 text-gray-600">
-          ${new Date(p.created_at).toLocaleString()}
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-
+    applyProcessFilter();
   } catch (err) {
     console.error(err);
-    document.getElementById('processTableBody').innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center py-6 text-red-500">
-          Failed to load process history
-        </td>
-      </tr>`;
   }
 }
 
-// Auto load when page opens
-loadProcessHistory();
+function applyProcessFilter() {
+  const projectCode = document
+    .getElementById('filterProjectCode')
+    .value
+    .trim();
+
+  const filtered = projectCode
+    ? allProcessData.filter(p =>
+        p.project_code &&
+        p.project_code.trim() === projectCode
+      )
+    : allProcessData;
+
+  renderProcessTable(filtered);
+}
+
+
+function renderProcessTable(data) {
+  const tbody = document.getElementById('processTableBody');
+  tbody.innerHTML = '';
+
+  if (!data.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center py-6 text-gray-500">
+          No records found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  data.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b hover:bg-gray-50';
+
+    tr.innerHTML = `
+      <td class="px-4 py-3">${i + 1}</td>
+      <td class="px-4 py-3 font-medium">${p.project_code || '-'}</td>
+      <td class="px-4 py-3">${p.process}</td>
+      <td class="px-4 py-3">${p.who}</td>
+      <td class="px-4 py-3 text-gray-600">
+        ${new Date(p.created_at).toLocaleString()}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 </script>
+
 
 <!-- <script>document.addEventListener("DOMContentLoaded", loadDailyTasks);</script> -->
 

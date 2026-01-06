@@ -7827,7 +7827,7 @@ app.put('/update/dc/close',async(req,res)=>{
 });
 
 app.post("/process/store", async (req, res) => {
-  const { process, who } = req.body;
+  const { process, who,prj_code} = req.body;
   console.log("received data to backend",req.body);
 
   if (!process || !who) {
@@ -7835,8 +7835,8 @@ app.post("/process/store", async (req, res) => {
   }
 
   await pool.query(
-    "INSERT INTO process_log (process, who) VALUES ($1, $2)",
-    [process, who]
+    "INSERT INTO process_log (process, who,project_code) VALUES ($1, $2,$3)",
+    [process, who,prj_code]
   );
 
   res.json({ message: "Stored successfully" });
@@ -7844,7 +7844,7 @@ app.post("/process/store", async (req, res) => {
 
 app.get('/process/view/json', async (req, res) => {
   const result = await pool.query(
-    'SELECT process, who, created_at FROM process_log ORDER BY created_at DESC'
+    'SELECT process, who, created_at,project_code FROM process_log ORDER BY created_at DESC'
   );
   res.json(result.rows);
 });
