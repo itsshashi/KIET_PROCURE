@@ -3571,7 +3571,7 @@ async function loadAssignedProjects() {
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
         ${
           p.project_status?.toLowerCase() !== "completed"
-            ? `<p><button class="btn btn-success btn-complete">Completed</button></p>`
+            ? `<p><button class="btn btn-success btn-complete" onclick="markProjectCompleted(${p.project_code})">Completed</button></p>`
             : ""
         }
         <button class="btn btn-danger" onclick="openProcessModal()">Process</button>
@@ -3595,6 +3595,34 @@ async function loadAssignedProjects() {
 function closeIncompleteProjectsModal() {
   document.getElementById("incompleteProjectsModal").style.display = "none";
 }
+async function markProjectCompleted(projectId) {
+  if (!confirm("Are you sure you want to mark this project as completed?")) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/mark_project_completed', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ project_id: projectId })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Project marked as completed ✅");
+      loadProcessHistory(); // refresh table
+    } else {
+      alert(data.error || "Failed to mark project ❌");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+}
+
 
 
 
