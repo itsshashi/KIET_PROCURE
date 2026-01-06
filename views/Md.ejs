@@ -1514,6 +1514,7 @@ select {
           <button onclick="switchTab('project-info')">Project Info</button>
           <button onclick="switchTab('tasks-management')"><i class="fas fa-tasks">  </i> Tasks Management</button>
           
+          
         </div>
       </div>
     </div>
@@ -2534,7 +2535,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     <!-- Tasks Management Tab Content -->
-   <div id="tasks-managementTab" class="tab-content">
+   <!-- ===================== DAILY TASKS (UNCHANGED) ===================== -->
+
+<div id="tasks-managementTab" class="tab-content">
   <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-2">📋 Daily Tasks Management</h2>
     <p class="text-gray-600 text-sm">View and manage all daily tasks assigned to projects.</p>
@@ -2551,20 +2554,47 @@ document.addEventListener('DOMContentLoaded', () => {
       <label for="filterAssignedTo" class="block text-sm font-medium text-gray-700">Assigned To:</label>
       <select id="filterAssignedTo" class="mt-1 p-2 border border-gray-300 rounded">
         <option value="">All</option>
-        <!-- Options populated dynamically -->
       </select>
     </div>
-  
+
     <div>
-      <button onclick="loadDailyTasks()" class="px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600">Filter</button>
+      <button onclick="loadDailyTasks()"
+        class="px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600">
+        Filter
+      </button>
     </div>
   </div>
 
-  <!-- Chat-like container for tasks -->
-  <div id="dailyTasksBody" class="flex flex-col gap-4 max-h-[600px] overflow-y-auto p-4 bg-white shadow-lg rounded-xl border border-gray-200">
-    <!-- Tasks dynamically populated here -->
+  <!-- Chat-like container -->
+  <div id="dailyTasksBody"
+       class="flex flex-col gap-4 max-h-[600px] overflow-y-auto p-4 bg-white shadow-lg rounded-xl border border-gray-200">
+  </div>
+
+
+<!-- ===================== PROCESS HISTORY (NEW SECTION) ===================== -->
+
+<div class="mt-12">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">⚙️ Process History</h2>
+    <p class="text-gray-600 text-sm">Audit log of all processes with time and owner.</p>
+  </div>
+
+  <div class="overflow-x-auto bg-white shadow-lg rounded-xl border border-gray-200">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100 border-b">
+        <tr>
+          <th class="px-4 py-3 text-left">#</th>
+          <th class="px-4 py-3 text-left">Process</th>
+          <th class="px-4 py-3 text-left">Done By</th>
+          <th class="px-4 py-3 text-left">Date & Time</th>
+        </tr>
+      </thead>
+      <tbody id="processTableBody"></tbody>
+    </table>
   </div>
 </div>
+</div>
+
 <script>let assignedDropdownPopulated = false; // Track if dropdown is already populated
 
 async function loadDailyTasks() {
@@ -2634,7 +2664,54 @@ function renderDailyTasks(tasks, { fromDate, assignedTo }) {
 `;
     container.appendChild(div);
   });
-}</script>
+}
+async function loadProcessHistory() {
+  try {
+    const res = await fetch('/process/view/json');
+    const processes = await res.json();
+
+    const tbody = document.getElementById('processTableBody');
+    tbody.innerHTML = '';
+
+    if (!processes.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-6 text-gray-500">
+            No process records found
+          </td>
+        </tr>`;
+      return;
+    }
+
+    processes.forEach((p, index) => {
+      const row = document.createElement('tr');
+      row.className = 'border-b hover:bg-gray-50';
+
+      row.innerHTML = `
+        <td class="px-4 py-3">${index + 1}</td>
+        <td class="px-4 py-3">${p.process}</td>
+        <td class="px-4 py-3 font-medium">${p.who}</td>
+        <td class="px-4 py-3 text-gray-600">
+          ${new Date(p.created_at).toLocaleString()}
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('processTableBody').innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center py-6 text-red-500">
+          Failed to load process history
+        </td>
+      </tr>`;
+  }
+}
+
+// Auto load when page opens
+loadProcessHistory();
+</script>
 
 <!-- <script>document.addEventListener("DOMContentLoaded", loadDailyTasks);</script> -->
 

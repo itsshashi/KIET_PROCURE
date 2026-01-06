@@ -7812,6 +7812,44 @@ app.get("/api/projects", async (req, res) => {
 });
 
 
+app.put('/update/dc/close',async(req,res)=>{
+  const id_close=req.body.order_id;
+  try {
+    await pool.query(
+      "UPDATE delivery_challan SET approval_status = 'Returned' WHERE id = $1",
+      [project_id]
+    );
+    res.status(200).json({ message: "Project marked completed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update project" });
+  }
+});
+
+app.post("/process/store", async (req, res) => {
+  const { process, who } = req.body;
+  console.log("received data to backend",req.body);
+
+  if (!process || !who) {
+    return res.status(400).json({ message: "All fields required" });
+  }
+
+  await pool.query(
+    "INSERT INTO process_log (process, who) VALUES ($1, $2)",
+    [process, who]
+  );
+
+  res.json({ message: "Stored successfully" });
+});
+
+app.get('/process/view/json', async (req, res) => {
+  const result = await pool.query(
+    'SELECT process, who, created_at FROM process_log ORDER BY created_at DESC'
+  );
+  res.json(result.rows);
+});
+
+
 
 
 const PORT = process.env.PORT || 3000;

@@ -538,7 +538,7 @@
             <td style="padding: 12px; color: #374151;">${expiryDate}</td>
             <td style="padding: 12px; color: #374151; ${daysToReturn !== 'N/A' && daysToReturn < 0 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 5 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 10 ? 'background-color: #d97706; color: white;' : 'background-color: #16a34a; color: white;'}">${daysToReturn}</td>
             <td style="padding: 12px; color: #374151;">${status}</td>
-            <td style="padding: 12px; color: #374151;"><i class="fas fa-eye" style="cursor: pointer; color: #2563eb;" onclick="viewItems(${challan.id})"></i></td>
+            <td style="padding: 12px; color: #374151;"><i class="fas fa-eye" style="cursor: pointer; color: #2563eb;" onclick="viewItems(${challan.id})"></i><button id='close' onclick=dc_close(${challan.id}) class="btn btn-primary" style="margin-left:30px;">DC Close</button></td>
           `;
 
           tbody.appendChild(row);
@@ -592,6 +592,23 @@
 
     function closeModal() {
       document.getElementById('items-modal').style.display = 'none';
+    }
+     async function dc_close(id){
+      try {
+        const response = await fetch('/update/dc/close', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: id })
+        });
+        // if (!response.ok) throw new Error('Failed to generate GRN');
+        // const data = await response.json();
+        // document.getElementById('grn_store').value = data.grn;
+        showPopup('Success', `GRN generated: ${id}`, 'success');
+      } catch (error) {
+        console.error('Error generating GRN:', error);
+        showPopup('Error', 'Error', 'error');
+      }
+    
     }
 
     // Handle GRN generation for store
