@@ -3580,22 +3580,7 @@ async function loadAssignedProjects() {
 
       container.appendChild(card);
     });
-
-    // ✅ Show modal if there is at least one incomplete project
-    if (hasIncomplete) {
-      document.getElementById("incompleteProjectsModal").style.display = "block";
-    }
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = "<p>Error loading projects.</p>";
-  }
-}
-
-// Function to close the modal
-function closeIncompleteProjectsModal() {
-  document.getElementById("incompleteProjectsModal").style.display = "none";
-}
-async function markProjectCompleted(projectId) {
+    async function markProjectCompleted(projectId) {
   if (!confirm("Are you sure you want to mark this project as completed?")) {
     return;
   }
@@ -3622,6 +3607,22 @@ async function markProjectCompleted(projectId) {
     alert("Server error ❌");
   }
 }
+
+    // ✅ Show modal if there is at least one incomplete project
+    if (hasIncomplete) {
+      document.getElementById("incompleteProjectsModal").style.display = "block";
+    }
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Error loading projects.</p>";
+  }
+}
+
+// Function to close the modal
+function closeIncompleteProjectsModal() {
+  document.getElementById("incompleteProjectsModal").style.display = "none";
+}
+
 
 
 
