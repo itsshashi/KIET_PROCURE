@@ -7667,11 +7667,12 @@ app.get("/attendance", (req, res) => {
 });
 
 app.put("/api/mark_project_completed", async (req, res) => {
-  const { projectId } = req.body;
+  const { project_id } = req.body;
+  console.log("backednd retrived",req.body);
   try {
     await pool.query(
       "UPDATE project_info SET project_status = 'Completed' WHERE project_code = $1",
-      [projectId]
+      [project_id]
     );
     res.status(200).json({ message: "Project marked completed" });
   } catch (err) {

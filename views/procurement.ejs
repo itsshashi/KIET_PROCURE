@@ -3524,6 +3524,32 @@ images_upload_handler: function (blobInfo) {
                 </div>
             </div><script>
 document.addEventListener("DOMContentLoaded", loadAssignedProjects);
+async function markProjectCompleted(projectId) {
+    console.log(projectId);
+  if (!confirm("Are you sure you want to mark this project as completed?")) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/mark_project_completed', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ project_id: projectId })
+    });
+
+    const data = await res.json();
+
+    
+      alert("Project marked as completed ✅");
+    //   loadProcessHistory(); // refresh table
+   
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+}
 
 async function loadAssignedProjects() {
   const valu = document.querySelector(".user-info span")?.textContent.trim() || "";
@@ -3533,6 +3559,8 @@ async function loadAssignedProjects() {
   if (!container) return;
 
   try {
+    
+
     const res = await fetch(`/assigned-projects/${userId}`);
     const data = await res.json();
     container.innerHTML = "";
@@ -3571,7 +3599,7 @@ async function loadAssignedProjects() {
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
         ${
           p.project_status?.toLowerCase() !== "completed"
-            ? `<p><button class="btn btn-success btn-complete" onclick="markProjectCompleted(${p.project_code})">Completed</button></p>`
+            ? `<p><button class="btn btn-success btn-complete" onclick="markProjectCompleted('${p.project_code}')">Completed</button></p>`
             : ""
         }
         <button class="btn btn-danger" onclick="openProcessModal()">Process</button>
@@ -3580,34 +3608,7 @@ async function loadAssignedProjects() {
 
       container.appendChild(card);
     });
-    async function markProjectCompleted(projectId) {
-  if (!confirm("Are you sure you want to mark this project as completed?")) {
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/mark_project_completed', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ project_id: projectId })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("Project marked as completed ✅");
-      loadProcessHistory(); // refresh table
-    } else {
-      alert(data.error || "Failed to mark project ❌");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Server error ❌");
-  }
-}
-
+    
     // ✅ Show modal if there is at least one incomplete project
     if (hasIncomplete) {
       document.getElementById("incompleteProjectsModal").style.display = "block";
