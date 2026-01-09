@@ -7116,39 +7116,191 @@ app.get("/approve-dc/:id", async (req, res) => {
 });
 
 
-app.get("/approve-dc/:id/view-pdf", async(req, res) => {
-  console.log("hello");
-  
-  const { id } = req.params;
-  console.log("params are",req.params);
+app.get("/approve-dc/:id/view-pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  const dcRes = await pool.query(
-    "SELECT * FROM delivery_challan WHERE id=$1",
-    [id]
-  );
-  const itemsRes = await pool.query(
-    "SELECT * FROM delivery_challan_items WHERE challan_id=$1",
-    [id]
-  );
+    const dcRes = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id=$1",
+      [id]
+    );
 
-  if (!dcRes.rows.length) return res.send("DC not found");
+    const itemsRes = await pool.query(
+      "SELECT * FROM delivery_challan_items WHERE challan_id=$1",
+      [id]
+    );
 
-  const filePath = path.join(__dirname, "temp", `preview_${id}.pdf`);
-  if (!fs.existsSync(path.dirname(filePath))) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (dcRes.rowCount === 0) {
+      return res.send("<h2>❌ Delivery Challan not found</h2>");
+    }
+
+    const dc = dcRes.rows[0];
+    const items = itemsRes.rows;
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Delivery Challan</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f4f6f8;
+          padding: 20px;
+        }
+        .container {
+          max-width: 900px;
+          margin: auto;
+          background: #fff;
+          padding: 25px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+          text-align: center;
+          color: #1e3a8a;
+          margin-bottom: 10px;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+        .header div {
+          font-size: 14px;
+        }
+        .section {
+          margin-bottom: 20px;
+        }
+        .section h3 {
+          background: #1e40af;
+          color: white;
+          padding: 6px 10px;
+          border-radius: 4px;
+          font-size: 15px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+        table th, table td {
+          border: 1px solid #cbd5e1;
+          padding: 8px;
+          font-size: 14px;
+        }
+        table th {
+          background: #e0e7ff;
+          text-align: left;
+        }
+        .footer {
+          margin-top: 30px;
+          display: flex;
+          justify-content: space-between;
+        }
+        .signature {
+          margin-top: 50px;
+          text-align: center;
+          font-size: 14px;
+        }
+        .print-btn {
+          text-align: right;
+          margin-bottom: 15px;
+        }
+        .print-btn button {
+          padding: 8px 16px;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        @media print {
+          .print-btn { display: none; }
+          body { background: white; }
+        }
+      </style>
+    </head>
+    <body>
+
+      <div class="container">
+
+        <div class="print-btn">
+          <button onclick="window.print()">🖨 Print / Save PDF</button>
+        </div>
+
+        <h1>Delivery Challan</h1>
+
+        <div class="header">
+          <div>
+            <strong>Challan No:</strong> ${dc.challan_no}<br>
+            <strong>Challan Date:</strong> ${dc.challan_date.toLocaleDateString()}<br>
+            <strong>Delivery Date:</strong> ${dc.delivery_date.toLocaleDateString()}
+          </div>
+          <div>
+            <strong>Vehicle No:</strong> ${dc.vehicle_no}<br>
+            <strong>Project:</strong> ${dc.project_name || "-"}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Consignor Details</h3>
+          <p>
+            <strong>Name:</strong> ${dc.consignor_name}<br>
+            <strong>GST:</strong> ${dc.consignor_gst}<br>
+            <strong>Address:</strong> ${dc.consignor_address}
+          </p>
+        </div>
+
+        <div class="section">
+          <h3>Consignee Details</h3>
+          <p>
+            <strong>Name:</strong> ${dc.consignee_name}<br>
+            <strong>GST:</strong> ${dc.consignee_gst}<br>
+            <strong>Address:</strong> ${dc.consignee_address}
+          </p>
+        </div>
+
+        <div class="section">
+          <h3>Item Details</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.description}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unit || "-"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        
+
+      </div>
+
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("<h2>❌ Server Error</h2>");
   }
-
- generateDeliveryChallan(
-    { ...dcRes.rows[0], items: itemsRes.rows },
-    filePath
-  );
-
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "inline");
-  res.setHeader("Cache-Control", "no-store");
-
-  res.sendFile(filePath, () => fs.unlinkSync(filePath));
 });
+
 
 app.post("/approve-dc/:id/approve", async (req, res) => {
   const { id } = req.params;
