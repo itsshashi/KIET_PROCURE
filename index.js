@@ -1,5 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
+
+
 import generateDeliveryChallan from "./dc.js";
 import { loadModels, getDescriptor, distance } from "./face.js";
 import fetch from "node-fetch";
@@ -7046,17 +7048,33 @@ app.post("/submit-delivery-challan", async (req, res) => {
       });
 
         await transporter.sendMail({
-            from: "No-reply@kietsindia.com",
-            to: data.managerEmail,
-            subject: "Delivery Challan Approval Required",
-            html: `
-                <h3>A Delivery Challan requires your approval</h3>
-                <p><strong>Challan No:</strong> ${data.challanNumber}</p>
-                <a href="${approvalLink}"
-                    style="padding:10px 20px; background:#28a745; color:white; text-decoration:none;">
-                APPROVE DC</a>
-            `
-        });
+  from: "No-reply@kietsindia.com",
+  to: data.managerEmail,
+  subject: "Delivery Challan Approval Required",
+  html: `
+    <div style="font-family:Arial,sans-serif;">
+      <h3>Delivery Challan Approval Required</h3>
+      <p><strong>Challan No:</strong> ${data.challanNumber}</p>
+
+      <a href="${approvalLink}"
+         style="
+           padding:12px 24px;
+           background:#0d6efd;
+           color:white;
+           text-decoration:none;
+           border-radius:4px;
+           display:inline-block;
+         ">
+        👁 VIEW DELIVERY CHALLAN
+      </a>
+
+      <p style="margin-top:15px;color:#555;">
+        Please review the PDF before approving.
+      </p>
+    </div>
+  `
+});
+
 
         res.json({ success: true, challan_no: data.challanNumber });
 
@@ -7066,152 +7084,94 @@ app.post("/submit-delivery-challan", async (req, res) => {
     }
 });
 app.get("/approve-dc/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
+  const { id } = req.params;
 
-        // Update DC status
-        await pool.query(
-            `UPDATE delivery_challan
-             SET
-                approval_status='approved',
-                approved_at=NOW(),
-                approved_by=manager_email
-             WHERE id=$1`,
-            [id]
-        );
+  const dcResult = await pool.query(
+    "SELECT challan_no FROM delivery_challan WHERE id=$1",
+    [id]
+  );
 
-        // Get DC details including requester
-        const dcResult = await pool.query(
-            "SELECT * FROM delivery_challan WHERE id = $1",
-            [id]
-        );
+  if (!dcResult.rows.length) {
+    return res.status(404).send("DC not found");
+  }
 
-        if (dcResult.rows.length === 0) {
-            return res.status(404).send("DC not found");
-        }
+  res.send(`
+    <h2>Delivery Challan Review</h2>
+    <p><strong>Challan No:</strong> ${dcResult.rows[0].challan_no}</p>
 
-        const dc = dcResult.rows[0];
-        const requesterEmail = dc.requester;
+    <a href="/approve-dc/${id}/view-pdf"
+       target="_blank"
+       style="padding:10px 20px; background:#0d6efd; color:white; text-decoration:none;">
+       👁 VIEW PDF
+    </a>
 
-        if (!requesterEmail) {
-            return res.send(`
-                <h1 style="color:green; font-family:sans-serif;">
-                    ✔ Delivery Challan Approved Successfully!
-                </h1>
-                <p>Note: No requester email found to send PDF.</p>
-            `);
-        }
+    <br><br>
 
-        // Get DC items
-        const itemsResult = await pool.query(
-            "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
-            [id]
-        );
-
-        const items = itemsResult.rows.map((row) => ({
-            part_no: row.part_no,
-            description: row.description,
-            hsn: row.hsn,
-            quantity: row.quantity,
-            unit: row.unit || "pcs",
-            remarks: row.remarks,
-        }));
-
-        // Prepare DC data for PDF
-        const dcData = {
-            challanNo: dc.challan_no,
-            challanDate: new Date(dc.challan_date).toLocaleDateString(),
-            deliveryDate: dc.delivery_date ? new Date(dc.delivery_date).toLocaleDateString() : "N/A",
-            vehicleNo: dc.vehicle_no,
-            consignor: {
-                name: dc.consignor_name,
-                address: dc.consignor_address,
-                gst: dc.consignor_gst,
-            },
-            consignee: {
-                name: dc.consignee_name,
-                address: dc.consignee_address,
-                gst: dc.consignee_gst,
-                contact: dc.consignee_contact,
-                phone: dc.consignee_phone,
-            },
-            reason: dc.reason,
-            items: items,
-            type: dc.dc_type,
-            signPath: "public/images/signature.png",
-            company: { logo: "public/images/lg.jpg" },
-            line: "public/images/line.png",
-        };
-
-        // Generate PDF
-        const timestamp = Date.now();
-        const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
-        const filePath = path.join(uploadsDir, fileName);
-
-        generateDeliveryChallan(dcData, filePath);
-
-        // Wait for PDF generation
-        setTimeout(async () => {
-            if (fs.existsSync(filePath)) {
-                // Send email with PDF to requester
-                const transporter = nodemailer.createTransport({
-                    host: "smtp.office365.com",
-                    port: 587,
-                    secure: false,
-                    auth: {
-                        user: "No-reply@kietsindia.com",
-                        pass: "Kiets@2025$1",
-                    },
-                    tls: { rejectUnauthorized: false },
-                });
-
-                await transporter.sendMail({
-                    from: "No-reply@kietsindia.com",
-                    to: requesterEmail,
-                    subject: `Delivery Challan Approved - ${dc.challan_no}`,
-                    html: `
-                        <div style="font-family: Arial, sans-serif; padding: 20px;">
-                            <h2 style="color: #28a745;">Delivery Challan Approved</h2>
-                            <p>Dear User,</p>
-                            <p>Your Delivery Challan <strong>${dc.challan_no}</strong> has been approved.</p>
-                            <p>Please find the PDF attached.</p>
-                            <br>
-                            <p>Best regards,<br>KIET Technologies Team</p>
-                        </div>
-                    `,
-                    attachments: [
-                        {
-                            filename: fileName,
-                            path: filePath,
-                            contentType: 'application/pdf'
-                        }
-                    ]
-                });
-
-                // Clean up file after sending
-                fs.unlinkSync(filePath);
-
-                res.send(`
-                    <h1 style="color:green; font-family:sans-serif;">
-                        ✔ Delivery Challan Approved Successfully!
-                    </h1>
-                    <p>PDF has been sent to the requester.</p>
-                `);
-            } else {
-                res.send(`
-                    <h1 style="color:green; font-family:sans-serif;">
-                        ✔ Delivery Challan Approved Successfully!
-                    </h1>
-                    <p>Note: PDF generation failed, but approval was successful.</p>
-                `);
-            }
-        }, 2000); // Wait 2 seconds for PDF generation
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error approving DC");
-    }
+    <form method="POST" action="/approve-dc/${id}/approve">
+      <button style="padding:10px 20px; background:#28a745; color:white;">
+        ✅ APPROVE DC
+      </button>
+    </form>
+  `);
 });
+
+
+app.get("/approve-dc/:id/view-pdf", async(req, res) => {
+  const { id } = req.params;
+  console.log("params are",req.params);
+
+  const dcRes = await pool.query(
+    "SELECT * FROM delivery_challan WHERE id=$1",
+    [id]
+  );
+  const itemsRes = await pool.query(
+    "SELECT * FROM delivery_challan_items WHERE challan_id=$1",
+    [id]
+  );
+
+  if (!dcRes.rows.length) return res.send("DC not found");
+
+  const filePath = path.join(__dirname, "temp", `preview_${id}.pdf`);
+  if (!fs.existsSync(path.dirname(filePath))) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  }
+
+ generateDeliveryChallan(
+    { ...dcRes.rows[0], items: itemsRes.rows },
+    filePath
+  );
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "inline");
+  res.setHeader("Cache-Control", "no-store");
+
+  res.sendFile(filePath, () => fs.unlinkSync(filePath));
+});
+
+app.post("/approve-dc/:id/approve", async (req, res) => {
+  const { id } = req.params;
+
+  await pool.query(
+    `UPDATE delivery_challan
+     SET approval_status='approved',
+         approved_at=NOW(),
+         approved_by=manager_email
+     WHERE id=$1 AND approval_status='pending'`,
+    [id]
+  );
+
+  // 🔽 keep your existing:
+  // - fetch DC
+  // - generate PDF
+  // - email requester
+  // - delete file
+
+  res.send(`
+    <h1 style="color:green">✔ Delivery Challan Approved</h1>
+    <p>PDF sent to requester</p>
+  `);
+});
+
 
 app.post("/submit-inventory_local", upload.single("invoice_local"), async (req, res) => {
   try {
@@ -7422,24 +7382,33 @@ app.get("/api/know_budget/:project_code", async (req, res) => {
 });
 app.put('/api/update-order', async (req, res) => {
   try {
-    const { id, invoice_no, invoice_date } = req.body;
-    console.log('Update request body:', req.body);
+    let { id, invoice_no, invoice_date, delivery_status } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: 'Order ID required' });
     }
 
-    // PostgreSQL parameterized query ($1, $2, $3)
+    // ✅ FIX: Convert empty string to NULL
+    invoice_no = invoice_no?.trim() || null;
+    invoice_date = invoice_date ? invoice_date : null;
+    delivery_status = delivery_status || null;
+
     const sql = `
       UPDATE project_info
       SET
         invoice_no = $1,
-        invoice_date = $2::date
-      WHERE id = $3
+        invoice_date = $2,
+        delivery_status = $3
+      WHERE id = $4
       RETURNING *;
     `;
 
-    const values = [invoice_no || null, invoice_date || null, id];
+    const values = [
+      invoice_no,
+      invoice_date,      // ← NULL or 'YYYY-MM-DD'
+      delivery_status,
+      id
+    ];
 
     const result = await pool.query(sql, values);
 
@@ -7447,13 +7416,18 @@ app.put('/api/update-order', async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    res.json({ message: 'Invoice updated successfully', order: result.rows[0] });
+    res.json({
+      message: 'Invoice updated successfully',
+      order: result.rows[0]
+    });
 
   } catch (err) {
     console.error('SQL Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+
 
 
 app.get('/api/project-po/:id', async (req, res) => {
