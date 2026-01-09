@@ -5205,6 +5205,10 @@ function renderProjectAssignments(assignments) {
              assigned : ${new Date(assignment.assigned_on).toLocaleDateString()}(₹${assignment.budget})
            </span>
            <span class = "text-xm text-red-800" style="font-size:10px;"> Target:  ${new Date(assignment.target_date).toLocaleDateString()}</span>
+           <button class="btn btn-primary btn-sm"
+                 onclick="openModal(${assignment.id}, this)">
+           Assign To
+         </button>
          </div>`
   }
 </td>
