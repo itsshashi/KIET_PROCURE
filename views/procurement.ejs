@@ -170,7 +170,7 @@
 }
         /* Sidebar Styles - Enhanced */
         .sidebar {
-            width: 280px;
+            width: 250px;
             background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
             padding: 0;
@@ -180,7 +180,7 @@
             z-index: 10;
             
             flex-shrink: 0;
-            width: 280px;
+            
             max-width: 100%;
         }
         
@@ -205,7 +205,7 @@
         }
         
         .logo img {
-            max-width: 200px;
+            max-width: 150px;
             height: auto;
             filter: brightness(0) invert(1);
         }
@@ -227,6 +227,7 @@
             font-weight: 500;
             position: relative;
             overflow: visible;
+            font-size: small;
         }
 
         .menu-item.submenu-open .submenu {
@@ -254,7 +255,7 @@
         }
         
         .menu-item i {
-            font-size: 1.2rem;
+            font-size: 1rem;
             width: 24px;
             text-align: center;
         }
@@ -297,8 +298,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 35px;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
         
@@ -364,7 +365,7 @@
         }
         
         .tab-header h3 {
-            font-size: 24px;
+            font-size: 20px;
             color: #1e293b;
             margin-bottom: 8px;
             font-weight: 600;
@@ -372,7 +373,7 @@
         
         .tab-header p {
             color: #64748b;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         /* Form Styles - Enhanced */
@@ -390,10 +391,10 @@
         
         .form-control {
             width: 100%;
-            padding: 14px 16px;
+            padding: 10px 14px;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s;
             background: #f8fafc;
         }
@@ -406,7 +407,7 @@
         
         .form-row {
             display: flex;
-            gap: 24px;
+            gap: 20px;
         }
         
         .form-row .form-group {
@@ -420,7 +421,7 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.3s;
             box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
@@ -867,7 +868,7 @@
         }
         
         .product-table th {
-            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            background: linear-gradient(135deg, #4f9eec, #28538b);
             padding: 16px 15px;
             text-align: left;
             font-weight: 600;
@@ -1912,7 +1913,6 @@
       <input type="text" class="form-control" id="supplierGst" name="supplierGst" placeholder="Enter Supplier GSTIN" >
     </div>
   </div>
-
   <div class="form-group">
     <label for="supplierAddress">Supplier Address </label>
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" placeholder="Enter Supplier Address" ></textarea>
@@ -1922,15 +1922,16 @@
     <label for="shippingAddress">Shipping Address *</label>
     <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="2" required>KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078</textarea>
   </div>
-
+ <div class="form-row">
   <div class="form-group">
     <label for="reference_no">Ref number *</label>
-    <input style="height: 25px;" type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
+    <input type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
   </div>
 
   <div class="form-group">
     <label for="termsOfPayment">Terms of Payment *</label>
     <input type="text" class="form-control" id="termsOfPayment" name="termsOfPayment" placeholder="e.g., 45 days net" required>
+  </div>
   </div>
     <div class="checky">
       <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
@@ -1938,12 +1939,13 @@
       <label for="contact" style="font-weight: bold;">Contact info</label>
       <input type="tel" id="phone" name="phone" placeholder="+91 -------------" pattern="[0-9]{10}">
     </div>
-  <div class="form-group">
+  
+
+  <div class="form-row">
+    <div class="form-group">
     <label for="quotation">Quotation*</label>
     <input type="file" name="quotation" id="quotation" required>
   </div>
-
-  <div class="form-row">
     <div class="form-group">
       <label for="urgency">Urgency *</label>
       <select class="form-control" id="urgency" name="urgency" required>
@@ -1955,25 +1957,25 @@
     </div>
     <div class="form-group">
       <label for="dateRequired">Date Required *</label>
-      <input type="date" class="form-control" id="dateRequired" name="dateRequired" required>
+      <input type="date" class="form-control" id="dateRequired" name="dateRequired" required style="padding: 10px 15px;">
     </div>
   </div>
 
   <h4>Product Details</h4>
   <table class="product-table" id="productTable">
     <thead>
-      <tr>
-        <th>SL No</th>
-        <th>Part No</th>
-        <th>Description</th>
-        <th>HSN Code</th>
-        <th>Quantity</th>
-        <th>Unit Price (₹)</th>
-        <th>GST %</th>
-        <th>Unit</th>
-        <th>Discount(₹)</th>
-        <th>Total (₹)</th>
-        <th>Actions</th>
+      <tr style="background-color: blue;">
+        <th style="font-size:13px; padding: 11px; color:white;">Sl.</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Part No</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Description</th>
+        <th style="font-size:13px; padding: 11px; color:white;">HSN Code</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Quantity</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Unit Price (₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">GST %</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Unit</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Discount(₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Total (₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Actions</th>
       </tr>
     </thead>
     <tbody>
