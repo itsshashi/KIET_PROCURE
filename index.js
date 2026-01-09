@@ -7117,6 +7117,8 @@ app.get("/approve-dc/:id", async (req, res) => {
 
 
 app.get("/approve-dc/:id/view-pdf", async(req, res) => {
+  console.log("hello");
+  
   const { id } = req.params;
   console.log("params are",req.params);
 
@@ -7645,7 +7647,7 @@ app.put("/api/mark_project_completed", async (req, res) => {
   console.log("backednd retrived",req.body);
   try {
     await pool.query(
-      "UPDATE project_info SET project_status = 'Completed' WHERE project_code = $1",
+      "UPDATE project_info SET project_status = 'Completed',delivery_status = 'Completed'  WHERE project_code = $1",
       [project_id]
     );
     res.status(200).json({ message: "Project marked completed" });
