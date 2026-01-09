@@ -102,7 +102,7 @@ function generateDeliveryChallan(dcData, filePath) {
 
     content: [
       {
-        text: `DELIVERY CHALLAN( ${dcData.type.toUpperCase()})`,
+        text: `DELIVERY CHALLAN( ${dcData.type})`,
         font: "Times",
         bold: true,
         fontSize: 18,
