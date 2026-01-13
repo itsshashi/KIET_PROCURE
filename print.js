@@ -377,6 +377,7 @@ function generatePurchaseOrder(poData, filePath) {
             lineHeight: 1.5,
             margin: [0, 0, 0, 3],
           },
+          
         ],
         fontSize: 10,
         alignment: "justify",
@@ -397,6 +398,12 @@ function generatePurchaseOrder(poData, filePath) {
       },
       {
         text: "**Computer generated** ",
+        font: "Roboto",
+        fontSize: 6,
+        alignment: "center",
+      },
+       {
+        text: "Note:Please bring this COPY OF PO at the time of delivery" ,
         font: "Roboto",
         fontSize: 6,
         alignment: "center",
