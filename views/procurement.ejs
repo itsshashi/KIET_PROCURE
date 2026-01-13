@@ -265,6 +265,10 @@
             display: none;
             position: relative;
             top: 0;
+            left:45px;
+            background-color: rgb(8, 34, 99);
+            border-radius: 20px;
+            
         }
         
         .submenu-item {
@@ -282,6 +286,9 @@
         .submenu-item:hover {
             background-color: rgba(255, 255, 255, 0.15);
             transform: translateX(3px);
+        }
+        .submenu::after{
+            display: none;
         }
         
         /* Main Content Styles - Enhanced */
@@ -1735,11 +1742,73 @@
     opacity: 1;
   }
 }
+.creative-loader {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Card */
+.loader-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 40px 60px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Ring */
+.progress-ring {
+  width: 70px;
+  height: 70px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Text animation */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
 
 
     </style>
 </head>
 <body>
+  <div id="loaderOverlay" class="creative-loader hidden">
+  <div class="loader-card">
+    <div class="progress-ring"></div>
+    <h3 id="loaderText">Processing</h3>
+    <span class="dots">.</span>
+  </div>
+</div>
+
+
     <!-- Task Popup -->
 <!-- Task Popup -->
 <div id="taskModal" class="task-modal">
@@ -1817,22 +1886,30 @@
                     <i class="fas fa-upload"></i> View file Uploads
                 </li>
             </ul>
+             
 
             <li class="menu-item" data-tab="delivery-challan">
                     <i class="fas fa-truck"></i> Delivery Challan
                 </li>
-
+                <li class="menu-item" data-tab="assigned-project">
+                <i class="fas fa-project-diagram"></i> Assigned Project
+            </li>
+                    <li class="menu-item" data-tab="quotation" id="quotation-toggle">
+                <i class="fas fa-file-alt"></i> Approved & Status
+                <i class="fas fa-chevron-down arrow"></i>
+            </li>
+<ul class="submenu" id="quotation-submenu">
             <li class="menu-item" data-tab="status">
-                <i class="fas fa-tasks"></i> Status
+                <i class="fas fa-tasks"></i> Status (Purchase Order)
             </li>
 
             <li class="menu-item" data-tab="approved-quotation">
                 <i class="fas fa-check-circle"></i> Approved Quotation
             </li>
+            </ul>
+            
 
-            <li class="menu-item" data-tab="assigned-project">
-                <i class="fas fa-project-diagram"></i> Assigned Project
-            </li>
+           
 
             <li class="menu-item" id="logout-btn">
                 <form action="/logout" method="post">
@@ -2231,7 +2308,23 @@ document.getElementById("supplierName").addEventListener("blur", async function 
                 </form>
             </div>
             <script>
-            
+            let loaderStart = 0;
+const MIN_TIME = 2000;
+
+function startLoader(text = "Processing") {
+  loaderStart = Date.now();
+  document.getElementById("loaderText").innerText = text;
+  document.getElementById("loaderOverlay").classList.remove("hidden");
+}
+
+function stopLoader() {
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, MIN_TIME - elapsed);
+
+  setTimeout(() => {
+    document.getElementById("loaderOverlay").classList.add("hidden");
+  }, delay);
+}
 
 const dcType = document.getElementById("dcType");
 const expiryContainer = document.getElementById("expiryContainer");
@@ -3596,6 +3689,7 @@ async function loadAssignedProjects() {
         <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
         <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
         <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+        <p><b>Remaining:</b> ₹${Number(p.remaining_budget|| 0).toLocaleString()}</p>
         <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
         <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
@@ -3981,7 +4075,7 @@ function closeProcessModal() {
 
             orderForm.addEventListener("submit", async function(e) {
                 e.preventDefault();
-
+                
                 // Show loader and disable button
                 loader.style.display = "flex";
                 submitBtn.disabled = true;
@@ -4008,7 +4102,7 @@ function closeProcessModal() {
                         alert(result.message);
 
                         // 🔹 Reset form fields
-                        orderForm.reset();
+                        
 
                         // 🔹 Reset product table
                         resetProductTable();
@@ -4018,6 +4112,38 @@ function closeProcessModal() {
                     } else {
                         alert("Order submission failed: " + (result.error || result.message || "Unknown error"));
                     }
+                    const project_cde = document.getElementById("projectCodeNumber").value.trim()
+                    console.log(project_cde);
+                    
+    // const orderId = ;
+      if (result) {
+        const statusRes = await fetch(`/getreq/${project_cde}`, {
+          method: "GET",
+          headers: { "Accept": "application/json",project_code:project_cde }
+        });
+
+        const statusContentType = statusRes.headers.get("content-type");
+        if (!statusContentType || !statusContentType.includes("application/json")) {
+            throw new Error("PROJECT CODE YOU SPECIFIED IS NOT DEFINED");
+        }
+
+        const statusData = await statusRes.json();
+        console.log(statusData);
+
+        if (!statusRes.ok) {
+            throw new Error(statusData.error || "Failed to fetch order status");
+        }
+
+
+        // Use the status data however you need:
+        console.log("Order status:", statusData.assigned_to);
+        // Optionally update the UI:
+        const statusEl = document.getElementById("orderStatus");
+        if (statusEl) statusEl.textContent = statusData.status || "Unknown";
+      } else {
+        console.warn("No orderId in createResult; skipping status fetch.");
+      }
+
                 } catch (err) {
                     console.error("❌ Error submitting order:", err);
                     alert("Order submission failed! Server returned invalid response.");
@@ -4026,6 +4152,7 @@ function closeProcessModal() {
                     loader.style.display = "none";
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Order';
+                    orderForm.reset();
                 }
             });
         });
@@ -4425,7 +4552,11 @@ function closeProcessModal() {
              });
          }
    async function downloadPO(orderId) {
+    const loader = document.getElementById("loader");
+
   try {
+    startLoader("Downloading P O");
+
     const response = await fetch(`/api/orders/${orderId}/pdf`);
     if (!response.ok) throw new Error("Download failed");
 
@@ -4456,6 +4587,7 @@ function closeProcessModal() {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    stopLoader();
   } catch (error) {
     console.error("Error downloading PO:", error);
     alert("Failed to download PO. Please try again.");

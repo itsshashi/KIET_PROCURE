@@ -26,6 +26,7 @@ import generateVKQuotation from "./vk.js";
 import generateMAEQuotation from "./mae.js";
 import { query } from "express-validator";
 import { sendNotification } from "./routes/pushNotifications.js";
+import { assign } from "nodemailer/lib/shared/index.js";
 const db_pass = process.env.DB_PASSWORD;
 // =============================
 // CONFIG
@@ -401,6 +402,7 @@ app.get("/api/orders", async (req, res) => {
                 created_at,
                 send_date 
             FROM purchase_orders
+            where assign_status=verified
             ORDER BY created_at DESC
         `); //send date added
     res.json(rows);
@@ -1023,8 +1025,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       (project_name, project_code_number, purchase_order_number, supplier_name,
        supplier_gst, supplier_address, shipping_address, urgency, date_required,
        notes, ordered_by, quotation_file, total_amount, reference_no, contact,
-       single, terms_of_payment,currency)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       single, terms_of_payment,currency,raised_amount)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING id`,
       [
         projectName,
@@ -1044,7 +1046,9 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         contact,
         single,
         termsOfPayment,
-        currency
+        currency,
+        totalAmount
+
       ]
     );
 
@@ -1074,49 +1078,18 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
     await pool.query("COMMIT");
     console.log("✔ DB Transaction committed");
+    const result3=await pool.query(`select remaining_budget from project_info where project_code=$1`,[projectCodeNumber]);
+    const remain_b=result3.rows[0].remaining_budget;
+    const calc=remain_b-totalAmount;
+    const result4=await pool.query(`update project_info  set remaining_budget=$1 where project_code=$2`,[calc,projectCodeNumber]);
+    
+    
+    console.log("result rows",result3.rows[0])
+
+
 
     // 🔹 Send email
-    const transporter = nodemailer.createTransport({
-      host: "smtp.office365.com",
-      port: 587,
-      secure: false,
-      auth: { user: "No-reply@kietsindia.com", pass: "Kiets@2025$1" },
-      tls: { rejectUnauthorized: false },
-    });
-
-    transporter.sendMail({
-      from: "No-reply@kietsindia.com",
-      to: "purchase@kietsindia.com",
-      subject: `New Purchase Order Raised — ${purchaseOrderNumber}`,
-      html: `
-        <div style="font-family: Arial; padding: 10px;">
-          <p><strong>Dear Purchase Team,</strong></p>
-          <p>A new Purchase Order has been raised. Below are the details:</p>
-
-          <table cellpadding="6" style="width:100%; border-collapse:collapse;">
-            <tr><td><b>Order Number</b></td><td>${purchaseOrderNumber}</td></tr>
-            <tr><td><b>Supplier</b></td><td>${supplierName}</td></tr>
-            <tr><td><b>Total Amount</b></td><td>${totalAmount}</td></tr>
-            <tr><td><b>Raised By</b></td><td>${orderedBy}</td></tr>
-            <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
-          </table>
-
-          <div style="text-align:center; margin:30px;">
-            <a href="https://kietprocure.com/" style="background:#0056b3;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;">
-              View Order
-            </a>
-          </div>
-
-          <div style="text-align:center; border-top:1px solid #ccc; padding-top:15px;">
-            <img src="cid:logoImage" width="120" />
-            <p style="font-size:12px; color:#777;">© 2025 KIET TECHNOLOGIES PVT LTD</p>
-          </div>
-        </div>
-      `,
-      attachments: [
-        { filename: "lg.jpg", path: "public/images/lg.jpg", cid: "logoImage" },
-      ],
-    }).catch(err => console.error("⚠ Email error:", err));
+    
 
     // 🔹 Final response
     return res.json({ success: true, message: "✅ Order submitted successfully" });
@@ -8020,7 +7993,8 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         delivery_date,
         target_date,
         po_no,
-        project_status
+        project_status,
+        remaining_budget
 
 
        FROM project_info
@@ -8226,6 +8200,226 @@ app.get('/process/view/json', async (req, res) => {
   );
   res.json(result.rows);
 });
+
+
+
+
+app.get('/getreq/:project_code', async (req, res) => {
+  try {
+    const { project_code } = req.params;
+
+    const result = await pool.query(
+      `SELECT assigned_to FROM project_info WHERE project_code = $1`,
+      [project_code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project code not found" });
+    }
+
+    const assignedToEmail = result.rows[0].assigned_to;
+
+    // Mail transporter
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: "Kiets@2025$1",
+      },
+      tls: { rejectUnauthorized: false },
+    });
+    console.log("assigned_to ",assignedToEmail);
+
+    const approvalLink = `https://kietprocure.com/approve-project/${project_code}`;
+    const viewLink = `https://kietprocure.com/view-project/${project_code}`;
+
+    await transporter.sendMail({
+      from: "No-reply@kietsindia.com",
+      to:assignedToEmail,
+      subject: `Approval Required — ${project_code}`,
+      html: `
+        <p><b>Dear Approver,</b></p>
+        <p>A new Purchase Order has been raised.</p>
+
+        <table border="1" cellpadding="6" style="border-collapse:collapse;">
+          <tr><td><b>Project Code</b></td><td>${project_code}</td></tr>
+          <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+        </table>
+
+        <div style="margin-top:20px;">
+        <a href="${viewLink}"
+           style="background:#007bff;color:white;
+           padding:12px 20px;margin-right:10px;
+           text-decoration:none;border-radius:5px;">
+           👁 VIEW ORDER
+        </a>
+          <a href="${approvalLink}"
+             style="background:#28a745;color:white;padding:12px 20px;
+             text-decoration:none;border-radius:5px;">
+             ✅ APPROVE
+          </a>
+        </div>
+
+        <p style="font-size:12px;color:#777;margin-top:30px;">
+          © 2025 KIET TECHNOLOGIES PVT LTD
+        </p>
+      `,
+    });
+
+    res.json({
+      success: true,
+      message: "Approval mail sent successfully",
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+app.get('/view-project/:project_code', async (req, res) => {
+  try {
+    const { project_code } = req.params;
+
+    // 1️⃣ Get PO Header
+    const result = await pool.query(
+      `SELECT * FROM purchase_orders WHERE project_code_number = $1`,
+      [project_code]
+    );
+
+    if (!result.rows.length) {
+      return res.send("<h3>Project not found</h3>");
+    }
+
+    const p = result.rows[0];
+
+    // 2️⃣ Get PO Items
+    const itemsResult = await pool.query(
+      `SELECT * FROM purchase_order_items WHERE purchase_order_id = $1`,
+      [p.id]
+    );
+
+    // 3️⃣ Calculations
+    let subTotal = 0;
+    let gstTotal = 0;
+
+    const itemRows = itemsResult.rows.map((i, index) => {
+      const qty = Number(i.quantity);
+      const price = Number(i.unit_price);
+      const discount = Number(i.discount || 0);
+      const gstRate = Number(i.gst || 0);
+
+      const base = (qty * price) - discount;
+      const gstAmt = (base * gstRate) / 100;
+      const total = base + gstAmt;
+
+      subTotal += base;
+      gstTotal += gstAmt;
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${i.part_no}</td>
+          <td>${i.description}</td>
+          <td>${i.hsn_code || "-"}</td>
+          <td>${qty}</td>
+          <td>${i.unit || "-"}</td>
+          <td>₹${price.toFixed(2)}</td>
+          <td>${gstRate}%</td>
+          <td>₹${gstAmt.toFixed(2)}</td>
+          <td>₹${total.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const grandTotal = subTotal + gstTotal;
+
+    // 4️⃣ Send HTML
+    res.send(`
+      <h2>📄 Purchase Order Details</h2>
+
+      <table border="1" cellpadding="8" style="border-collapse:collapse;margin-bottom:20px;">
+        <tr><td><b>Project Code</b></td><td>${p.project_code_number}</td></tr>
+        <tr><td><b>Project Name</b></td><td>${p.project_name}</td></tr>
+        
+        <tr><td><b>Status</b></td><td>${p.assign_status}</td></tr>
+        <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+      </table>
+
+      <h3>🧾 Items</h3>
+
+      <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+        <tr style="background:#f2f2f2;">
+          <th>#</th>
+          <th>Part No</th>
+          <th>Description</th>
+          <th>HSN</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Unit Price</th>
+          <th>GST %</th>
+          <th>GST Amt</th>
+          <th>Total</th>
+        </tr>
+        ${itemRows || `<tr><td colspan="10" align="center">No items found</td></tr>`}
+      </table>
+
+      <div style="margin-top:20px;width:320px;">
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+          <tr><td><b>Sub Total</b></td><td>₹${subTotal.toFixed(2)}</td></tr>
+          <tr><td><b>GST Total</b></td><td>₹${gstTotal.toFixed(2)}</td></tr>
+          <tr style="background:#e8ffe8;">
+            <td><b>Grand Total</b></td>
+            <td><b>₹${grandTotal.toFixed(2)}</b></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top:25px;">
+        <a href="/approve-project/${p.project_code_number}"
+           style="background:#28a745;color:white;
+           padding:12px 20px;text-decoration:none;border-radius:5px;">
+           ✅ APPROVE
+        </a>
+      </div>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading project");
+  }
+});
+
+
+app.get('/approve-project/:project_code', async (req, res) => {
+  try {
+    const { project_code } = req.params;
+
+    await pool.query(
+      `
+      UPDATE purchase_orders
+      SET assign_status = 'verified'
+      WHERE project_code_number = $1
+      `,
+      [project_code]
+    );
+
+    res.send(`
+      <h2 style="color:green;">✅ Project Approved Successfully</h2>
+      <p>Project Code: <b>${project_code}</b></p>
+      <p>You may now close this window.</p>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Approval failed");
+  }
+});
+
+
 
 
 
