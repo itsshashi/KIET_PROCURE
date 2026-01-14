@@ -635,7 +635,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
         // MAE Details Section
        {
   // text: "Material Acquisition Estimate (MAE) Details",
-  text:"2026-27 Contract Renewal Details",
+  text:"Revised price list for 2026-27 as per Hypertak hike",
   font: "Times",
   bold: true,
   fontSize: 14,
