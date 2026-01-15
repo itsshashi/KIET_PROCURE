@@ -402,7 +402,7 @@ app.get("/api/orders", async (req, res) => {
                 created_at,
                 send_date 
             FROM purchase_orders
-            where assign_status=verified
+            where assign_status='verified'
             ORDER BY created_at DESC
         `); //send date added
     res.json(rows);
