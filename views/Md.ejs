@@ -2259,6 +2259,19 @@ select {
 
     <!-- Project Assignment Tab Content -->
     <div id="project-assignTab" class="tab-content">
+
+<!-- Process Details Modal -->
+<div id="processModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+     background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:20px; border-radius:8px; width:80%; max-height:80%; overflow:auto;">
+    <h3>Process Details</h3>
+    <div id="processModalContent">Loading...</div>
+    <button onclick="closeProcessModal()" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+
+
       <div class="mb-6">
          <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2 hover:text-blue-600 cursor-pointer transition-colors duration-300 " style="font-weight: bolder;">
     <span>📋</span> PROJECT DETAILS
@@ -2304,6 +2317,7 @@ select {
         <th class="px-4 py-3">TOTAL VALUE</th>
         <th class="px-4 py-3">ASSIGNED TO</th>
         <th class="px-4 py-3">VIEW PO</th>
+        <th class="px-4 py-3">PROCESS</th>
       </tr>
     </thead>
     <tbody id="projectAssignmentsBody">
@@ -5235,6 +5249,13 @@ function renderProjectAssignments(assignments) {
 }
 
 </td>
+<td>
+  <button class="btn btn-info btn-sm"
+          onclick="viewProcessDetails('${assignment.project_code}')">
+    View Process Details
+  </button>
+</td>
+
 
       </tr>`;
 
@@ -5333,6 +5354,45 @@ function open_po(id) {
       console.error(err);
       alert('PO file not found');
     });
+}
+
+
+async function viewProcessDetails(projectCode) {
+  try {
+    const res = await fetch(`/process-details/${projectCode}`);
+    const data = await res.json();
+
+    const modalContent = document.getElementById('processModalContent');
+
+    if (!Array.isArray(data) || data.length === 0) {
+      modalContent.innerHTML = `<p>No process details found for project <b>${projectCode}</b>.</p>`;
+    } else {
+      let html = '<table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;">';
+      html += '<tr><th>Date</th><th>Process</th><th>By / Remarks</th></tr>';
+      data.forEach(row => {
+        html += `<tr>
+                   <td>${new Date(row.created_at).toLocaleString()}</td>
+                 <td>${row.process}</td>
+                 <td>${row.who}</td>
+                 </tr>`;
+      });
+      html += '</table>';
+      modalContent.innerHTML = html;
+    }
+
+    // ✅ Show modal
+    const modal = document.getElementById('processModal');
+    modal.style.display = 'flex';
+
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching process details");
+  }
+}
+
+// Close modal function
+function closeProcessModal() {
+  document.getElementById('processModal').style.display = 'none';
 }
 
 

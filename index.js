@@ -8169,7 +8169,8 @@ app.put('/update/dc/close',async(req,res)=>{
   try {
     await pool.query(
       "UPDATE delivery_challan SET approval_status = 'Returned' WHERE id = $1",
-      [project_id]
+      [id_close
+      ]
     );
     res.status(200).json({ message: "Project marked completed" });
   } catch (err) {
@@ -8419,6 +8420,27 @@ app.get('/approve-project/:project_code', async (req, res) => {
   }
 });
 
+
+app.get('/process-details/:project_code', async (req, res) => {
+  try {
+    const { project_code } = req.params;
+
+ const result = await pool.query(
+      `SELECT process, who, created_at
+       FROM process_log
+       WHERE project_code = $1
+       ORDER BY created_at ASC`,
+      [project_code]
+    );
+
+
+    // ✅ Return array even if empty
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
 

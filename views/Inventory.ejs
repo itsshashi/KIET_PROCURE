@@ -6,7 +6,16 @@
   <title>Inventory Dashboard</title>
   <link rel="icon" href="images/logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
+    #challan-table-container {
+  cursor: grab;
+  transition: cursor 0.2s;
+}
+#challan-table-container.active {
+  cursor: grabbing;
+}
+
     * {
       margin: 0;
       padding: 0;
@@ -408,27 +417,37 @@
           <p>View delivery challans and return deadlines</p>
         </div>
 
-        <div style="overflow-x: auto;">
-          <table id="challan-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-              <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Challan No</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Date</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Consignee</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Email(requester)</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Type</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Expiry Date</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Days to Return</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Status</th>
-                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="challan-tbody">
-              <!-- Challans will be loaded here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <div style="margin-top: 20px; margin-bottom: 10px;">
+  <label for="filter-challan" style="font-weight: 500; color: #374151;">Filter by Challan No: </label>
+  <input 
+    type="text" 
+    id="filter-challan" 
+    placeholder="Enter challan no..." 
+    style="padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; width: 200px;"
+  >
+</div>
+
+        <div id="challan-table-container" style="overflow-x: auto; cursor: grab; border: 1px solid #e5e7eb; border-radius: 8px;">
+  <table id="challan-table" style="width: max-content; min-width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Challan No</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Date</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Consignee</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Email(requester)</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Type</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Expiry Date</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Days to Return</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Status</th>
+        <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="challan-tbody">
+      <!-- Challans will be loaded here -->
+    </tbody>
+  </table>
+</div>
+
 
       <!-- Modal for viewing items -->
       <div id="items-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
@@ -446,6 +465,37 @@
   </div>
 
   <script>
+    const slider = document.getElementById('challan-table-container');
+let isDown = false;
+let startX;
+let scrollLeft;
+
+slider.addEventListener('mousedown', (e) => {
+  isDown = true;
+  slider.classList.add('active'); // optional, for styling cursor
+  startX = e.pageX - slider.offsetLeft;
+  scrollLeft = slider.scrollLeft;
+  slider.style.cursor = 'grabbing';
+});
+
+slider.addEventListener('mouseleave', () => {
+  isDown = false;
+  slider.style.cursor = 'grab';
+});
+
+slider.addEventListener('mouseup', () => {
+  isDown = false;
+  slider.style.cursor = 'grab';
+});
+
+slider.addEventListener('mousemove', (e) => {
+  if (!isDown) return;
+  e.preventDefault();
+  const x = e.pageX - slider.offsetLeft;
+  const walk = (x - startX) * 1; // scroll-fast factor
+  slider.scrollLeft = scrollLeft - walk;
+});
+
     // Fetch and populate purchase orders
     async function loadOrders() {
       try {
@@ -538,7 +588,15 @@
             <td style="padding: 12px; color: #374151;">${expiryDate}</td>
             <td style="padding: 12px; color: #374151; ${daysToReturn !== 'N/A' && daysToReturn < 0 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 5 ? 'background-color: #dc2626; color: white;' : daysToReturn <= 10 ? 'background-color: #d97706; color: white;' : 'background-color: #16a34a; color: white;'}">${daysToReturn}</td>
             <td style="padding: 12px; color: #374151;">${status}</td>
-            <td style="padding: 12px; color: #374151;"><i class="fas fa-eye" style="cursor: pointer; color: #2563eb;" onclick="viewItems(${challan.id})"></i><button id='close' onclick=dc_close(${challan.id}) class="btn btn-primary" style="margin-left:30px;">DC Close</button></td>
+<td style="padding: 12px; color: #374151; display: flex; align-items: center; gap: 12px;">
+  <i class="fas fa-eye" style="cursor: pointer; color: #2563eb;" onclick="viewItems(${challan.id})"></i>
+  <button 
+    style="padding:6px 12px; background-color:#dc2626; color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px; font-weight:500;"
+    style="margin-left:30px;"
+    onclick="dc_close(${challan.id}, this)">
+    Close
+  </button>
+</td>
           `;
 
           tbody.appendChild(row);
@@ -593,23 +651,47 @@
     function closeModal() {
       document.getElementById('items-modal').style.display = 'none';
     }
-     async function dc_close(id){
-      try {
-        const response = await fetch('/update/dc/close', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: id })
-        });
-        // if (!response.ok) throw new Error('Failed to generate GRN');
-        // const data = await response.json();
-        // document.getElementById('grn_store').value = data.grn;
-        showPopup('Success', `GRN generated: ${id}`, 'success');
-      } catch (error) {
-        console.error('Error generating GRN:', error);
-        showPopup('Error', 'Error', 'error');
-      }
-    
+     async function dc_close(id, btn) {
+  try {
+    const response = await fetch('/update/dc/close', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: id })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to close DC');
     }
+
+    showPopup('Success', `Delivery challan [id: ${id}] is successfully Closed!`, 'success');
+
+    // Remove the table row
+    const row = btn.closest('tr');
+    if (row) row.remove();
+
+  } catch (error) {
+    console.error('Error Closing Delivery Challan:', error);
+    showPopup('Error', 'Error closing delivery challan', 'error');
+  }
+}
+
+// Filter by Challan No
+document.getElementById('filter-challan').addEventListener('input', function() {
+  const filter = this.value.toLowerCase();
+  const tbody = document.getElementById('challan-tbody');
+  const rows = tbody.getElementsByTagName('tr');
+
+  for (let row of rows) {
+    const challanCell = row.cells[0]; // first column = Challan No
+    if (challanCell) {
+      const challanText = challanCell.textContent.toLowerCase();
+      row.style.display = challanText.includes(filter) ? '' : 'none';
+    }
+  }
+});
+
+
+
 
     // Handle GRN generation for store
     document.getElementById('generate-grn-btn').addEventListener('click', async function() {
