@@ -55,7 +55,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:'Shashank@KIET1519',
+  password:'process.env.DB_PASSWORD',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -1163,7 +1163,7 @@ app.post("/forgot-password", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: {
         rejectUnauthorized: false,
@@ -1337,7 +1337,7 @@ app.post("/api/send-email/:id", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: {
         rejectUnauthorized: false,
@@ -1480,7 +1480,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: {
         rejectUnauthorized: false,
@@ -1669,7 +1669,7 @@ app.put("/api/orders/:id/status", async (req, res) => {
         secure: false, // STARTTLS
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -1763,7 +1763,7 @@ app.put("/api/orders/:id/send", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: {
         rejectUnauthorized: false,
@@ -4084,7 +4084,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -4531,7 +4531,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -4897,7 +4897,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -6250,7 +6250,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -7013,7 +7013,7 @@ app.post("/submit-delivery-challan", async (req, res) => {
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: "process.env.NO_PASSWORD",
         },
         tls: {
           rejectUnauthorized: false,
@@ -7184,7 +7184,7 @@ app.post("/approve-dc/:id/approve@89", async (req, res) => {
                     secure: false,
                     auth: {
                         user: "No-reply@kietsindia.com",
-                        pass: "Kiets@2025$1",
+                        pass: "process.env.NO_PASSWORD",
                     },
                     tls: { rejectUnauthorized: false },
                 });
@@ -7514,7 +7514,7 @@ app.post("/approve-dc/:id/approve", async (req, res) => {
       secure: false,
       auth: {
         user: 'No-reply@kietsindia.com',
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: { rejectUnauthorized: false },
     });
@@ -8227,7 +8227,7 @@ app.get('/getreq/:project_code', async (req, res) => {
       secure: false,
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: "process.env.NO_PASSWORD",
       },
       tls: { rejectUnauthorized: false },
     });
