@@ -2139,6 +2139,7 @@ app.get("/api/dc/:id/pdf", async (req, res) => {
       signPath: "public/images/signature.png",
       company: { logo: "public/images/lg.jpg" },
       line: "public/images/line.png",
+      expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
     };
 
     // 3️⃣ Generate unique filename
