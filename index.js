@@ -3426,6 +3426,7 @@ app.get("/api/quotations/:id/details/:type", async (req, res) => {
                 client_name as clientName,
                 client_email as clientEmail,
                 client_phone as clientPhone,
+                created_by,
                 
                 
                 total_amount as totalAmount,
@@ -3496,7 +3497,8 @@ app.get("/api/quotations/:id/details/:type", async (req, res) => {
                 notes,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                created_by
                 
             FROM "quotations"
             WHERE id = $1
@@ -3724,6 +3726,144 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
         `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         ["approved", quotationId]
       );
+      
+
+const transporter = nodemailer.createTransport({
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "No-reply@kietsindia.com",
+          pass: process.env.NO_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+      const mailOptions = {
+        from: "No-reply@kietsindia.com",
+        to: quotation.createdBy, // MD email
+        subject: `Quotatiohn Approved - ${quotation.quotation_number}`,
+    
+             html: `
+   
+     
+    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
+
+  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+
+    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
+
+    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+      We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
+      Please find the summary details below for your reference:
+    </p>
+
+    <h1 style="font-size: 20px; color: #222; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #0056b3; padding-bottom: 6px;">your quotation has been approved</h1>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://kietprocure.com/"
+        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        Review Quotation
+      </a>
+    </div>
+  
+
+    
+  
+  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+      <img src="cid:logoImage" alt="Company Logo"
+        style="width: 90px; height: auto; margin-bottom: 10px;" />
+
+      <div style="font-size: 16px; font-weight: bold; color: #000;">
+        KIET TECHNOLOGIES PVT LTD
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+      </div>
+
+      <div style="font-size: 13px; margin-top: 5px;">
+        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+      </div>
+
+      <!-- Social Icons -->
+      <div style="margin-top: 12px;">
+        <a href="https://facebook.com" style="margin: 0 6px;">
+          <img src="cid:fbIcon" width="22" />
+        </a>
+        <a href="https://linkedin.com/company" style="margin: 0 6px;">
+          <img src="cid:lkIcon" width="22" />
+        </a>
+        <a href="https://instagram.com" style="margin: 0 6px;">
+          <img src="cid:igIcon" width="22" />
+        </a>
+        <a href="https://kietsindia.com" style="margin: 0 6px;">
+          <img src="cid:webIcon" width="22" />
+        </a>
+      </div>
+
+      <div style="font-size: 11px; color: #777; margin-top: 15px;">
+        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+    </div>
+</div>
+
+
+    
+
+   
+    
+  `,
+        attachments: [
+          {
+            filename: "lg.jpg",
+            path: "public/images/lg.jpg",
+            cid: "logoImage",
+          },
+        ],
+      };
+
+
+try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("✅ VK approval request email sent to MD:", info.response);
+      } catch (err) {
+        console.error("❌ Email failed:", err);
+      }
+
+
     } catch (dbError) {
       throw new DatabaseTransactionError(
         "Failed to update quotation status",
