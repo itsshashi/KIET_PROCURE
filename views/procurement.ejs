@@ -3317,20 +3317,20 @@ images_upload_handler: function (blobInfo) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-row">
+                            <!-- <div class="form-row">
                                 <div class="form-col">
-                                    <div class="form-group">
+                                     <div class="form-group">
                                         <label for="vkReferenceNo">Reference Number <span style="color: red;">*</span></label>
                                         <div style="display: flex; gap: 10px;">
                                             <input type="text" id="vkReferenceNo" name="referenceNo" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
                                             <button type="button" id="vkGenerateReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
                                         </div>
-                                    </div>
+                                    </div> 
                                 </div>
                                 <div class="form-col">
-                                    <!-- Empty column for balance -->
+                                   
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
@@ -5628,26 +5628,7 @@ function closeProcessModal() {
                 updateHypertekDescription();
             }
 
-            function updatePvRates() {
-                const totalCosts = parseFloat(vkTotalCostsDisplay.textContent) || 0;
-                const exportValue = parseFloat(document.querySelector('#vk .price-input[data-index="export"]').closest('tr').querySelector('.value-display').textContent) || 0;
-                const boxValue = parseFloat(document.querySelector('#vk .price-input[data-index="box"]').closest('tr').querySelector('.value-display').textContent) || 0;
-                const totalRate = totalCosts + exportValue + boxValue;
-
-                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-                let totalPvQty = 0;
-                pvQtyInputs.forEach(input => {
-                    totalPvQty += parseFloat(input.value) || 0;
-                });
-                const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
-                const pvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-                pvRateInputs.forEach(input => {
-                    input.value = unitRate.toFixed(2);
-                    const qtyInput = input.closest('tr').querySelector('.pv-adaptor-qty-input');
-                    const valueDisplay = input.closest('tr').querySelector('.pv-value-display');
-                    updatePvValue(qtyInput, input, valueDisplay);
-                });
-            }
+            
 
             function updatePvValue(qtyInput, rateInput, valueDisplay) {
                 const qty = parseFloat(qtyInput.value) || 0;
@@ -5657,15 +5638,7 @@ function closeProcessModal() {
                 updatePvTotal();
             }
 
-            function updatePvTotal() {
-                const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-                let total = 0;
-                pvValueDisplays.forEach(display => {
-                    total += parseFloat(display.textContent) || 0;
-                });
-                const pvTotalAmount = document.getElementById('vk-pv-total-amount');
-                pvTotalAmount.textContent = total.toFixed(2);
-            }
+           
 
             function addPvRow() {
                 const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
@@ -5857,7 +5830,19 @@ function closeProcessModal() {
                             const response = await fetch('/api/generate-vk-quotation-number');
                             if (response.ok) {
                                 const data = await response.json();
-                                vkQuotationNumberInput.value = data.quotationNumber;
+
+                                 const famN = prompt('Enter Family Name'); // browser prompt
+                      if (famN) {
+                        // Modify the quotation number string
+                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
+                      }
+                    
+                      // Set the modified number in your input field
+                      vkQuotationNumberInput.value = data.quotationNumber;
+                                    
+
+
+                                // vkQuotationNumberInput.value = data.quotationNumber;
                             } else {
                                 console.error('Error fetching VK quotation number');
                                 alert('Error generating quotation number. Please try again.');
@@ -6115,34 +6100,64 @@ function closeProcessModal() {
             updateHypertekDescription();
         }
 
-        function updatePvRates() {
-            const totalCostsDisplay = document.getElementById('vk-total-costs');
-            const totalCosts = parseFloat(totalCostsDisplay ? totalCostsDisplay.textContent : '0') || 0;
-            const exportValue = parseFloat(document.querySelector('#vk .price-input[data-index="export"]').closest('tr').querySelector('.value-display').textContent) || 0;
-            const boxValue = parseFloat(document.querySelector('#vk .price-input[data-index="box"]').closest('tr').querySelector('.value-display').textContent) || 0;
-            const totalRate = totalCosts + exportValue + boxValue;
+    function updatePvRates() {
+    const totalCostsEl = document.querySelector('#vk-total-costs');
+    const totalCosts = parseFloat(totalCostsEl?.textContent || '0') || 0;
 
-            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            let totalPvQty = 0;
-            pvQtyInputs.forEach(input => {
-                totalPvQty += parseFloat(input.value) || 0;
-            });
-            const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
-            const pvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-            pvRateInputs.forEach(input => {
-                input.value = unitRate.toFixed(2);
-                const qtyInput = input.closest('tr').querySelector('.pv-adaptor-qty-input');
-                const valueDisplay = input.closest('tr').querySelector('.pv-value-display');
-                updatePvValue(qtyInput, input, valueDisplay);
-            });
+    const exportInput = document.querySelector('.price-input[data-index="export"]');
+
+    const boxInput = document.querySelector('.price-input[data-index="box"]');
+
+    const exportValue = parseFloat(
+        exportInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const boxValue = parseFloat(
+        boxInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const totalRate = totalCosts + exportValue + boxValue;
+// Calculate total PV qty
+    const pvQtyInputs = document.querySelectorAll('.pv-adaptor-qty-input');
+    let totalPvQty = 0;
+
+    pvQtyInputs.forEach(input => {
+        totalPvQty += parseFloat(input.value) || 0;
+    });
+
+    if (totalPvQty === 0) return;
+
+    const unitRate = totalRate * totalPvQty;
+
+    document.querySelectorAll('.pv-rate-input').forEach(input => {
+        input.value = unitRate.toFixed(2);
+
+        const row = input.closest('tr');
+        if (!row) return;
+
+        const qtyInput = row.querySelector('.pv-adaptor-qty-input');
+        const valueDisplay = row.querySelector('.pv-value-display');
+
+        if (qtyInput && valueDisplay) {
+            updatePvValue(qtyInput, input, valueDisplay);
         }
+    });
+}
+
 
         function updatePvValue(qtyInput, rateInput, valueDisplay) {
             const qty = parseFloat(qtyInput.value) || 0;
             const rate = parseFloat(rateInput.value) || 0;
             const value = qty * rate;
             valueDisplay.textContent = value.toFixed(2);
+            console.log('Updated PV Value:', value.toFixed(2), 'for Qty:', qty, 'Rate:', rate);
             updatePvTotal();
+            updatePvRates();
+            
+
+            
+
+            
         }
 
         function updatePvTotal() {
@@ -6155,6 +6170,9 @@ function closeProcessModal() {
             if (pvTotalAmount) {
                 pvTotalAmount.textContent = total.toFixed(2);
             }
+            updatePvRates()
+        
+
         }
 
         function addPvRow() {
@@ -6184,7 +6202,9 @@ function closeProcessModal() {
 
             newQtyInput.addEventListener('input', function() {
                 updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                updatePvRates();
             });
+            
 
             newRateInput.addEventListener('input', function() {
                 updatePvValue(newQtyInput, newRateInput, newValueDisplay);
@@ -6192,6 +6212,7 @@ function closeProcessModal() {
 
             newPvAdaptorQtyInput.addEventListener('input', function() {
                 updateClassOptions();
+                
             });
 
             updateClassOptions();

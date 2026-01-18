@@ -6937,7 +6937,7 @@ For detailed technical documentation, please contact the development team.`);
         pvQtyInputs.forEach(input => {
           totalPvQty += parseFloat(input.value) || 0;
         });
-        const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
+        const unitRate = totalPvQty > 0 ? totalRate * totalPvQty : 0;
         const pvRateInputs = document.querySelectorAll('.pv-rate-input');
         pvRateInputs.forEach(input => {
           input.value = unitRate.toFixed(2);
