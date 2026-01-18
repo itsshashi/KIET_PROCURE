@@ -55,7 +55,8 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:process.env.DB_PASSWORD,
+  // password:process.env.DB_PASSWORD,
+  password:'Shashank@KIET1519',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -3630,447 +3631,179 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // Input validation
-    const quotationId = req.params.id;
-    console.log("QUOTATION BODY", req.body);
-    const { quotation_source } = req.body;
-    console.log(req.body, "bodyyy");
-
-    if (!quotationId || isNaN(quotationId)) {
-      return res.status(400).json({
-        error: "Invalid quotation ID",
-        details: "Quotation ID must be a valid number",
-      });
-    }
-
-    if (!quotation_source) {
-      return res.status(400).json({
-        error: "Missing required field",
-        details: "quotation_source is required",
-      });
-    }
-
-    console.log(
-      "Approving quotation ID:",
-      quotationId,
-      "Source:",
-      quotation_source
-    );
-    // Determine tables
-    let quotationsTable, itemsTable;
-    if (quotation_source === "vk") {
-      quotationsTable = "vk_quotations";
-      itemsTable = "vk_quotation_items";
-    } else {
-      // Default to standard quotations for any non-VK source (regular, standard, etc.)
-      quotationsTable = "quotations";
-      itemsTable = "quotation_items";
+    const quotationId = Number(req.params.id);
+    if (!quotationId) {
+      return res.status(400).json({ error: "Invalid quotation ID" });
     }
 
     await client.query("BEGIN");
 
-    // Fetch quotation with error handling
-    let quotationResult;
-    try {
-      quotationResult = await client.query(
-        `SELECT * FROM ${quotationsTable} WHERE id = $1`,
+    /* -----------------------------------------
+       1. AUTO-DETECT QUOTATION TABLE
+    ----------------------------------------- */
+    let quotation;
+    let quotationsTable;
+
+    const vkResult = await client.query(
+      "SELECT id, status FROM vk_quotations WHERE id = $1",
+      [quotationId]
+    );
+
+    if (vkResult.rows.length) {
+      quotation = vkResult.rows[0];
+      quotationsTable = "vk_quotations";
+    } else {
+      const normalResult = await client.query(
+        "SELECT id, status FROM quotations WHERE id = $1",
         [quotationId]
       );
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to fetch quotation from database",
-        dbError
-      );
+
+      if (!normalResult.rows.length) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+
+      quotation = normalResult.rows[0];
+      quotationsTable = "quotations";
     }
 
-    if (quotationResult.rows.length === 0) {
-      throw new QuotationNotFoundError(quotationId);
-    }
-
-    const quotation = quotationResult.rows[0];
-
-    // Check if already approved
+    /* -----------------------------------------
+       2. CHECK STATUS
+    ----------------------------------------- */
     if (quotation.status === "approved") {
-      await client.query("ROLLBACK");
       return res.status(409).json({
         error: "Quotation already approved",
-        details: `Quotation ${quotationId} has already been approved`,
       });
     }
 
-    // Fetch items with error handling
-    let itemsResult;
-    try {
-      itemsResult = await client.query(
-        `SELECT * FROM ${itemsTable} WHERE quotation_id = $1 ORDER BY id`,
-        [quotationId]
-      );
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to fetch quotation items",
-        dbError
-      );
-    }
-
-    if (itemsResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        error: "Cannot approve quotation",
-        details: "Quotation has no items",
-      });
-    }
-
-    // Update status
-    try {
-      await client.query(
-        `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        ["approved", quotationId]
-      );
-      
-
-const transporter = nodemailer.createTransport({
-        host: "smtp.office365.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "No-reply@kietsindia.com",
-          pass: process.env.NO_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
-
-      const mailOptions = {
-        from: "No-reply@kietsindia.com",
-        to: quotation.createdBy, // MD email
-        subject: `Quotatiohn Approved - ${quotation.quotation_number}`,
-    
-             html: `
-   
-     
-    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
-
-  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
-
-    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
-
-    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
-      We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
-      Please find the summary details below for your reference:
-    </p>
-
-    <h1 style="font-size: 20px; color: #222; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #0056b3; padding-bottom: 6px;">your quotation has been approved</h1>
-
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://kietprocure.com/"
-        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
-        Review Quotation
-      </a>
-    </div>
-  
-
-    
-  
-  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
-      <img src="cid:logoImage" alt="Company Logo"
-        style="width: 90px; height: auto; margin-bottom: 10px;" />
-
-      <div style="font-size: 16px; font-weight: bold; color: #000;">
-        KIET TECHNOLOGIES PVT LTD
-      </div>
-
-      <div style="font-size: 13px; margin-top: 5px;">
-        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
-      </div>
-
-      <div style="font-size: 13px; margin-top: 5px;">
-        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
-        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
-      </div>
-
-      <!-- Social Icons -->
-      <div style="margin-top: 12px;">
-        <a href="https://facebook.com" style="margin: 0 6px;">
-          <img src="cid:fbIcon" width="22" />
-        </a>
-        <a href="https://linkedin.com/company" style="margin: 0 6px;">
-          <img src="cid:lkIcon" width="22" />
-        </a>
-        <a href="https://instagram.com" style="margin: 0 6px;">
-          <img src="cid:igIcon" width="22" />
-        </a>
-        <a href="https://kietsindia.com" style="margin: 0 6px;">
-          <img src="cid:webIcon" width="22" />
-        </a>
-      </div>
-
-      <div style="font-size: 11px; color: #777; margin-top: 15px;">
-        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
-      </div>
-    </div>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</div>
-
-
-
-    </div>
-</div>
-
-
-    
-
-   
-    
-  `,
-        attachments: [
-          {
-            filename: "lg.jpg",
-            path: "public/images/lg.jpg",
-            cid: "logoImage",
-          },
-        ],
-      };
-
-
-try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ VK approval request email sent to MD:", info.response);
-      } catch (err) {
-        console.error("❌ Email failed:", err);
-      }
-
-
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to update quotation status",
-        dbError
-      );
-    }
-
-    // Prepare PDF data with validation
-    const poData = {
-      poNumber: quotation.quotation_number || "N/A",
-      date: quotation.quotation_date || new Date().toISOString(),
-      expected_date: quotation.valid_until,
-      termsOfPayment: quotation.payment_terms || "Net 30",
-      currency: quotation.currency || "INR",
-      company: {
-        name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
-        email: quotation.company_email || "info@kiet.com",
-        gst: quotation.company_gst || "29AAFCK6528DIZG",
-        address:
-          quotation.company_address ||
-          "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
-        logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
-      },
-      supplier: {
-        name: quotation.client_name || "Unknown Supplier",
-        address: quotation.client_address || "Address not provided",
-        duration: quotation.delivery_duration,
-      },
-      shipTo: quotation.client_address || "Address not provided",
-      reference_no: quotation.reference_no,
-      requester: {
-        name: quotation.client_name || "Unknown",
-      },
-      items: itemsResult.rows.map((row) => ({
-        part_no: row.part_no || "N/A",
-        description: row.description || "No description",
-        hsn_code: row.hsn_code,
-        gst: row.gst_rate || 0,
-        quantity: row.quantity || 0,
-        unit: row.unit || "PCS",
-        unit_price: row.unit_price || 0,
-        discount: row.discount || 0,
-        total: row.total_amount || 0,
-      })),
-      line: path.join(__dirname, "public", "images", "line.png"),
-      signPath: path.join(__dirname, "public", "images", "signature.png"),
-    };
-
-    // VK-specific fields with error handling
-    if (quotation_source === "vk") {
-      try {
-        const vkDataResult = await client.query(
-          `SELECT kiet_costs, pv_adaptors FROM ${quotationsTable} WHERE id = $1`,
-          [quotationId]
-        );
-
-        const vkData = vkDataResult.rows[0];
-
-        if (vkData.kiet_costs) {
-          try {
-            poData.kietCosts = JSON.parse(vkData.kiet_costs);
-          } catch (parseError) {
-            console.warn("Failed to parse kiet_costs JSON:", parseError);
-            poData.kietCosts = null;
-          }
-        }
-
-        if (vkData.pv_adaptors) {
-          try {
-            poData.pvAdaptors = JSON.parse(vkData.pv_adaptors);
-          } catch (parseError) {
-            console.warn("Failed to parse pv_adaptors JSON:", parseError);
-            poData.pvAdaptors = null;
-          }
-        }
-      } catch (vkError) {
-        console.warn("VK data fetch non-critical error:", vkError);
-        // Continue without VK-specific data
-      }
-    }
-
-    // Generate PDF with error handling
-    const sanitizedNumber = (quotation.quotation_number || "unknown").replace(
-      /[^a-zA-Z0-9.-]/g,
-      "_"
+    /* -----------------------------------------
+       3. UPDATE STATUS
+    ----------------------------------------- */
+    await client.query(
+      `UPDATE ${quotationsTable}
+       SET status = 'approved',
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [quotationId]
     );
-    const fileName = `quotation_${sanitizedNumber}.pdf`;
-    const filePath = path.join(qtUploadsDir, fileName);
-
-    try {
-      // Verify directory exists
-      if (!fs.existsSync(qtUploadsDir)) {
-        fs.mkdirSync(qtUploadsDir, { recursive: true });
-      }
-
-      if (quotation.quotation_type === "VK") {
-        await generateVKQuotation(poData, filePath);
-      } else {
-        await generateQuotation(poData, filePath);
-      }
-
-      // Verify PDF was created
-      if (!fs.existsSync(filePath)) {
-        throw new PDFGenerationError("PDF file was not created");
-      }
-    } catch (pdfError) {
-      throw new PDFGenerationError("Failed to generate PDF document", pdfError);
-    }
 
     await client.query("COMMIT");
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Quotation approved and PDF generated successfully",
-      data: {
-        quotationId,
-        quotationNumber: quotation.quotation_number,
-        pdfPath: fileName,
-      },
+      quotationId,
+      status: "approved",
+      table: quotationsTable,
     });
+
   } catch (error) {
-    // Rollback transaction if still active
-    try {
-      await client.query("ROLLBACK");
-    } catch (rollbackError) {
-      console.error("Rollback failed:", rollbackError);
-    }
+    await client.query("ROLLBACK");
 
-    // Log full error details for debugging
-    console.error("Error approving quotation:", {
-      error: error.message,
-      stack: error.stack,
-      quotationId: req.params.id,
-      timestamp: new Date().toISOString(),
-    });
+    console.error("Approve quotation error:", error.message);
 
-    // Handle custom errors
-    if (
-      error instanceof QuotationNotFoundError ||
-      error instanceof InvalidQuotationSourceError
-    ) {
-      return res.status(error.statusCode).json({
-        error: error.message,
-        quotationId: req.params.id,
-      });
-    }
-
-    if (
-      error instanceof PDFGenerationError ||
-      error instanceof DatabaseTransactionError
-    ) {
-      return res.status(error.statusCode).json({
-        error: error.message,
-        details: "Please contact support if this issue persists",
-      });
-    }
-
-    // Handle unexpected errors
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to approve quotation",
-      message: "An unexpected error occurred. Please try again later.",
     });
+
   } finally {
-    // Always release the client
-    try {
-      
-      client.release();
-    } catch (releaseError) {
-      console.error("Failed to release database client:", releaseError);
-    }
+    client.release();
   }
 });
+
+
+
 
 // Reject quotation
 app.put("/api/quotations/:id/reject", async (req, res) => {
   const client = await pool.connect();
 
   try {
+    const quotationId = Number(req.params.id);
+    const { reason } = req.body;
+
+    if (!quotationId) {
+      return res.status(400).json({ error: "Invalid quotation ID" });
+    }
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: "Rejection reason is required" });
+    }
+
     await client.query("BEGIN");
 
-    const quotationId = req.params.id;
-    const { reason, quotation_source } = req.body;
+    /* -----------------------------------------
+       1. AUTO-DETECT QUOTATION TABLE
+    ----------------------------------------- */
+    let quotationsTable;
+    let quotation;
 
-    // Determine which table to update based on quotation source
-    const quotationsTable =
-      quotation_source === "vk" ? "vk_quotations" : "quotations";
-
-    // Update quotation status and add rejection reason
-    await client.query(
-      `UPDATE ${quotationsTable} SET status = $1, notes = CONCAT(COALESCE(notes, ''), '\\n\\nRejected: ', $2), updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
-      ["rejected", reason, quotationId]
+    const vkResult = await client.query(
+      "SELECT id, status, notes FROM vk_quotations WHERE id = $1",
+      [quotationId]
     );
 
-    // Log rejection action
-    console.log(`Quotation ${quotationId} rejected by MD. Reason: ${reason}`);
+    if (vkResult.rows.length) {
+      quotation = vkResult.rows[0];
+      quotationsTable = "vk_quotations";
+    } else {
+      const normalResult = await client.query(
+        "SELECT id, status, notes FROM quotations WHERE id = $1",
+        [quotationId]
+      );
+
+      if (!normalResult.rows.length) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+
+      quotation = normalResult.rows[0];
+      quotationsTable = "quotations";
+    }
+
+    /* -----------------------------------------
+       2. STATUS CHECK
+    ----------------------------------------- */
+    if (quotation.status === "rejected") {
+      return res.status(409).json({
+        error: "Quotation already rejected",
+      });
+    }
+
+    /* -----------------------------------------
+       3. UPDATE STATUS + REJECTION NOTE
+    ----------------------------------------- */
+    await client.query(
+      `
+      UPDATE ${quotationsTable}
+      SET status = 'rejected',
+          
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      `,
+      [ quotationId]
+    );
 
     await client.query("COMMIT");
 
-    res.json({ success: true, message: "Quotation rejected successfully" });
+    return res.json({
+      success: true,
+      quotationId,
+      status: "rejected",
+      table: quotationsTable,
+    });
+
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Error rejecting quotation:", error);
-    res.status(500).json({ error: "Failed to reject quotation" });
+
+    console.error("Reject quotation error:", error.message);
+
+    return res.status(500).json({
+      error: "Failed to reject quotation",
+    });
+
   } finally {
     client.release();
   }
 });
+
 
 // Send VK quotation approval request (separate API for VK quotations)
 app.post(
