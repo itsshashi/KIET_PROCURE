@@ -3186,7 +3186,7 @@ app.get("/api/pending-vk_quotations", async (req, res) => {
     const vkResult = await client.query(`
               SELECT
                   vq.*,
-                  COALESCE(SUM(vqi.total_amount), 0) as total_amount,
+                  vq.total_amount as total_amount,
                   COUNT(vqi.id) as item_count,
                   'vk' as quotation_source
               FROM vk_quotations vq
@@ -3844,17 +3844,89 @@ app.post(
         clientEmail,
         clientPhone,
         notes,
+        vkgst,
+        vkpackaging,
+        vkinsurance,
+        vkdeliveryTerms,
       } = req.body;
 
       console.log("VK Form data extracted:", req.body);
 
       // Parse PV adaptors data (this is the main data for VK quotations)
-      const pvAdaptors = req.body.pvAdaptors
-        ? JSON.parse(req.body.pvAdaptors)
-        : [];
-      const kietCosts = req.body.kietCosts
-        ? JSON.parse(req.body.kietCosts)
-        : [];
+      const {
+  pvQty = [],
+  pvFamilyName = [],
+  pvRevNo = [],
+  pvCoaxialPin = [],
+  pvSokCard = [],
+  pvSokQty = [],
+  pvRate = []
+} = req.body;
+
+const pvAdaptors = pvQty.map((_, i) => ({
+  qty: Number(pvQty[i]),
+  familyName: pvFamilyName[i],
+  revNo: pvRevNo[i],
+  coaxialPin: pvCoaxialPin[i],
+  sokCard: pvSokCard[i],
+  sokQty: pvSokQty[i],
+  rate: Number(pvRate[i])
+}));
+
+ // Extract arrays from request
+const {
+  itemDescription = [],
+  priceInput = [],
+  qtyInput = []
+} = req.body;
+
+// Validation: main items count
+if (itemDescription.length !== qtyInput.length) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
+  });
+}
+
+// Validation: priceInput must have enough entries for main + additional costs
+if (priceInput.length < itemDescription.length + 2) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: priceInput must include additional charges"
+  });
+}
+
+// Build main KIET costs
+const kietCosts = itemDescription.map((desc, i) => ({
+  description: desc,
+  cost: Number(priceInput[i]),
+  qty: Number(qtyInput[i]),
+  totalValue: Number(priceInput[i]) * Number(qtyInput[i])
+}));
+
+// Append additional costs (always last 2 entries in priceInput)
+kietCosts.push({
+  description: "Export packaging charges included",
+  cost: Number(priceInput[priceInput.length - 2]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 2])
+});
+
+kietCosts.push({
+  description: "Bigger box setup",
+  cost: Number(priceInput[priceInput.length - 1]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 1])
+});
+
+// Optional: Calculate total KIET cost
+const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
+
+console.log("KIET Costs data:", kietCosts.length, "items");
+console.log("Total KIET Cost:", totalKietCost);
+
+// Now you can insert `kietCosts` into DB along with VK quotation
+// Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
+
+
 
       console.log("PV Adaptors data:", pvAdaptors.length, "adaptors");
       console.log("KIET Costs data:", kietCosts.length, "cost items");
@@ -3875,8 +3947,8 @@ app.post(
                 valid_until, currency, payment_terms, delivery_duration,
                 company_name, company_email, company_gst, company_address,
                 client_name, client_email, client_phone,
-                total_amount, notes, status, created_by, kiet_costs, pv_adaptors
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                total_amount, notes, status, created_by, kiet_costs, pv_adaptors,gstterms,packaging,insurance,deliveryterms
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             RETURNING id
         `;
 
@@ -3909,6 +3981,11 @@ app.post(
         req.session.user ? req.session.user.email : null,
         JSON.stringify(kietCosts),
         JSON.stringify(pvAdaptors),
+        vkgst || null,
+        vkpackaging || null,  
+        vkinsurance || null,
+        vkdeliveryTerms || null
+
       ];
       console.log("Inserting VK quotation with values:", quotationValues);
 
@@ -5550,10 +5627,13 @@ app.get("/view-quotation/:param", async (req, res) => {
 app.get("/view-vk-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
+
+    // Decide whether param is ID or quotation number
     const isNumeric = /^\d+$/.test(param);
+    const column = isNumeric ? "id" : "quotation_number";
 
     const quotationResult = await pool.query(
-      `SELECT * FROM vk_quotations WHERE ${isNumeric ? "id" : "quotation_number"} = $1 LIMIT 1`,
+      `SELECT * FROM vk_quotations WHERE ${column} = $1 LIMIT 1`,
       [param]
     );
 
@@ -5562,37 +5642,65 @@ app.get("/view-vk-quotation/:param", async (req, res) => {
     }
 
     const quotation = quotationResult.rows[0];
-    const kietCosts = typeof quotation.kiet_costs === "string" ? JSON.parse(quotation.kiet_costs) : (quotation.kiet_costs || []);
-const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotation.pv_adaptors) : (quotation.pv_adaptors || []);
 
+    // ✅ Safe JSON parsing
+    const safeParse = (value) => {
+      try {
+        if (!value) return [];
+        if (typeof value === "string") return JSON.parse(value);
+        return value;
+      } catch (err) {
+        console.error("JSON parse error:", err);
+        return [];
+      }
+    };
 
+    const kietCosts = safeParse(quotation.kiet_costs);
+    const pvAdaptors = safeParse(quotation.pv_adaptors);
+
+    // ✅ Build PDF data
     const poData = {
       company: {
         logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
         name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.company_email || "info@kiet.com",
         gst: quotation.company_gst || "29AAFCK6528DIZG",
-        address: quotation.company_address || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
+        address:
+          quotation.company_address ||
+          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
       },
+
       supplier: {
         address: quotation.client_address || "",
         contact: quotation.client_phone || "",
         duration: quotation.delivery_duration || "",
       },
-      clientEmail: quotation.client_email,
+
+      clientEmail: quotation.client_email || "",
       poNumber: quotation.quotation_number,
-      date: quotation.quotation_date ? quotation.quotation_date.toLocaleDateString("en-GB") : "",
-      requester: { name: quotation.client_name || "" },
-      reference_no: quotation.reference_no,
-      expected_date: quotation.valid_until ? quotation.valid_until.toLocaleDateString("en-GB") : "",
+      date: quotation.quotation_date
+        ? new Date(quotation.quotation_date).toLocaleDateString("en-GB")
+        : "",
+
+      requester: {
+        name: quotation.client_name || "",
+      },
+
+      reference_no: quotation.reference_no || "",
+      expected_date: quotation.valid_until
+        ? new Date(quotation.valid_until).toLocaleDateString("en-GB")
+        : "",
+
       termsOfPayment: quotation.payment_terms || "",
       gstterms: quotation.gstterms || "Extra 18%",
       insurance: quotation.insurance || "N/A",
-      deliveyt: quotation.deliveryterms || "Ex-Works / DAP",
+      delivery: quotation.deliveryterms || "Ex-Works / DAP",
       package: quotation.packaging || "Standard Export Packaging extra",
       currency: quotation.currency || "INR",
+
       kietCosts,
       pvAdaptors,
+
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
     };
@@ -5602,7 +5710,10 @@ const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotat
 
     await generateVKQuotation(poData, filePath);
 
-    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${fileName}"`
+    );
     res.setHeader("Content-Type", "application/pdf");
 
     return res.sendFile(filePath);

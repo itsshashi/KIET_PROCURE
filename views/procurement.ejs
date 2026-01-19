@@ -7,6 +7,8 @@
     <link href="../public/images/logo.png" rel="icon" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
      
         * {
@@ -1907,7 +1909,7 @@
                 <i class="fas fa-check-circle"></i> Approved Quotation
             </li>
             </ul>
-            <li class="menu-item" data-tab='pending_orders'>Pending Orders</li>
+            
             
 
            
@@ -3318,6 +3320,58 @@ images_upload_handler: function (blobInfo) {
                                     </div>
                                 </div>
                             </div>
+                             <div class="form-row">
+                
+                <div class="form-col">
+               <div class="form-row">
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="gst">GST</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="gst" name="vkgst" placeholder="GST">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="packaging">Packaging</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="packaging" name="vkpackaging" placeholder="Packaging">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="insurance">Insurance</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="insurance" name="vkinsurance" placeholder="Insurance">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="deliveryTerms">Delivery Terms</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="deliveryTerms" name="vkdeliveryTerms" placeholder="Delivery Terms">
+                   </div>
+                 </div>
+               </div>
+                  <!-- Empty column for balance -->
+                </div>
+              </div>
                             <!-- <div class="form-row">
                                 <div class="form-col">
                                      <div class="form-group">
@@ -3592,6 +3646,44 @@ images_upload_handler: function (blobInfo) {
                         
                     </form>
                     </div>
+                    <script>
+document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
+  e.preventDefault(); // stop page reload
+  startLoader(); // Start loader animation
+  
+
+  const form = this;
+  const formData = new FormData(form);
+
+  try {
+    const res = await fetch(form.action, {
+      method: form.method,
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // ✅ ALERT
+      alert("Quotation sent successfully ✅");
+      stopLoader(); // Stop loader animation
+
+      // ✅ RESET FORM
+      form.reset();
+
+      // ✅ OPTIONAL: clear quotation number
+      document.getElementById("vkQuotationNumber").value = "";
+
+    } else {
+      alert("Failed to send quotation ❌");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+});
+</script>
+
 
 
 

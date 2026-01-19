@@ -1344,9 +1344,72 @@ select {
     /* Sortable headers */
     table th { cursor: pointer; user-select: none; }
     table th:hover { background: #34495e; }
+
+    .creative-loader {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Card */
+.loader-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 40px 60px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Ring */
+.progress-ring {
+  width: 70px;
+  height: 70px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Text animation */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
   </style>
 </head>
 <body>
+
+   <div id="loaderOverlay" class="creative-loader hidden">
+  <div class="loader-card">
+    <div class="progress-ring"></div>
+    <h3 id="loaderText">Processing</h3>
+    <span class="dots">.</span>
+  </div>
+</div>
+
   <div class=" container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -3305,6 +3368,7 @@ const quotationForm = document.getElementById('quotationForm');
 
 quotationForm.addEventListener('submit', async function (e) {
   e.preventDefault();
+  
 
   try {
     // 1️⃣ Prepare first FormData for trade generation
@@ -3350,8 +3414,7 @@ quotationForm.addEventListener('submit', async function (e) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-
-    console.log('✅ Quotation PDF downloaded successfully.');
+    console.log('✅ Quotation PDF generated and download initiated.');
   } catch (error) {
     console.error('❌ Error generating quotation:', error);
     alert(error.message || 'Failed to generate quotation. Please try again.');
@@ -3539,7 +3602,7 @@ function resetFields() {
     width: 100%;
     max-width: 100%;
     margin: 0;">
-          <form id="quotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
+          <form id="vkquotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
             <!-- Quotation Information Section -->
             <div class="form-section" style=" margin-bottom: 30px;
     padding-bottom: 20px;
@@ -4024,14 +4087,88 @@ function resetFields() {
     justify-content: center;
     margin-top: 30px;">
               <button type="submit" class="btn btn-primary" id="generateQuotation" style="visibility: visible !important; opacity: 1 !important;">Generate Quotation</button>
-              <button type="button" class="btn btn-secondary" id="previewQuotation" style="visibility: visible !important; opacity: 1 !important;">Preview</button>
-              <button type="button" class="btn btn-secondary" id="raiseRequest" style="background-color: #4CAF50; color: white; visibility: visible !important; opacity: 1 !important;">Raise Request</button>
+              <button type="button" class="btn btn-secondary" id="previewQuotation" style="display: none !important; opacity: 1 !important;">Preview</button>
+              <button type="button" class="btn btn-secondary" id="raiseRequest" style="background-color: #4CAF50; color: white; display: none !important; opacity: 1 !important;">Raise Request</button>
             </div>
           </form>
         </div>
       </div>
     </div>
   </div>
+  <script>
+      let loaderStart = 0;
+const MIN_TIME = 2000;
+
+function startLoader(text = "Processing") {
+  loaderStart = Date.now();
+  document.getElementById("loaderText").innerText = text;
+  document.getElementById("loaderOverlay").classList.remove("hidden");
+}
+
+function stopLoader() {
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, MIN_TIME - elapsed);
+
+  setTimeout(() => {
+    document.getElementById("loaderOverlay").classList.add("hidden");
+  }, delay);
+}
+
+document.getElementById("vkquotationForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+
+  const form = this;
+  const overlay = document.getElementById("loadingOverlay");
+  const formData = new FormData(form);
+  startLoader( "Generating Quotation... Please wait");
+
+  try {
+    // ✅ show loader
+    
+
+    const response = await fetch(form.action, {
+      method: form.method,
+      body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+    // ✅ hide loader
+    
+const blob = await response.blob();
+
+      // ✅ Create download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+
+      // ✅ Filename (fallback if backend doesn't send one)
+      a.download = `VK_Quotation_${Date.now()}.pdf`;
+
+      document.body.appendChild(a);
+      a.click();
+
+      // ✅ Cleanup
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      alert("Quotation downloaded successfully ✅");
+      form.reset();
+      stopLoader();
+  } catch (error) {
+    stopLoader();
+    console.log("error",error);
+    alert("Server error ❌ Please try again");
+  }
+  finally {
+      stopLoader();
+    }
+});
+</script>
+
 
 
   <!-- Modal for PDF preview -->
@@ -5481,6 +5618,7 @@ function renderApproveQuotations(quotations, tbodyId) {
 function renderApprovevkQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
+  console.log('Rendering VK Quotations:', quotations);
 
 
 
@@ -8959,7 +9097,6 @@ function toggleMenu(id) {
 //     container.appendChild(div);
 //   });
 // }
-
 
 
 
