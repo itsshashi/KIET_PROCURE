@@ -4013,7 +4013,7 @@ function resetFields() {
                 </tbody>
               </table>
               <div style="margin: 10px 50px 0 0; text-align: right;">
-                <strong>Total PV Amount INR: </strong><span class="currency-symbol">₹</span> <span id="pv-total-amount">0.00</span>
+                <strong>Total PV Amount: </strong><span class="currency-symbol">₹</span> <span id="pv-total-amount">0.00</span>
               </div>
               <button type="button" id="addPvRow" class="btn btn-secondary" style="margin-top: 10px;">Add Row</button>
             </div>
@@ -7075,7 +7075,7 @@ For detailed technical documentation, please contact the development team.`);
         pvQtyInputs.forEach(input => {
           totalPvQty += parseFloat(input.value) || 0;
         });
-        const unitRate = totalPvQty > 0 ? totalRate * totalPvQty : 0;
+        const unitRate = totalRate;
         const pvRateInputs = document.querySelectorAll('.pv-rate-input');
         pvRateInputs.forEach(input => {
           input.value = unitRate.toFixed(2);
