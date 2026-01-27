@@ -7152,6 +7152,8 @@ app.post("/approve-dc/:id/approve@89", async (req, res) => {
             signPath: "public/images/signature.png",
             company: { logo: "public/images/lg.jpg" },
             line: "public/images/line.png",
+            expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
+
         };
         const timestamp = Date.now();
         const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
