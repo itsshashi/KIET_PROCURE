@@ -8225,8 +8225,8 @@ app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
     });
     console.log("assigned_to ",assignedToEmail);
 
-    const approvalLink = `https://kietprocure.com/approve-project/${project_code}/${'supplier_name'}`;
-    const viewLink = `https://kietprocure.com/view-project/${project_code}/${'supplier_name'}`;
+    const approvalLink = `https://kietprocure.com/approve-project/${project_code}/${supplier_name}`;
+    const viewLink = `https://kietprocure.com/view-project/${project_code}/${supplier_name}`;
 
     await transporter.sendMail({
       from: "No-reply@kietsindia.com",
