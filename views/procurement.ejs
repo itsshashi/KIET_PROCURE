@@ -4211,14 +4211,17 @@ function closeProcessModal() {
                     } else {
                         alert("Order submission failed: " + (result.error || result.message || "Unknown error"));
                     }
-                    const project_cde = document.getElementById("projectCodeNumber").value.trim()
+                    const project_cde = document.getElementById("projectCodeNumber").value.trim();
+                    const supplier_name = document.getElementById("supplierName").value;
+
                     console.log(project_cde);
+                    console.log('supplier_name:',supplier_name);
                     
     // const orderId = ;
       if (result) {
-        const statusRes = await fetch(`/getreq/${project_cde}`, {
+    const statusRes = await fetch(`/getreq/${project_cde}/${supplier_name}`, {
           method: "GET",
-          headers: { "Accept": "application/json",project_code:project_cde }
+          headers: { "Accept": "application/json",project_code:project_cde,supplier_name:supplier_name }
         });
 
         const statusContentType = statusRes.headers.get("content-type");
