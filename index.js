@@ -8195,9 +8195,11 @@ app.get('/process/view/json', async (req, res) => {
 
 
 
-app.get('/getreq/:project_code', async (req, res) => {
+app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
   try {
-    const { project_code } = req.params;
+    const { project_code,supplier_name } = req.params;
+    console.log("project_code",project_code);
+    console.log("supplier_name",supplier_name);
 
     const result = await pool.query(
       `SELECT assigned_to FROM project_info WHERE project_code = $1`,
@@ -8223,8 +8225,8 @@ app.get('/getreq/:project_code', async (req, res) => {
     });
     console.log("assigned_to ",assignedToEmail);
 
-    const approvalLink = `https://kietprocure.com/approve-project/${project_code}`;
-    const viewLink = `https://kietprocure.com/view-project/${project_code}`;
+    const approvalLink = `https://kietprocure.com/approve-project/${project_code}/${'supplier_name'}`;
+    const viewLink = `https://kietprocure.com/view-project/${project_code}/${'supplier_name'}`;
 
     await transporter.sendMail({
       from: "No-reply@kietsindia.com",
@@ -8271,14 +8273,14 @@ app.get('/getreq/:project_code', async (req, res) => {
 });
 
 
-app.get('/view-project/:project_code', async (req, res) => {
+app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
   try {
-    const { project_code } = req.params;
+    const { project_code,supplier_name } = req.params;
 
     // 1️⃣ Get PO Header
     const result = await pool.query(
-      `SELECT * FROM purchase_orders WHERE project_code_number = $1`,
-      [project_code]
+      `SELECT * FROM purchase_orders WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2 `,
+      [project_code,supplier_name]
     );
 
     if (!result.rows.length) {
@@ -8385,17 +8387,17 @@ app.get('/view-project/:project_code', async (req, res) => {
 });
 
 
-app.get('/approve-project/:project_code', async (req, res) => {
+app.get('/approve-project/:project_code/:supplier_name', async (req, res) => {
   try {
-    const { project_code } = req.params;
+    const { project_code,supplier_name } = req.params;
 
     await pool.query(
       `
       UPDATE purchase_orders
       SET assign_status = 'verified'
-      WHERE project_code_number = $1
+      WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2
       `,
-      [project_code]
+      [project_code,supplier_name]
     );
 
     res.send(`
