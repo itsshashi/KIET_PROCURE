@@ -853,12 +853,14 @@ app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
 // Login submit
 app.post("/submit", async (req, res) => {
   const { email, password, role } = req.body;
+  console.log("▶ /submit called for", email, "as", role);
 
   try {
     const result = await pool.query(
-      "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
-      [email]
+      "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) and role=$2",
+      [email, role]
     );
+    
 
     if (!result.rows.length)
       return res.render("index.ejs", { message: "Invalid email or password" });
