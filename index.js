@@ -8372,7 +8372,7 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
       </div>
 
       <div style="margin-top:25px;">
-        <a href="/approve-project/${p.project_code_number}"
+        <a href="https://kietprocure.com/approve-project/${project_code}/${supplier_name}"
            style="background:#28a745;color:white;
            padding:12px 20px;text-decoration:none;border-radius:5px;">
            ✅ APPROVE
