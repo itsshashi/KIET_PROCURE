@@ -3799,7 +3799,7 @@ async function loadAssignedProjects() {
             : ""
         }
         <button class="btn btn-danger" onclick="openProcessModal()">Process</button>
-         <button class="btn btn-secondary" onclick="viewDocument(${p.documents})">View Doc</button>    `;
+         <button class="btn btn-secondary" onclick="viewDocument('${p.documents}')">View Doc</button>    `;
 
       container.appendChild(card);
     });
