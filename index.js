@@ -7998,7 +7998,8 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         po_no,
         project_status,
         remaining_budget,
-        quantity
+        quantity,
+        documents
 
 
        FROM project_info
