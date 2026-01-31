@@ -7623,7 +7623,8 @@ app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
         assigned_on,
         budget,
         target_date,
-        project_status
+        project_status,
+        documents
         
       FROM project_info
       ORDER BY po_date DESC
@@ -7984,7 +7985,8 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         target_date,
         po_no,
         project_status,
-        remaining_budget
+        remaining_budget,
+        quantity
 
 
        FROM project_info
@@ -8435,6 +8437,37 @@ app.get('/process-details/:project_code', async (req, res) => {
 });
 
 
+app.post(
+  "/upload-project-document",
+  upload.single("document"),
+  async (req, res) => {
+    try {
+      const { projectId } = req.body;
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded" });
+      }
+
+      const filePath = `uploads/documents/${req.file.filename}`;
+
+      await pool.query(
+        `UPDATE project_info
+         SET documents = $1
+         WHERE id = $2`,
+        [filePath, projectId]
+      );
+
+      res.json({
+        success: true,
+        message: "Document uploaded",
+        filePath
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: "Upload failed" });
+    }
+  }
+);
 
 
 

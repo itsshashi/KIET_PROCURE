@@ -3788,6 +3788,7 @@ async function loadAssignedProjects() {
         <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
         <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
         <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+        <p><b>Quantity:</b> ${p.quantity}</p>
         <p><b>Remaining:</b> ₹${Number(p.remaining_budget|| 0).toLocaleString()}</p>
         <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
         <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>

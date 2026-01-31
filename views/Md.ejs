@@ -5375,6 +5375,7 @@ function renderProjectAssignments(assignments) {
       assignment.project_status?.toLowerCase() === "completed";
 
     const btnClass = isCompleted ? "btn-success" : "btn-danger";
+    
 
     return `
       <button class="btn ${btnClass} btn-sm"
@@ -5384,14 +5385,39 @@ function renderProjectAssignments(assignments) {
     `;
   })()
 }
-
+);
 </td>
-<td>
+<td style="gap: 5px; display: flex; flex-direction: column;">
   <button class="btn btn-info btn-sm"
           onclick="viewProcessDetails('${assignment.project_code}')">
     View Process Details
   </button>
+  ${assignment.documents 
+    ? `
+      <button 
+        class="btn btn-info btn-sm"
+        onclick="viewDocument('${assignment.documents}')">
+        View Document
+      </button>
+    `
+    : `
+      <input 
+        type="file" 
+        id="documentInput-${assignment.id}" 
+        style="display:none"
+        onchange="uploadDocument(${assignment.id})"
+      />
+
+      <button 
+        class="btn btn-warning btn-sm"
+        onclick="document.getElementById('documentInput-${assignment.id}').click()">
+        Upload Document
+      </button>
+    `
+  }
+
 </td>
+
 
 
       </tr>`;
@@ -5476,6 +5502,41 @@ function renderProjectAssignments(assignments) {
 //     alert('Error updating task status');
 //   }
 // }
+
+async function uploadDocument(projectId) {
+  const fileInput = document.getElementById(`documentInput-${projectId}`);
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("document", file);
+  formData.append("projectId", projectId);
+
+  const res = await fetch("/upload-project-document", {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await res.json();
+
+  if (result.success) {
+    alert("Document uploaded successfully");
+    location.reload(); // refresh to show View button
+  } else {
+    alert("Upload failed");
+  }
+}
+
+
+function viewDocument(filePath) {
+  if (!filePath) {
+    alert("No document available");
+    return;
+  }
+
+  window.open(`/${filePath}`, "_blank");
+}
 
 function open_po(id) {
   fetch(`/api/project-po/${id}`)
