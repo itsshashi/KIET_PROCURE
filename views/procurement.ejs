@@ -3815,7 +3815,7 @@ async function loadAssignedProjects() {
   }
 }
 function viewDocument(filePath) {
-  if (!filePath) {
+  if (!filePath || filePath.trim() === "null") {
     alert("No document available");
     return;
   }
