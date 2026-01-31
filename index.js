@@ -43,6 +43,7 @@ app.use("/uploads", express.static(uploadsDir));
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+const documentsDir = path.join(uploadsDir, "documents");
 
 const qtUploadsDir = path.join(__dirname, "qt_uploads");
 // Ensure qt_uploads folder exists
@@ -2732,6 +2733,17 @@ const quotationUpload = multer({
       cb(new Error("Invalid file type"));
     }
   },
+});
+
+
+const docStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, documentsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
 });
 
 // purchaseOrder.js
@@ -8436,38 +8448,34 @@ app.get('/process-details/:project_code', async (req, res) => {
   }
 });
 
+const uploadDocument = multer({ storage: docStorage });
 
 app.post(
   "/upload-project-document",
-  upload.single("document"),
+  uploadDocument.single("document"),
   async (req, res) => {
-    try {
-      const { projectId } = req.body;
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: "No file uploaded" });
-      }
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILE:", req.file);   // 🔴 THIS IS KEY
 
-      const filePath = `uploads/documents/${req.file.filename}`;
-
-      await pool.query(
-        `UPDATE project_info
-         SET documents = $1
-         WHERE id = $2`,
-        [filePath, projectId]
-      );
-
-      res.json({
-        success: true,
-        message: "Document uploaded",
-        filePath
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "File not received by server"
       });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ success: false, message: "Upload failed" });
     }
+
+    const dbFilePath = `uploads/documents/${req.file.filename}`;
+
+    await pool.query(
+      `UPDATE project_info SET documents = $1 WHERE id = $2`,
+      [dbFilePath, req.body.projectId]
+    );
+
+    res.json({ success: true });
   }
 );
+
 
 
 
