@@ -6091,56 +6091,65 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
 
     const { id } = req.params;
 
-    // ---- Parse PV ADAPTORS ----
-    let pvAdaptors = [];
-    if (Array.isArray(req.body.pvQty)) {
-      req.body.pvQty.forEach((qty, index) => {
-        pvAdaptors.push({
-          slNo: index + 1,
-          qty: parseFloat(qty) || 0,
-          familyName: req.body.pvFamilyName[index] || "",
-          revNo: req.body.pvRevNo[index] || "",
-          coaxialPin: req.body.pvCoaxialPin[index] || "",
-          sokCard: req.body.pvSokCard[index] || "",
-          sokQty: parseFloat(req.body.pvSokQty[index]) || 0,
-          rate: parseFloat(req.body.pvRate[index]) || 0,
-          totalAmount: (
-            (parseFloat(qty) || 0) *
-            (parseFloat(req.body.pvRate[index]) || 0)
-          ).toFixed(2),
-        });
-      });
-    }
+    /* ===========================
+       PARSE JSON FROM FORMDATA
+    ============================ */
+    const pvAdaptors = JSON.parse(req.body.pv_adaptors || "[]");
+    const kietCosts  = JSON.parse(req.body.kiet_costs || "[]");
 
-    // ---- Calculate total ----
-    const totalAmount = pvAdaptors.reduce(
-      (sum, item) => sum + parseFloat(item.totalAmount),
+    /* ===========================
+       CALCULATE TOTALS
+    ============================ */
+    const totalPv = pvAdaptors.reduce(
+      (sum, item) => sum + Number(item.totalAmount || 0),
       0
     );
-    console.log('vk revision rev', req.body.quotation_rev)
-    console.log("Total Amount:", totalAmount);
-    console.log("PV Adaptors:", pvAdaptors);
 
-    // ---- UPDATE ONLY PV ADAPTORS ----
-    await client.query(
+    const totalKiet = kietCosts.reduce(
+      (sum, item) => sum + Number(item.totalValue || 0),
+      0
+    );
+
+    const grandTotal = Number((totalPv + totalKiet).toFixed(2));
+
+    console.log("VK Revision:", req.body.quotation_rev);
+    console.log("PV Adaptors:", pvAdaptors);
+    console.log("KIET Costs:", kietCosts);
+    console.log("Grand Total:", grandTotal);
+
+    /* ===========================
+       UPDATE DATABASE
+    ============================ */
+    const result = await client.query(
       `
       UPDATE vk_quotations SET
-       
-        pv_adaptors = $1,
-        total_amount = $2,
-        updated_at = CURRENT_TIMESTAMP,quotation_numb=$3
-      WHERE id = $4
+        pv_adaptors     = $1,
+        kiet_costs      = $2,
+        total_amount     = $3,
+        quotation_number = $4,
+        updated_at      = CURRENT_TIMESTAMP
+      WHERE id = $5
       `,
-      [JSON.stringify(pvAdaptors), totalAmount,req.body.quotation_rev, id]
+      [
+        JSON.stringify(pvAdaptors),
+        JSON.stringify(kietCosts),
+        grandTotal,
+        req.body.quotation_rev,
+        Number(id)
+      ]
     );
+
+    if (result.rowCount === 0) {
+      throw new Error("Quotation not found");
+    }
 
     await client.query("COMMIT");
 
     res.json({
       success: true,
-      message: "PV Adaptor details updated successfully",
+      message: "VK quotation updated successfully",
       quotationId: id,
-      totalAmount
+      totalAmount: grandTotal
     });
 
   } catch (error) {
@@ -6151,6 +6160,7 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
     client.release();
   }
 });
+
 
 
 

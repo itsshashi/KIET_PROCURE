@@ -4350,7 +4350,7 @@ const blob = await response.blob();
 <!-- KIET Cost Calculations Section -->
 <div id="editKietSection" class="mt-8 hidden">
 
-    <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations</h3>
+    <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations(note: Class will not change)</h3>
     <p class="text-sm text-gray-600 mb-3">
         As per Price Agreement - Document No:
         <strong>con_GPAG_PU14_54808</strong>
@@ -4381,7 +4381,7 @@ const blob = await response.blob();
 <!-- PV Adaptor Details Section -->
 <div id="editPvAdaptors" class="mt-10 hidden">
 
-    <h3 class="text-lg font-semibold text-gray-800">PV Wiring Adaptor Details</h3>
+    <h3 class="text-lg font-semibold text-gray-800">PV Wiring Adaptor Details(Do not update in this table)</h3>
 
     <div class="overflow-x-auto w-full mt-2">
         <table class="min-w-[900px] w-full border border-gray-300 rounded-lg text-sm">
@@ -6170,115 +6170,263 @@ function closeEditQuotation() {
 }
 
 // Handle Edit Quotation Form Submission
-document.getElementById('editQuotationForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  let quotation_typ=document.getElementById('editQuotationType').innerText;
- if (quotation_typ == "VK") {
-  const rev_=document.getElementById('editQuotationProjectCode').value;
-  const quotationId = document.getElementById("editQuotationid").innerText;
+document
+  .getElementById("editQuotationForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  // send complete form data including pv adaptors
-  const form = new FormData(document.getElementById("editQuotationForm"));
+    const quotationType =
+      document.getElementById("editQuotationType").innerText.trim();
 
-  try {
-    const res = await fetch(`/update-vk-quotation_md/${quotationId}`, {
-      method: "POST",
-      body: form  // 🔥 not JSON, must be form-data because backend expects arrays
-    });
+    const quotationId =
+      document.getElementById("editQuotationid").innerText.trim();
 
-    const result = await res.json();
-    if (result.success) {
-      alert("VK quotation updated successfully! ✅");
+    /* ===========================
+       VK QUOTATION UPDATE
+    ============================ */
+    if (quotationType === "VK") {
+      const form = new FormData(this);
+
+      /* 🔥 append missing structured data */
+      form.append("kiet_costs", JSON.stringify(collectKietCosts()));
+      form.append("pv_adaptors", JSON.stringify(collectPvAdaptors()));
+
+      try {
+        const res = await fetch(
+          `/update-vk-quotation_md/${quotationId}`,
+          {
+            method: "POST",
+            body: form // multipart/form-data
+          }
+        );
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.error || "Update failed");
+        }
+
+        alert("VK quotation updated successfully! ✅");
+        closeEditQuotation();
+        location.reload();
+      } catch (err) {
+        console.error("Error updating VK quotation:", err);
+        alert("❌ Failed to update VK quotation");
+      }
+
+      return;
+    }
+
+    /* ===========================
+       NON-VK QUOTATION UPDATE
+    ============================ */
+    try {
+      const items = [];
+      const itemRows = document.querySelectorAll(
+        "#editQuotationTableBody tr"
+      );
+
+      itemRows.forEach((row) => {
+        items.push({
+          partNo: row.querySelector(".edit-quotation-part-no")?.value || "",
+          description:
+            row.querySelector(".edit-quotation-description")?.value || "",
+          hsn: row.querySelector(".edit-quotation-hsn")?.value || "",
+          quantity:
+            Number(
+              row.querySelector(".edit-quotation-quantity")?.value
+            ) || 0,
+          unitPrice:
+            Number(
+              row.querySelector(".edit-quotation-unit-price")?.value
+            ) || 0,
+          unit: row.querySelector(".edit-quotation-unit")?.value || "",
+          total:
+            Number(
+              row.querySelector(".edit-quotation-total")?.value
+            ) || 0
+        });
+      });
+
+      const response = await fetch(
+        `/api/quotations/${currentEditId}/items`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update quotation");
+      }
+
+      alert("Quotation updated successfully! ✅");
       closeEditQuotation();
-      location.reload();
-    } else {
-      alert("Failed to update VK quotation ❌");
+      loadApproveQuotations();
+    } catch (err) {
+      console.error("Error updating quotation:", err);
+      alert("❌ Failed to update quotation");
     }
+  });
+  function parseNumber(value) {
+  if (value === null || value === undefined) return 0;
 
-  } catch (error) {
-    console.error("Error updating VK quotation:", error);
-    alert("❌ Something went wrong");
-  }
+  return Number(
+    value
+      .toString()
+      .replace(/,/g, "")        // remove commas
+      .replace(/₹/g, "")        // remove currency symbol
+      .replace(/[^\d.-]/g, "") // remove junk
+      .trim()
+  ) || 0;
+}
+function getCellValue(cell) {
+  // Check for input field
+  const input = cell.querySelector("input");
+  if (input) return input.value;
 
-  return; // stop default form submit
+  // Check for textarea
+  const textarea = cell.querySelector("textarea");
+  if (textarea) return textarea.value;
+
+  // Fallback to text content
+  return cell.textContent || "";
 }
 
 
-  else{
-   const form = new FormData(this);   // get form object
-   console.log("Form Data Entries:");
-   for (let pair of form.entries()) {
-    console.log(pair[0] + ': ' + pair[1]);
-  }
-  const data = {};
+/* ===========================
+   HELPERS (NO HTML CHANGE)
+============================ */
 
-  // Convert form data into JSON (supports arrays like name="pvSlNo[]")
-  form.forEach((value, key) => {
-    if (key.endsWith("[]")) {
-      const cleanKey = key.replace("[]", "");
-      if (!data[cleanKey]) data[cleanKey] = [];
-      data[cleanKey].push(value);
-    } else {
-      data[key] = value;
-    }
-  });
+/* KIET COSTS */
+function collectKietCosts() {
+  const rows = document.querySelectorAll("#editKietTableBody tr");
+  const data = [];
 
-  console.log("Final form data:", data);
+  rows.forEach((row, index) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 2) return;
 
-  
-  
+    const description = getCellValue(cells[0]).trim();
 
-  // Collect quotation items
-  const items = [];
-  const itemRows = document.querySelectorAll('#editQuotationTableBody tr');
-  console.log('Item Rows:', itemRows);
+    const qtyCell = cells[2];   // may not exist
+    const costCell = cells[1];
 
-  itemRows.forEach(row => {
-    const item = {
-      partNo: row.querySelector('.edit-quotation-part-no').value,
-      description: row.querySelector('.edit-quotation-description').value,
-      hsn: row.querySelector('.edit-quotation-hsn').value,
-      quantity: row.querySelector('.edit-quotation-quantity').value,
-      unitPrice: row.querySelector('.edit-quotation-unit-price').value,
-     
-      unit: row.querySelector('.edit-quotation-unit').value,
-      
-      total: row.querySelector('.edit-quotation-total').value
-    };
-    items.push(item);
-  });
+    const qty = qtyCell ? parseNumber(getCellValue(qtyCell)) : 0;
+    const cost = parseNumber(getCellValue(costCell));
 
-  const formData = {
-    items: items
-  };
+    // 🔥 detect summary / extra charge rows
+    const isSummaryRow =
+      description.toLowerCase().includes("total") ||
+      description.toLowerCase().includes("export") ||
+      description.toLowerCase().includes("packaging") ||
+      description.toLowerCase().includes("box");
 
-  try {
-    // Update quotation items
-    const response = await fetch(`/api/quotations/${currentEditId}/items`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
+    const totalValue = isSummaryRow
+      ? cost
+      : Number((qty * cost).toFixed(2));
+
+    data.push({
+      slNo: index + 1,
+      description,
+      qty: isSummaryRow ? "" : qty,
+      cost,
+      totalValue,
+      isSummaryRow
     });
-    
+  });
+  console.log("Collected KIET Costs:", data);
 
-    if (!response.ok) throw new Error('Failed to update quotation');
-
-    // Handle file uploads if any
-   
-
-    alert('Quotation updated successfully! ✅');
-    closeEditQuotation();
-    loadApproveQuotations(); // Reload the current tab data
-
-  } catch (error) {
-    console.error('Error updating quotation:', error);
-    alert('Failed to update quotation. Please try again.');
-  }
+  return data;
 }
-});
+
+
+
+
+function debugTableValues(tableBodyId) {
+  const rows = document.querySelectorAll(`#${tableBodyId} tr`);
+
+  console.log(`🔍 Debugging table: ${tableBodyId}`);
+  console.log("Total rows:", rows.length);
+
+  rows.forEach((row, rowIndex) => {
+    const cells = row.querySelectorAll("td");
+    console.log(`\n🟦 Row ${rowIndex + 1} (cells: ${cells.length})`);
+
+    cells.forEach((cell, cellIndex) => {
+      const rawText = cell.innerText.trim();
+      const input = cell.querySelector("input, textarea, select");
+      const inputValue = input ? input.value : null;
+
+      console.log(
+        `  Cell[${cellIndex}] →`,
+        {
+          rawText,
+          inputValue,
+          usedValue: input ? inputValue : rawText
+        }
+      );
+    });
+  });
+}
+
+debugTableValues("editPvAdaptorsTable");
+
+
+
+
+/* PV ADAPTORS */
+function collectPvAdaptors() {
+  const rows = document.querySelectorAll("#editPvAdaptorsTable tr");
+  const data = [];
+
+  const kietTotal = getKietTotalAmount(); // 🔥 single source of truth
+
+  rows.forEach((row, index) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 9) return;
+
+    const qty = parseNumber(getCellValue(cells[7])) || 1;
+    const rate = kietTotal; // ✅ DERIVED, NOT READ FROM TABLE
+
+    data.push({
+      slNo: index + 1,
+      familyName: getCellValue(cells[1]).trim(),
+      revNo: getCellValue(cells[2]).trim(),
+      coaxialPin: getCellValue(cells[3]).trim(),
+      sokCard: getCellValue(cells[4]).trim(),
+      sokQty: parseNumber(getCellValue(cells[5])),
+      qty,
+      rate,
+      totalAmount: Number((qty * rate).toFixed(2))
+    });
+  });
+
+  return data;
+}
+
+function getKietTotalAmount() {
+  const kietCosts = collectKietCosts();
+
+  // Prefer explicit "Total Cost" row
+  const totalRow = kietCosts.find(row =>
+    row.description.toLowerCase() === "total cost"
+  );
+
+  if (totalRow) {
+    return Number(totalRow.totalValue) || 0;
+  }
+
+  // Fallback
+  return kietCosts.reduce(
+    (sum, row) => sum + Number(row.totalValue || 0),
+    0
+  );
+}
+
+
+
 
 
 // Handle Edit Form Submission
