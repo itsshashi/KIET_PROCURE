@@ -1915,9 +1915,9 @@
             <i class="fas fa-chevron-down arrow"></i>
         </li>
         <ul class="submenu">
-            <li class="submenu-item" data-tab="statustab">
+            <li class="submenu-item" data-tab="statusContent">
                 <i class="fas fa-tasks"></i>
-                <span>Status (Purchase Order)</span>
+                <span>Status(Purchase Order)</span>
             </li>
             <li class="submenu-item" data-tab="approved-quotation">
                 <i class="fas fa-clipboard-check"></i>
@@ -1926,7 +1926,7 @@
         </ul>
 
         <!-- Logout -->
-        <li class="menu-item" id="logout-btn">
+        <li class="menu-item" id="logout-btn" onclick="window.location.href='/'">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
         </li>
@@ -4006,7 +4006,7 @@ function closeProcessModal() {
             </div>
 
             <!-- Status Tab -->
-            <div class="tab-content" id="status">
+            <div class="tab-content" id="statusContent">
                 <div class="tab-header">
                     <h3>Order Status</h3>
                     <p>Track the status of your orders</p>
@@ -4153,24 +4153,32 @@ function closeProcessModal() {
         // }
 
         async function fetchOrders() {
-            try {
-                const res = await fetch("/status");
-                if (!res.ok) throw new Error("Failed to fetch orders");
+  try {
+    const res = await fetch("/status");
+    if (!res.ok) throw new Error("Failed to fetch orders");
 
-                const contentType = res.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Server returned non-JSON response");
-                }
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json") && !contentType.includes("+json")) {
+      throw new Error("Server returned non-JSON response");
+    }
 
-                orders = await res.json();
-                renderStatusCards();
-                updateOrderTracking();
-            } catch (err) {
-                console.error("❌ Error fetching orders:", err);
-                document.getElementById("statusCardsContainer").innerHTML =
-                "<p>Could not load your orders.</p>";
-            }
-        }
+    const orders = await res.json();
+    //renderStatusCards(orders) ;
+
+    console.log("✅ Orders fetched:", orders);
+    renderStatusCards(orders);
+  } catch (err) {
+    console.error("❌ Error fetching orders:", err);
+
+    const container = document.getElementById("statustab");
+    if (container) {
+      container.innerHTML = "<p>Could not load your orders.</p>";
+    } else {
+      console.warn("⚠️ statusCardsContainer not found; cannot show error message in UI.");
+    }
+  }
+}
+
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -4299,6 +4307,7 @@ function closeProcessModal() {
         // Tab switching functionality
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function() {
+                console.log("Menu item clicked:", this.dataset.tab);
                 if (this.id !== 'logout-btn') {
                     // Special handling for quotation - only toggle submenu, don't switch tabs
                     if (this.dataset.tab === 'quotation') {
@@ -4325,9 +4334,11 @@ function closeProcessModal() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
 
                     // 👉 When switching to Status tab, fetch fresh orders
-                    if (this.dataset.tab === 'statustab') {
-                        fetchOrders();
+                    if (this.dataset.tab === 'status') {
                         console.log("status is pressed")
+                        
+                        fetchOrders();
+                        
                     }
                     if (this.dataset.tab === 'delivery-challan'){
                         console.log("delivery challan is pressed")
@@ -4394,6 +4405,19 @@ function closeProcessModal() {
                     loadQuotationUploads(); // Load uploads when tab is opened
                     
                 }
+                if (this.dataset.tab === 'statusContent') {
+                        console.log("status is pressed")
+                        fetchOrders();
+                        document.getElementById('statusContent').classList.add('active');
+                        
+                        
+                    }
+                if(this.dataset.tab === 'approved-quotation') {
+                        const activeFilter = document.querySelector('.sub-tab.active').dataset.filter || 'all';
+                        fetchApprovedQuotations(activeFilter);
+                        document.getElementById('approved-quotation').classList.add('active');
+                    }
+                    
                
             });
         });
@@ -4631,8 +4655,8 @@ function closeProcessModal() {
         }
 
         // Render status cards based on orders and filter
-         function renderStatusCards() {
-             const container = document.getElementById('statusCardsContainer');
+         function renderStatusCards(orders) {
+             const container = document.getElementById('statustab');
              container.innerHTML = '';
 
              const filter = document.getElementById('statusFilter').value.toLowerCase();
