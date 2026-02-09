@@ -1799,6 +1799,29 @@
   100% { content: '...'; }
 }
 
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 9999;
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-content {
+  background: #fff;
+  margin: 5% auto;
+  padding: 20px;
+  width: 95%;
+  max-width: 1200px;
+  border-radius: 6px;
+}
+
+
+
 
 
     </style>
@@ -3304,6 +3327,73 @@ images_upload_handler: function (blobInfo) {
 });
 
 </script>
+<div id="editItemsModal" class="modal">
+  <div class="modal-content" style="max-width:95%;">
+
+    <h3>Edit Purchase Order Items</h3>
+
+    <table border="1" width="100%" cellspacing="0" cellpadding="6">
+      <thead>
+        <tr>
+          <th>Part No</th>
+          <th>Description</th>
+          <th>HSN</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Price</th>
+          <th>Discount %</th>
+          <th>GST %</th>
+          <th>Total</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody id="editItemsTableBody">
+        <!-- rows injected by JS -->
+      </tbody>
+    </table>
+
+    <div style="margin-top:15px; text-align:right;">
+      <button class="btn btn-success" onclick="savePoItems()">Save Items</button>
+      <button class="btn btn-secondary" onclick="closeItemsModal()">Close</button>
+    </div>
+
+  </div>
+</div>
+<script>
+    async function openItemsModal(poId) {
+  
+
+  // show modal
+  document.getElementById("editItemsModal").classList.add("show");
+
+  // load items
+  const res = await fetch(`/po/${poId}/items`);
+  const items = await res.json();
+
+  const tbody = document.getElementById("editItemsTableBody");
+  tbody.innerHTML = "";
+
+  items.forEach(item => {
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr class="item-row">
+        <td>${item.part_no}</td>
+        <td><textarea>${item.description}</textarea></td>
+        <td><input type="number" value="${item.quantity}"></td>
+        <td><input type="number" value="${item.unit_price}"></td>
+        <td><input type="number" value="${item.gst}"></td>
+        <td><input type="number" value="${item.discount}"></td>
+        <td><input type="number" readonly></td>
+      </tr>
+    `);
+  });
+}
+function closeItemsModal() {
+  document.getElementById("editItemsModal").classList.remove("show");
+}
+
+</script>
+
 
             <!-- VK Tab -->
             <div class="tab-content" id="vk">
@@ -3670,6 +3760,42 @@ images_upload_handler: function (blobInfo) {
                     </form>
                     </div>
                     <script>
+                        // Generate Quotation Number for VK
+            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
+            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
+
+            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
+                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
+                    
+                        try {
+                            const response = await fetch('/api/generate-vk-quotation-number');
+                            if (response.ok) {
+                                const data = await response.json();
+
+                                 const famN = prompt('Enter Family Name'); // browser prompt
+                      if (famN) {
+                        // Modify the quotation number string
+                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
+                      }
+                    
+                      // Set the modified number in your input field
+                      vkQuotationNumberInput.value = data.quotationNumber;
+                                    
+
+
+                                // vkQuotationNumberInput.value = data.quotationNumber;
+                            } else {
+                                console.error('Error fetching VK quotation number');
+                                alert('Error generating quotation number. Please try again.');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching VK quotation number:', error);
+                            alert('Error generating quotation number. Please try again.');
+                        }
+                    }
+                )
+            };
+
 document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
   e.preventDefault(); // stop page reload
   startLoader(); // Start loader animation
@@ -4653,6 +4779,7 @@ function closeProcessModal() {
                 }
             });
         }
+        
 
         // Render status cards based on orders and filter
          function renderStatusCards(orders) {
@@ -4680,24 +4807,40 @@ function closeProcessModal() {
                      <div class="status-header">
                          <h4>${order.purchaseOrderNumber}</h4>
                          <span class="status-badge badge-${order.status.toLowerCase()}">${order.status}</span>
-                     </div>
+                     
+                         </div>
                      <div class="status-body">
                         
                          <p><strong>Project:</strong> ${order.projectName}</p>
                          <p><strong>Supplier:</strong> ${order.supplierName}</p>
                          <p><strong>Amount:</strong> ${order.totalAmount}</p>
-                        <button class="btn btn-secondary download-btn"
+                        <div class="status-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                         <button class="btn btn-secondary download-btn"
     ${["purchase","pending","rejected"].includes(order.status?.toLowerCase()) ? "disabled" : ""}
     onclick="downloadPO('${order.id}')">
     Download PO
 </button>
+${order.status?.toLowerCase() === "pending"
+  ? `<i class="fa-solid fa-pen-to-square edit-icon" onclick="openItemsModal('${order.id}')')"></i>`
+  : ""
+}
+</div>
 
+
+
+ 
+</div>
 
                  `;
 
+
+
+
+
+
                  container.appendChild(card);
                  card.addEventListener("click", () => {
-                 selectedOrder = order;
+                 
                  updateOrderTracking(order);
 
              // highlight selected card
@@ -4705,12 +4848,16 @@ function closeProcessModal() {
                  card.classList.add("active");
 
                  // Show order details section
-                 showOrderDetails(order);
+                 openItemsModal(order.id);
                  console.log("Order details should now be visible for:", order.purchaseOrderNumber);
          });
 
              });
          }
+
+
+
+     
    async function downloadPO(orderId) {
     const loader = document.getElementById("loader");
 
