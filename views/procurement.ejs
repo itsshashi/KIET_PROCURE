@@ -3760,42 +3760,6 @@ function closeItemsModal() {
                     </form>
                     </div>
                     <script>
-                        // Generate Quotation Number for VK
-            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
-            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
-
-            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
-                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
-                    
-                        try {
-                            const response = await fetch('/api/generate-vk-quotation-number');
-                            if (response.ok) {
-                                const data = await response.json();
-
-                                 const famN = prompt('Enter Family Name'); // browser prompt
-                      if (famN) {
-                        // Modify the quotation number string
-                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
-                      }
-                    
-                      // Set the modified number in your input field
-                      vkQuotationNumberInput.value = data.quotationNumber;
-                                    
-
-
-                                // vkQuotationNumberInput.value = data.quotationNumber;
-                            } else {
-                                console.error('Error fetching VK quotation number');
-                                alert('Error generating quotation number. Please try again.');
-                            }
-                        } catch (error) {
-                            console.error('Error fetching VK quotation number:', error);
-                            alert('Error generating quotation number. Please try again.');
-                        }
-                    }
-                )
-            };
-
 document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
   e.preventDefault(); // stop page reload
   startLoader(); // Start loader animation
@@ -3831,6 +3795,914 @@ document.getElementById("vkQuotationForm").addEventListener("submit", async func
     alert("Server error ❌");
   }
 });
+
+
+function initializeVKForm() {      
+let currencySymbol = '₹';
+
+            const vkQtyInputs = document.querySelectorAll('#vk .qty-input');
+            const vkValueDisplays = document.querySelectorAll('#vk .value-display');
+            const vkTotalCostsDisplay = document.getElementById('vk-total-costs');
+            const vkClassSelects = document.querySelectorAll('#vk .class-select');
+            const vkPvQtyInputs = document.querySelectorAll('#vk .pv-qty-input');
+            const vkPvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
+            const vkPvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
+            const vkPvAdaptorQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            const vkAddPvRowBtn = document.getElementById('vkAddPvRow');
+            const vkPvTableBody = document.getElementById('vkPvTableBody');
+
+            // Add PV Family Modal functionality
+            const pvFamilyModal = document.getElementById('pvFamilyModal');
+            const closeBtn = document.querySelector('.close');
+            const savePvFamilyBtn = document.getElementById('savePvFamily');
+            let currentFamilyInput = null;
+
+            function openPvFamilyModal(familyInput) {
+                currentFamilyInput = familyInput;
+                pvFamilyModal.style.display = 'block';
+                // Clear modal fields
+                document.getElementById('modalFamilyName').value = '';
+                document.getElementById('modalCode').value = '';
+                document.getElementById('modalRevType').value = '';
+                document.getElementById('modalConfig').value = '';
+                document.getElementById('modalSokCard').value = '';
+                document.getElementById('modalpart_no').value = '';
+            }
+
+            function closePvFamilyModal() {
+                pvFamilyModal.style.display = 'none';
+                currentFamilyInput = null;
+            }
+
+            function savePvFamily() {
+                if (currentFamilyInput) {
+                    const pins = document.querySelector('#vk .qty-input[data-index="1"]').value;
+                    const familyName = document.getElementById('modalFamilyName').value;
+                    const code = document.getElementById('modalCode').value;
+                    const revType = document.getElementById('modalRevType').value;
+                    const config = document.getElementById('modalConfig').value;
+                    const sokCard = document.getElementById('modalSokCard').value;
+                    const part_no = document.getElementById('modalpart_no').value;
+
+                    const formattedFamilyName = ` Wiring according to ${familyName} Code: - ${code} Rev-Type- ${revType}Config- ${config} \n PART NO.- ${part_no}\n Inc \n    • Hypertak parts and pins\n    • Wires and Wirings\n    `;
+                    const formattedValue = `${formattedFamilyName}• SOK CARD -${sokCard} \n As price agreement_Wiring_Class_${document.querySelector('#vk .class-select[data-index="1"]').value} \n Total no of pins - ${pins} Nos`;
+
+                    currentFamilyInput.value = formattedValue;
+                }
+                closePvFamilyModal();
+            }
+            
+            // Event listeners for family name inputs within VK tab
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('pv-family-input') && e.target.closest('#vk')) {
+                    openPvFamilyModal(e.target);
+                }
+            });
+
+            if (closeBtn) closeBtn.addEventListener('click', closePvFamilyModal);
+
+            window.addEventListener('click', function(e) {
+                if (e.target === pvFamilyModal) {
+                    closePvFamilyModal();
+                }
+            });
+
+            if (savePvFamilyBtn) savePvFamilyBtn.addEventListener('click', savePvFamily);
+
+            // Class prices for different quantities
+            const originalPrices = [
+                { class: 1, cost: 280.11 },
+                { class: 2, cost: 213.33 },
+                { class: 3, cost: 199.02 },
+                { class: 4, cost: 190.01 },
+                { class: 5, cost: 181.53 },
+                { class: 6, cost: 175.17 },
+                { class: 7, cost: 164.57 },
+                { class: 8, cost: 161.39 },
+                { class: 9, cost: 157.15 },
+                { class: 10, cost: 157.15 },
+                { class: 11, cost: 155.03 },
+                { class: 12, cost: 153.00 }
+            ];
+
+            const qty2Prices = [
+                { class: 1, cost: 276.62 },
+                { class: 2, cost: 211.14 },
+                { class: 3, cost: 197.12 },
+                { class: 4, cost: 188.28 },
+                { class: 5, cost: 179.97 },
+                { class: 6, cost: 173.73 },
+                { class: 7, cost: 163.34 },
+                { class: 8, cost: 160.22 },
+                { class: 9, cost: 158.14 },
+                { class: 10, cost: 156.06 },
+                { class: 11, cost: 153.99 },
+                { class: 12, cost: 152.00 }
+            ];
+
+            const qtyAbove2Prices = [
+                { class: 1, cost: 274.92 },
+                { class: 2, cost: 210.08 },
+                { class: 3, cost: 196.18 },
+                { class: 4, cost: 187.44 },
+                { class: 5, cost: 179.21 },
+                { class: 6, cost: 173.03 },
+                { class: 7, cost: 162.74 },
+                { class: 8, cost: 159.66 },
+                { class: 9, cost: 157.60 },
+                { class: 10, cost: 155.54 },
+                { class: 11, cost: 153.48 },
+                { class: 12, cost: 151.50 }
+            ];
+
+            function updateValue(input, valueDisplay) {
+                const cost = parseFloat(input.getAttribute('data-cost'));
+                const qty = parseFloat(input.value) || 0;
+                const value = cost * qty;
+                valueDisplay.textContent = value.toFixed(2);
+                return value;
+            }
+
+            function updateTotalCosts() {
+                const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
+                let total = 0;
+                for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                    const display = rows[i].querySelector('.value-display');
+                    if (display) {
+                        total += parseFloat(display.textContent) || 0;
+                    }
+                }
+                vkTotalCostsDisplay.textContent = total.toFixed(2);
+            }
+            console.log('sdfghsdf',vkClassSelects);
+            console.log(vkQtyInputs);
+
+            function updateClassCost(select) {
+                const selectedOption = select.options[select.selectedIndex];
+                const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
+                const index = select.getAttribute('data-index');
+                const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
+                const valueDisplay = vkValueDisplays[index];
+                const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
+
+                qtyInput.setAttribute('data-cost', newCost);
+                if (priceInputHidden) {
+                    priceInputHidden.value = newCost.toFixed(2);
+                }
+                updateValue(qtyInput, valueDisplay);
+                updateTotalCosts();
+            }
+
+            function getClassFromQty(qty) {
+                if (qty >= 1 && qty <= 300) return 1;
+                if (qty >= 301 && qty <= 500) return 2;
+                if (qty >= 501 && qty <= 600) return 3;
+                if (qty >= 601 && qty <= 700) return 4;
+                if (qty >= 701 && qty <= 800) return 5;
+                if (qty >= 801 && qty <= 900) return 6;
+                if (qty >= 901 && qty <= 1100) return 7;
+                if (qty >= 1101 && qty <= 1200) return 8;
+                if (qty >= 1201 && qty <= 1300) return 9;
+                if (qty >= 1301 && qty <= 1400) return 10;
+                if (qty >= 1401 && qty <= 1500) return 11;
+                return 12; // default for > 1500
+            }
+
+            function updateClassOptions() {
+                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+                if (!classSelect) return;
+
+                // Calculate total PV quantity for pricing
+                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+                let totalPvQty = 0;
+                pvQtyInputs.forEach(input => {
+                    totalPvQty += parseFloat(input.value) || 0;
+                });
+
+                console.log('Total PV Qty:', totalPvQty);
+
+                let prices;
+                if (totalPvQty > 2) {
+                    prices = qtyAbove2Prices;
+                    console.log('Using qtyAbove2Prices');
+                } else if (totalPvQty == 2) {
+                    prices = qty2Prices;
+                    console.log('Using qty2Prices');
+                } else {
+                    prices = originalPrices;
+                    console.log('Using originalPrices');
+                }
+
+                // Store current selected value
+                const currentValue = classSelect.value;
+
+                classSelect.innerHTML = '';
+
+                prices.forEach(price => {
+                    const option = document.createElement('option');
+                    option.value = price.class;
+                    option.setAttribute('data-cost', price.cost);
+                    option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
+                    classSelect.appendChild(option);
+                });
+
+                // Get Hypertek qty and select class based on it
+                const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+                const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
+                const selectedClass = getClassFromQty(hypertekQty);
+
+                // Set the selected class if it exists in options, otherwise default to 2
+                if (prices.some(price => price.class == selectedClass)) {
+                    classSelect.value = selectedClass;
+                    console.log('Set class value based on Hypertek qty:', selectedClass, 'for qty:', hypertekQty);
+                } else {
+                    classSelect.value = '2';
+                    console.log('Set default class value: 2 (class not available in current price set)');
+                }
+
+                // Update the cost after changing options
+                updateClassCost(classSelect);
+                updateHypertekDescription();
+            }
+
+            
+
+            function updatePvValue(qtyInput, rateInput, valueDisplay) {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const rate = parseFloat(rateInput.value) || 0;
+                const value = qty * rate;
+                valueDisplay.textContent = value.toFixed(2);
+                updatePvTotal();
+            }
+
+           
+
+            function addPvRow() {
+                const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
+                const newRow = document.createElement('tr');
+                newRow.className = 'pv-row';
+                newRow.innerHTML = `
+                    <td>${rowCount}</td>
+                    <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
+                    <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
+                    <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
+                    <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
+                    <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
+                    <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
+                    <td><div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
+                    <td><span class="currency-symbol">₹</span> <span class="pv-value-display">0.00</span></td>
+                `;
+                vkPvTableBody.appendChild(newRow);
+
+                const newQtyInput = newRow.querySelector('.pv-qty-input');
+                const newRateInput = newRow.querySelector('.pv-rate-input');
+                const newValueDisplay = newRow.querySelector('.pv-value-display');
+                const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
+
+                newQtyInput.addEventListener('input', function() {
+                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                });
+
+                newRateInput.addEventListener('input', function() {
+                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                });
+
+                newPvAdaptorQtyInput.addEventListener('input', function() {
+                    updateClassOptions();
+                });
+
+                updateClassOptions();
+                updatePvRates();
+            }
+
+            vkQtyInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const valueDisplay = input.closest('tr').querySelector('.value-display');
+                    updateValue(input, valueDisplay);
+                    updateTotalCosts();
+                });
+            });
+
+            // Add event listener to qty input (data-index="1") to detect change and update class options
+            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+            hypertekQtyInput.addEventListener('input', function() {
+                updateClassOptions();
+            });
+
+            // Update class options when PV qty changes
+            // This is already handled above, remove duplicate
+
+            vkClassSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    console.log('Class select changed to:', this.value);
+                    updateClassCost(this);
+                    updateHypertekDescription();
+                    updatePvRates();
+                });
+            });
+
+            vkPvAdaptorQtyInputs.forEach((input, index) => {
+                const rateInput = vkPvRateInputs[index];
+                const valueDisplay = vkPvValueDisplays[index];
+                input.addEventListener('input', function() {
+                    updatePvValue(input, rateInput, valueDisplay);
+                });
+            });
+
+            vkPvRateInputs.forEach((input, index) => {
+                const qtyInput = vkPvAdaptorQtyInputs[index];
+                const valueDisplay = vkPvValueDisplays[index];
+                input.addEventListener('input', function() {
+                    updatePvValue(qtyInput, input, valueDisplay);
+                });
+            });
+
+            vkAddPvRowBtn.addEventListener('click', addPvRow);
+
+            vkPvAdaptorQtyInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    console.log('PV qty input changed, updating class options');
+                    updateClassOptions();
+                });
+            });
+
+            const exportPriceInput = document.querySelector('#vk .price-input[data-index="export"]');
+            const exportValueDisplay = exportPriceInput.closest('tr').querySelector('.value-display');
+            exportPriceInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                exportValueDisplay.textContent = value.toFixed(2);
+                updatePvRates();
+            });
+
+            const boxPriceInput = document.querySelector('#vk .price-input[data-index="box"]');
+            const boxValueDisplay = boxPriceInput.closest('tr').querySelector('.value-display');
+            boxPriceInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                boxValueDisplay.textContent = value.toFixed(2);
+                updatePvRates();
+            });
+
+            // Update value display for Standard Housing price input
+            const standardHousingPriceInput = document.querySelector('#vk .price-input[data-index="0"]');
+            if (standardHousingPriceInput) {
+                standardHousingPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qtyInput = this.closest('tr').querySelector('.qty-input');
+                    const qty = parseFloat(qtyInput.value) || 0;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            // Update value display for SOK 10150 and Koaxial-Stift-Radial price inputs
+            const sokPriceInput = document.querySelector('#vk .price-input[data-index="2"]');
+            if (sokPriceInput) {
+                sokPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qty = 1;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            const coaxialPriceInput = document.querySelector('#vk .price-input[data-index="3"]');
+            if (coaxialPriceInput) {
+                coaxialPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qty = 1;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            function updateSokDescription() {
+                const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
+                const sokDescriptionInput = document.getElementById('vk-sok-description-input');
+                let sokValue = '';
+                sokCardInputs.forEach(input => {
+                    if (input.value.trim()) {
+                        sokValue = input.value.trim();
+                    }
+                });
+                if (sokValue) {
+                    sokDescriptionInput.value = `SOK ${sokValue}`;
+                } else {
+                    sokDescriptionInput.value = 'SOK 10150';
+                }
+            }
+
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('pv-sok-card-input') && e.target.closest('#vk')) {
+                    updateSokDescription();
+                }
+            });
+
+            function updateHypertekDescription() {
+                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+                const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
+                if (classSelect && hypertekDescriptionInput) {
+                    const selectedClass = classSelect.value;
+                    hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
+                    console.log('Updated Hypertek description to class:', selectedClass);
+                }
+            }
+
+            updateSokDescription();
+            updateHypertekDescription();
+
+            // Generate Quotation Number for VK
+            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
+            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
+
+            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
+                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
+                    
+                        try {
+                            const response = await fetch('/api/generate-vk-quotation-number');
+                            if (response.ok) {
+                                const data = await response.json();
+
+                                 const famN = prompt('Enter Family Name'); // browser prompt
+                      if (famN) {
+                        // Modify the quotation number string
+                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
+                      }
+                    
+                      // Set the modified number in your input field
+                      vkQuotationNumberInput.value = data.quotationNumber;
+                                    
+
+
+                                // vkQuotationNumberInput.value = data.quotationNumber;
+                            } else {
+                                console.error('Error fetching VK quotation number');
+                                alert('Error generating quotation number. Please try again.');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching VK quotation number:', error);
+                            alert('Error generating quotation number. Please try again.');
+                        }
+                    }
+                )
+            };
+
+            // Generate Reference Number for VK
+            const vkGenerateReferenceNumberBtn = document.getElementById('vkGenerateReferenceNumber');
+            const vkReferenceNoInput = document.getElementById('vkReferenceNo');
+
+            if (vkGenerateReferenceNumberBtn && vkReferenceNoInput) {
+                vkGenerateReferenceNumberBtn.addEventListener('click', function() {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const referenceNumber = `REF-${dateStr}-${randomNum}`;
+                    vkReferenceNoInput.value = referenceNumber;
+                });
+            }
+
+            updateTotalCosts();
+            updateClassOptions();
+            updatePvRates();
+
+            const vkCurrencySelect = document.getElementById('currency');
+            vkCurrencySelect.addEventListener('change', function() {
+                currencySymbol = getCurrencySymbol(this.value);
+                document.querySelectorAll('#vk .currency-symbol').forEach(span => span.textContent = currencySymbol);
+                updateHeaderCurrency();
+                updateClassOptions();
+                updateTotalRowCurrency();
+            });
+
+            function updateHeaderCurrency() {
+                const header = document.getElementById('totalValueHeader');
+                if (header) {
+                    header.textContent = `Total Value in ${vkCurrencySelect.value}`;
+                }
+            }
+
+            function updateTotalRowCurrency() {
+                const totalRowLabel = document.querySelector('#vk .total-row td strong');
+                if (totalRowLabel) {
+                    totalRowLabel.textContent = `Total costs in ${vkCurrencySelect.value} (qty of 1 No.)`;
+                }
+            }
+
+            // Remove duplicate getCurrencySymbol function
+
+            function getCurrencySymbol(currency) {
+                switch (currency) {
+                    case 'INR': return '₹';
+                    case 'USD': return '$';
+                    case 'EUR': return '€';
+                    default: return '₹';
+                }
+            }
+
+            // VK Send Approval Request button functionality
+            document.getElementById('vkSendApprovalRequest').addEventListener('click', async function() {
+                const form = document.getElementById('vkQuotationForm');
+                const formData = new FormData(form);
+
+                // Collect PV adaptors data
+                const pvAdaptors = [];
+                document.querySelectorAll('#vkPvTableBody .pv-row').forEach(row => {
+                    const adaptor = {
+                        qty: row.querySelector('.pv-adaptor-qty-input').value,
+                        familyName: row.querySelector('.pv-family-input').value,
+                        revNo: row.querySelector('input[name="pvRevNo[]"]').value,
+                        coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
+                        sokCard: row.querySelector('.pv-sok-card-input').value,
+                        sokQty: row.querySelector('.pv-qty-input').value,
+                        rate: row.querySelector('.pv-rate-input').value
+                    };
+                    pvAdaptors.push(adaptor);
+                });
+
+                // Collect KIET costs data
+                const kietCosts = [];
+                document.querySelectorAll('#vk .kiet-table tbody tr').forEach(row => {
+                    if (!row.classList.contains('total-row')) {
+                        const descriptionCell = row.cells[0];
+                        let description = descriptionCell.textContent.trim();
+                        const input = descriptionCell.querySelector('input[name="itemDescription[]"]');
+                        if (input) {
+                            description = input.value;
+                        }
+                        let cost = '0';
+                        const qtyInput = row.querySelector('.qty-input');
+                        if (qtyInput) {
+                            cost = qtyInput.getAttribute('data-cost') || '0';
+                        } else {
+                            const priceInput = row.querySelector('.price-input');
+                            if (priceInput) {
+                                cost = priceInput.value;
+                            }
+                        }
+                        const costItem = {
+                            description: description,
+                            cost: cost,
+                            qty: row.querySelector('.qty-input') ? row.querySelector('.qty-input').value : '1',
+                            totalValue: row.querySelector('.value-display') ? row.querySelector('.value-display').textContent : '0'
+                        };
+                        kietCosts.push(costItem);
+                    }
+                });
+
+                formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
+                formData.append('kietCosts', JSON.stringify(kietCosts));
+                formData.append('status', 'pending_approval');
+
+                try {
+                    const response = await fetch('/api/send-vk-quotation-approval', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    console.log('Response from approval request:', response);
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert('VK Quotation approval request sent successfully! MD will review your quotation.');
+                        // Reset form or redirect as needed
+                    } else {
+                        const error = await response.json();
+                        alert('Error sending approval request: ' + (error.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error sending approval request:', error);
+                    alert('Error sending approval request. Please try again.');
+                }
+            });
+
+            // VK Form submission
+            document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
+                // Show loading screen
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            });
+
+        }
+
+        // Initialize VK form when VK tab becomes active
+        function checkVKTabActivation() {
+            const vkTab = document.getElementById('vk');
+            if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
+                initializeVKForm();
+                vkTab.setAttribute('data-initialized', 'true');
+            }
+        }
+
+        // VK KIET Table Dynamic Calculation Functions
+        function updateValue(input, valueDisplay) {
+            const cost = parseFloat(input.getAttribute('data-cost'));
+            const qty = parseFloat(input.value) || 0;
+            const value = cost * qty;
+            valueDisplay.textContent = value.toFixed(2);
+            return value;
+        }
+
+        function updateTotalCosts() {
+            const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
+            let total = 0;
+            for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                const display = rows[i].querySelector('.value-display');
+                if (display) {
+                    total += parseFloat(display.textContent) || 0;
+                }
+            }
+            const totalCostsDisplay = document.getElementById('vk-total-costs');
+            if (totalCostsDisplay) {
+                totalCostsDisplay.textContent = total.toFixed(2);
+            }
+        }
+
+        function updateClassCost(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
+            const index = select.getAttribute('data-index');
+            const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
+            const valueDisplay = document.querySelector(`#vk .value-display[data-index="${index}"]`);
+            const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
+
+            qtyInput.setAttribute('data-cost', newCost);
+            if (priceInputHidden) {
+                priceInputHidden.value = newCost.toFixed(2);
+            }
+            updateValue(qtyInput, valueDisplay);
+            updateTotalCosts();
+        }
+
+        function getClassFromQty(qty) {
+            if (qty >= 1 && qty <= 300) return 1;
+            if (qty >= 301 && qty <= 500) return 2;
+            if (qty >= 501 && qty <= 600) return 3;
+            if (qty >= 601 && qty <= 700) return 4;
+            if (qty >= 701 && qty <= 800) return 5;
+            if (qty >= 801 && qty <= 900) return 6;
+            if (qty >= 901 && qty <= 1100) return 7;
+            if (qty >= 1101 && qty <= 1200) return 8;
+            if (qty >= 1201 && qty <= 1300) return 9;
+            if (qty >= 1301 && qty <= 1400) return 10;
+            if (qty >= 1401 && qty <= 1500) return 11;
+            return 12;
+        }
+
+        function updateClassOptions() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            if (!classSelect) return;
+
+            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            let totalPvQty = 0;
+            pvQtyInputs.forEach(input => {
+                totalPvQty += parseFloat(input.value) || 0;
+            });
+
+            let prices;
+            if (totalPvQty > 2) {
+                prices = qtyAbove2Prices;
+            } else if (totalPvQty == 2) {
+                prices = qty2Prices;
+            } else {
+                prices = originalPrices;
+            }
+
+            classSelect.innerHTML = '';
+
+            prices.forEach(price => {
+                const option = document.createElement('option');
+                option.value = price.class;
+                option.setAttribute('data-cost', price.cost);
+                option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
+                classSelect.appendChild(option);
+            });
+
+            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+            const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
+            const selectedClass = getClassFromQty(hypertekQty);
+
+            if (prices.some(price => price.class == selectedClass)) {
+                classSelect.value = selectedClass;
+            } else {
+                classSelect.value = '2';
+            }
+
+            updateClassCost(classSelect);
+            updateHypertekDescription();
+        }
+
+    function updatePvRates() {
+    const totalCostsEl = document.querySelector('#vk-total-costs');
+    const totalCosts = parseFloat(totalCostsEl?.textContent || '0') || 0;
+
+    const exportInput = document.querySelector('.price-input[data-index="export"]');
+
+    const boxInput = document.querySelector('.price-input[data-index="box"]');
+
+    const exportValue = parseFloat(
+        exportInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const boxValue = parseFloat(
+        boxInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const totalRate = totalCosts + exportValue + boxValue;
+// Calculate total PV qty
+    const pvQtyInputs = document.querySelectorAll('.pv-adaptor-qty-input');
+    let totalPvQty = 0;
+
+    pvQtyInputs.forEach(input => {
+        totalPvQty += parseFloat(input.value) || 0;
+    });
+
+    if (totalPvQty === 0) return;
+
+    const unitRate = totalRate * totalPvQty;
+
+    document.querySelectorAll('.pv-rate-input').forEach(input => {
+        input.value = unitRate.toFixed(2);
+
+        const row = input.closest('tr');
+        if (!row) return;
+
+        const qtyInput = row.querySelector('.pv-adaptor-qty-input');
+        const valueDisplay = row.querySelector('.pv-value-display');
+
+        if (qtyInput && valueDisplay) {
+            updatePvValue(qtyInput, input, valueDisplay);
+        }
+    });
+}
+
+
+        function updatePvValue(qtyInput, rateInput, valueDisplay) {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            const value = qty * rate;
+            valueDisplay.textContent = value.toFixed(2);
+            console.log('Updated PV Value:', value.toFixed(2), 'for Qty:', qty, 'Rate:', rate);
+            updatePvTotal();
+            updatePvRates();
+            
+
+            
+
+            
+        }
+
+        function updatePvTotal() {
+            const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
+            let total = 0;
+            pvValueDisplays.forEach(display => {
+                total += parseFloat(display.textContent) || 0;
+            });
+            const pvTotalAmount = document.getElementById('vk-pv-total-amount');
+            if (pvTotalAmount) {
+                pvTotalAmount.textContent = total.toFixed(2);
+            }
+            updatePvRates()
+        
+
+        }
+
+        function addPvRow() {
+            const vkPvTableBody = document.getElementById('vkPvTableBody');
+            if (!vkPvTableBody) return;
+
+            const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
+            const newRow = document.createElement('tr');
+            newRow.className = 'pv-row';
+            newRow.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
+                <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
+                <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
+                <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
+                <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
+                <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
+                <td><div style="display: flex; align-items: center;"><span class="currency-symbol">${currencySymbol}</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
+                <td><span class="currency-symbol">${currencySymbol}</span> <span class="pv-value-display">0.00</span></td>
+            `;
+            vkPvTableBody.appendChild(newRow);
+
+            const newQtyInput = newRow.querySelector('.pv-qty-input');
+            const newRateInput = newRow.querySelector('.pv-rate-input');
+            const newValueDisplay = newRow.querySelector('.pv-value-display');
+            const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
+
+            newQtyInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                updatePvRates();
+            });
+            
+
+            newRateInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+            });
+
+            newPvAdaptorQtyInput.addEventListener('input', function() {
+                updateClassOptions();
+                
+            });
+
+            updateClassOptions();
+            updatePvRates();
+        }
+
+        function updateSokDescription() {
+            const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
+            const sokDescriptionInput = document.getElementById('vk-sok-description-input');
+            if (!sokDescriptionInput) return;
+
+            let sokValue = '';
+            sokCardInputs.forEach(input => {
+                if (input.value.trim()) {
+                    sokValue = input.value.trim();
+                }
+            });
+            if (sokValue) {
+                sokDescriptionInput.value = `SOK ${sokValue}`;
+            } else {
+                sokDescriptionInput.value = 'SOK 10150';
+            }
+        }
+
+        function updateHypertekDescription() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
+            if (classSelect && hypertekDescriptionInput) {
+                const selectedClass = classSelect.value;
+                hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
+            }
+        }
+
+        // Check for VK tab activation on submenu clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.submenu-item[data-tab="vk"]')) {
+                // Use requestAnimationFrame to ensure DOM updates are complete
+                requestAnimationFrame(checkVKTabActivation);
+            }
+        });
+
+        // Also check when tab becomes visible (for direct navigation)
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const vkTab = document.getElementById('vk');
+                    if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
+                        setTimeout(initializeVKForm, 100);
+                        vkTab.setAttribute('data-initialized', 'true');
+                    }
+                }
+            });
+        });
+
+        // Observe the VK tab for class changes
+        const vkTabElement = document.getElementById('vk');
+        if (vkTabElement) {
+            observer.observe(vkTabElement, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Initialize VK form immediately if tab is already active
+        checkVKTabActivation();
+
+        // VK Add Attachment functionality
+        const vkAddAttachmentBtn = document.getElementById('vkAddAttachment');
+        const vkAttachmentsContainer = document.getElementById('vkAttachmentsContainer');
+
+        vkAddAttachmentBtn.addEventListener('click', function() {
+            const newAttachmentRow = document.createElement('div');
+            newAttachmentRow.className = 'attachment-row';
+            newAttachmentRow.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            newAttachmentRow.innerHTML = `
+                <div class="form-group" style="flex: 1;">
+                    <label>Upload File</label>
+                    <input type="file" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.png,.txt,.dwg,.xls,.xlsx">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Note</label>
+                    <textarea name="attachmentNotes[]" rows="2" placeholder="Description of the attachment"></textarea>
+                </div>
+                <button type="button" class="btn btn-danger btn-small vk-remove-attachment" style="margin-top: 25px;">Remove</button>
+            `;
+            vkAttachmentsContainer.appendChild(newAttachmentRow);
+        });
+
+        // VK Remove Attachment functionality
+        vkAttachmentsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('vk-remove-attachment')) {
+                e.target.closest('.attachment-row').remove();
+            }
+        });
+
+
 </script>
 
 
@@ -5707,910 +6579,8 @@ ${order.status?.toLowerCase() === "pending"
         // PV Family Modal functionality (global scope) - removed duplicate
 
         // VK Form JavaScript - Initialize when VK tab is activated
-        function initializeVKForm() {
-            let currencySymbol = '₹';
-
-            const vkQtyInputs = document.querySelectorAll('#vk .qty-input');
-            const vkValueDisplays = document.querySelectorAll('#vk .value-display');
-            const vkTotalCostsDisplay = document.getElementById('vk-total-costs');
-            const vkClassSelects = document.querySelectorAll('#vk .class-select');
-            const vkPvQtyInputs = document.querySelectorAll('#vk .pv-qty-input');
-            const vkPvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-            const vkPvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-            const vkPvAdaptorQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            const vkAddPvRowBtn = document.getElementById('vkAddPvRow');
-            const vkPvTableBody = document.getElementById('vkPvTableBody');
-
-            // Add PV Family Modal functionality
-            const pvFamilyModal = document.getElementById('pvFamilyModal');
-            const closeBtn = document.querySelector('.close');
-            const savePvFamilyBtn = document.getElementById('savePvFamily');
-            let currentFamilyInput = null;
-
-            function openPvFamilyModal(familyInput) {
-                currentFamilyInput = familyInput;
-                pvFamilyModal.style.display = 'block';
-                // Clear modal fields
-                document.getElementById('modalFamilyName').value = '';
-                document.getElementById('modalCode').value = '';
-                document.getElementById('modalRevType').value = '';
-                document.getElementById('modalConfig').value = '';
-                document.getElementById('modalSokCard').value = '';
-                document.getElementById('modalpart_no').value = '';
-            }
-
-            function closePvFamilyModal() {
-                pvFamilyModal.style.display = 'none';
-                currentFamilyInput = null;
-            }
-
-            function savePvFamily() {
-                if (currentFamilyInput) {
-                    const pins = document.querySelector('#vk .qty-input[data-index="1"]').value;
-                    const familyName = document.getElementById('modalFamilyName').value;
-                    const code = document.getElementById('modalCode').value;
-                    const revType = document.getElementById('modalRevType').value;
-                    const config = document.getElementById('modalConfig').value;
-                    const sokCard = document.getElementById('modalSokCard').value;
-                    const part_no = document.getElementById('modalpart_no').value;
-
-                    const formattedFamilyName = ` Wiring according to ${familyName} Code: - ${code} Rev-Type- ${revType}Config- ${config} \n PART NO.- ${part_no}\n Inc \n    • Hypertak parts and pins\n    • Wires and Wirings\n    `;
-                    const formattedValue = `${formattedFamilyName}• SOK CARD -${sokCard} \n As price agreement_Wiring_Class_${document.querySelector('#vk .class-select[data-index="1"]').value} \n Total no of pins - ${pins} Nos`;
-
-                    currentFamilyInput.value = formattedValue;
-                }
-                closePvFamilyModal();
-            }
-            
-            // Event listeners for family name inputs within VK tab
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('pv-family-input') && e.target.closest('#vk')) {
-                    openPvFamilyModal(e.target);
-                }
-            });
-
-            if (closeBtn) closeBtn.addEventListener('click', closePvFamilyModal);
-
-            window.addEventListener('click', function(e) {
-                if (e.target === pvFamilyModal) {
-                    closePvFamilyModal();
-                }
-            });
-
-            if (savePvFamilyBtn) savePvFamilyBtn.addEventListener('click', savePvFamily);
-
-            // Class prices for different quantities
-            const originalPrices = [
-                { class: 1, cost: 280.11 },
-                { class: 2, cost: 213.33 },
-                { class: 3, cost: 199.02 },
-                { class: 4, cost: 190.01 },
-                { class: 5, cost: 181.53 },
-                { class: 6, cost: 175.17 },
-                { class: 7, cost: 164.57 },
-                { class: 8, cost: 161.39 },
-                { class: 9, cost: 157.15 },
-                { class: 10, cost: 157.15 },
-                { class: 11, cost: 155.03 },
-                { class: 12, cost: 153.00 }
-            ];
-
-            const qty2Prices = [
-                { class: 1, cost: 276.62 },
-                { class: 2, cost: 211.14 },
-                { class: 3, cost: 197.12 },
-                { class: 4, cost: 188.28 },
-                { class: 5, cost: 179.97 },
-                { class: 6, cost: 173.73 },
-                { class: 7, cost: 163.34 },
-                { class: 8, cost: 160.22 },
-                { class: 9, cost: 158.14 },
-                { class: 10, cost: 156.06 },
-                { class: 11, cost: 153.99 },
-                { class: 12, cost: 152.00 }
-            ];
-
-            const qtyAbove2Prices = [
-                { class: 1, cost: 274.92 },
-                { class: 2, cost: 210.08 },
-                { class: 3, cost: 196.18 },
-                { class: 4, cost: 187.44 },
-                { class: 5, cost: 179.21 },
-                { class: 6, cost: 173.03 },
-                { class: 7, cost: 162.74 },
-                { class: 8, cost: 159.66 },
-                { class: 9, cost: 157.60 },
-                { class: 10, cost: 155.54 },
-                { class: 11, cost: 153.48 },
-                { class: 12, cost: 151.50 }
-            ];
-
-            function updateValue(input, valueDisplay) {
-                const cost = parseFloat(input.getAttribute('data-cost'));
-                const qty = parseFloat(input.value) || 0;
-                const value = cost * qty;
-                valueDisplay.textContent = value.toFixed(2);
-                return value;
-            }
-
-            function updateTotalCosts() {
-                const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
-                let total = 0;
-                for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
-                    const display = rows[i].querySelector('.value-display');
-                    if (display) {
-                        total += parseFloat(display.textContent) || 0;
-                    }
-                }
-                vkTotalCostsDisplay.textContent = total.toFixed(2);
-            }
-            console.log('sdfghsdf',vkClassSelects);
-            console.log(vkQtyInputs);
-
-            function updateClassCost(select) {
-                const selectedOption = select.options[select.selectedIndex];
-                const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
-                const index = select.getAttribute('data-index');
-                const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
-                const valueDisplay = vkValueDisplays[index];
-                const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
-
-                qtyInput.setAttribute('data-cost', newCost);
-                if (priceInputHidden) {
-                    priceInputHidden.value = newCost.toFixed(2);
-                }
-                updateValue(qtyInput, valueDisplay);
-                updateTotalCosts();
-            }
-
-            function getClassFromQty(qty) {
-                if (qty >= 1 && qty <= 300) return 1;
-                if (qty >= 301 && qty <= 500) return 2;
-                if (qty >= 501 && qty <= 600) return 3;
-                if (qty >= 601 && qty <= 700) return 4;
-                if (qty >= 701 && qty <= 800) return 5;
-                if (qty >= 801 && qty <= 900) return 6;
-                if (qty >= 901 && qty <= 1100) return 7;
-                if (qty >= 1101 && qty <= 1200) return 8;
-                if (qty >= 1201 && qty <= 1300) return 9;
-                if (qty >= 1301 && qty <= 1400) return 10;
-                if (qty >= 1401 && qty <= 1500) return 11;
-                return 12; // default for > 1500
-            }
-
-            function updateClassOptions() {
-                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-                if (!classSelect) return;
-
-                // Calculate total PV quantity for pricing
-                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-                let totalPvQty = 0;
-                pvQtyInputs.forEach(input => {
-                    totalPvQty += parseFloat(input.value) || 0;
-                });
-
-                console.log('Total PV Qty:', totalPvQty);
-
-                let prices;
-                if (totalPvQty > 2) {
-                    prices = qtyAbove2Prices;
-                    console.log('Using qtyAbove2Prices');
-                } else if (totalPvQty == 2) {
-                    prices = qty2Prices;
-                    console.log('Using qty2Prices');
-                } else {
-                    prices = originalPrices;
-                    console.log('Using originalPrices');
-                }
-
-                // Store current selected value
-                const currentValue = classSelect.value;
-
-                classSelect.innerHTML = '';
-
-                prices.forEach(price => {
-                    const option = document.createElement('option');
-                    option.value = price.class;
-                    option.setAttribute('data-cost', price.cost);
-                    option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
-                    classSelect.appendChild(option);
-                });
-
-                // Get Hypertek qty and select class based on it
-                const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-                const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
-                const selectedClass = getClassFromQty(hypertekQty);
-
-                // Set the selected class if it exists in options, otherwise default to 2
-                if (prices.some(price => price.class == selectedClass)) {
-                    classSelect.value = selectedClass;
-                    console.log('Set class value based on Hypertek qty:', selectedClass, 'for qty:', hypertekQty);
-                } else {
-                    classSelect.value = '2';
-                    console.log('Set default class value: 2 (class not available in current price set)');
-                }
-
-                // Update the cost after changing options
-                updateClassCost(classSelect);
-                updateHypertekDescription();
-            }
-
-            
-
-            function updatePvValue(qtyInput, rateInput, valueDisplay) {
-                const qty = parseFloat(qtyInput.value) || 0;
-                const rate = parseFloat(rateInput.value) || 0;
-                const value = qty * rate;
-                valueDisplay.textContent = value.toFixed(2);
-                updatePvTotal();
-            }
-
-           
-
-            function addPvRow() {
-                const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
-                const newRow = document.createElement('tr');
-                newRow.className = 'pv-row';
-                newRow.innerHTML = `
-                    <td>${rowCount}</td>
-                    <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
-                    <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
-                    <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
-                    <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
-                    <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
-                    <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
-                    <td><div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
-                    <td><span class="currency-symbol">₹</span> <span class="pv-value-display">0.00</span></td>
-                `;
-                vkPvTableBody.appendChild(newRow);
-
-                const newQtyInput = newRow.querySelector('.pv-qty-input');
-                const newRateInput = newRow.querySelector('.pv-rate-input');
-                const newValueDisplay = newRow.querySelector('.pv-value-display');
-                const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
-
-                newQtyInput.addEventListener('input', function() {
-                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-                });
-
-                newRateInput.addEventListener('input', function() {
-                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-                });
-
-                newPvAdaptorQtyInput.addEventListener('input', function() {
-                    updateClassOptions();
-                });
-
-                updateClassOptions();
-                updatePvRates();
-            }
-
-            vkQtyInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const valueDisplay = input.closest('tr').querySelector('.value-display');
-                    updateValue(input, valueDisplay);
-                    updateTotalCosts();
-                });
-            });
-
-            // Add event listener to qty input (data-index="1") to detect change and update class options
-            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-            hypertekQtyInput.addEventListener('input', function() {
-                updateClassOptions();
-            });
-
-            // Update class options when PV qty changes
-            // This is already handled above, remove duplicate
-
-            vkClassSelects.forEach(select => {
-                select.addEventListener('change', function() {
-                    console.log('Class select changed to:', this.value);
-                    updateClassCost(this);
-                    updateHypertekDescription();
-                    updatePvRates();
-                });
-            });
-
-            vkPvAdaptorQtyInputs.forEach((input, index) => {
-                const rateInput = vkPvRateInputs[index];
-                const valueDisplay = vkPvValueDisplays[index];
-                input.addEventListener('input', function() {
-                    updatePvValue(input, rateInput, valueDisplay);
-                });
-            });
-
-            vkPvRateInputs.forEach((input, index) => {
-                const qtyInput = vkPvAdaptorQtyInputs[index];
-                const valueDisplay = vkPvValueDisplays[index];
-                input.addEventListener('input', function() {
-                    updatePvValue(qtyInput, input, valueDisplay);
-                });
-            });
-
-            vkAddPvRowBtn.addEventListener('click', addPvRow);
-
-            vkPvAdaptorQtyInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    console.log('PV qty input changed, updating class options');
-                    updateClassOptions();
-                });
-            });
-
-            const exportPriceInput = document.querySelector('#vk .price-input[data-index="export"]');
-            const exportValueDisplay = exportPriceInput.closest('tr').querySelector('.value-display');
-            exportPriceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value) || 0;
-                exportValueDisplay.textContent = value.toFixed(2);
-                updatePvRates();
-            });
-
-            const boxPriceInput = document.querySelector('#vk .price-input[data-index="box"]');
-            const boxValueDisplay = boxPriceInput.closest('tr').querySelector('.value-display');
-            boxPriceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value) || 0;
-                boxValueDisplay.textContent = value.toFixed(2);
-                updatePvRates();
-            });
-
-            // Update value display for Standard Housing price input
-            const standardHousingPriceInput = document.querySelector('#vk .price-input[data-index="0"]');
-            if (standardHousingPriceInput) {
-                standardHousingPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qtyInput = this.closest('tr').querySelector('.qty-input');
-                    const qty = parseFloat(qtyInput.value) || 0;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            // Update value display for SOK 10150 and Koaxial-Stift-Radial price inputs
-            const sokPriceInput = document.querySelector('#vk .price-input[data-index="2"]');
-            if (sokPriceInput) {
-                sokPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qty = 1;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            const coaxialPriceInput = document.querySelector('#vk .price-input[data-index="3"]');
-            if (coaxialPriceInput) {
-                coaxialPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qty = 1;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            function updateSokDescription() {
-                const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
-                const sokDescriptionInput = document.getElementById('vk-sok-description-input');
-                let sokValue = '';
-                sokCardInputs.forEach(input => {
-                    if (input.value.trim()) {
-                        sokValue = input.value.trim();
-                    }
-                });
-                if (sokValue) {
-                    sokDescriptionInput.value = `SOK ${sokValue}`;
-                } else {
-                    sokDescriptionInput.value = 'SOK 10150';
-                }
-            }
-
-            document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('pv-sok-card-input') && e.target.closest('#vk')) {
-                    updateSokDescription();
-                }
-            });
-
-            function updateHypertekDescription() {
-                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-                const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
-                if (classSelect && hypertekDescriptionInput) {
-                    const selectedClass = classSelect.value;
-                    hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
-                    console.log('Updated Hypertek description to class:', selectedClass);
-                }
-            }
-
-            updateSokDescription();
-            updateHypertekDescription();
-
-            // Generate Quotation Number for VK
-            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
-            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
-
-            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
-                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
-                    
-                        try {
-                            const response = await fetch('/api/generate-vk-quotation-number');
-                            if (response.ok) {
-                                const data = await response.json();
-
-                                 const famN = prompt('Enter Family Name'); // browser prompt
-                      if (famN) {
-                        // Modify the quotation number string
-                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
-                      }
-                    
-                      // Set the modified number in your input field
-                      vkQuotationNumberInput.value = data.quotationNumber;
-                                    
-
-
-                                // vkQuotationNumberInput.value = data.quotationNumber;
-                            } else {
-                                console.error('Error fetching VK quotation number');
-                                alert('Error generating quotation number. Please try again.');
-                            }
-                        } catch (error) {
-                            console.error('Error fetching VK quotation number:', error);
-                            alert('Error generating quotation number. Please try again.');
-                        }
-                    }
-                )
-            };
-
-            // Generate Reference Number for VK
-            const vkGenerateReferenceNumberBtn = document.getElementById('vkGenerateReferenceNumber');
-            const vkReferenceNoInput = document.getElementById('vkReferenceNo');
-
-            if (vkGenerateReferenceNumberBtn && vkReferenceNoInput) {
-                vkGenerateReferenceNumberBtn.addEventListener('click', function() {
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const dateStr = `${year}${month}${day}`;
-                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                    const referenceNumber = `REF-${dateStr}-${randomNum}`;
-                    vkReferenceNoInput.value = referenceNumber;
-                });
-            }
-
-            updateTotalCosts();
-            updateClassOptions();
-            updatePvRates();
-
-            const vkCurrencySelect = document.getElementById('currency');
-            vkCurrencySelect.addEventListener('change', function() {
-                currencySymbol = getCurrencySymbol(this.value);
-                document.querySelectorAll('#vk .currency-symbol').forEach(span => span.textContent = currencySymbol);
-                updateHeaderCurrency();
-                updateClassOptions();
-                updateTotalRowCurrency();
-            });
-
-            function updateHeaderCurrency() {
-                const header = document.getElementById('totalValueHeader');
-                if (header) {
-                    header.textContent = `Total Value in ${vkCurrencySelect.value}`;
-                }
-            }
-
-            function updateTotalRowCurrency() {
-                const totalRowLabel = document.querySelector('#vk .total-row td strong');
-                if (totalRowLabel) {
-                    totalRowLabel.textContent = `Total costs in ${vkCurrencySelect.value} (qty of 1 No.)`;
-                }
-            }
-
-            // Remove duplicate getCurrencySymbol function
-
-            function getCurrencySymbol(currency) {
-                switch (currency) {
-                    case 'INR': return '₹';
-                    case 'USD': return '$';
-                    case 'EUR': return '€';
-                    default: return '₹';
-                }
-            }
-
-            // VK Send Approval Request button functionality
-            document.getElementById('vkSendApprovalRequest').addEventListener('click', async function() {
-                const form = document.getElementById('vkQuotationForm');
-                const formData = new FormData(form);
-
-                // Collect PV adaptors data
-                const pvAdaptors = [];
-                document.querySelectorAll('#vkPvTableBody .pv-row').forEach(row => {
-                    const adaptor = {
-                        qty: row.querySelector('.pv-adaptor-qty-input').value,
-                        familyName: row.querySelector('.pv-family-input').value,
-                        revNo: row.querySelector('input[name="pvRevNo[]"]').value,
-                        coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
-                        sokCard: row.querySelector('.pv-sok-card-input').value,
-                        sokQty: row.querySelector('.pv-qty-input').value,
-                        rate: row.querySelector('.pv-rate-input').value
-                    };
-                    pvAdaptors.push(adaptor);
-                });
-
-                // Collect KIET costs data
-                const kietCosts = [];
-                document.querySelectorAll('#vk .kiet-table tbody tr').forEach(row => {
-                    if (!row.classList.contains('total-row')) {
-                        const descriptionCell = row.cells[0];
-                        let description = descriptionCell.textContent.trim();
-                        const input = descriptionCell.querySelector('input[name="itemDescription[]"]');
-                        if (input) {
-                            description = input.value;
-                        }
-                        let cost = '0';
-                        const qtyInput = row.querySelector('.qty-input');
-                        if (qtyInput) {
-                            cost = qtyInput.getAttribute('data-cost') || '0';
-                        } else {
-                            const priceInput = row.querySelector('.price-input');
-                            if (priceInput) {
-                                cost = priceInput.value;
-                            }
-                        }
-                        const costItem = {
-                            description: description,
-                            cost: cost,
-                            qty: row.querySelector('.qty-input') ? row.querySelector('.qty-input').value : '1',
-                            totalValue: row.querySelector('.value-display') ? row.querySelector('.value-display').textContent : '0'
-                        };
-                        kietCosts.push(costItem);
-                    }
-                });
-
-                formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
-                formData.append('kietCosts', JSON.stringify(kietCosts));
-                formData.append('status', 'pending_approval');
-
-                try {
-                    const response = await fetch('/api/send-vk-quotation-approval', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    console.log('Response from approval request:', response);
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        alert('VK Quotation approval request sent successfully! MD will review your quotation.');
-                        // Reset form or redirect as needed
-                    } else {
-                        const error = await response.json();
-                        alert('Error sending approval request: ' + (error.message || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Error sending approval request:', error);
-                    alert('Error sending approval request. Please try again.');
-                }
-            });
-
-            // VK Form submission
-            document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
-                // Show loading screen
-                document.getElementById('loadingOverlay').style.display = 'flex';
-            });
-
-        }
-
-        // Initialize VK form when VK tab becomes active
-        function checkVKTabActivation() {
-            const vkTab = document.getElementById('vk');
-            if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
-                initializeVKForm();
-                vkTab.setAttribute('data-initialized', 'true');
-            }
-        }
-
-        // VK KIET Table Dynamic Calculation Functions
-        function updateValue(input, valueDisplay) {
-            const cost = parseFloat(input.getAttribute('data-cost'));
-            const qty = parseFloat(input.value) || 0;
-            const value = cost * qty;
-            valueDisplay.textContent = value.toFixed(2);
-            return value;
-        }
-
-        function updateTotalCosts() {
-            const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
-            let total = 0;
-            for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
-                const display = rows[i].querySelector('.value-display');
-                if (display) {
-                    total += parseFloat(display.textContent) || 0;
-                }
-            }
-            const totalCostsDisplay = document.getElementById('vk-total-costs');
-            if (totalCostsDisplay) {
-                totalCostsDisplay.textContent = total.toFixed(2);
-            }
-        }
-
-        function updateClassCost(select) {
-            const selectedOption = select.options[select.selectedIndex];
-            const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
-            const index = select.getAttribute('data-index');
-            const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
-            const valueDisplay = document.querySelector(`#vk .value-display[data-index="${index}"]`);
-            const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
-
-            qtyInput.setAttribute('data-cost', newCost);
-            if (priceInputHidden) {
-                priceInputHidden.value = newCost.toFixed(2);
-            }
-            updateValue(qtyInput, valueDisplay);
-            updateTotalCosts();
-        }
-
-        function getClassFromQty(qty) {
-            if (qty >= 1 && qty <= 300) return 1;
-            if (qty >= 301 && qty <= 500) return 2;
-            if (qty >= 501 && qty <= 600) return 3;
-            if (qty >= 601 && qty <= 700) return 4;
-            if (qty >= 701 && qty <= 800) return 5;
-            if (qty >= 801 && qty <= 900) return 6;
-            if (qty >= 901 && qty <= 1100) return 7;
-            if (qty >= 1101 && qty <= 1200) return 8;
-            if (qty >= 1201 && qty <= 1300) return 9;
-            if (qty >= 1301 && qty <= 1400) return 10;
-            if (qty >= 1401 && qty <= 1500) return 11;
-            return 12;
-        }
-
-        function updateClassOptions() {
-            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-            if (!classSelect) return;
-
-            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            let totalPvQty = 0;
-            pvQtyInputs.forEach(input => {
-                totalPvQty += parseFloat(input.value) || 0;
-            });
-
-            let prices;
-            if (totalPvQty > 2) {
-                prices = qtyAbove2Prices;
-            } else if (totalPvQty == 2) {
-                prices = qty2Prices;
-            } else {
-                prices = originalPrices;
-            }
-
-            classSelect.innerHTML = '';
-
-            prices.forEach(price => {
-                const option = document.createElement('option');
-                option.value = price.class;
-                option.setAttribute('data-cost', price.cost);
-                option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
-                classSelect.appendChild(option);
-            });
-
-            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-            const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
-            const selectedClass = getClassFromQty(hypertekQty);
-
-            if (prices.some(price => price.class == selectedClass)) {
-                classSelect.value = selectedClass;
-            } else {
-                classSelect.value = '2';
-            }
-
-            updateClassCost(classSelect);
-            updateHypertekDescription();
-        }
-
-    function updatePvRates() {
-    const totalCostsEl = document.querySelector('#vk-total-costs');
-    const totalCosts = parseFloat(totalCostsEl?.textContent || '0') || 0;
-
-    const exportInput = document.querySelector('.price-input[data-index="export"]');
-
-    const boxInput = document.querySelector('.price-input[data-index="box"]');
-
-    const exportValue = parseFloat(
-        exportInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
-    ) || 0;
-
-    const boxValue = parseFloat(
-        boxInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
-    ) || 0;
-
-    const totalRate = totalCosts + exportValue + boxValue;
-// Calculate total PV qty
-    const pvQtyInputs = document.querySelectorAll('.pv-adaptor-qty-input');
-    let totalPvQty = 0;
-
-    pvQtyInputs.forEach(input => {
-        totalPvQty += parseFloat(input.value) || 0;
-    });
-
-    if (totalPvQty === 0) return;
-
-    const unitRate = totalRate * totalPvQty;
-
-    document.querySelectorAll('.pv-rate-input').forEach(input => {
-        input.value = unitRate.toFixed(2);
-
-        const row = input.closest('tr');
-        if (!row) return;
-
-        const qtyInput = row.querySelector('.pv-adaptor-qty-input');
-        const valueDisplay = row.querySelector('.pv-value-display');
-
-        if (qtyInput && valueDisplay) {
-            updatePvValue(qtyInput, input, valueDisplay);
-        }
-    });
-}
-
-
-        function updatePvValue(qtyInput, rateInput, valueDisplay) {
-            const qty = parseFloat(qtyInput.value) || 0;
-            const rate = parseFloat(rateInput.value) || 0;
-            const value = qty * rate;
-            valueDisplay.textContent = value.toFixed(2);
-            console.log('Updated PV Value:', value.toFixed(2), 'for Qty:', qty, 'Rate:', rate);
-            updatePvTotal();
-            updatePvRates();
-            
-
-            
-
-            
-        }
-
-        function updatePvTotal() {
-            const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-            let total = 0;
-            pvValueDisplays.forEach(display => {
-                total += parseFloat(display.textContent) || 0;
-            });
-            const pvTotalAmount = document.getElementById('vk-pv-total-amount');
-            if (pvTotalAmount) {
-                pvTotalAmount.textContent = total.toFixed(2);
-            }
-            updatePvRates()
         
-
-        }
-
-        function addPvRow() {
-            const vkPvTableBody = document.getElementById('vkPvTableBody');
-            if (!vkPvTableBody) return;
-
-            const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
-            const newRow = document.createElement('tr');
-            newRow.className = 'pv-row';
-            newRow.innerHTML = `
-                <td>${rowCount}</td>
-                <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
-                <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
-                <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
-                <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
-                <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
-                <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
-                <td><div style="display: flex; align-items: center;"><span class="currency-symbol">${currencySymbol}</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
-                <td><span class="currency-symbol">${currencySymbol}</span> <span class="pv-value-display">0.00</span></td>
-            `;
-            vkPvTableBody.appendChild(newRow);
-
-            const newQtyInput = newRow.querySelector('.pv-qty-input');
-            const newRateInput = newRow.querySelector('.pv-rate-input');
-            const newValueDisplay = newRow.querySelector('.pv-value-display');
-            const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
-
-            newQtyInput.addEventListener('input', function() {
-                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-                updatePvRates();
-            });
-            
-
-            newRateInput.addEventListener('input', function() {
-                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-            });
-
-            newPvAdaptorQtyInput.addEventListener('input', function() {
-                updateClassOptions();
-                
-            });
-
-            updateClassOptions();
-            updatePvRates();
-        }
-
-        function updateSokDescription() {
-            const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
-            const sokDescriptionInput = document.getElementById('vk-sok-description-input');
-            if (!sokDescriptionInput) return;
-
-            let sokValue = '';
-            sokCardInputs.forEach(input => {
-                if (input.value.trim()) {
-                    sokValue = input.value.trim();
-                }
-            });
-            if (sokValue) {
-                sokDescriptionInput.value = `SOK ${sokValue}`;
-            } else {
-                sokDescriptionInput.value = 'SOK 10150';
-            }
-        }
-
-        function updateHypertekDescription() {
-            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-            const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
-            if (classSelect && hypertekDescriptionInput) {
-                const selectedClass = classSelect.value;
-                hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
-            }
-        }
-
-        // Check for VK tab activation on submenu clicks
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.submenu-item[data-tab="vk"]')) {
-                // Use requestAnimationFrame to ensure DOM updates are complete
-                requestAnimationFrame(checkVKTabActivation);
-            }
-        });
-
-        // Also check when tab becomes visible (for direct navigation)
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    const vkTab = document.getElementById('vk');
-                    if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
-                        setTimeout(initializeVKForm, 100);
-                        vkTab.setAttribute('data-initialized', 'true');
-                    }
-                }
-            });
-        });
-
-        // Observe the VK tab for class changes
-        const vkTabElement = document.getElementById('vk');
-        if (vkTabElement) {
-            observer.observe(vkTabElement, { attributes: true, attributeFilter: ['class'] });
-        }
-
-        // Initialize VK form immediately if tab is already active
-        checkVKTabActivation();
-
-        // VK Add Attachment functionality
-        const vkAddAttachmentBtn = document.getElementById('vkAddAttachment');
-        const vkAttachmentsContainer = document.getElementById('vkAttachmentsContainer');
-
-        vkAddAttachmentBtn.addEventListener('click', function() {
-            const newAttachmentRow = document.createElement('div');
-            newAttachmentRow.className = 'attachment-row';
-            newAttachmentRow.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
-            newAttachmentRow.innerHTML = `
-                <div class="form-group" style="flex: 1;">
-                    <label>Upload File</label>
-                    <input type="file" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.png,.txt,.dwg,.xls,.xlsx">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Note</label>
-                    <textarea name="attachmentNotes[]" rows="2" placeholder="Description of the attachment"></textarea>
-                </div>
-                <button type="button" class="btn btn-danger btn-small vk-remove-attachment" style="margin-top: 25px;">Remove</button>
-            `;
-            vkAttachmentsContainer.appendChild(newAttachmentRow);
-        });
-
-        // VK Remove Attachment functionality
-        vkAttachmentsContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('vk-remove-attachment')) {
-                e.target.closest('.attachment-row').remove();
-            }
-        });
+      
 
         
 
