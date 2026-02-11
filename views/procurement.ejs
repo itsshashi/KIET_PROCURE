@@ -4719,8 +4719,10 @@ let currencySymbol = '₹';
                     <p>Download your approved quotations</p>
                 </div>
                 <div class="sub-tabs">
-                    <button class="sub-tab active" data-filter="all">All Approved</button>
+                    <button class="sub-tab active" data-filter="all">Trade Approved</button>
                     <button class="sub-tab" data-filter="mae">MAE Approved</button>
+                    <button class="sub-tab" data-filter="vk">VK Approved</button>
+                    
                 </div>
 
                 <div class="status-cards" id="approvedCardsContainer">
@@ -5099,6 +5101,7 @@ function closeProcessModal() {
         let orders = [];
         let approvedQuotations = [];
         let maeapprovedQuotations =[];
+        let vkapprovedQuotations =[];
 
         async function fetchApprovedQuotations(filter = 'all') {
             try {
@@ -5110,6 +5113,10 @@ function closeProcessModal() {
 
                     endpoint = `/api/mae-quotations/get/approved/${creat}`;
 ;
+                }
+                else if (filter === 'vk') {
+                    const creat=document.querySelector('#maeCreatedBy').value;
+                    endpoint = `/api/render-vk_quotations/${creat}`;
                 }
 
                 const res = await fetch(endpoint);
@@ -5787,7 +5794,14 @@ ${order.status?.toLowerCase() === "pending"
             } else if (filter === 'all') {
                 // For all, we might need to fetch from general endpoint or combine
                 // For now, keep as is since we fetch from general endpoint for 'all'
+                
             }
+            else if (filter === 'vk') {
+                // For VK filter, we might need to fetch from VK-specific endpoint
+                // For now, keep as is since we fetch from general endpoint for 'all'
+                filteredQuotations = approvedQuotations
+            }
+           
 
             console.log("Rendering approved quotations for filter:", filter, "Data:", filteredQuotations);
 
@@ -5836,6 +5850,14 @@ ${order.status?.toLowerCase() === "pending"
                 // For now, keep as is since we fetch from general endpoint for 'all'
                  });
             }
+            else if (filter === 'vk') {
+
+                
+                    card.querySelector('.download-btn').addEventListener('click', function() {
+                         view_vk(quotation.id);
+                    });
+                }
+            
 
                 // Add download functionality
                 });
@@ -5873,6 +5895,7 @@ ${order.status?.toLowerCase() === "pending"
                 alert('Failed to download quotation. Please try again.');
             }
         }
+        
         async function downloadQuotationmae(quotationId) {
             try {
                 const response = await fetch(`/download-mae-quotation/${quotationId}`);
@@ -5907,8 +5930,8 @@ ${order.status?.toLowerCase() === "pending"
                 alert('Failed to download quotation. Please try again.');
             }
         }
-
-
+        
+        
         // Load quotation uploads
         async function loadQuotationUploads() {
             try {
@@ -5944,6 +5967,21 @@ ${order.status?.toLowerCase() === "pending"
             } catch (error) {
                 console.error('Error loading quotation uploads:', error);
                 document.getElementById('uploadsCardsContainer').innerHTML = '<p>Failed to load uploaded files.</p>';
+            }
+        }
+        async function view_vk(quotationId){
+            try {
+                const response = await fetch(`/view-vk-quotation/${quotationId}`);
+                if (!response.ok) throw new Error('Failed to fetch VK quotation');
+
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error viewing VK quotation:', error);
+                alert('Failed to view VK quotation. Please try again.');
             }
         }
 
