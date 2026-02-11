@@ -377,9 +377,9 @@ app.get("/api/orders", async (req, res) => {
   const referer = req.get("referer") || "";
 
   // Allow only requests from your domain
-  if (!referer.startsWith("https://kietprocure.com")) {
-    return res.status(403).json({ error: "Access denied" });
-  }
+  // if (!referer.startsWith("http://localhost:3000")) {
+  //   return res.status(403).json({ error: "Access denied" });
+  // }
 
   try {
     const { rows } = await pool.query(`
@@ -2818,6 +2818,8 @@ app.get("/approved-quotations", async (req, res) => {
 app.get("/download-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
+    console.log("Received param for quotation download:", param);
+    
 
     const isNumeric = /^\d+$/.test(param);
 
@@ -8486,6 +8488,70 @@ app.post(
     res.json({ success: true });
   }
 );
+
+
+app.get("/po/:poId/items", async (req, res) => {
+  const { poId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT id, part_no, description, quantity, unit_price,hsn_code,unit, gst, discount
+       FROM purchase_order_items
+       WHERE purchase_order_id = $1
+       ORDER BY id`,
+      [poId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch PO items" });
+  }
+});
+
+
+app.get("/api/render-vk_quotations/:creat", async (req, res) => {
+  const client = await pool.connect();
+
+  // Determine which tables to query based on source
+
+  const quotationResult = await client.query(`
+    SELECT
+        id,
+        quotation_type AS "quotationType",
+        quotation_number AS "quotationnumber",
+        quotation_date AS "quotationdate",
+        reference_no AS "referenceNo",
+        valid_until AS "validuntil",
+        currency,
+        payment_terms AS "paymentterms",
+        delivery_duration AS "deliveryduration",
+        company_name AS "companyname",
+        company_email AS "companyEmail",
+        company_gst AS "companyGST",
+        company_address AS "companyAddress",
+        client_name AS "clientname",
+        client_email AS "clientemail",
+        client_phone AS "clientPhone",
+        client_address ,
+
+        kiet_costs::jsonb AS "kietCosts",
+        pv_adaptors::jsonb AS "pvAdaptors",
+
+        total_amount AS "totalamount",
+        notes,
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt",created_by AS "createdBy"
+
+    FROM vk_quotations
+    WHERE status = 'approved' and created_by='${req.params.creat}'
+    ORDER BY created_at DESC;
+  `);
+  client.release();
+
+  res.json(quotationResult.rows);
+});
 
 
 
