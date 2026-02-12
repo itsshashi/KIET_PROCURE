@@ -6,7 +6,8 @@
   <title>Inventory Dashboard</title>
   <link rel="icon" href="images/logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
   <style>
     #challan-table-container {
   cursor: grab;
@@ -281,15 +282,80 @@
         <div class="tab-header">
           <h3>Store Management Entry</h3>
           <p>Enter inventory details for store management</p>
+          
         </div>
+        
 
         <form id="store-form" action="/submit-inventory" method="post" enctype="multipart/form-data">
           <input type="hidden" name="management-type" value="store">
           <div class="form-group">
-            <label for="order_id_store">Select Purchase Order</label>
-            <select id="order_id_store" name="order_id" class="form-control" required>
-              <option value="">Select an order</option>
-            </select>
+            <div class="mb-3 position-relative">
+
+  <label>Select Purchase Order</label>
+
+  <input 
+    type="text"
+    id="orderInput"
+    class="form-control"
+    autocomplete="off"
+  >
+
+  <input type="hidden" id="orderId" name="order_id">
+
+  <div id="orderSuggestions"
+       class="list-group position-absolute w-100"
+       style="top:100%; left:0; display:none; max-height:250px; overflow-y:auto;">
+  </div>
+
+</div>
+<script>
+  const input = document.getElementById("orderInput");
+const hiddenInput = document.getElementById("orderId");
+const suggestionBox = document.getElementById("orderSuggestions");
+
+input.addEventListener("input", async function () {
+
+  const value = this.value.trim();
+
+  if (!value) {
+    suggestionBox.style.display = "none";
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/inventory-orders?search=${value}`);
+    const orders = await response.json();
+
+    suggestionBox.innerHTML = "";
+
+    if (!orders.length) {
+      suggestionBox.style.display = "none";
+      return;
+    }
+
+    orders.forEach(order => {
+      const item = document.createElement("div");
+      item.className = "list-group-item";
+      item.innerHTML = `<strong>${order.po_number}</strong> - ${order.project}`;
+      
+      item.addEventListener("click", () => {
+        input.value = `${order.po_number} - ${order.project} (${order.supplier})`;
+        hiddenInput.value = order.id;
+        suggestionBox.style.display = "none";
+      });
+
+      suggestionBox.appendChild(item);
+    });
+
+    suggestionBox.style.display = "block";
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
+});
+
+</script>
+
           </div>
 
           <div class="form-group">
@@ -463,6 +529,7 @@
       </div>
     </div>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <script>
     const slider = document.getElementById('challan-table-container');
@@ -497,33 +564,31 @@ slider.addEventListener('mousemove', (e) => {
 });
 
     // Fetch and populate purchase orders
-    async function loadOrders() {
-      try {
-        const response = await fetch('/api/inventory-orders');
-        const orders = await response.json();
-        const selectStore = document.getElementById('order_id_store');
-        const selectLocal = document.getElementById('order_id_local');
-        selectStore.innerHTML = '<option value="">Select an order</option>';
-        // For local, it's an input field, so don't populate
-        if (selectLocal.tagName === 'SELECT') {
-          selectLocal.innerHTML = '<option value="">Select an order</option>';
-          orders.forEach(order => {
-            const optionLocal = document.createElement('option');
-            optionLocal.value = order.id;
-            optionLocal.textContent = `${order.order_id} - ${order.project} (${order.supplier})`;
-            selectLocal.appendChild(optionLocal);
-          });
-        }
-        orders.forEach(order => {
-          const optionStore = document.createElement('option');
-          optionStore.value = order.id;
-          optionStore.textContent = `${order.order_id} - ${order.project} (${order.supplier})`;
-          selectStore.appendChild(optionStore);
-        });
-      } catch (error) {
-        console.error('Error loading orders:', error);
-      }
+   async function loadOrders() {
+  try {
+    const response = await fetch('/api/inventory-orders');
+    const orders = await response.json();
+
+    const selectStore = document.getElementById('order_id_store');
+
+    // Only populate the STORE select dropdown
+    if (selectStore && selectStore.tagName === 'SELECT') {
+
+      selectStore.innerHTML = '<option value="">Select an order</option>';
+
+      orders.forEach(order => {
+        const option = document.createElement('option');
+        option.value = order.id;
+        option.textContent = `${order.po_number} - ${order.project} (${order.supplier})`;
+        selectStore.appendChild(option);
+      });
     }
+
+  } catch (error) {
+    console.error('Error loading orders:', error);
+  }
+}
+
 
     document.addEventListener('DOMContentLoaded', loadOrders);
 

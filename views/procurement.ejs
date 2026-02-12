@@ -5700,9 +5700,11 @@ function closeProcessModal() {
     Download PO
 </button>
 ${order.status?.toLowerCase() === "pending"
-  ? `<i class="fa-solid fa-pen-to-square edit-icon" onclick="openItemsModal('${order.id}')')"></i>`
+  ? `<i class="fa-solid fa-pen-to-square edit-icon" 
+       onclick="openItemsModal('${order.id}')"></i>`
   : ""
 }
+
 </div>
 
 
@@ -5727,7 +5729,7 @@ ${order.status?.toLowerCase() === "pending"
                  card.classList.add("active");
 
                  // Show order details section
-                 openItemsModal(order.id);
+                //  openItemsModal(order.id);
                  console.log("Order details should now be visible for:", order.purchaseOrderNumber);
          });
 

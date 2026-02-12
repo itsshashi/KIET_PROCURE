@@ -695,33 +695,60 @@ app.get("/api/orders/search/filter", async (req, res) => {
 // Get orders for inventory processing
 app.get("/api/inventory-orders", async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-            SELECT
-                id,
-                project_code_number as order_id,
-                project_name as project,
-                supplier_name as supplier,
-                supplier_gst,
-                supplier_address,
-                shipping_address,
-                ordered_by as requested_by,
-                date_required,
-                COALESCE(total_amount, 0) as total_amount,
-                status,
-                urgency,
-                notes,
-                quotation_file,
-                created_at
-            FROM purchase_orders
-            WHERE status IN ('sent', 'received')
-            ORDER BY created_at DESC
-        `);
+    const { search } = req.query;
+
+    let query = `
+      SELECT
+        id,
+        project_code_number as order_id,
+        project_name as project,
+        supplier_name as supplier,
+        supplier_gst,
+        supplier_address,
+        shipping_address,
+        ordered_by as requested_by,
+        date_required,
+        COALESCE(total_amount, 0) as total_amount,
+        status,
+        urgency,
+        notes,
+        quotation_file,
+        created_at,po_number
+      FROM purchase_orders
+      WHERE status IN ('sent', 'received')
+    `;
+
+    const values = [];
+    let count = 1;
+
+    // 🔍 If user typed something
+    if (search) {
+      query += `
+        AND (
+          project_code_number ILIKE $${count}
+          OR project_name ILIKE $${count}
+          OR supplier_name ILIKE $${count}
+        )
+      `;
+      values.push(`%${search}%`);
+      count++;
+    }
+
+    query += `
+      ORDER BY created_at DESC
+      LIMIT 20
+    `;
+
+    const { rows } = await pool.query(query, values);
+
     res.json(rows);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // Get delivery challans for inventory view
 app.get("/api/delivery-challans", async (req, res) => {
