@@ -5641,7 +5641,7 @@ app.get("/view-quotation/:param", async (req, res) => {
       },
       gstterms: quotation.gst || "Extra 18%",
       insurance: quotation.insurance || "N/A",
-      delivery_terms: quotation.delivery_terms || "Ex-Works / DAP",
+      delivery_terms: quotation.deliveryterms || "Ex-Works / DAP",
       packaging: quotation.packaging || "Standard Export Packaging extra",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
