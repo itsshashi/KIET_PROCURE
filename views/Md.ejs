@@ -5642,7 +5642,7 @@ function renderApproveQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
 
-
+console.log('Rendering Quotations for Approval: rendering', quotations);
 
   quotations.forEach(quotation => {
     const row = `
@@ -5653,7 +5653,7 @@ function renderApproveQuotations(quotations, tbodyId) {
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
-        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td>${quotation.Currency}.${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
         <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
         <td class="actions">
           <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
@@ -5745,7 +5745,7 @@ function renderApprovedQuotations(quotations, tbodyId) {
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
-        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td>${quotation.currency} .${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
         <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
         <td class="actions">
           <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
