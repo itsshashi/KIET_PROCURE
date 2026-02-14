@@ -402,7 +402,7 @@ function generateQuotation(poData, filePath) {
                         fontSize: 10,
                       },
                       {
-                        text: poData.delivery_Sterms,
+                        text: poData.delivery_terms,
                         font: "Times",
                         alignment: "right",
                         fontSize: 10,
