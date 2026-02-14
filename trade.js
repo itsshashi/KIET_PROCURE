@@ -123,6 +123,10 @@ function generateQuotation(poData, filePath) {
         .join("\n")
     : ""; // join with newlines
   // 👉 Document definition
+         const packageLabel =
+  poData.currency === "INR"
+    ? "Package and Forwarding"
+    : "Packaging";
   const docDefinition = {
     header: function (currentPage, pageCount) {
       return {
@@ -171,7 +175,9 @@ function generateQuotation(poData, filePath) {
             },
           ]
         : []),
+        
     ],
+    
 
     content: [
       {
@@ -356,21 +362,21 @@ function generateQuotation(poData, filePath) {
                         fontSize: 10,
                       },
                     ],
-                    [
-                      {
-                        text: "Reference No",
-                        font: "Times",
-                        bold: true,
-                        alignment: "left",
-                        fontSize: 10,
-                      },
-                      {
-                        text: poData.reference_no,
-                        font: "Times",
-                        alignment: "right",
-                        fontSize: 10,
-                      },
-                    ],
+                    // [
+                    //   {
+                    //     text: "Reference No",
+                    //     font: "Times",
+                    //     bold: true,
+                    //     alignment: "left",
+                    //     fontSize: 10,
+                    //   },
+                    //   {
+                    //     text: poData.reference_no,
+                    //     font: "Times",
+                    //     alignment: "right",
+                    //     fontSize: 10,
+                    //   },
+                    // ],
 
                     [
                       {
@@ -432,21 +438,24 @@ function generateQuotation(poData, filePath) {
                         fontSize: 10,
                       },
                     ],
-                    [
-                      {
-                        text: "Package and Forwarding",
-                        font: "Times",
-                        bold: true,
-                        alignment: "left",
-                        fontSize: 10,
-                      },
-                      {
-                        text: poData.package,
-                        font: "Times",
-                        alignment: "right",
-                        fontSize: 10,
-                      },
-                    ],
+   
+
+[
+  {
+    text: packageLabel,
+    font: "Times",
+    bold: true,
+    alignment: "left",
+    fontSize: 10,
+  },
+  {
+    text: poData.package,
+    font: "Times",
+    alignment: "right",
+    fontSize: 10,
+  },
+],
+
                     [
                       {
                         text: "Payment Terms",
