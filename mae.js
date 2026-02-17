@@ -445,6 +445,22 @@ const maeContent = buildMaeContent(poData.textareaDetails);
                           fontSize: 9,
                         },
                       ],
+                      [
+                        {
+                          text: "Lead Time",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.maeleadtime || "3 Months",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      
                     ],
                   },
                   layout: {

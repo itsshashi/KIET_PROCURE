@@ -5808,6 +5808,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
+      maeleadtime: quotation.maeleadtime || "",
     };
 
     const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
@@ -5872,7 +5873,8 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       packaging:q.maepackaging || " ",
       insurance: q.maeinsurance || "",
       line: path.join(process.cwd(), "public/images/line.png"),
-      signPath: path.join(process.cwd(), "public/images/signature.png")
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+      maeleadtime: q.maeleadtime || "",
     };
 
     // Save inside qt_uploads without subfolders
@@ -6090,6 +6092,7 @@ app.post("/preview", upload.none(), async (req, res) => {
       warranty: formData.maeWarranty || "",
       line: path.join(__dirname, "public/images/line.png"),
       signPath: path.join(__dirname, "public/images/signature.png"),
+        maeleadtime: formData.maeleadtime || "",
     };
 
     const fileName = `mae_preview_${Date.now()}.pdf`;
@@ -6220,6 +6223,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeInsurance,
    maeWarranty,
    maePackaging,
+   maeleadtime,
    
    subject,
    createdBy
@@ -6247,11 +6251,12 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeWarranty,
    status,
    subject,created_by
-   ,maepackaging
+   ,maepackaging,
+   maeleadtime
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
-       $14, $15, $16,$17,$18) RETURNING id`;
+       $14, $15, $16,$17,$18,$19) RETURNING id`;
    const maeValues=[
      quotationNumber,
    quotationDate,
@@ -6270,7 +6275,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    "pending",
    subject,
    createdBy,
-   maePackaging
+   maePackaging,
+   maeleadtime,
 
    ];
    const result=await client.query(maeQut,maeValues);
