@@ -1938,9 +1938,12 @@
       <label for="contact" style="font-weight: bold;">Contact info</label>
       <input type="tel" id="phone" name="phone" placeholder="+91 -------------" pattern="[0-9]{10}">
     </div>
+
+<!-- multiple file upload for quotation-->
+
   <div class="form-group">
     <label for="quotation">Quotation*</label>
-    <input type="file" name="quotation" id="quotation" required>
+    <input type="file" name="quotation[]" id="quotation" multiple required>
   </div>
 
   <div class="form-row">
@@ -1962,6 +1965,7 @@
   <h4>Product Details</h4>
 
   <!-- excel upload for product details -->
+
   <div class="form-group">
   <input type="file" id="excelUpload" accept=".xlsx,.xls">
 
@@ -2075,7 +2079,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 
     <!-- excel uplode script -->
       let loaderStart = 0;
-const MIN_TIME = 2000;
+      const MIN_TIME = 2000;
 async function uploadExcel() {
 
     console.log("Excel script loaded");
