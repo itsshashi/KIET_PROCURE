@@ -3342,11 +3342,11 @@ images_upload_handler: function (blobInfo) {
           <th>Description</th>
           <th>HSN</th>
           <th>Qty</th>
-          <th>Unit</th>
-          <th>Price</th>
-          <th>Discount %</th>
+          <th>UnitPrice</th>
+          <th>unit</th>
+          <th>Discount </th>
           <th>GST %</th>
-          <th>Total</th>
+          
           <th></th>
         </tr>
       </thead>
@@ -3382,10 +3382,14 @@ images_upload_handler: function (blobInfo) {
       <tr class="item-row">
         <td>${item.part_no}</td>
         <td><textarea>${item.description}</textarea></td>
+        <td><input type="text" value="${item.hsn}"></td>
         <td><input type="number" value="${item.quantity}"></td>
         <td><input type="number" value="${item.unit_price}"></td>
-        <td><input type="number" value="${item.gst}"></td>
+        <td><input type="text" value="${item.unit}"></td>
         <td><input type="number" value="${item.discount}"></td>
+        <td><input type="number" value="${item.gst}"></td>
+       
+        
         <td><input type="number" readonly></td>
       </tr>
     `);
@@ -3393,6 +3397,22 @@ images_upload_handler: function (blobInfo) {
 }
 function closeItemsModal() {
   document.getElementById("editItemsModal").classList.remove("show");
+}
+function savePoItems() {
+  const rows = document.querySelectorAll("#editItemsTableBody .item-row");
+  const updatedItems = Array.from(rows).map(row => {
+    const cells = row.querySelectorAll("td");
+    return {
+      part_no: cells[0].textContent.trim(),
+      description: cells[1].querySelector("textarea").value.trim(),
+      quantity: parseFloat(cells[2].querySelector("input").value),
+      unit_price: parseFloat(cells[3].querySelector("input").value),
+      gst: parseFloat(cells[4].querySelector("input").value),
+      discount: parseFloat(cells[5].querySelector("input").value)
+    };
+  });
+  
+  console.log("Updated PO Items:", updatedItems);
 }
 
 </script>
@@ -5267,9 +5287,17 @@ function closeProcessModal() {
                     
     // const orderId = ;
       if (result) {
-    const statusRes = await fetch(`/getreq/${project_cde}/${supplier_name}`, {
+        console.log('Order created with ID:', result.poId);
+        
+    const statusRes = await fetch(`/getreq/${result.poId}`,
+     {  
           method: "GET",
-          headers: { "Accept": "application/json",project_code:project_cde,supplier_name:supplier_name }
+          headers: {
+  "Accept": "application/json",
+  project_code: project_cde,
+  supplier_name: supplier_name,
+  order_id: result.poId
+}
         });
 
         const statusContentType = statusRes.headers.get("content-type");

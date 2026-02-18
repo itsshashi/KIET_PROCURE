@@ -1123,7 +1123,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     
 
     // 🔹 Final response
-    return res.json({ success: true, message: "✅ Order submitted successfully" });
+    return res.json({ success: true, message: "✅ Order submitted successfully",poId: orderId });
 
 
 
@@ -8257,11 +8257,21 @@ app.get('/process/view/json', async (req, res) => {
 
 
 
-app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
+app.get('/getreq/:id', async (req, res) => {
   try {
-    const { project_code,supplier_name } = req.params;
-    console.log("project_code",project_code);
-    console.log("supplier_name",supplier_name);
+    const { id } = req.params;
+     const project_code = req.headers['project_code'];
+    const supplier_name = req.headers['supplier_name'];
+    const order_id = req.headers['order_id'];
+    console.log('Received request with headers:', req.headers);
+console.log('id received:', id);
+    console.log('id:', id);
+    console.log('project_code:', project_code);
+    console.log('supplier_name:', supplier_name);
+    console.log('order_id:', order_id);
+
+
+    
 
     const result = await pool.query(
       `SELECT assigned_to FROM project_info WHERE project_code = $1`,
@@ -8270,6 +8280,7 @@ app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project code not found" });
+      alert("Project code not found");
     }
 
     const assignedToEmail = result.rows[0].assigned_to;
@@ -8281,18 +8292,18 @@ app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
       secure: false,
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: process.env.NO_PASSWORD,
+        pass: 'Kiets@2025$1',
       },
       tls: { rejectUnauthorized: false },
     });
     console.log("assigned_to ",assignedToEmail);
 
-    const approvalLink = `https://kietprocure.com/approve-project/'${project_code}'/'${supplier_name}'`;
-    const viewLink = `https://kietprocure.com/view-project/${project_code}/${supplier_name}`;
+    const approvalLink = `https://kietprocure.com/approve-project/${order_id}`;
+    const viewLink = `https://kietprocure.com/view-project/${order_id}`;
 
     await transporter.sendMail({
       from: "No-reply@kietsindia.com",
-      to:assignedToEmail,
+      to:'shashank@kietsindia.com',
       subject: `Approval Required — ${project_code}`,
       html: `
         <p><b>Dear Approver,</b></p>
@@ -8335,14 +8346,21 @@ app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
 });
 
 
-app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
+app.get('/view-project/:id', async (req, res) => {
   try {
-    const { project_code,supplier_name } = req.params;
+    const { id } = req.params;
+
+    // 🔒 Basic validation
+    if (isNaN(id)) {
+      return res.status(400).send("Invalid Project ID");
+    }
 
     // 1️⃣ Get PO Header
     const result = await pool.query(
-      `SELECT * FROM purchase_orders WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2 `,
-      [project_code,supplier_name]
+      `SELECT * 
+       FROM purchase_orders 
+       WHERE id = $1`,
+      [id]
     );
 
     if (!result.rows.length) {
@@ -8353,8 +8371,10 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
 
     // 2️⃣ Get PO Items
     const itemsResult = await pool.query(
-      `SELECT * FROM purchase_order_items WHERE purchase_order_id = $1`,
-      [p.id]
+      `SELECT * 
+       FROM purchase_order_items 
+       WHERE purchase_order_id = $1`,
+      [id]
     );
 
     // 3️⃣ Calculations
@@ -8362,8 +8382,8 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
     let gstTotal = 0;
 
     const itemRows = itemsResult.rows.map((i, index) => {
-      const qty = Number(i.quantity);
-      const price = Number(i.unit_price);
+      const qty = Number(i.quantity || 0);
+      const price = Number(i.unit_price || 0);
       const discount = Number(i.discount || 0);
       const gstRate = Number(i.gst || 0);
 
@@ -8377,8 +8397,8 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
       return `
         <tr>
           <td>${index + 1}</td>
-          <td>${i.part_no}</td>
-          <td>${i.description}</td>
+          <td>${i.part_no || "-"}</td>
+          <td>${i.description || "-"}</td>
           <td>${i.hsn_code || "-"}</td>
           <td>${qty}</td>
           <td>${i.unit || "-"}</td>
@@ -8392,16 +8412,16 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
 
     const grandTotal = subTotal + gstTotal;
 
-    // 4️⃣ Send HTML
+    // 4️⃣ Send HTML Response
     res.send(`
       <h2>📄 Purchase Order Details</h2>
 
       <table border="1" cellpadding="8" style="border-collapse:collapse;margin-bottom:20px;">
         <tr><td><b>Project Code</b></td><td>${p.project_code_number}</td></tr>
         <tr><td><b>Project Name</b></td><td>${p.project_name}</td></tr>
-        
+        <tr><td><b>Supplier</b></td><td>${p.supplier_name}</td></tr>
         <tr><td><b>Status</b></td><td>${p.assign_status}</td></tr>
-        <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+        <tr><td><b>Date</b></td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>
       </table>
 
       <h3>🧾 Items</h3>
@@ -8434,7 +8454,7 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
       </div>
 
       <div style="margin-top:25px;">
-        <a href="https://kietprocure.com/approve-project/${project_code}/${supplier_name}"
+        <a href="/approve-project/${id}"
            style="background:#28a745;color:white;
            padding:12px 20px;text-decoration:none;border-radius:5px;">
            ✅ APPROVE
@@ -8449,22 +8469,23 @@ app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
 });
 
 
-app.get('/approve-project/:project_code/:supplier_name', async (req, res) => {
+
+app.get('/approve-project/:id', async (req, res) => {
   try {
-    const { project_code,supplier_name } = req.params;
+    const { id } = req.params;
 
     await pool.query(
       `
       UPDATE purchase_orders
       SET assign_status = 'verified'
-      WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2
+      WHERE id = $1
       `,
-      [project_code,supplier_name]
+      [id]
     );
 
     res.send(`
       <h2 style="color:green;">✅ Project Approved Successfully</h2>
-      <p>Project Code: <b>${project_code}</b></p>
+      <p>Project ID: <b>${id}</b></p>
       <p>You may now close this window.</p>
     `);
 
