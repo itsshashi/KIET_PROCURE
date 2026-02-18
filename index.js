@@ -1,7 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
 import generateDeliveryChallan from "./dc.js";
-import { loadModels, getDescriptor, distance } from "./face.js";
+import { loadModels, getDescriptor, distance } from "./face.js";  
 import fetch from "node-fetch";
 
 import dotenv from "dotenv";
@@ -259,6 +259,67 @@ app.get("/api/inventory-invoice/:poNumber", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+//excel uplode
+app.post("/upload-excel", upload.single("excelFile"), (req, res) => {
+    try {
+
+        if (!req.file) {
+            return res.json({ success: false, message: "No file uploaded" });
+        }
+
+        const workbook = XLSX.readFile(req.file.path);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet);
+
+        console.log("Detected headers:", Object.keys(data[0]));
+
+        if (data.length === 0) {
+            return res.json({ success: false, message: "Excel file is empty" });
+        }
+
+        // Get headers
+        const headers = Object.keys(data[0]);
+
+        // Create lowercase header map
+        const headerMap = {};
+        headers.forEach(h => {
+            headerMap[h.toLowerCase().trim()] = h;
+        });
+
+         console.log("Detected headers:", headerMap);
+
+        // Find matching columns (case-insensitive)
+        const partNumberKey = headerMap["part number"];
+        const descriptionKey = headerMap["description"];
+        console.log("Mapped Part Number Key:", partNumberKey, "Mapped Description Key:", descriptionKey);
+
+        if (!partNumberKey || !descriptionKey) {
+            return res.json({
+                success: false,
+                message: "Excel must contain Part Number and Description columns"
+            });
+        }
+
+        const items = data
+          .map(row => ({
+              partNo: row[partNumberKey],
+              description: row[descriptionKey]
+          }))
+          .filter(item =>
+              item.partNo || item.description
+          );
+
+        res.json({ success: true, items });
+
+    } catch (err) {
+    console.error("Excel Upload Error:", err);
+    res.json({ success: false, message: err.message });
+}
+
+});
+
+
 
 // API route to generate GRN number
 app.post("/api/generate-grn", async (req, res) => {
