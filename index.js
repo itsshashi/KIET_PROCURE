@@ -8265,6 +8265,7 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
     
   
     const { project_code } = req.params;
+    console.log("Project code received:", project_code);
 
 
     
