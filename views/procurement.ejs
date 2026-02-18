@@ -5289,14 +5289,13 @@ function closeProcessModal() {
       if (result) {
         console.log('Order created with ID:', result.poId);
         
-    const statusRes = await fetch(`/getreq/${result.poId}`,
+    const statusRes = await fetch(`/getreq/${result.poId}/${project_cde}/${supplier_name}`,
      {  
           method: "GET",
           headers: {
   "Accept": "application/json",
-  project_code: project_cde,
-  supplier_name: supplier_name,
-  order_id: result.poId
+  
+
 }
         });
 

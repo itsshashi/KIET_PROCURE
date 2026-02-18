@@ -61,22 +61,12 @@ const pool = new Pool({
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
-app.use(cors({
-  origin: "https://kietprocure.com",   // your frontend domain
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Project-Code",
-    "X-Supplier-Name",
-    "X-Order-Id"
-  ]
-}));
+
 
 // =============================
 // MIDDLEWARE
 // =============================
- // Enable CORS for API requests
+app.use(cors()); // Enable CORS for API requests
 app.use(
   session({
     secret: "super-secret-key",
@@ -8267,21 +8257,14 @@ app.get('/process/view/json', async (req, res) => {
 
 
 
-app.get('/getreq/:id', async (req, res) => {
-  alert("API called with id: " + req.headers['project_code']);
-  alert("API called with id: " + req.headers['project_cde']);
+app.get('/getreq/:id/:project_code', async (req, res) => {
+  
   try {
     const { id } = req.params;
-     const project_code = req.headers['project_code'];
-    const supplier_name = req.headers['supplier_name'];
-    const order_id = req.headers['order_id'];
+    const order_id=id;
+    
   
-    console.log('Received request with headers:', req.headers);
-console.log('id received:', id);
-    console.log('id:', id);
-    console.log('project_code:', project_code);
-    console.log('supplier_name:', supplier_name);
-    console.log('order_id:', order_id);
+    const { project_code } = req.params;
 
 
     
