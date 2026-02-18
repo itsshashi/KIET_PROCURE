@@ -61,12 +61,22 @@ const pool = new Pool({
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
-
+app.use(cors({
+  origin: "https://kietprocure.com",   // your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Project-Code",
+    "X-Supplier-Name",
+    "X-Order-Id"
+  ]
+}));
 
 // =============================
 // MIDDLEWARE
 // =============================
-app.use(cors()); // Enable CORS for API requests
+ // Enable CORS for API requests
 app.use(
   session({
     secret: "super-secret-key",
