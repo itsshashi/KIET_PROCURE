@@ -8258,11 +8258,14 @@ app.get('/process/view/json', async (req, res) => {
 
 
 app.get('/getreq/:id', async (req, res) => {
+  alert("API called with id: " + req.headers['project_code']);
+  alert("API called with id: " + req.headers['project_cde']);
   try {
     const { id } = req.params;
      const project_code = req.headers['project_code'];
     const supplier_name = req.headers['supplier_name'];
     const order_id = req.headers['order_id'];
+  
     console.log('Received request with headers:', req.headers);
 console.log('id received:', id);
     console.log('id:', id);
