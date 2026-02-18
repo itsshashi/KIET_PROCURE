@@ -8292,7 +8292,7 @@ console.log('id received:', id);
       secure: false,
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: 'Kiets@2025$1',
+        pass: process.env.NO_PASSWORD,
       },
       tls: { rejectUnauthorized: false },
     });
