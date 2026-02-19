@@ -1,5 +1,6 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
+import XLSX from "xlsx";
 
 
 import generateDeliveryChallan from "./dc.js";
@@ -7887,6 +7888,7 @@ app.get('/api/project-po/:id', async (req, res) => {
 });
 
 
+
 app.post(
   "/api/project-details_",
   upload.single('po_upload'),
@@ -8292,7 +8294,7 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
         pass: process.env.NO_PASSWORD,
       },
       tls: { rejectUnauthorized: false 
-        
+
       },
     });
     console.log("assigned_to ",assignedToEmail);
@@ -8610,6 +8612,66 @@ app.get("/api/render-vk_quotations/:creat", async (req, res) => {
 
 
 
+
+
+
+app.post("/upload-excel", upload.single("excelFile"), (req, res) => {
+    try {
+
+        if (!req.file) {
+            return res.json({ success: false, message: "No file uploaded" });
+        }
+
+        const workbook = XLSX.readFile(req.file.path);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet);
+
+        console.log("Detected headers:", Object.keys(data[0]));
+
+        if (data.length === 0) {
+            return res.json({ success: false, message: "Excel file is empty" });
+        }
+
+        // Get headers
+        const headers = Object.keys(data[0]);
+
+        // Create lowercase header map
+        const headerMap = {};
+        headers.forEach(h => {
+            headerMap[h.toLowerCase().trim()] = h;
+        });
+
+         console.log("Detected headers:", headerMap);
+
+        // Find matching columns (case-insensitive)
+        const partNumberKey = headerMap["part number"];
+        const descriptionKey = headerMap["description"];
+        console.log("Mapped Part Number Key:", partNumberKey, "Mapped Description Key:", descriptionKey);
+
+        if (!partNumberKey || !descriptionKey) {
+            return res.json({
+                success: false,
+                message: "Excel must contain Part Number and Description columns"
+            });
+        }
+
+        const items = data
+          .map(row => ({
+              partNo: row[partNumberKey],
+              description: row[descriptionKey]
+          }))
+          .filter(item =>
+              item.partNo || item.description
+          );
+
+        res.json({ success: true, items });
+
+    } catch (err) {
+    console.error("Excel Upload Error:", err);
+    res.json({ success: false, message: err.message });
+}
+
+});
 
 const PORT = process.env.PORT || 3000;
 

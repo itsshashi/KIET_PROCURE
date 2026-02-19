@@ -2072,6 +2072,8 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
     <label for="quotation">Quotation*</label>
     <input type="file" name="quotation" id="quotation" required>
   </div>
+   
+
     <div class="form-group">
       <label for="urgency">Urgency *</label>
       <select class="form-control" id="urgency" name="urgency" required>
@@ -2086,7 +2088,11 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
       <input type="date" class="form-control" id="dateRequired" name="dateRequired" required style="padding: 10px 15px;">
     </div>
   </div>
-
+ <div class="form-group">
+    <label for="excelUpload">Upload Excel if your items are in excel[FORMAT: .xlsx , .xls]</label>
+  <input type="file" id="excelUpload" accept=".xlsx,.xls"  >
+  <button class="btn" type="button" onclick="uploadExcel()" style="margin-top:5px;">Upload Excel</button>
+  </div>
   <h4>Product Details</h4>
   <table class="product-table" id="productTable">
     <thead>
@@ -2194,6 +2200,113 @@ document.getElementById("supplierName").addEventListener("blur", async function 
         console.error("Error fetching project budget:", error);
       }
     });
+    async function uploadExcel() {
+
+    console.log("Excel script loaded");
+
+
+    const fileInput = document.getElementById("excelUpload");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select an Excel file.");
+        return; 
+    }
+
+    startLoader("Uploading Excel...");
+
+    const formData = new FormData();
+    formData.append("excelFile", file);
+
+    try {
+        const res = await fetch("/upload-excel", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+        //console.log("Excel upload response:", data);
+
+
+        if (data.success) {
+            populateItemTable(data.items);
+        } else {
+            alert("Error: " + data.message);
+        }
+
+    } catch (err) {
+        alert("Upload failed.");
+    }
+
+    stopLoader();
+}
+
+//<!-- excel auto fill table function -->
+
+function populateItemTable(items) {
+
+    const tbody = document.querySelector('#productTable tbody');
+
+    if (!tbody) {
+        console.error("❌ productTable tbody not found");
+        alert("Table body not found!");
+        return;
+    }
+
+    if (!items || items.length === 0) {
+        console.error("❌ No items received");
+        alert("No valid rows found in Excel");
+        return;
+    }
+
+    console.log("✅ Filling table with", items.length, "rows");
+
+    tbody.innerHTML = '';
+
+    items.forEach((item, index) => {
+
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td>${index + 1}</td>
+
+            <td><input type="text" class="form-control" name="partNo[]" value="${item.partNo || ''}" required></td>
+
+            <td><input type="text" class="form-control" name="description[]" value="${item.description || ''}" required></td>
+
+            <td><input type="text" class="form-control" name="hsn[]"></td>
+
+            <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+
+            <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
+
+            <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+
+            <td><input type="text" class="form-control unit" name="unit[]" ></td>
+
+            <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
+
+            <td class="total">0.00</td>
+
+            <td>
+                <button type="button" class="action-btn delete-row">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+
+
+        tbody.appendChild(newRow);
+
+        if (typeof addRowEventListeners === "function") {
+            addRowEventListeners(newRow);
+        }
+    });
+
+    if (typeof updateRowNumbers === "function") {
+        updateRowNumbers();
+    }
+}
     </script>  
      <div class="tab-content" id="delivery-challan">
                 <div class="tab-header">
