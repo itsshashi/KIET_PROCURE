@@ -67,7 +67,7 @@ function generateDeliveryChallan(dcData, filePath) {
       { text: "HSN", bold: true },
       { text: "Quantity", bold: true },
       { text: "Unit", bold: true },
-      { text: "Remarks", bold: true },
+      { text: "Remarks/Cost", bold: true },
     ],
   ];
 
