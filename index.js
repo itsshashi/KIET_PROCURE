@@ -878,11 +878,8 @@ app.post("/submit-inventory", upload.single("invoice"), async (req, res) => {
 // =============================
 
 // Home / Login
-// app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
-app.get("/", (req, res) => {
-  console.log("Root hit");
-  res.send("OK");
-});
+app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
+
 
 
 // Login submit
