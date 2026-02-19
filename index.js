@@ -8291,7 +8291,9 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
         user: "No-reply@kietsindia.com",
         pass: process.env.NO_PASSWORD,
       },
-      tls: { rejectUnauthorized: false },
+      tls: { rejectUnauthorized: false 
+        
+      },
     });
     console.log("assigned_to ",assignedToEmail);
 
