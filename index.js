@@ -1,7 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
 import XLSX from "xlsx";
-import '@tensorflow/tfjs-node';
+// import '@tensorflow/tfjs-node';
 
 
 import generateDeliveryChallan from "./dc.js";
@@ -8051,7 +8051,8 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         project_status,
         remaining_budget,
         quantity,
-        documents
+        documents,
+        remaining_cost
 
 
        FROM project_info
@@ -8477,7 +8478,19 @@ app.get('/view-project/:id', async (req, res) => {
 app.get('/approve-project/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
+    const itemsResult = await pool.query(
+      `SELECT * 
+       FROM purchase_orders
+       WHERE id = $1`,
+      [id]
+    );
+    console.log("Items result:", itemsResult.rows);
+    console.log("Project code:", itemsResult.rows[0].project_code_number);
+    const project_code=itemsResult.rows[0].project_code_number;
+    const raised_amt=itemsResult.rows[0].total_amount;
+    const raised_amount=raised_amt-raised_amt*0.18;
+    const itemResult2=await pool.query(
+      `SELECT remaining_cost FROM project_info WHERE project_code = $1`,[project_code])
     await pool.query(
       `
       UPDATE purchase_orders
@@ -8485,6 +8498,16 @@ app.get('/approve-project/:id', async (req, res) => {
       WHERE id = $1
       `,
       [id]
+    );
+
+    const updatedRemainingCost=itemResult2.rows[0].remaining_cost-raised_amount;
+    await pool.query(
+      `
+      UPDATE project_info
+      SET remaining_cost = $1
+      WHERE project_code = $2
+      `,
+      [updatedRemainingCost,project_code]
     );
 
     res.send(`

@@ -2092,7 +2092,7 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
     <label for="excelUpload">Upload Excel if your items are in excel[FORMAT: .xlsx , .xls]</label>
   <input type="file" id="excelUpload" accept=".xlsx,.xls"  >
   <button class="btn" type="button" onclick="uploadExcel()" style="margin-top:5px;">Upload Excel</button>
-  </div>
+  <span style="color: red; font-size: smaller;">note: header name should match - 1. part number 2. description </span></div>
   <h4>Product Details</h4>
   <table class="product-table" id="productTable">
     <thead>
@@ -4948,7 +4948,7 @@ async function loadAssignedProjects() {
         <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
         <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
         <p><b>Quantity:</b> ${p.quantity}</p>
-        <p><b>Remaining:</b> ₹${Number(p.remaining_budget|| 0).toLocaleString()}</p>
+        <p><b>Remaining:</b> ₹${Number(p.remaining_cost|| 0).toLocaleString()}</p>
         <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
         <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
