@@ -8300,7 +8300,7 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
 
     await transporter.sendMail({
       from: "No-reply@kietsindia.com",
-      to:'shashank@kietsindia.com',
+      to:assignedToEmail,
       subject: `Approval Required — ${project_code}`,
       html: `
         <p><b>Dear Approver,</b></p>
