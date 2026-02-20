@@ -8510,6 +8510,36 @@ app.get('/approve-project/:id', async (req, res) => {
       [updatedRemainingCost,project_code]
     );
 
+ const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false, // STARTTLS
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: process.env.NO_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    
+    const mailSubject = "New Order Approve Request - Action Required";
+    const mailBody = `
+  <p>Hello Purchase Team,</p>
+  <p>We received a request to approve a purchase order for project ${project_code}.</p>
+  <p>Please review and approve the purchase order at your earliest convenience.</p>
+  <p>Thank you,<br>The KIET Technologies Team</p>
+`;
+
+    await transporter.sendMail({
+      from: '"KIET Technologies" <no-reply@kietsindia.com>', // display name + Office 365 email
+      to: 'purchase@kietsindia.com',
+      subject: mailSubject,
+      html: mailBody,
+    });
+
+
     res.send(`
       <h2 style="color:green;">✅ Project Approved Successfully</h2>
       <p>Project ID: <b>${id}</b></p>
