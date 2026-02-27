@@ -3463,6 +3463,8 @@ images_upload_handler: function (blobInfo) {
           <th></th>
         </tr>
       </thead>
+      <p class="editedtime">
+      </p>
 
       <tbody id="editItemsTableBody">
         <!-- rows injected by JS -->
@@ -4660,7 +4662,7 @@ let currencySymbol = '₹';
 
     if (totalPvQty === 0) return;
 
-    const unitRate = totalRate * totalPvQty;
+    const unitRate = totalRate;
 
     document.querySelectorAll('.pv-rate-input').forEach(input => {
         input.value = unitRate.toFixed(2);
