@@ -2,6 +2,7 @@ import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";import { JSDOM } from "jsdom";
 
+
 // Create a fake browser environment for html-to-pdfmake
 const dom = new JSDOM("<!DOCTYPE html>");
 global.window = dom.window;
@@ -98,7 +99,33 @@ function buildMaeContent(textareaDetails) {
   let nodes = htmlToPdfmake(html, { window: global.window });
 
   // STEP 4: Recursively apply your font, size, and line spacing
-  nodes = applyTimesFont(nodes);
+  function applyStyles(node) {
+    if (typeof node === "string") {
+      return { text: node, font: "Times", fontSize: 11, lineHeight: 1.5 };
+    } else if (Array.isArray(node)) {
+      return node.map(applyStyles);
+    } else if (typeof node === "object") {
+      let styledNode = { ...node };
+      if (styledNode.text) {
+        styledNode.font = "Times";
+        styledNode.fontSize = 11;
+        styledNode.lineHeight = 1.5;
+      }
+      if (styledNode.stack) {
+
+        styledNode.stack = styledNode.stack.map(applyStyles);
+      }
+      if (styledNode.columns) {
+        styledNode.columns = styledNode.columns.map(applyStyles);
+      }
+      return styledNode;
+    }
+    return node;
+
+  }
+
+  nodes = applyStyles(nodes);
+
 
   return Array.isArray(nodes) ? nodes : [nodes];
 }
