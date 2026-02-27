@@ -1261,7 +1261,7 @@ select {
 
     /* Modal styles */
     .modal { display: none; position: fixed; z-index: 1000; padding-top: 30px; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-    .modal-content { background: #fff; margin: auto; padding: 20px; border-radius: 10px; width: 85%; height: 85%; display: flex; flex-direction: column; }
+    .modal-content { background: #fff; margin: auto; padding: 20px; border-radius: 10px; width: 85%; height: 95%; display: flex; flex-direction: column; }
     .modal-header { margin-bottom: 10px; }
     .modal-header h2 { margin: 0; color: #2c3e50; }
     .close { float: right; color: #e74c3c; font-size: 28px; cursor: pointer; font-weight: bold; }
@@ -2400,6 +2400,9 @@ select {
         <p class="text-sm text-gray-600">
           Complete project overview with budget tracking and assignment details.
         </p>
+        <p class="text-sm text-green-600 font-semibold mt-2" style="background: #d1fae5; padding: 10px; border-radius: 6px;">
+          <i class="fas fa-info-circle"></i> To add a new project: Go to <strong>Project Details</strong> → <strong>Project Info</strong> tab → Click <strong>Add Project</strong> button
+        </p>
       </div>
 
       <!-- Project Summary Cards -->
@@ -2431,6 +2434,9 @@ select {
       <!-- Search and Filter Section -->
       <div class="filters">
         <div class="filter-row">
+          <button onclick="openAddProjectModal()" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            <i class="fas fa-plus"></i> Add Project
+          </button>
           <input type="text" id="projectSearchInput" placeholder="Search by Project Code, Description, or Assigned To..." onkeyup="applyProjectFilters()">
           <select id="assigneeFilter" onchange="applyProjectFilters()">
             <option value="All Assignees">All Assignees</option>
@@ -2526,6 +2532,84 @@ function updateSummaryCards(projects) {
     `₹${totalBudget.toFixed(2)}`;
 }
 
+// Add Project Modal Functions
+function openAddProjectModal() {
+  document.getElementById('addProjectModal').style.display = 'block';
+}
+
+function closeAddProjectModal() {
+  document.getElementById('addProjectModal').style.display = 'none';
+  document.getElementById('addProjectForm').reset();
+}
+
+async function submitProject(event) {
+  event.preventDefault();
+  
+  const projectData = {
+    projectCode: document.getElementById('newProjectCode').value,
+    description: document.getElementById('newProjectDescription').value,
+    customer: document.getElementById('newProjectCustomer').value,
+    userName: document.getElementById('newProjectUserName').value,
+    poNo: document.getElementById('newProjectPoNo').value,
+    poDate: document.getElementById('newProjectPoDate').value,
+    quantity: document.getElementById('newProjectQuantity').value,
+    valuePerUnit: document.getElementById('newProjectValuePerUnit').value,
+    baseValue: document.getElementById('newProjectBudget').value,
+    totalValue: document.getElementById('newProjectTotalValue').value,
+    deliveryStatus: document.getElementById('newProjectDeliveryStatus').value,
+    deliveryDate: document.getElementById('newProjectDeliveryDate').value,
+    currency: document.getElementById('newProjectCurrency').value,
+    totalPoValuePending: document.getElementById('newProjectTotalPoValuePending').value,
+    invType: document.getElementById('newProjectInvType').value,
+  };
+
+  try {
+    const response = await fetch('/api/project-details', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(projectData)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      // If assigned_to is provided, assign the project using the PUT endpoint
+      const assignedTo = document.getElementById('newProjectAssignedTo').value;
+      const budget = document.getElementById('newProjectBudget').value;
+      if (assignedTo && result.data && result.data.id) {
+        await fetch('/api/assign_to', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedValue: assignedTo,
+            current_id: result.data.id,
+            budgetValue: budget || 0,
+            target: ''
+          })
+        });
+      }
+      alert('Project added successfully!');
+      closeAddProjectModal();
+      fetchProjects(); // Refresh the project list
+    } else {
+      alert('Error: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Failed to add project. Please try again.');
+  }
+}
+
+// Close add project modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('addProjectModal');
+  if (event.target == modal) {
+    closeAddProjectModal();
+  }
+});
+
 
 </script>
 
@@ -2539,6 +2623,123 @@ function updateSummaryCards(projects) {
           </div>
           <div class="modal-body" id="projectDetailsContent">
             <!-- Project details will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Project Modal -->
+      <div id="addProjectModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 600px;">
+          <div class="modal-header" style="background: #10b981; color: white; padding: 16px 20px;">
+            <h2><i class="fas fa-plus-circle"></i> Add New Project</h2>
+            <span class="close" onclick="closeAddProjectModal()">&times;</span>
+          </div>
+          <div class="modal-body" style="padding: 20px;">
+            <form id="addProjectForm" onsubmit="submitProject(event)">
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Project Code *</label>
+                  <input type="text" id="newProjectCode" required placeholder="Enter Project Code" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Description *</label>
+                  <input type="text" id="newProjectDescription" required placeholder="Enter Project Description" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Customer *</label>
+                  <input type="text" id="newProjectCustomer" required placeholder="Enter Customer Name" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">User Name *</label>
+                  <input type="text" id="newProjectUserName" required placeholder="Enter User Name" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">PO Number</label>
+                  <input type="text" id="newProjectPoNo" placeholder="Enter PO Number" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">PO Date</label>
+                  <input type="date" id="newProjectPoDate" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Quantity</label>
+                  <input type="number" id="newProjectQuantity" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Value Per Unit (₹)</label>
+                  <input type="number" id="newProjectValuePerUnit" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Budget (₹)</label>
+                  <input type="number" id="newProjectBudget" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Total Value (₹)</label>
+                  <input type="number" id="newProjectTotalValue" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Delivery Status</label>
+                  <select id="newProjectDeliveryStatus" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="">Select Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Delayed">Delayed</option>
+                  </select>
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Delivery Date</label>
+                  <input type="date" id="newProjectDeliveryDate" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Currency</label>
+                  <select id="newProjectCurrency" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="₹">INR (₹)</option>
+                    <option value="$">USD ($)</option>
+                    <option value="€">EUR (€)</option>
+                  </select>
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Assigned To</label>
+                  
+                  <input type="text" id="newProjectAssignedTo" placeholder="Enter Email" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                <span style="color: red;">you can put later on project info </span>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Total PO Value Pending (₹)</label>
+                  <input type="number" id="newProjectTotalPoValuePending" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Invoice Type</label>
+                  <select id="newProjectInvType" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="">Select Invoice Type</option>
+                    <option value="Goods">Goods</option>
+                    <option value="Service">Service</option>
+                    
+                  </select>
+
+              
+              </div>
+              </div>
+              <div style="margin-top: 20px; text-align: right;">
+                <button type="button" onclick="closeAddProjectModal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">Cancel</button>
+                <button type="submit" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">Submit Project</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
