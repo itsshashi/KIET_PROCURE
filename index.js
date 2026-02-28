@@ -8777,7 +8777,7 @@ app.put("/api/approval-requests/approve/:id", async (req, res) => {
     const { id } = req.params;
     await pool.query(
       `UPDATE purchase_orders
-        SET assign_status = 'verified'
+        SET assign_status = 'approved'
         WHERE id = $1`,
       [id]
     );
@@ -8792,7 +8792,7 @@ app.put("/api/approval-requests/reject/:id", async (req, res) => {
     const { id } = req.params;
     await pool.query(
       `UPDATE purchase_orders
-        SET assign_status = 'rejected'
+        SET status = 'rejected'
         WHERE id = $1`,
       [id]
     );
