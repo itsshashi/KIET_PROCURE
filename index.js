@@ -765,7 +765,8 @@ app.get("/api/delivery-challans", async (req, res) => {
         approval_status,
         consignee_name,
         reason,
-        requester
+        requester,
+        manager_email
       FROM delivery_challan
       WHERE approval_status = 'approved'
       ORDER BY challan_date DESC
@@ -8740,7 +8741,7 @@ JOIN project_info pi
 WHERE pi.assigned_to = $1
 ORDER BY po.created_at DESC;
     `, [by]);
-gi
+
     res.json(result.rows);
 
   } catch (err) {
@@ -8786,6 +8787,86 @@ app.put("/api/approval-requests/approve/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to approve purchase order" });
   }
 });
+
+app.get("/api/delivery-challans/:approver", async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        id,
+        challan_no,
+        challan_date,
+        expiry_date,
+        dc_type,
+        approval_status,
+        consignee_name,
+        reason,
+        requester,
+        manager_email
+      FROM delivery_challan
+      where manager_email = $1
+      ORDER BY challan_date DESC
+    `, [req.params.approver]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/delivery-challans/items/:id", async (req, res) => {
+  try {
+    const
+  { rows } = await pool.query(`
+      SELECT
+        id,
+        part_no,
+        description,
+        quantity,
+        unit,
+        remarks
+      FROM delivery_challan_items
+      WHERE challan_id = $1
+    `, [req.params.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/delivery-challans/approve/:id", async (req, res) => {
+  try {    const { id } = req.params;
+    await pool.query(
+      `UPDATE delivery_challan
+        SET approval_status = 'approved'
+        WHERE id = $1`,
+      [id]
+    );
+    res.json({ success: true, message: "Delivery challan approved" });
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "Failed to approve delivery challan" });
+  }
+});
+
+
+app.get("/api/delivery-challans/reject/:id", async (req, res) => {
+  try {    const { id } = req.params;
+    await pool.query(
+      `UPDATE delivery_challan
+        SET approval_status = 'Rejected'
+        WHERE id = $1`,
+      [id]
+    );
+    res.json({ success: true, message: "Delivery challan rejected" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to reject delivery challan" });
+  }
+});
+
+
 
 const PORT = process.env.PORT || 3000;
 
