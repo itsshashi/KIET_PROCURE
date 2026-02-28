@@ -387,6 +387,7 @@ app.get("/api/orders", async (req, res) => {
     const { rows } = await pool.query(`
             SELECT
                 id,
+                po_number,
                 purchase_order_number as order_id,
                 project_name as project,
                 project_code_number as projectCodeNumber,

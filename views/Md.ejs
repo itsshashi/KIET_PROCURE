@@ -1585,7 +1585,31 @@ select {
 
     <!-- All Orders Table -->
     <div id="allTab" class="tab-content">
+      <!-- <input type="text" id="filterPurchaseOrders" placeholder="Filter by Order ID, Project, Supplier..." onkeyup="filterPurchaseOrders()" style="margin-bottom: 15px; padding: 8px 12px; width: 100%; max-width: 400px; border: 1px solid #ced4da; border-radius: 6px;">
+      <button onclick="clearPurchaseOrderFilter()" style="margin-bottom: 15px; padding: 8px 12px; background-color: #dc3545; color: white; border: none; border-radius: 6px;">Clear Filter</button> -->
+
+
+       <div class="filters" id="filtersSection">
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="Search by Order ID, Project, Supplier..." onkeyup="applyFilters()">
+        <select id="supplierFilter" onchange="applyFilters()">
+          <option value="All Suppliers">All Suppliers</option>
+        </select>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="All Statuses">All Statuses</option>
+          <option value="enquired">Enquired</option>
+          <option value="purchase">Purchase Requested</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input type="date" id="dateFrom" onchange="applyFilters()">
+        <input type="date" id="dateTo" onchange="applyFilters()">
+        <button onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
       <table id="allOrdersTable">
+
         <thead>
           <tr>
             <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
@@ -1606,27 +1630,11 @@ select {
     </div>
 
     <!-- Search and Filter Section -->
-    <div class="filters" id="filtersSection">
-      <div class="filter-row">
-        <input type="text" id="searchInput" placeholder="Search by Order ID, Project, Supplier..." onkeyup="applyFilters()">
-        <select id="supplierFilter" onchange="applyFilters()">
-          <option value="All Suppliers">All Suppliers</option>
-        </select>
-        <select id="statusFilter" onchange="applyFilters()">
-          <option value="All Statuses">All Statuses</option>
-          <option value="enquired">Enquired</option>
-          <option value="purchase">Purchase Requested</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <input type="date" id="dateFrom" onchange="applyFilters()">
-        <input type="date" id="dateTo" onchange="applyFilters()">
-        <button onclick="clearFilters()">Clear Filters</button>
-      </div>
-    </div>
+   
 
     <!-- Pending Approvals Table -->
     <div id="pendingTab" class="tab-content">
+      
       <table id="pendingTable">
         <thead>
           <tr>
@@ -2005,12 +2013,15 @@ select {
 
     <!-- Approved Quotations Table -->
     <div id="approvedQuotationsTab" class="tab-content">
+      <input type="text" id="quotationSearchInput" placeholder="Search by Quotation Number..." onkeyup="applyQuotationSearchFilter()" style="margin-bottom: 15px; padding: 8px; width: 800px; border-radius: 5px; border: 1px solid #ccc;">
+      <button onclick="clearQuotationSearchFilter()" style="margin-left: 10px; padding: 8px 12px; border-radius: 5px; border: none; background-color: #10b981; color: #fff; cursor: pointer;">
+        Clear Search</button>
       <table id="approvedQuotationsTable">
         <thead>
           <tr>
             <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
             <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
-            <th onclick="sortTable('quotation_type')">Quotation Type <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_type')">Quotation Number <i class="fas fa-sort"></i></th>
             <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
             <th>Quotation Raiser</th>
             <th onclick="sortTable('created_at')">Date <i class="fas fa-sort"></i></th>
@@ -2025,6 +2036,9 @@ select {
 
     <!-- Approved VK Quotations Table -->
     <div id="approvedVKQuotationsTab" class="tab-content">
+        <input type="text" id="vkQuotationSearchInput" placeholder="Search by Quotation Number..." onkeyup="applyVKQuotationSearchFilter()" style="margin-bottom: 15px; padding: 8px; width: 800px; border-radius: 5px; border: 1px solid #ccc;">
+        <button onclick="clearVKQuotationSearchFilter()" style="margin-left: 10px; padding: 8px 12px; border-radius: 5px; border: none; background-color: #10b981; color: #fff; cursor: pointer;">
+          Clear Search</button>
       <table id="approvedVKQuotationsTable">
         <thead>
           <tr>
@@ -2676,6 +2690,93 @@ async function fetchProjects() {
     console.error("Error fetching projects:", error);
   }
 }
+
+async function filterPurchaseOrders(){
+  const projectCodeInput = document.getElementById("filterPurchaseOrders").value.toLowerCase();
+  const tbody = document.getElementById("allOrdersBody");
+  const rows = tbody.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+    const projectCode = cells[2]?.innerText.toLowerCase() || "";
+
+    if (projectCode.includes(projectCodeInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+
+
+
+async function applyQuotationSearchFilter() {
+  const searchInput = document
+    .getElementById("quotationSearchInput")
+    .value.toLowerCase();
+
+  const rows = document
+    .getElementById("approvedQuotationsBody")
+    .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+
+    // Quotation Number column (3rd column → index 2)
+    const quotationNumber = cells[2]?.innerText.toLowerCase() || "";
+
+    if (quotationNumber.includes(searchInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+
+function clearQuotationSearchFilter() {
+  document.getElementById("quotationSearchInput").value = "";
+  const rows = document.getElementById("approveBody").getElementsByTagName("tr");
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+//  filter vk quotation by quotation number
+function applyVKQuotationSearchFilter() {
+  const searchInput = document
+    .getElementById("vkQuotationSearchInput")
+    .value.toLowerCase();
+
+  const rows = document
+    .getElementById("approvedVKQuotationsBody")
+    .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+
+    // Quotation Number column (3rd column → index 2)
+    const quotationNumber = cells[1]?.innerText.toLowerCase() || "";
+
+    if (quotationNumber.includes(searchInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+function clearVkQuotationSearchFilter() {
+  document.getElementById("vkQuotationSearchInput").value = "";
+  const rows = document.getElementById("vkApproveBody").getElementsByTagName("tr");
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+
+
+
+
+
+
+
 
 function updateSummaryCards(projects) {
   // Total Projects
@@ -6107,7 +6208,7 @@ function renderApprovedQuotations(quotations, tbodyId) {
       <tr>
         <td>${quotation.id}</td>
         <td>${quotation.company_name}</td>
-        <td>${quotation.quotation_type}</td>
+        <td>${quotation.quotation_number}</td>
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
@@ -6159,49 +6260,49 @@ function renderApprovedQuotations(quotations, tbodyId) {
     }
 
     // Render orders table
-    function renderOrders(orders, tbodyId) {
-      const tbody = document.getElementById(tbodyId);
-      tbody.innerHTML = "";
+    // function renderOrders(orders, tbodyId) {
+    //   const tbody = document.getElementById(tbodyId);
+    //   tbody.innerHTML = "";
 
-      orders.forEach(order => {
-        const row = `
-          <tr>
-            <td>${order.id}</td>
-            <td>${order.purchase_order_number || order.order_id}</td>
-            <td>${order.project_name || order.project}</td>
-            <td>${order.department || 'Design and Development'}</td>
-            <td>${order.supplier_name || order.supplier}</td>
-            <td>${order.urgency || order.description || "-"}</td>
-            <td>${order.ordered_by || order.requested_by}</td>
-            <td>${new Date(order.date_required).toLocaleDateString()}</td>
-            <td>₹${order.total_amount ? order.total_amount.toLocaleString() : '0.00'}</td>
-            <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-            <td class="actions">
-              <button class="view" onclick='viewQuotation(${JSON.stringify(order)})'>
-                <i class="fas fa-file-pdf"></i> Preview
-              </button>
-              <button class="view" onclick="editOrder(${order.id})">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="approve" onclick="updateStatus(${order.id}, 'approved')">
-                <i class="fas fa-check"></i> Approve
-              </button>
-              <button class="reject" onclick="updateStatus(${order.id}, 'rejected')">
-                <i class="fas fa-times"></i> Reject
-              </button>
-              ${order.status === 'approved' || order.status === 'sent' || order.status === 'received'
-                ? `<button class="view" onclick="generatePO(${order.id})">
-                     <i class="fas fa-file-alt"></i> Generate PO
-                   </button>`
-                : `<button class="view" onclick="generatePO(${order.id})" disabled style="opacity: 0.5; cursor: not-allowed;">
-                     <i class="fas fa-file-alt"></i> Generate PO
-                   </button>`}
-            </td>
-          </tr>
-        `;
-        tbody.insertAdjacentHTML("beforeend", row);
-      });
-    }
+    //   orders.forEach(order => {
+    //     const row = `
+    //       <tr>
+    //         <td>${order.id}</td>
+    //         <td>${order.purchase_order_number || order.order_id}</td>
+    //         <td>${order.project_name || order.project}</td>
+    //         <td>${order.department || 'Design and Development'}</td>
+    //         <td>${order.supplier_name || order.supplier}</td>
+    //         <td>${order.urgency || order.description || "-"}</td>
+    //         <td>${order.ordered_by || order.requested_by}</td>
+    //         <td>${new Date(order.date_required).toLocaleDateString()}</td>
+    //         <td>₹${order.total_amount ? order.total_amount.toLocaleString() : '0.00'}</td>
+    //         <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+    //         <td class="actions">
+    //           <button class="view" onclick='viewQuotation(${JSON.stringify(order)})'>
+    //             <i class="fas fa-file-pdf"></i> Preview
+    //           </button>
+    //           <button class="view" onclick="editOrder(${order.id})">
+    //             <i class="fas fa-edit"></i> Edit
+    //           </button>
+    //           <button class="approve" onclick="updateStatus(${order.id}, 'approved')">
+    //             <i class="fas fa-check"></i> Approve
+    //           </button>
+    //           <button class="reject" onclick="updateStatus(${order.id}, 'rejected')">
+    //             <i class="fas fa-times"></i> Reject
+    //           </button>
+    //           ${order.status === 'approved' || order.status === 'sent' || order.status === 'received'
+    //             ? `<button class="view" onclick="generatePO(${order.id})">
+    //                  <i class="fas fa-file-alt"></i> Generate PO
+    //                </button>`
+    //             : `<button class="view" onclick="generatePO(${order.id})" disabled style="opacity: 0.5; cursor: not-allowed;">
+    //                  <i class="fas fa-file-alt"></i> Generate PO
+    //                </button>`}
+    //         </td>
+    //       </tr>
+    //     `;
+    //     tbody.insertAdjacentHTML("beforeend", row);
+    //   });
+    // }
 
 
 
@@ -8371,7 +8472,7 @@ For detailed technical documentation, please contact the development team.`);
         const row = `
           <tr>
             <td>${order.id}</td>
-            <td>${order.purchase_order_number || order.order_id}</td>
+            <td>${order.po_number}</td>
             <td>${order.project_name || order.project}</td>
             <td>${order.department || 'Design and Development'}</td>
             <td>${order.supplier_name || order.supplier}</td>
