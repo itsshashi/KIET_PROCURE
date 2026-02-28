@@ -8729,6 +8729,64 @@ app.post("/upload-excel", upload.single("excelFile"), (req, res) => {
 
 });
 
+app.get("/api/approval-requests/:by", async (req, res) => {
+  try {
+    const by = req.params.by;
+    const result = await pool.query(`
+      SELECT po.*
+FROM purchase_orders po
+JOIN project_info pi 
+    ON po.project_code_number = pi.project_code
+WHERE pi.assigned_to = $1
+ORDER BY po.created_at DESC;
+    `, [by]);
+gi
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch approval requests" });
+  }
+});
+
+app.get('/api/purchase_order_items/:purchaseId', async (req, res) => {
+  const { purchaseId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        poi.*,
+        po.total_amount
+      FROM purchase_order_items poi
+      JOIN purchase_orders po
+        ON poi.purchase_order_id = po.id
+      WHERE poi.purchase_order_id = $1`,
+      [purchaseId]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("DB ERROR:", err);   // <-- IMPORTANT
+    res.status(500).json({ error: "Database error" });
+  }
+});
+app.put("/api/approval-requests/approve/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `UPDATE purchase_orders
+        SET assign_status = 'verified'
+        WHERE id = $1`,
+      [id]
+    );
+    res.json({ success: true, message: "Purchase order approved" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to approve purchase order" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
