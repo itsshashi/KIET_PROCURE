@@ -8880,6 +8880,25 @@ app.get("/api/delivery-challans/reject/:id", async (req, res) => {
   }
 });
 
+app.get('/api/projects', async (req, res) => {
+
+  try {
+    
+    const result = await pool.query(
+      `SELECT * FROM project_info ORDER BY id DESC`,
+      
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching project details:", error);
+    res.status(500).json({ error: "Failed to fetch project details" });
+  }
+});
 
 
 const PORT = process.env.PORT || 3000;

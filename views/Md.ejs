@@ -1875,6 +1875,11 @@ select {
 });
 
 
+
+
+
+
+
     // Generate MAE Quotation Number
     const generateMaeQuotationNumberBtn = document.getElementById('generateMaeQuotationNumber');
     const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
@@ -2342,6 +2347,99 @@ select {
   <p class="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-300">
     Review comprehensive project information along with associated purchase order details.
   </p>
+  
+<div style="
+  display:flex; 
+  flex-wrap:wrap; 
+  gap:12px; 
+  align-items:center; 
+  background:#ffffff; 
+  padding:15px; 
+  border-radius:10px; 
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+">
+
+  <!-- Project Code Input -->
+  <input 
+    type="text" 
+    id="projectCodeinput" 
+    placeholder="Enter Project Code"
+    style="
+      padding:10px 14px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:14px;
+      outline:none;
+      width:200px;
+      transition:0.3s;
+    "
+    onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.15)'"
+    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+  />
+
+  <!-- Assigned To Input -->
+  <input 
+    type="text" 
+    id="assignedInput" 
+    placeholder="Enter Assigned Email"
+    style="
+      padding:10px 14px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:14px;
+      outline:none;
+      width:230px;
+      transition:0.3s;
+    "
+    onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.15)'"
+    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+  />
+
+  <!-- Filter Button -->
+  <button 
+    onclick="filterProjectAssignments()" 
+    style="
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color:white;
+      border:none;
+      padding:10px 22px;
+      border-radius:8px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      box-shadow:0 4px 12px rgba(37,99,235,0.3);
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(37,99,235,0.5)'"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(37,99,235,0.3)'"
+  >
+    🔍 Filter
+  </button>
+
+  <!-- Reset Button -->
+  <button 
+    onclick="resetAssignmentFilter()" 
+    style="
+      background: linear-gradient(135deg, #6b7280, #374151);
+      color:white;
+      border:none;
+      padding:10px 22px;
+      border-radius:8px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      box-shadow:0 4px 12px rgba(107,114,128,0.3);
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(107,114,128,0.5)'"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(107,114,128,0.3)'"
+  >
+    ♻ Reset
+  </button>
+
+</div>
+
+
       </div>
       <!-- Items Modal -->
 <div id="itemsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
@@ -2476,6 +2574,73 @@ select {
       </div>
       <script>
 document.addEventListener("DOMContentLoaded", fetchProjects);
+
+function filterProjectAssignments() {
+
+  const projectCodeInput = document.getElementById("projectCodeinput");
+  const assignedInput = document.getElementById("assignedInput");
+  const tbody = document.getElementById("projectAssignmentsBody");
+
+  if (!tbody) return;
+
+  const projectCodeFilter = projectCodeInput.value.toLowerCase();
+  const assignedFilter = assignedInput.value.toLowerCase();
+
+  const rows = tbody.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+
+    const cells = rows[i].getElementsByTagName("td");
+
+
+    const projectCode = cells[3]?.innerText.toLowerCase() || "";
+    console.log("Project Code:", projectCode); // Debug log
+    const assignedTo = cells[18]?.innerText.toLowerCase() || "";
+    console.log("Assigned To:", assignedTo); 
+    function copyAssignedFromCell(cell) {
+
+  const text = cell.innerText;
+
+  const emailLine = text.split("\n")[0]; 
+  const email = emailLine.replace("Assigned To:", "").trim();
+  
+
+  navigator.clipboard.writeText(email);
+}
+copyAssignedFromCell(cells[18]);
+
+    // Debug log
+
+    const matchProject = projectCode.includes(projectCodeFilter);
+    const matchAssigned = assignedTo.includes(assignedFilter);
+
+    if (projectCodeFilter && assignedFilter) {
+      rows[i].style.display = (matchProject && matchAssigned) ? "" : "none";
+    } 
+    else if (projectCodeFilter) {
+      rows[i].style.display = matchProject ? "" : "none";
+    } 
+    else if (assignedFilter) {
+      rows[i].style.display = matchAssigned ? "" : "none";
+    } 
+    else {
+      rows[i].style.display = "";
+    }
+  }
+}
+
+function resetAssignmentFilter() {
+  document.getElementById("projectCodeinput").value = "";
+  document.getElementById("assignedInput").value = "";
+
+  const rows = document.getElementById("projectAssignmentsBody")
+                       .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+
 
 async function fetchProjects() {
   try {
@@ -5586,7 +5751,7 @@ function renderProjectAssignments(assignments) {
     `;
   })()
 }
-);
+
 </td>
 <td style="gap: 5px; display: flex; flex-direction: column;">
   <button class="btn btn-info btn-sm"

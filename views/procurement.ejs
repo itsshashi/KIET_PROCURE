@@ -4998,7 +4998,7 @@ let currencySymbol = '₹';
                         <i class="fas fa-file-signature"></i> DC Approval
                     </button>
                     
-                    <input type="text" id="approvalSearchInput" onkeyup="filterApprovalRequests()" placeholder="Search by request number or name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
+                    <input type="text" id="approvalSearchInput" onkeyup="filterApprovalRequests()" placeholder="Search by Project Code Or request number or name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
                     <button onclick="loadApprovalRequests()" class="btn btn-primary" style="padding: 8px 16px;">Refresh</button>
                 </div>
 
@@ -5122,6 +5122,8 @@ let currencySymbol = '₹';
                     <button onclick="switchToTab('delivery-challan-approval')" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-file-signature"></i> DC Approval
                     </button>
+                    <input type="text" id="dcApprovalSearchInput" onkeyup="filterDcApprovalRequests()" placeholder="Search by DC number or consignee name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
+                    <button onclick="loaddeliveryChallanApprovalRequests()" class="btn btn-primary" style="padding: 8px 16px;">Refresh</button>
                 </div>
 
                     <div class="table-container" style="overflow-x: auto;">
@@ -5142,7 +5144,7 @@ let currencySymbol = '₹';
                                 <th style="padding: 12px; text-align: center; font-weight: 600;"></th> 
                             </tr>
                         </thead>
-                        <tbody id="approvalRequestsDcBody">
+                        <tbody id="approvaldcRequestsDcBody">
                             <tr>
                                 <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
                                     <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><br>
@@ -5222,6 +5224,71 @@ function action(){
     loadApprovalRequests();
     loaddeliveryChallanApprovalRequests();
 }
+
+function filterApprovalRequests() {
+
+    const input = document.getElementById("approvalSearchInput");
+    const tbody = document.getElementById("approvalRequestsBody");
+
+    if (!input || !tbody) return;
+
+    const filter = input.value.toLowerCase();
+    const rows = tbody.getElementsByTagName("tr");
+
+    for (let i = 0; i < rows.length; i++) {
+
+        const cells = rows[i].getElementsByTagName("td");
+
+        const project_code = cells[2]?.innerText.toLowerCase() || "";
+        const raiser = cells[5]?.innerText.toLowerCase() || "";
+
+        rows[i].style.display =
+            project_code.includes(filter) || raiser.includes(filter)
+                ? ""
+                : "none";
+    }
+}
+
+
+
+
+
+async function filterDcApprovalRequests() {
+
+    const input = document.getElementById("dcApprovalSearchInput");
+    if (!input) {
+        console.error("Search input not found");
+        return;
+    }
+
+    const table = document.getElementById("approvaldcRequestsDcBody");
+    if (!table) {
+        console.error("Table approvaldcRequestsDcBody not found");
+        return;
+    }
+
+    const filter = input.value.toLowerCase();
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+
+        const tdDcNumber = tr[i].getElementsByTagName("td")[1];
+        const tdConsignee = tr[i].getElementsByTagName("td")[5];
+
+        if (tdDcNumber && tdConsignee) {
+
+            const dcNumberText = tdDcNumber.textContent.toLowerCase();
+            const consigneeText = tdConsignee.textContent.toLowerCase();
+
+            tr[i].style.display =
+                dcNumberText.includes(filter) || consigneeText.includes(filter)
+                    ? ""
+                    : "none";
+        }
+    }
+}
+
+
 async function viewDCItems(id) {
 
   const modal = document.getElementById("dcItemsModal");
@@ -5348,7 +5415,7 @@ async function loaddeliveryChallanApprovalRequests() {
       const reasonEl=document.querySelector(".reason_dc");
   reasonEl.textContent="";
 
-    const tbody = document.getElementById("approvalRequestsDcBody");
+    const tbody = document.getElementById("approvaldcRequestsDcBody");
     tbody.innerHTML = "";
 
     if (!data.length) {
