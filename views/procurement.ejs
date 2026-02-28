@@ -4989,7 +4989,15 @@ let currencySymbol = '₹';
                 
                 <!-- Filter and Search -->
                 <div class="filter-section" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                   
+                    
+                    <!-- Tab Switch Buttons -->
+                    <button onclick="switchToTab('approval-requests')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shopping-cart"></i> Purchase Orders
+                    </button>
+                    <button onclick="switchToTab('delivery-challan-approval')" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-signature"></i> DC Approval
+                    </button>
+                    
                     <input type="text" id="approvalSearchInput" onkeyup="filterApprovalRequests()" placeholder="Search by request number or name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
                     <button onclick="loadApprovalRequests()" class="btn btn-primary" style="padding: 8px 16px;">Refresh</button>
                 </div>
@@ -5099,6 +5107,112 @@ let currencySymbol = '₹';
                     </div>
                 </div> -->
             </div>
+
+                <!-- Delivery Challan Approval Tab -->
+                <div class="tab-content" id="delivery-challan-approval">
+                    <div class="tab-header
+">
+                        <h3>Pending DC Approval Requests</h3>
+                        <p>View all pending delivery challan approval requests awaiting your review</p>
+                    </div>
+                    <div class="filter-section" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="switchToTab('approval-requests')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shopping-cart"></i> Purchase Orders
+                    </button>
+                    <button onclick="switchToTab('delivery-challan-approval')" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-signature"></i> DC Approval
+                    </button>
+                </div>
+
+                    <div class="table-container" style="overflow-x: auto;">
+                    <table id="approvalRequestsTable" style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background: #4a90d9; color: white;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Sl No</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">DC NUMBER</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Challan Date</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Dc Type</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Consignee Name</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Reason</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Requester</th>
+                                
+                                
+                                <th style="padding: 12px; text-align: right; font-weight: 600;">Status</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;"> Actions </th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;"></th> 
+                            </tr>
+                        </thead>
+                        <tbody id="approvalRequestsDcBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><br>
+                                    Loading pending approval requests...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                </div>
+                <div id="dcItemsModal" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+">
+
+  <div style="
+    background:white;
+    width:80%;
+    max-width:900px;
+    border-radius:8px;
+    padding:20px;
+    max-height:80%;
+    overflow:auto;
+  ">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3> DC  Items</h3>
+      <button onclick="closedcItemsModal()" style="
+        background:#dc3545;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:4px;
+        cursor:pointer;
+      ">Close</button>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#4a90d9; color:white;">
+          <th style="padding:10px">Item</th>
+          
+          <th style="padding:10px;">Description</th>
+          <th style="padding:10px;">Qty</th>
+          <th style="padding:10px;">Unit</th>
+          <th style="padding:10px;">Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="dcItemsBody">
+        <tr>
+          <td colspan="5" style="text-align:center; padding:20px;">
+            Loading...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+<p style="color:white;background-color: #1C4D8D;" class="reason_dc"></p>
+  </div>
+  
+</div>
+</div>
+               
         
 
             <script>
@@ -5106,6 +5220,60 @@ document.addEventListener("DOMContentLoaded", action);
 function action(){
     loadAssignedProjects();
     loadApprovalRequests();
+    loaddeliveryChallanApprovalRequests();
+}
+async function viewDCItems(id) {
+
+  const modal = document.getElementById("dcItemsModal");
+  const tbody = document.getElementById("dcItemsBody");
+
+
+  modal.style.display = "flex";
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center; padding:20px;">
+        Loading...
+      </td>
+    </tr>
+  `;
+  try {
+
+    const res = await fetch(`/api/delivery-challans/items/${id}`);
+    const data = await res.json();
+
+    const tbody = document.getElementById("dcItemsBody");
+    tbody.innerHTML = "";
+
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:20px;">
+            No items found for this DC
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    data.forEach(item => {
+      tbody.innerHTML += `
+        <tr>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.part_no}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.description || '-'}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.quantity}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.unit}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.remarks}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("dcItemsModal").style.display = "flex";
+    
+
+  } catch (error) {
+    console.error("Failed to load DC items:", error);
+    alert("Failed to load DC items. Please try again.");
+  }
 }
 
 async function approvePO(id) {
@@ -5136,6 +5304,200 @@ async function rejectPO(id) {
     console.error("Rejection failed:", error);
   }
 }
+
+// Function to switch to specific tab from approval requests
+function switchToTab(tabId) {
+    // Remove active class from all tabs and menu items
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+        menuItem.classList.remove('active');
+    });
+    document.querySelectorAll('.submenu-item').forEach(subItem => {
+        subItem.classList.remove('active');
+    });
+
+    // Add active class to target tab
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+
+    // Find and activate the corresponding menu item
+    const menuItem = document.querySelector(`[data-tab="${tabId}"]`);
+    if (menuItem) {
+        menuItem.classList.add('active');
+    }
+
+    // Scroll to top when switching tabs
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Additional actions for specific tabs
+    if (tabId === 'delivery-challan') {
+        console.log("Switched to DC Approval tab");
+    }
+}
+
+async function loaddeliveryChallanApprovalRequests() {
+  try {
+    const by=document.querySelector(".user-info span")?.textContent.trim() || "";
+    console.log("Loading DC approval requests for user:", by);
+    const res = await fetch(`/api/delivery-challans/${by}`);
+    const data = await res.json();
+      const reasonEl=document.querySelector(".reason_dc");
+  reasonEl.textContent="";
+
+    const tbody = document.getElementById("approvalRequestsDcBody");
+    tbody.innerHTML = "";
+
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center;padding:20px;">
+            No pending DC approvals
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    data.forEach((dc, index) => {
+      tbody.innerHTML += `
+<tr style="border-bottom:1px solid #e5e7eb; transition: background 0.2s;">
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${index + 1}
+    </td>
+    
+    <td style="padding:12px; text-align:left; font-weight:500; color:#333;border-right:1px solid #EBF4F6;">
+        ${dc.challan_no}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${new Date(dc.challan_date).toLocaleDateString()}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.dc_type}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.consignee_name}
+    </td>
+    <td style="padding:12px; text-align:left;border-right:1px solid #EBF4F6; color:#555;width: 250px; max-width: 250px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis;">
+        ${dc.reason}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.requester}
+    </td>
+    
+    
+    <td style="padding:12px; text-align:right; font-weight:600; color:#1f2937;border-right:1px solid #EBF4F6;">
+        <span style="
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:12px;
+        font-weight:600;
+        background: ${
+            dc.approval_status === 'pending'
+            ? '#fff3cd'
+            : dc.approval_status === 'approved'
+            ? '#d4edda'
+            : dc.approval_status === 'Returned'
+            ? '#cce5ff'
+            : '#f8d7da'
+        };
+        color: ${
+            dc.approval_status === 'pending'
+            ? '#856404'
+            : dc.approval_status === 'approved'
+            ? '#155724'
+            : dc.approval_status === 'Returned'
+            ? '#004085'
+            : '#721c24'
+        };
+        ">
+        ${dc.approval_status}
+        </span>
+    </td>
+    <td style="padding: 12px; text-align: center;border-right:1px solid #EBF4F6;">
+        <div class="action-container">
+            <i class="fas fa-eye view-icon" 
+            onclick="viewDCItems(${dc.id})" 
+            title="View Items"></i>
+
+            ${dc.approval_status === "pending" ? `
+                <div class="button-group">
+                    <button class="btn-action
+                    btn-approve" onclick="approveDC(${dc.id})">
+                    <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn-action
+                    btn-reject" onclick="rejectDC(${dc.id})">
+                    <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            ` : `
+                
+                
+                
+                
+                
+                <span class="verified-badge">
+                    <i class="fas fa-check-double"></i> Verified
+                </span>
+            `}
+        </div>
+    </td>
+    <td style="padding: 12px; text-align: center;">
+        <!-- Additional actions can go here -->
+    </td>
+</tr>
+`;
+
+    });
+    
+    
+
+  } catch (error) {
+    console.error("Error loading DC approvals:", error);
+  }
+};
+
+
+
+
+async function approveDC(id) {
+  if (!confirm("Are you sure you want to approve this DC?")) return;
+
+  try {
+    await fetch(`/api/delivery-challans/approve/${id}`, {
+      method: "PUT"
+    });
+
+    loaddeliveryChallanApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("DC Approval failed:", error);
+  }
+}
+async function rejectDC(id) {
+  if (!confirm("Are you sure you want to reject this DC?")) return;
+
+  try {
+    await fetch(`/api/delivery-challans/reject/${id}`, {
+      method: "PUT"
+    });
+
+    loaddeliveryChallanApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("DC Rejection failed:", error);
+  }
+}
+
+
 async function loadApprovalRequests() {
   try {
     const by=document.querySelector(".user-info span")?.textContent.trim() || "";
@@ -5369,6 +5731,9 @@ async function viewPOItems(purchaseId) {
 
 function closeItemsModal() {
   document.getElementById("poItemsModal").style.display = "none";
+}
+function closedcItemsModal() {
+  document.getElementById("dcItemsModal").style.display = "none";
 }
 async function loadAssignedProjects() {
   const valu = document.querySelector(".user-info span")?.textContent.trim() || "";
