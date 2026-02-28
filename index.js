@@ -8787,7 +8787,21 @@ app.put("/api/approval-requests/approve/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to approve purchase order" });
   }
 });
-
+app.put("/api/approval-requests/reject/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `UPDATE purchase_orders
+        SET assign_status = 'rejected'
+        WHERE id = $1`,
+      [id]
+    );
+    res.json({ success: true, message: "Purchase order approved" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to approve purchase order" });
+  }
+});
 app.get("/api/delivery-challans/:approver", async (req, res) => {
   try {
     const { rows } = await pool.query(`
