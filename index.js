@@ -8792,7 +8792,7 @@ app.put("/api/approval-requests/reject/:id", async (req, res) => {
     const { id } = req.params;
     await pool.query(
       `UPDATE purchase_orders
-        SET status = 'rejected'
+        SET status = 'rejected'and assign_status='Rejected'
         WHERE id = $1`,
       [id]
     );
