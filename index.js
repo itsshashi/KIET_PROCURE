@@ -8944,7 +8944,7 @@ app.put("/api/delivery-challans/approve/:id", async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: process.env.MAIL_USER,
+      from: '"KIET Technologies" <no-reply@kietsindia.com>',
       to: requesterEmail,
       subject: `Delivery Challan Approved - ${dc.challan_no}`,
       html: `
