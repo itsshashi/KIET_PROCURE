@@ -5281,9 +5281,8 @@ const blob = await response.blob();
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         if (searchTerm) {
           orders = orders.filter(order =>
-            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
-            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
-            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+            (order.po_number || '').toLowerCase().includes(searchTerm)
+            
           );
         }
 
@@ -8299,7 +8298,7 @@ For detailed technical documentation, please contact the development team.`);
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         if (searchTerm) {
           orders = orders.filter(order =>
-            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.po_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
             (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
             (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
           );
