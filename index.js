@@ -8857,6 +8857,30 @@ app.put("/api/delivery-challans/approve/:id", async (req, res) => {
         WHERE id = $1`,
       [id]
     );
+
+     const dcResult = await pool.query(
+            "SELECT * FROM delivery_challan WHERE id = $1",
+            [id]
+        );
+        if (dcResult.rows.length === 0) {
+            return res.status(404).send("DC not found");
+        }
+        const dc = dcResult.rows[0];
+        const requesterEmail = dc.requester;
+        console.log("Requester email:", requesterEmail);
+         if (!requesterEmail) {
+            return res.send(`
+                <h1 style="color:green; font-family:sans-serif;">
+                    ✔ Delivery Challan Approved Successfully!
+                </h1>
+                <p>Note: No requester email found to send PDF.</p>
+            `);
+        }
+
+
+
+
+
     const itemsResult = await pool.query(
       "SELECT * FROM delivery_challan_items WHERE challan_id=$1 ORDER BY id",
       [id]
