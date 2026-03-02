@@ -8849,7 +8849,7 @@ app.get("/api/delivery-challans/items/:id", async (req, res) => {
   }
 });
 
-app.get("/api/delivery-challans/approve/:id", async (req, res) => {
+app.put("/api/delivery-challans/approve/:id", async (req, res) => {
   try {    const { id } = req.params;
     await pool.query(
       `UPDATE delivery_challan
