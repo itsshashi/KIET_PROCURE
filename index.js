@@ -2428,8 +2428,8 @@ app.post(
         items: items,
         gstterms: formData.gst || "Extra 18%",
         insurance: formData.insurance || "N/A",
-        deliveyt: formData.deliveryTerms || "Ex-Works/DAP",
-        package: formData.packaging || "Standard Export Packaging extra",
+        delivery_terms: formData.deliveryterms || "Ex-Works/DAP",
+        packaging: formData.packaging || "Standard Export Packaging extra",
 
         currency: formData.currency || "",
         line: path.join(__dirname, "public", "images", "line.png"),
@@ -8610,10 +8610,23 @@ app.get("/po/:poId/items", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, part_no, description, quantity, unit_price,hsn_code,unit, gst, discount
-       FROM purchase_order_items
-       WHERE purchase_order_id = $1
-       ORDER BY id`,
+      `SELECT 
+    poi.id,
+    poi.part_no,
+    poi.description,
+    poi.quantity,
+    poi.unit_price,
+    poi.hsn_code,
+    poi.unit,
+    poi.gst,
+    poi.discount,
+    po.created_at,
+    po.total_amount
+FROM purchase_order_items poi
+JOIN purchase_orders po 
+    ON poi.purchase_order_id = po.id
+WHERE poi.purchase_order_id = $1
+ORDER BY poi.id;`,
       [poId]
     );
 
@@ -9005,6 +9018,21 @@ app.get('/api/projects', async (req, res) => {
   } catch (error) {
     console.error("Error fetching project details:", error);
     res.status(500).json({ error: "Failed to fetch project details" });
+  }
+});
+
+app.put('api/update-po_items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items } = req.body;
+    await pool.query(
+      'UPDATE purchase_order_items SET items = $1 WHERE id = $2',
+      [JSON.stringify(items), id]
+    );
+    res.json({ success: true, message: "PO items updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update PO items" });
   }
 });
 
