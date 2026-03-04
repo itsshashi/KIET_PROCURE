@@ -8791,7 +8791,7 @@ app.put("/api/approval-requests/approve/:id", async (req, res) => {
     const { id } = req.params;
     await pool.query(
       `UPDATE purchase_orders
-        SET assign_status = 'approved'
+        SET assign_status = 'verified'
         WHERE id = $1`,
       [id]
     );
