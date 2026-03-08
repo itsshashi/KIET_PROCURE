@@ -1151,94 +1151,110 @@ input:focus, select:focus {
       }
     }
 
+
+
     function populateProjectsTable(data) {
-      const tbody = document.getElementById('projectsTableBody');
-      tbody.innerHTML = '';
+  const tbody = document.getElementById('projectsTableBody');
+  tbody.innerHTML = '';
 
-      if (data.length === 0) {
-        document.getElementById('noProjectsMessage').style.display = 'block';
-        return;
-      }
+  if (!data || data.length === 0) {
+    document.getElementById('noProjectsMessage').style.display = 'block';
+    return;
+  }
 
-      document.getElementById('noProjectsMessage').style.display = 'none';
+  document.getElementById('noProjectsMessage').style.display = 'none';
 
-      data.forEach(item => {
-        const tr = document.createElement('tr');
+  data.forEach(item => {
+    const tr = document.createElement('tr');
 
-        // Determine row color based on status
-let rowStyles;
-switch ((item.delivery_status || '').toLowerCase()) {
-  case 'pending':
-    // Soft Amber: Warm but not alarming
-    rowStyles = 'background-color: #fffbeb; color: #92400e; border-bottom: 1px solid #fde68a;';
-    break;
-  case 'in progress':
-    // Soft Blue: Focused and active
-    rowStyles = 'background-color: #f0f9ff; color: #075985; border-bottom: 1px solid #bae6fd;';
-    break;
-  case 'completed':
-    // Soft Emerald: Positive but professional (Replaced the "pure green")
-    rowStyles = 'background-color: #f0fdf4; color: #166534; border-bottom: 1px solid #bbf7d0;';
-    break;
-  case 'delayed':
-    // Soft Rose: Noticeable but not "Error-red"
-    rowStyles = 'background-color: #fff1f2; color: #9f1239; border-bottom: 1px solid #fecdd3;';
-    break;
-  default:
-    rowStyles = 'background-color: #ffffff; color: #374151; border-bottom: 1px solid #e5e7eb;';
+    // ✅ IMPORTANT: Set row ID (fixes 400 Bad Request)
+    tr.dataset.id = item.id;
+
+    // 🔹 Row color based on delivery status
+    let rowStyles;
+    switch ((item.delivery_status || '').toLowerCase()) {
+      case 'pending':
+        rowStyles = 'background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;';
+        break;
+      case 'in_progress':
+        rowStyles = 'background:#f0f9ff;color:#075985;border-bottom:1px solid #bae6fd;';
+        break;
+      case 'completed':
+        rowStyles = 'background:#f0fdf4;color:#166534;border-bottom:1px solid #bbf7d0;';
+        break;
+      case 'delayed':
+        rowStyles = 'background:#fff1f2;color:#9f1239;border-bottom:1px solid #fecdd3;';
+        break;
+      default:
+        rowStyles = 'background:#ffffff;color:#374151;border-bottom:1px solid #e5e7eb;';
+    }
+    tr.style = rowStyles;
+
+    tr.innerHTML = `
+      <td style="border-left:1px solid #c7d2fe;">${item.id ?? 'N/A'}</td>
+      <td>${item.description ?? 'N/A'}</td>
+      <td>${item.project_code ?? 'N/A'}</td>
+      <td>${item.quantity ?? 'N/A'}</td>
+      <td>${item.customer ?? 'N/A'}</td>
+      <td>${item.user_name ?? 'N/A'}</td>
+      <td>${item.po_no ?? 'N/A'}</td>
+      <td>${item.po_date ? new Date(item.po_date).toLocaleDateString('en-IN') : 'N/A'}</td>
+      <td>${item.currency ?? ''}${item.value_per_unit ? parseFloat(item.value_per_unit).toFixed(2) : '0.00'}</td>
+      <td>₹${item.total_po_value_pending ? parseFloat(item.total_po_value_pending).toFixed(2) : '0.00'}</td>
+
+      <!-- Delivery Status -->
+      <td>
+        <select data-field="delivery_status"
+                class="delivery-status"
+                style="background:#eef2ff;border:none;width:100%;padding:4px;">
+          <option value="">Select</option>
+          <option value="pending" ${item.delivery_status === 'Pending' ? 'selected' : ''}>Pending</option>
+          <option value="in_rogress" ${item.delivery_status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+          <option value="completed" ${item.delivery_status === 'Completed' ? 'selected' : ''}>Completed</option>
+          <option value="cancelled" ${item.delivery_status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </td>
+
+      <td>${item.delivery_date ? new Date(item.delivery_date).toLocaleDateString('en-IN') : 'N/A'}</td>
+      <td>${item.inv_type ?? 'N/A'}</td>
+
+      <!-- Invoice No -->
+      <td contenteditable="true"
+          data-field="invoice_no"
+          style="background:#eef2ff;">
+        ${item.invoice_no ?? ''}
+      </td>
+
+      <!-- Invoice Date -->
+      <td>
+        <input type="date"
+               data-field="invoice_date"
+               value="${item.invoice_date ? item.invoice_date.split('T')[0] : ''}"
+               style="background:#eef2ff;border:1px solid #c7d2fe;">
+      </td>
+
+      <td>${item.currency ?? ''}${item.base_value ? parseFloat(item.base_value).toFixed(2) : '0.00'}</td>
+      <td>${item.currency ?? ''}${item.total_value ? parseFloat(item.total_value).toFixed(2) : '0.00'}</td>
+
+      <td>
+        <button class="btn btn-primary save-btn">Save</button>
+      </td>
+
+      <td>
+        <button class="btn btn-secondary view-items-btn"
+                onclick="viewItems(${item.id})">
+          View Items
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
-tr.style = rowStyles;
 
-
-console.log('Populating row for item:', item);
-// Use it in your table row
-tr.innerHTML = `
-  <td style="border-left: 1px solid #c7d2fe;">${item.id || 'N/A'}</td>
-  <td>${item.description || 'N/A'}</td>
-  <td>${item.project_code || 'N/A'}</td>
-  <td>${item.quantity || 'N/A'}</td>
-  <td>${item.customer || 'N/A'}</td>
-  <td>${item.user_name || 'N/A'}</td>
-  <td>${item.po_no || 'N/A'}</td>
-  <td>${new Date(item.po_date).toLocaleDateString('en-IN') || 'N/A'}</td>
-  <td>${item.currency}${item.value_per_unit ? parseFloat(item.value_per_unit).toFixed(2) : '0.00'}</td>
-  <td>₹${item.total_po_value_pending ? parseFloat(item.total_po_value_pending).toFixed(2) : '0.00'}</td>
-  <td>${item.delivery_status || 'N/A'}</td>
-  <td>${new Date(item.delivery_date).toLocaleDateString('en-IN') || 'N/A'}</td>
-  <td>${item.inv_type || 'N/A'}</td>
-<!-- Invoice No (editable text) -->
-  <td contenteditable="true"
-      data-field="invoice_no"
-      style="background:#eef2ff;">
-    ${item.invoice_no || ''}
-  </td>
-
-  <!-- Invoice Date (editable date) -->
-  <td>
-    <input type="date"
-           data-field="invoice_date"
-           value="${item.invoice_date ? item.invoice_date.split('T')[0] : ''}"
-           style="background:#eef2ff;border:1px solid #c7d2fe;">
-  </td>  
-   
-  <td style="white-space:no-wrap;">${item.currency}${item.base_value ? parseFloat(item.base_value).toFixed(2) : '0.00'}</td>
-  <td>${item.currency}${item.total_value ? parseFloat(item.total_value).toFixed(2) : '0.00'}</td>
-
-<td>
-    <button class="btn btn-primary save-btn">Save</button>
     
-  </td> 
-  <td>
-    <button class="btn btn-secondary view-items-btn" onclick="viewItems(${item.id})">View Items</button></td> `;
-
-
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    // Switch tab function
+    //switch tab function
     function switchTab(tab) {
       // Hide all tab contents
       document.getElementById('accountsTab').style.display = 'none';
@@ -1457,29 +1473,31 @@ tr.innerHTML = `
   }
 }
 
-  const tbody = document.getElementById('projectsTableBody');
-tbody.addEventListener('click', function (e) {
+const tbody = document.getElementById('projectsTableBody');
+
+tbody.addEventListener('click', async function (e) {
   if (!e.target.classList.contains('save-btn')) return;
 
   const tr = e.target.closest('tr');
 
-  // Sl.No / ID (make sure first column contains ID)
-  const id = tr.children[0].innerText.trim();
+  console.log('Row dataset:', tr.dataset); // 👈 DEBUG
 
-  const updatedData = { id };
+  const updatedData = {
+    id: tr.dataset.id
+  };
 
   tr.querySelectorAll('[data-field]').forEach(el => {
-    const field = el.dataset.field;
-
-    updatedData[field] =
+    updatedData[el.dataset.field] =
       el.tagName === 'INPUT' || el.tagName === 'SELECT'
         ? el.value
         : el.innerText.trim();
   });
 
-  saveRow(updatedData);
+  await saveRow(updatedData);
   alert('Invoice details saved successfully! ✅');
 });
+
+
 
 function calTotalValue() {
   const baseValue = parseFloat(document.getElementById('baseValue').value) || 0;

@@ -1,5 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
+
+
 import generateDeliveryChallan from "./dc.js";
 import { loadModels, getDescriptor, distance } from "./face.js";  
 import fetch from "node-fetch";
@@ -24,6 +26,7 @@ import generateVKQuotation from "./vk.js";
 import generateMAEQuotation from "./mae.js";
 import { query } from "express-validator";
 import { sendNotification } from "./routes/pushNotifications.js";
+import { assign } from "nodemailer/lib/shared/index.js";
 const db_pass = process.env.DB_PASSWORD;
 // =============================
 // CONFIG
@@ -40,6 +43,7 @@ app.use("/uploads", express.static(uploadsDir));
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+const documentsDir = path.join(uploadsDir, "documents");
 
 const qtUploadsDir = path.join(__dirname, "qt_uploads");
 // Ensure qt_uploads folder exists
@@ -52,6 +56,7 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
+  // password:process.env.DB_PASSWORD,
   password:'Shashank@KIET1519',
   port: 5432,
 });
@@ -433,9 +438,9 @@ app.get("/api/orders", async (req, res) => {
   const referer = req.get("referer") || "";
 
   // Allow only requests from your domain
-  if (!referer.startsWith("https://kietprocure.com")) {
-    return res.status(403).json({ error: "Access denied" });
-  }
+  // if (!referer.startsWith("http://localhost:3000")) {
+  //   return res.status(403).json({ error: "Access denied" });
+  // }
 
   try {
     const { rows } = await pool.query(`
@@ -460,6 +465,7 @@ app.get("/api/orders", async (req, res) => {
                 created_at,
                 send_date 
             FROM purchase_orders
+            where assign_status='verified'
             ORDER BY created_at DESC
         `); //send date added
     res.json(rows);
@@ -750,33 +756,60 @@ app.get("/api/orders/search/filter", async (req, res) => {
 // Get orders for inventory processing
 app.get("/api/inventory-orders", async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-            SELECT
-                id,
-                project_code_number as order_id,
-                project_name as project,
-                supplier_name as supplier,
-                supplier_gst,
-                supplier_address,
-                shipping_address,
-                ordered_by as requested_by,
-                date_required,
-                COALESCE(total_amount, 0) as total_amount,
-                status,
-                urgency,
-                notes,
-                quotation_file,
-                created_at
-            FROM purchase_orders
-            WHERE status IN ('sent', 'received')
-            ORDER BY created_at DESC
-        `);
+    const { search } = req.query;
+
+    let query = `
+      SELECT
+        id,
+        project_code_number as order_id,
+        project_name as project,
+        supplier_name as supplier,
+        supplier_gst,
+        supplier_address,
+        shipping_address,
+        ordered_by as requested_by,
+        date_required,
+        COALESCE(total_amount, 0) as total_amount,
+        status,
+        urgency,
+        notes,
+        quotation_file,
+        created_at,po_number
+      FROM purchase_orders
+      WHERE status IN ('sent', 'received')
+    `;
+
+    const values = [];
+    let count = 1;
+
+    // 🔍 If user typed something
+    if (search) {
+      query += `
+        AND (
+          project_code_number ILIKE $${count}
+          OR project_name ILIKE $${count}
+          OR supplier_name ILIKE $${count}
+        )
+      `;
+      values.push(`%${search}%`);
+      count++;
+    }
+
+    query += `
+      ORDER BY created_at DESC
+      LIMIT 20
+    `;
+
+    const { rows } = await pool.query(query, values);
+
     res.json(rows);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // Get delivery challans for inventory view
 app.get("/api/delivery-challans", async (req, res) => {
@@ -909,12 +942,14 @@ app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
 // Login submit
 app.post("/submit", async (req, res) => {
   const { email, password, role } = req.body;
+  console.log("▶ /submit called for", email, "as", role);
 
   try {
     const result = await pool.query(
-      "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
-      [email]
+      "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) and role=$2",
+      [email, role]
     );
+    
 
     if (!result.rows.length)
       return res.render("index.ejs", { message: "Invalid email or password" });
@@ -1082,8 +1117,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       (project_name, project_code_number, purchase_order_number, supplier_name,
        supplier_gst, supplier_address, shipping_address, urgency, date_required,
        notes, ordered_by, quotation_file, total_amount, reference_no, contact,
-       single, terms_of_payment,currency)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       single, terms_of_payment,currency,raised_amount)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING id`,
       [
         projectName,
@@ -1103,7 +1138,9 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         contact,
         single,
         termsOfPayment,
-        currency
+        currency,
+        totalAmount
+
       ]
     );
 
@@ -1133,49 +1170,18 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
     await pool.query("COMMIT");
     console.log("✔ DB Transaction committed");
+    const result3=await pool.query(`select remaining_budget from project_info where project_code=$1`,[projectCodeNumber]);
+    const remain_b=result3.rows[0].remaining_budget;
+    const calc=remain_b-totalAmount;
+    const result4=await pool.query(`update project_info  set remaining_budget=$1 where project_code=$2`,[calc,projectCodeNumber]);
+    
+    
+    console.log("result rows",result3.rows[0])
+
+
 
     // 🔹 Send email
-    const transporter = nodemailer.createTransport({
-      host: "smtp.office365.com",
-      port: 587,
-      secure: false,
-      auth: { user: "No-reply@kietsindia.com", pass: "Kiets@2025$1" },
-      tls: { rejectUnauthorized: false },
-    });
-
-    transporter.sendMail({
-      from: "No-reply@kietsindia.com",
-      to: "purchase@kietsindia.com",
-      subject: `New Purchase Order Raised — ${purchaseOrderNumber}`,
-      html: `
-        <div style="font-family: Arial; padding: 10px;">
-          <p><strong>Dear Purchase Team,</strong></p>
-          <p>A new Purchase Order has been raised. Below are the details:</p>
-
-          <table cellpadding="6" style="width:100%; border-collapse:collapse;">
-            <tr><td><b>Order Number</b></td><td>${purchaseOrderNumber}</td></tr>
-            <tr><td><b>Supplier</b></td><td>${supplierName}</td></tr>
-            <tr><td><b>Total Amount</b></td><td>${totalAmount}</td></tr>
-            <tr><td><b>Raised By</b></td><td>${orderedBy}</td></tr>
-            <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
-          </table>
-
-          <div style="text-align:center; margin:30px;">
-            <a href="https://kietprocure.com/" style="background:#0056b3;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;">
-              View Order
-            </a>
-          </div>
-
-          <div style="text-align:center; border-top:1px solid #ccc; padding-top:15px;">
-            <img src="cid:logoImage" width="120" />
-            <p style="font-size:12px; color:#777;">© 2025 KIET TECHNOLOGIES PVT LTD</p>
-          </div>
-        </div>
-      `,
-      attachments: [
-        { filename: "lg.jpg", path: "public/images/lg.jpg", cid: "logoImage" },
-      ],
-    }).catch(err => console.error("⚠ Email error:", err));
+    
 
     // 🔹 Final response
     return res.json({ success: true, message: "✅ Order submitted successfully" });
@@ -1249,7 +1255,7 @@ app.post("/forgot-password", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: process.env.NO_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -1423,7 +1429,7 @@ app.post("/api/send-email/:id", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: process.env.NO_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -1566,7 +1572,7 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: process.env.NO_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -1755,7 +1761,7 @@ app.put("/api/orders/:id/status", async (req, res) => {
         secure: false, // STARTTLS
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -1849,7 +1855,7 @@ app.put("/api/orders/:id/send", async (req, res) => {
       secure: false, // STARTTLS
       auth: {
         user: "No-reply@kietsindia.com",
-        pass: "Kiets@2025$1",
+        pass: process.env.NO_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -2225,6 +2231,7 @@ app.get("/api/dc/:id/pdf", async (req, res) => {
       signPath: "public/images/signature.png",
       company: { logo: "public/images/lg.jpg" },
       line: "public/images/line.png",
+      expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
     };
 
     // 3️⃣ Generate unique filename
@@ -2816,6 +2823,17 @@ const quotationUpload = multer({
   },
 });
 
+
+const docStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, documentsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
 // purchaseOrder.js
 
 // Get approved quotations for procurement users
@@ -2888,6 +2906,8 @@ app.get("/approved-quotations", async (req, res) => {
 app.get("/download-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
+    console.log("Received param for quotation download:", param);
+    
 
     const isNumeric = /^\d+$/.test(param);
 
@@ -3270,7 +3290,7 @@ app.get("/api/pending-vk_quotations", async (req, res) => {
     const vkResult = await client.query(`
               SELECT
                   vq.*,
-                  COALESCE(SUM(vqi.total_amount), 0) as total_amount,
+                  vq.total_amount as total_amount,
                   COUNT(vqi.id) as item_count,
                   'vk' as quotation_source
               FROM vk_quotations vq
@@ -3511,6 +3531,7 @@ app.get("/api/quotations/:id/details/:type", async (req, res) => {
                 client_name as clientName,
                 client_email as clientEmail,
                 client_phone as clientPhone,
+                created_by,
                 
                 
                 total_amount as totalAmount,
@@ -3581,7 +3602,8 @@ app.get("/api/quotations/:id/details/:type", async (req, res) => {
                 notes,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                created_by
                 
             FROM "quotations"
             WHERE id = $1
@@ -3713,309 +3735,179 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // Input validation
-    const quotationId = req.params.id;
-    console.log("QUOTATION BODY", req.body);
-    const { quotation_source } = req.body;
-    console.log(req.body, "bodyyy");
-
-    if (!quotationId || isNaN(quotationId)) {
-      return res.status(400).json({
-        error: "Invalid quotation ID",
-        details: "Quotation ID must be a valid number",
-      });
-    }
-
-    if (!quotation_source) {
-      return res.status(400).json({
-        error: "Missing required field",
-        details: "quotation_source is required",
-      });
-    }
-
-    console.log(
-      "Approving quotation ID:",
-      quotationId,
-      "Source:",
-      quotation_source
-    );
-    // Determine tables
-    let quotationsTable, itemsTable;
-    if (quotation_source === "vk") {
-      quotationsTable = "vk_quotations";
-      itemsTable = "vk_quotation_items";
-    } else {
-      // Default to standard quotations for any non-VK source (regular, standard, etc.)
-      quotationsTable = "quotations";
-      itemsTable = "quotation_items";
+    const quotationId = Number(req.params.id);
+    if (!quotationId) {
+      return res.status(400).json({ error: "Invalid quotation ID" });
     }
 
     await client.query("BEGIN");
 
-    // Fetch quotation with error handling
-    let quotationResult;
-    try {
-      quotationResult = await client.query(
-        `SELECT * FROM ${quotationsTable} WHERE id = $1`,
+    /* -----------------------------------------
+       1. AUTO-DETECT QUOTATION TABLE
+    ----------------------------------------- */
+    let quotation;
+    let quotationsTable;
+
+    const vkResult = await client.query(
+      "SELECT id, status FROM vk_quotations WHERE id = $1",
+      [quotationId]
+    );
+
+    if (vkResult.rows.length) {
+      quotation = vkResult.rows[0];
+      quotationsTable = "vk_quotations";
+    } else {
+      const normalResult = await client.query(
+        "SELECT id, status FROM quotations WHERE id = $1",
         [quotationId]
       );
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to fetch quotation from database",
-        dbError
-      );
+
+      if (!normalResult.rows.length) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+
+      quotation = normalResult.rows[0];
+      quotationsTable = "quotations";
     }
 
-    if (quotationResult.rows.length === 0) {
-      throw new QuotationNotFoundError(quotationId);
-    }
-
-    const quotation = quotationResult.rows[0];
-
-    // Check if already approved
+    /* -----------------------------------------
+       2. CHECK STATUS
+    ----------------------------------------- */
     if (quotation.status === "approved") {
-      await client.query("ROLLBACK");
       return res.status(409).json({
         error: "Quotation already approved",
-        details: `Quotation ${quotationId} has already been approved`,
       });
     }
 
-    // Fetch items with error handling
-    let itemsResult;
-    try {
-      itemsResult = await client.query(
-        `SELECT * FROM ${itemsTable} WHERE quotation_id = $1 ORDER BY id`,
-        [quotationId]
-      );
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to fetch quotation items",
-        dbError
-      );
-    }
-
-    if (itemsResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        error: "Cannot approve quotation",
-        details: "Quotation has no items",
-      });
-    }
-
-    // Update status
-    try {
-      await client.query(
-        `UPDATE ${quotationsTable} SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        ["approved", quotationId]
-      );
-    } catch (dbError) {
-      throw new DatabaseTransactionError(
-        "Failed to update quotation status",
-        dbError
-      );
-    }
-
-    // Prepare PDF data with validation
-    const poData = {
-      poNumber: quotation.quotation_number || "N/A",
-      date: quotation.quotation_date || new Date().toISOString(),
-      expected_date: quotation.valid_until,
-      termsOfPayment: quotation.payment_terms || "Net 30",
-      currency: quotation.currency || "INR",
-      company: {
-        name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
-        email: quotation.company_email || "info@kiet.com",
-        gst: quotation.company_gst || "29AAFCK6528DIZG",
-        address:
-          quotation.company_address ||
-          "51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
-        logo: path.join(__dirname, "public", "images", "page_logo.jpg"),
-      },
-      supplier: {
-        name: quotation.client_name || "Unknown Supplier",
-        address: quotation.client_address || "Address not provided",
-        duration: quotation.delivery_duration,
-      },
-      shipTo: quotation.client_address || "Address not provided",
-      reference_no: quotation.reference_no,
-      requester: {
-        name: quotation.client_name || "Unknown",
-      },
-      items: itemsResult.rows.map((row) => ({
-        part_no: row.part_no || "N/A",
-        description: row.description || "No description",
-        hsn_code: row.hsn_code,
-        gst: row.gst_rate || 0,
-        quantity: row.quantity || 0,
-        unit: row.unit || "PCS",
-        unit_price: row.unit_price || 0,
-        discount: row.discount || 0,
-        total: row.total_amount || 0,
-      })),
-      line: path.join(__dirname, "public", "images", "line.png"),
-      signPath: path.join(__dirname, "public", "images", "signature.png"),
-    };
-
-    // VK-specific fields with error handling
-    if (quotation_source === "vk") {
-      try {
-        const vkDataResult = await client.query(
-          `SELECT kiet_costs, pv_adaptors FROM ${quotationsTable} WHERE id = $1`,
-          [quotationId]
-        );
-
-        const vkData = vkDataResult.rows[0];
-
-        if (vkData.kiet_costs) {
-          try {
-            poData.kietCosts = JSON.parse(vkData.kiet_costs);
-          } catch (parseError) {
-            console.warn("Failed to parse kiet_costs JSON:", parseError);
-            poData.kietCosts = null;
-          }
-        }
-
-        if (vkData.pv_adaptors) {
-          try {
-            poData.pvAdaptors = JSON.parse(vkData.pv_adaptors);
-          } catch (parseError) {
-            console.warn("Failed to parse pv_adaptors JSON:", parseError);
-            poData.pvAdaptors = null;
-          }
-        }
-      } catch (vkError) {
-        console.warn("VK data fetch non-critical error:", vkError);
-        // Continue without VK-specific data
-      }
-    }
-
-    // Generate PDF with error handling
-    const sanitizedNumber = (quotation.quotation_number || "unknown").replace(
-      /[^a-zA-Z0-9.-]/g,
-      "_"
+    /* -----------------------------------------
+       3. UPDATE STATUS
+    ----------------------------------------- */
+    await client.query(
+      `UPDATE ${quotationsTable}
+       SET status = 'approved',
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [quotationId]
     );
-    const fileName = `quotation_${sanitizedNumber}.pdf`;
-    const filePath = path.join(qtUploadsDir, fileName);
-
-    try {
-      // Verify directory exists
-      if (!fs.existsSync(qtUploadsDir)) {
-        fs.mkdirSync(qtUploadsDir, { recursive: true });
-      }
-
-      if (quotation.quotation_type === "VK") {
-        await generateVKQuotation(poData, filePath);
-      } else {
-        await generateQuotation(poData, filePath);
-      }
-
-      // Verify PDF was created
-      if (!fs.existsSync(filePath)) {
-        throw new PDFGenerationError("PDF file was not created");
-      }
-    } catch (pdfError) {
-      throw new PDFGenerationError("Failed to generate PDF document", pdfError);
-    }
 
     await client.query("COMMIT");
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Quotation approved and PDF generated successfully",
-      data: {
-        quotationId,
-        quotationNumber: quotation.quotation_number,
-        pdfPath: fileName,
-      },
+      quotationId,
+      status: "approved",
+      table: quotationsTable,
     });
+
   } catch (error) {
-    // Rollback transaction if still active
-    try {
-      await client.query("ROLLBACK");
-    } catch (rollbackError) {
-      console.error("Rollback failed:", rollbackError);
-    }
+    await client.query("ROLLBACK");
 
-    // Log full error details for debugging
-    console.error("Error approving quotation:", {
-      error: error.message,
-      stack: error.stack,
-      quotationId: req.params.id,
-      timestamp: new Date().toISOString(),
-    });
+    console.error("Approve quotation error:", error.message);
 
-    // Handle custom errors
-    if (
-      error instanceof QuotationNotFoundError ||
-      error instanceof InvalidQuotationSourceError
-    ) {
-      return res.status(error.statusCode).json({
-        error: error.message,
-        quotationId: req.params.id,
-      });
-    }
-
-    if (
-      error instanceof PDFGenerationError ||
-      error instanceof DatabaseTransactionError
-    ) {
-      return res.status(error.statusCode).json({
-        error: error.message,
-        details: "Please contact support if this issue persists",
-      });
-    }
-
-    // Handle unexpected errors
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to approve quotation",
-      message: "An unexpected error occurred. Please try again later.",
     });
+
   } finally {
-    // Always release the client
-    try {
-      
-      client.release();
-    } catch (releaseError) {
-      console.error("Failed to release database client:", releaseError);
-    }
+    client.release();
   }
 });
+
+
+
 
 // Reject quotation
 app.put("/api/quotations/:id/reject", async (req, res) => {
   const client = await pool.connect();
 
   try {
+    const quotationId = Number(req.params.id);
+    const { reason } = req.body;
+
+    if (!quotationId) {
+      return res.status(400).json({ error: "Invalid quotation ID" });
+    }
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: "Rejection reason is required" });
+    }
+
     await client.query("BEGIN");
 
-    const quotationId = req.params.id;
-    const { reason, quotation_source } = req.body;
+    /* -----------------------------------------
+       1. AUTO-DETECT QUOTATION TABLE
+    ----------------------------------------- */
+    let quotationsTable;
+    let quotation;
 
-    // Determine which table to update based on quotation source
-    const quotationsTable =
-      quotation_source === "vk" ? "vk_quotations" : "quotations";
-
-    // Update quotation status and add rejection reason
-    await client.query(
-      `UPDATE ${quotationsTable} SET status = $1, notes = CONCAT(COALESCE(notes, ''), '\\n\\nRejected: ', $2), updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
-      ["rejected", reason, quotationId]
+    const vkResult = await client.query(
+      "SELECT id, status, notes FROM vk_quotations WHERE id = $1",
+      [quotationId]
     );
 
-    // Log rejection action
-    console.log(`Quotation ${quotationId} rejected by MD. Reason: ${reason}`);
+    if (vkResult.rows.length) {
+      quotation = vkResult.rows[0];
+      quotationsTable = "vk_quotations";
+    } else {
+      const normalResult = await client.query(
+        "SELECT id, status, notes FROM quotations WHERE id = $1",
+        [quotationId]
+      );
+
+      if (!normalResult.rows.length) {
+        return res.status(404).json({ error: "Quotation not found" });
+      }
+
+      quotation = normalResult.rows[0];
+      quotationsTable = "quotations";
+    }
+
+    /* -----------------------------------------
+       2. STATUS CHECK
+    ----------------------------------------- */
+    if (quotation.status === "rejected") {
+      return res.status(409).json({
+        error: "Quotation already rejected",
+      });
+    }
+
+    /* -----------------------------------------
+       3. UPDATE STATUS + REJECTION NOTE
+    ----------------------------------------- */
+    await client.query(
+      `
+      UPDATE ${quotationsTable}
+      SET status = 'rejected',
+          
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      `,
+      [ quotationId]
+    );
 
     await client.query("COMMIT");
 
-    res.json({ success: true, message: "Quotation rejected successfully" });
+    return res.json({
+      success: true,
+      quotationId,
+      status: "rejected",
+      table: quotationsTable,
+    });
+
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Error rejecting quotation:", error);
-    res.status(500).json({ error: "Failed to reject quotation" });
+
+    console.error("Reject quotation error:", error.message);
+
+    return res.status(500).json({
+      error: "Failed to reject quotation",
+    });
+
   } finally {
     client.release();
   }
 });
+
 
 // Send VK quotation approval request (separate API for VK quotations)
 app.post(
@@ -4056,17 +3948,89 @@ app.post(
         clientEmail,
         clientPhone,
         notes,
+        vkgst,
+        vkpackaging,
+        vkinsurance,
+        vkdeliveryTerms,
       } = req.body;
 
       console.log("VK Form data extracted:", req.body);
 
       // Parse PV adaptors data (this is the main data for VK quotations)
-      const pvAdaptors = req.body.pvAdaptors
-        ? JSON.parse(req.body.pvAdaptors)
-        : [];
-      const kietCosts = req.body.kietCosts
-        ? JSON.parse(req.body.kietCosts)
-        : [];
+      const {
+  pvQty = [],
+  pvFamilyName = [],
+  pvRevNo = [],
+  pvCoaxialPin = [],
+  pvSokCard = [],
+  pvSokQty = [],
+  pvRate = []
+} = req.body;
+
+const pvAdaptors = pvQty.map((_, i) => ({
+  qty: Number(pvQty[i]),
+  familyName: pvFamilyName[i],
+  revNo: pvRevNo[i],
+  coaxialPin: pvCoaxialPin[i],
+  sokCard: pvSokCard[i],
+  sokQty: pvSokQty[i],
+  rate: Number(pvRate[i])
+}));
+
+ // Extract arrays from request
+const {
+  itemDescription = [],
+  priceInput = [],
+  qtyInput = []
+} = req.body;
+
+// Validation: main items count
+if (itemDescription.length !== qtyInput.length) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
+  });
+}
+
+// Validation: priceInput must have enough entries for main + additional costs
+if (priceInput.length < itemDescription.length + 2) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: priceInput must include additional charges"
+  });
+}
+
+// Build main KIET costs
+const kietCosts = itemDescription.map((desc, i) => ({
+  description: desc,
+  cost: Number(priceInput[i]),
+  qty: Number(qtyInput[i]),
+  totalValue: Number(priceInput[i]) * Number(qtyInput[i])
+}));
+
+// Append additional costs (always last 2 entries in priceInput)
+kietCosts.push({
+  description: "Export packaging charges included",
+  cost: Number(priceInput[priceInput.length - 2]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 2])
+});
+
+kietCosts.push({
+  description: "Bigger box setup",
+  cost: Number(priceInput[priceInput.length - 1]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 1])
+});
+
+// Optional: Calculate total KIET cost
+const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
+
+console.log("KIET Costs data:", kietCosts.length, "items");
+console.log("Total KIET Cost:", totalKietCost);
+
+// Now you can insert `kietCosts` into DB along with VK quotation
+// Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
+
+
 
       console.log("PV Adaptors data:", pvAdaptors.length, "adaptors");
       console.log("KIET Costs data:", kietCosts.length, "cost items");
@@ -4087,8 +4051,8 @@ app.post(
                 valid_until, currency, payment_terms, delivery_duration,
                 company_name, company_email, company_gst, company_address,
                 client_name, client_email, client_phone,
-                total_amount, notes, status, created_by, kiet_costs, pv_adaptors
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                total_amount, notes, status, created_by, kiet_costs, pv_adaptors,gstterms,packaging,insurance,deliveryterms
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             RETURNING id
         `;
 
@@ -4121,6 +4085,11 @@ app.post(
         req.session.user ? req.session.user.email : null,
         JSON.stringify(kietCosts),
         JSON.stringify(pvAdaptors),
+        vkgst || null,
+        vkpackaging || null,  
+        vkinsurance || null,
+        vkdeliveryTerms || null
+
       ];
       console.log("Inserting VK quotation with values:", quotationValues);
 
@@ -4170,7 +4139,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -4617,7 +4586,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -4983,7 +4952,7 @@ app.post(
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -5733,7 +5702,7 @@ app.get("/view-quotation/:param", async (req, res) => {
       },
       gstterms: quotation.gst || "Extra 18%",
       insurance: quotation.insurance || "N/A",
-      delivery_terms: quotation.delivery_terms || "Ex-Works / DAP",
+      delivery_terms: quotation.deliveryterms || "Ex-Works / DAP",
       packaging: quotation.packaging || "Standard Export Packaging extra",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
@@ -5762,10 +5731,13 @@ app.get("/view-quotation/:param", async (req, res) => {
 app.get("/view-vk-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
+
+    // Decide whether param is ID or quotation number
     const isNumeric = /^\d+$/.test(param);
+    const column = isNumeric ? "id" : "quotation_number";
 
     const quotationResult = await pool.query(
-      `SELECT * FROM vk_quotations WHERE ${isNumeric ? "id" : "quotation_number"} = $1 LIMIT 1`,
+      `SELECT * FROM vk_quotations WHERE ${column} = $1 LIMIT 1`,
       [param]
     );
 
@@ -5774,37 +5746,65 @@ app.get("/view-vk-quotation/:param", async (req, res) => {
     }
 
     const quotation = quotationResult.rows[0];
-    const kietCosts = typeof quotation.kiet_costs === "string" ? JSON.parse(quotation.kiet_costs) : (quotation.kiet_costs || []);
-const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotation.pv_adaptors) : (quotation.pv_adaptors || []);
 
+    // ✅ Safe JSON parsing
+    const safeParse = (value) => {
+      try {
+        if (!value) return [];
+        if (typeof value === "string") return JSON.parse(value);
+        return value;
+      } catch (err) {
+        console.error("JSON parse error:", err);
+        return [];
+      }
+    };
 
+    const kietCosts = safeParse(quotation.kiet_costs);
+    const pvAdaptors = safeParse(quotation.pv_adaptors);
+
+    // ✅ Build PDF data
     const poData = {
       company: {
         logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
         name: quotation.company_name || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.company_email || "info@kiet.com",
         gst: quotation.company_gst || "29AAFCK6528DIZG",
-        address: quotation.company_address || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
+        address:
+          quotation.company_address ||
+          "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd",
       },
+
       supplier: {
         address: quotation.client_address || "",
         contact: quotation.client_phone || "",
         duration: quotation.delivery_duration || "",
       },
-      clientEmail: quotation.client_email,
+
+      clientEmail: quotation.client_email || "",
       poNumber: quotation.quotation_number,
-      date: quotation.quotation_date ? quotation.quotation_date.toLocaleDateString("en-GB") : "",
-      requester: { name: quotation.client_name || "" },
-      reference_no: quotation.reference_no,
-      expected_date: quotation.valid_until ? quotation.valid_until.toLocaleDateString("en-GB") : "",
+      date: quotation.quotation_date
+        ? new Date(quotation.quotation_date).toLocaleDateString("en-GB")
+        : "",
+
+      requester: {
+        name: quotation.client_name || "",
+      },
+
+      reference_no: quotation.reference_no || "",
+      expected_date: quotation.valid_until
+        ? new Date(quotation.valid_until).toLocaleDateString("en-GB")
+        : "",
+
       termsOfPayment: quotation.payment_terms || "",
       gstterms: quotation.gstterms || "Extra 18%",
       insurance: quotation.insurance || "N/A",
-      deliveyt: quotation.deliveryterms || "Ex-Works / DAP",
+      delivery: quotation.deliveryterms || "Ex-Works / DAP",
       package: quotation.packaging || "Standard Export Packaging extra",
       currency: quotation.currency || "INR",
+
       kietCosts,
       pvAdaptors,
+
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
     };
@@ -5814,7 +5814,10 @@ const pvAdaptors = typeof quotation.pv_adaptors === "string" ? JSON.parse(quotat
 
     await generateVKQuotation(poData, filePath);
 
-    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${fileName}"`
+    );
     res.setHeader("Content-Type", "application/pdf");
 
     return res.sendFile(filePath);
@@ -5866,6 +5869,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
+      maeleadtime: quotation.maeleadtime || "",
     };
 
     const fileName = `mae_quotation_${poData.poNumber}_${Date.now()}.pdf`;
@@ -5930,12 +5934,15 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       packaging:q.maepackaging || " ",
       insurance: q.maeinsurance || "",
       line: path.join(process.cwd(), "public/images/line.png"),
-      signPath: path.join(process.cwd(), "public/images/signature.png")
+      signPath: path.join(process.cwd(), "public/images/signature.png"),
+      maeleadtime: q.maeleadtime || "",
     };
 
     // Save inside qt_uploads without subfolders
     // Remove null, undefined, or empty values
 let safeNumber = poData.poNumber;
+safeNumber = safeNumber ? String(safeNumber).trim() : null;
+safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_"); // Keep only safe chars and limit length
 
 // If null/undefined/empty → use ID or a random short code
 if (!safeNumber) {
@@ -6148,6 +6155,7 @@ app.post("/preview", upload.none(), async (req, res) => {
       warranty: formData.maeWarranty || "",
       line: path.join(__dirname, "public/images/line.png"),
       signPath: path.join(__dirname, "public/images/signature.png"),
+        maeleadtime: formData.maeleadtime || "",
     };
 
     const fileName = `mae_preview_${Date.now()}.pdf`;
@@ -6178,56 +6186,65 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
 
     const { id } = req.params;
 
-    // ---- Parse PV ADAPTORS ----
-    let pvAdaptors = [];
-    if (Array.isArray(req.body.pvQty)) {
-      req.body.pvQty.forEach((qty, index) => {
-        pvAdaptors.push({
-          slNo: index + 1,
-          qty: parseFloat(qty) || 0,
-          familyName: req.body.pvFamilyName[index] || "",
-          revNo: req.body.pvRevNo[index] || "",
-          coaxialPin: req.body.pvCoaxialPin[index] || "",
-          sokCard: req.body.pvSokCard[index] || "",
-          sokQty: parseFloat(req.body.pvSokQty[index]) || 0,
-          rate: parseFloat(req.body.pvRate[index]) || 0,
-          totalAmount: (
-            (parseFloat(qty) || 0) *
-            (parseFloat(req.body.pvRate[index]) || 0)
-          ).toFixed(2),
-        });
-      });
-    }
+    /* ===========================
+       PARSE JSON FROM FORMDATA
+    ============================ */
+    const pvAdaptors = JSON.parse(req.body.pv_adaptors || "[]");
+    const kietCosts  = JSON.parse(req.body.kiet_costs || "[]");
 
-    // ---- Calculate total ----
-    const totalAmount = pvAdaptors.reduce(
-      (sum, item) => sum + parseFloat(item.totalAmount),
+    /* ===========================
+       CALCULATE TOTALS
+    ============================ */
+    const totalPv = pvAdaptors.reduce(
+      (sum, item) => sum + Number(item.totalAmount || 0),
       0
     );
-    console.log('vk revision rev', req.body.quotation_rev)
-    console.log("Total Amount:", totalAmount);
-    console.log("PV Adaptors:", pvAdaptors);
 
-    // ---- UPDATE ONLY PV ADAPTORS ----
-    await client.query(
+    const totalKiet = kietCosts.reduce(
+      (sum, item) => sum + Number(item.totalValue || 0),
+      0
+    );
+
+    const grandTotal = Number((totalPv + totalKiet).toFixed(2));
+
+    console.log("VK Revision:", req.body.quotation_rev);
+    console.log("PV Adaptors:", pvAdaptors);
+    console.log("KIET Costs:", kietCosts);
+    console.log("Grand Total:", grandTotal);
+
+    /* ===========================
+       UPDATE DATABASE
+    ============================ */
+    const result = await client.query(
       `
       UPDATE vk_quotations SET
-       
-        pv_adaptors = $1,
-        total_amount = $2,
-        updated_at = CURRENT_TIMESTAMP,quotation_numb=$3
-      WHERE id = $4
+        pv_adaptors     = $1,
+        kiet_costs      = $2,
+        total_amount     = $3,
+        quotation_number = $4,
+        updated_at      = CURRENT_TIMESTAMP
+      WHERE id = $5
       `,
-      [JSON.stringify(pvAdaptors), totalAmount,req.body.quotation_rev, id]
+      [
+        JSON.stringify(pvAdaptors),
+        JSON.stringify(kietCosts),
+        grandTotal,
+        req.body.quotation_rev,
+        Number(id)
+      ]
     );
+
+    if (result.rowCount === 0) {
+      throw new Error("Quotation not found");
+    }
 
     await client.query("COMMIT");
 
     res.json({
       success: true,
-      message: "PV Adaptor details updated successfully",
+      message: "VK quotation updated successfully",
       quotationId: id,
-      totalAmount
+      totalAmount: grandTotal
     });
 
   } catch (error) {
@@ -6238,6 +6255,7 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
     client.release();
   }
 });
+
 
 
 
@@ -6268,6 +6286,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeInsurance,
    maeWarranty,
    maePackaging,
+   maeleadtime,
    
    subject,
    createdBy
@@ -6295,11 +6314,12 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    maeWarranty,
    status,
    subject,created_by
-   ,maepackaging
+   ,maepackaging,
+   maeleadtime
    ) VALUES( $1, $2, $3, $4,
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
-       $14, $15, $16,$17,$18) RETURNING id`;
+       $14, $15, $16,$17,$18,$19) RETURNING id`;
    const maeValues=[
      quotationNumber,
    quotationDate,
@@ -6318,7 +6338,8 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    "pending",
    subject,
    createdBy,
-   maePackaging
+   maePackaging,
+   maeleadtime,
 
    ];
    const result=await client.query(maeQut,maeValues);
@@ -6336,7 +6357,7 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -7099,7 +7120,7 @@ app.post("/submit-delivery-challan", async (req, res) => {
         secure: false,
         auth: {
           user: "No-reply@kietsindia.com",
-          pass: "Kiets@2025$1",
+          pass: process.env.NO_PASSWORD,
         },
         tls: {
           rejectUnauthorized: false,
@@ -7107,17 +7128,33 @@ app.post("/submit-delivery-challan", async (req, res) => {
       });
 
         await transporter.sendMail({
-            from: "No-reply@kietsindia.com",
-            to: data.managerEmail,
-            subject: "Delivery Challan Approval Required",
-            html: `
-                <h3>A Delivery Challan requires your approval</h3>
-                <p><strong>Challan No:</strong> ${data.challanNumber}</p>
-                <a href="${approvalLink}"
-                    style="padding:10px 20px; background:#28a745; color:white; text-decoration:none;">
-                APPROVE DC</a>
-            `
-        });
+  from: "No-reply@kietsindia.com",
+  to: data.managerEmail,
+  subject: "Delivery Challan Approval Required",
+  html: `
+    <div style="font-family:Arial,sans-serif;">
+      <h3>Delivery Challan Approval Required</h3>
+      <p><strong>Challan No:</strong> ${data.challanNumber}</p>
+
+      <a href="${approvalLink}"
+         style="
+           padding:12px 24px;
+           background:#0d6efd;
+           color:white;
+           text-decoration:none;
+           border-radius:4px;
+           display:inline-block;
+         ">
+        👁 VIEW DELIVERY CHALLAN
+      </a>
+
+      <p style="margin-top:15px;color:#555;">
+        Please review the PDF before approving.
+      </p>
+    </div>
+  `
+});
+
 
         res.json({ success: true, challan_no: data.challanNumber });
 
@@ -7127,7 +7164,50 @@ app.post("/submit-delivery-challan", async (req, res) => {
     }
 });
 app.get("/approve-dc/:id", async (req, res) => {
-    try {
+  try {
+    const { id } = req.params;
+
+    const dcResult = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id = $1",
+      [id]
+    );
+
+    if (!dcResult.rows.length) {
+      return res.status(404).send("DC not found");
+    }
+
+    const dc = dcResult.rows[0];
+    const requesterEmail = dc.requester; // optional, not used here
+
+    res.send(`
+      <h2>Delivery Challan Review</h2>
+      <p><strong>Challan No:</strong> ${dc.challan_no}</p>
+
+      <a href="/approve-dc/${id}/view-pdf"
+         target="_blank"
+         style="padding:10px 20px; background:#0d6efd; color:white; text-decoration:none;">
+         👁 VIEW PDF
+      </a>
+
+      <br><br>
+
+      <form method="POST" action="/approve-dc/${id}/approve@89">
+        <button type="submit"
+          style="padding:10px 20px; background:#28a745; color:white;">
+          ✅ APPROVE DC
+        </button>
+      </form>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading DC");
+  }
+});
+
+app.post("/approve-dc/:id/approve@89", async (req, res) => {
+  console.log('approve dc has been done');
+      try {
         const { id } = req.params;
 
         // Update DC status
@@ -7140,21 +7220,16 @@ app.get("/approve-dc/:id", async (req, res) => {
              WHERE id=$1`,
             [id]
         );
-
-        // Get DC details including requester
         const dcResult = await pool.query(
             "SELECT * FROM delivery_challan WHERE id = $1",
             [id]
         );
-
         if (dcResult.rows.length === 0) {
             return res.status(404).send("DC not found");
         }
-
         const dc = dcResult.rows[0];
         const requesterEmail = dc.requester;
-
-        if (!requesterEmail) {
+         if (!requesterEmail) {
             return res.send(`
                 <h1 style="color:green; font-family:sans-serif;">
                     ✔ Delivery Challan Approved Successfully!
@@ -7162,13 +7237,10 @@ app.get("/approve-dc/:id", async (req, res) => {
                 <p>Note: No requester email found to send PDF.</p>
             `);
         }
-
-        // Get DC items
-        const itemsResult = await pool.query(
+      const itemsResult = await pool.query(
             "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
             [id]
         );
-
         const items = itemsResult.rows.map((row) => ({
             part_no: row.part_no,
             description: row.description,
@@ -7202,9 +7274,9 @@ app.get("/approve-dc/:id", async (req, res) => {
             signPath: "public/images/signature.png",
             company: { logo: "public/images/lg.jpg" },
             line: "public/images/line.png",
-        };
+            expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
 
-        // Generate PDF
+        };
         const timestamp = Date.now();
         const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
         const filePath = path.join(uploadsDir, fileName);
@@ -7221,7 +7293,7 @@ app.get("/approve-dc/:id", async (req, res) => {
                     secure: false,
                     auth: {
                         user: "No-reply@kietsindia.com",
-                        pass: "Kiets@2025$1",
+                        pass: process.env.NO_PASSWORD,
                     },
                     tls: { rejectUnauthorized: false },
                 });
@@ -7272,7 +7344,320 @@ app.get("/approve-dc/:id", async (req, res) => {
         console.error(err);
         res.status(500).send("Error approving DC");
     }
+
 });
+
+
+
+app.get("/approve-dc/:id/view-pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const dcRes = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id=$1",
+      [id]
+    );
+
+    const itemsRes = await pool.query(
+      "SELECT * FROM delivery_challan_items WHERE challan_id=$1",
+      [id]
+    );
+
+    if (dcRes.rowCount === 0) {
+      return res.send("<h2>❌ Delivery Challan not found</h2>");
+    }
+
+    const dc = dcRes.rows[0];
+    const items = itemsRes.rows;
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Delivery Challan</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f4f6f8;
+          padding: 20px;
+        }
+        .container {
+          max-width: 900px;
+          margin: auto;
+          background: #fff;
+          padding: 25px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+          text-align: center;
+          color: #1e3a8a;
+          margin-bottom: 10px;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+        .header div {
+          font-size: 14px;
+        }
+        .section {
+          margin-bottom: 20px;
+        }
+        .section h3 {
+          background: #1e40af;
+          color: white;
+          padding: 6px 10px;
+          border-radius: 4px;
+          font-size: 15px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+        table th, table td {
+          border: 1px solid #cbd5e1;
+          padding: 8px;
+          font-size: 14px;
+        }
+        table th {
+          background: #e0e7ff;
+          text-align: left;
+        }
+        .footer {
+          margin-top: 30px;
+          display: flex;
+          justify-content: space-between;
+        }
+        .signature {
+          margin-top: 50px;
+          text-align: center;
+          font-size: 14px;
+        }
+        .print-btn {
+          text-align: right;
+          margin-bottom: 15px;
+        }
+        .print-btn button {
+          padding: 8px 16px;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        @media print {
+          .print-btn { display: none; }
+          body { background: white; }
+        }
+      </style>
+    </head>
+    <body>
+
+      <div class="container">
+
+        <div class="print-btn">
+          <button onclick="window.print()">🖨 Print / Save PDF</button>
+        </div>
+
+        <h1>Delivery Challan</h1>
+
+        <div class="header">
+          <div>
+            <strong>Challan No:</strong> ${dc.challan_no}<br>
+            <strong>Challan Date:</strong> ${dc.challan_date.toLocaleDateString()}<br>
+            <strong>Delivery Date:</strong> ${dc.delivery_date.toLocaleDateString()}
+          </div>
+          <div>
+            <strong>Vehicle No:</strong> ${dc.vehicle_no}<br>
+            <strong>Project:</strong> ${dc.project_name || "-"}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Consignor Details</h3>
+          <p>
+            <strong>Name:</strong> ${dc.consignor_name}<br>
+            <strong>GST:</strong> ${dc.consignor_gst}<br>
+            <strong>Address:</strong> ${dc.consignor_address}
+          </p>
+        </div>
+
+        <div class="section">
+          <h3>Consignee Details</h3>
+          <p>
+            <strong>Name:</strong> ${dc.consignee_name}<br>
+            <strong>GST:</strong> ${dc.consignee_gst}<br>
+            <strong>Address:</strong> ${dc.consignee_address}
+          </p>
+        </div>
+
+        <div class="section">
+          <h3>Item Details</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.description}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unit || "-"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        
+
+      </div>
+
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("<h2>❌ Server Error</h2>");
+  }
+});
+
+
+app.post("/approve-dc/:id/approve", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1️⃣ Fetch DC
+    const dcRes = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id=$1",
+      [id]
+    );
+
+    if (dcRes.rowCount === 0) {
+      return res.status(404).send("Delivery Challan not found");
+    }
+
+    const dc = dcRes.rows[0];
+
+    if (dc.approval_status !== "pending") {
+      return res.send("Delivery Challan already processed");
+    }
+
+    const requesterEmail = dc.created_by; // adjust column name if different
+
+    // 2️⃣ Approve DC
+    await pool.query(
+      `UPDATE delivery_challan
+       SET approval_status='approved',
+           approved_at=NOW(),
+           approved_by=manager_email
+       WHERE id=$1`,
+      [id]
+    );
+
+    // 3️⃣ Fetch items
+    const itemsResult = await pool.query(
+      "SELECT * FROM delivery_challan_items WHERE challan_id=$1 ORDER BY id",
+      [id]
+    );
+
+    const items = itemsResult.rows.map(row => ({
+      part_no: row.part_no,
+      description: row.description,
+      hsn: row.hsn,
+      quantity: row.quantity,
+      unit: row.unit || "pcs",
+      remarks: row.remarks,
+    }));
+
+    // 4️⃣ Prepare PDF data
+    const dcData = {
+      challanNo: dc.challan_no,
+      challanDate: new Date(dc.challan_date).toLocaleDateString(),
+      deliveryDate: dc.delivery_date
+        ? new Date(dc.delivery_date).toLocaleDateString()
+        : "N/A",
+      vehicleNo: dc.vehicle_no,
+      consignor: {
+        name: dc.consignor_name,
+        address: dc.consignor_address,
+        gst: dc.consignor_gst,
+      },
+      consignee: {
+        name: dc.consignee_name,
+        address: dc.consignee_address,
+        gst: dc.consignee_gst,
+        contact: dc.consignee_contact,
+        phone: dc.consignee_phone,
+      },
+      reason: dc.reason,
+      items,
+      type: dc.dc_type,
+      signPath: "public/images/signature.png",
+      company: { logo: "public/images/lg.jpg" },
+      line: "public/images/line.png",
+      expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
+    };
+
+    // 5️⃣ Generate PDF
+    const fileName = `DC_${dc.challan_no}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    await generateDeliveryChallan(dcData, filePath);
+
+    // 6️⃣ Send Email
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'No-reply@kietsindia.com',
+        pass: process.env.NO_PASSWORD,
+      },
+      tls: { rejectUnauthorized: false },
+    });
+
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: requesterEmail,
+      subject: `Delivery Challan Approved - ${dc.challan_no}`,
+      html: `
+        <h2 style="color:#28a745">Delivery Challan Approved</h2>
+        <p>Your Delivery Challan <b>${dc.challan_no}</b> has been approved.</p>
+        <p>Please find the attached PDF.</p>
+        <br>
+        <p>Regards,<br>KIET Technologies Team</p>
+      `,
+      attachments: [{ filename: fileName, path: filePath }],
+    });
+
+    // 7️⃣ Delete PDF
+    fs.unlinkSync(filePath);
+
+    // 8️⃣ Send response ONCE
+    res.send(`
+      <h1 style="color:green">✔ Delivery Challan Approved</h1>
+      <p>PDF sent to requester</p>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 
 app.post("/submit-inventory_local", upload.single("invoice_local"), async (req, res) => {
   try {
@@ -7358,7 +7743,8 @@ app.get('/api/project-details_info', isAuthenticated, async (req, res) => {
         assigned_on,
         budget,
         target_date,
-        project_status
+        project_status,
+        documents
         
       FROM project_info
       ORDER BY po_date DESC
@@ -7483,24 +7869,33 @@ app.get("/api/know_budget/:project_code", async (req, res) => {
 });
 app.put('/api/update-order', async (req, res) => {
   try {
-    const { id, invoice_no, invoice_date } = req.body;
-    console.log('Update request body:', req.body);
+    let { id, invoice_no, invoice_date, delivery_status } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: 'Order ID required' });
     }
 
-    // PostgreSQL parameterized query ($1, $2, $3)
+    // ✅ FIX: Convert empty string to NULL
+    invoice_no = invoice_no?.trim() || null;
+    invoice_date = invoice_date ? invoice_date : null;
+    delivery_status = delivery_status || null;
+
     const sql = `
       UPDATE project_info
       SET
         invoice_no = $1,
-        invoice_date = $2::date
-      WHERE id = $3
+        invoice_date = $2,
+        delivery_status = $3
+      WHERE id = $4
       RETURNING *;
     `;
 
-    const values = [invoice_no || null, invoice_date || null, id];
+    const values = [
+      invoice_no,
+      invoice_date,      // ← NULL or 'YYYY-MM-DD'
+      delivery_status,
+      id
+    ];
 
     const result = await pool.query(sql, values);
 
@@ -7508,13 +7903,18 @@ app.put('/api/update-order', async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    res.json({ message: 'Invoice updated successfully', order: result.rows[0] });
+    res.json({
+      message: 'Invoice updated successfully',
+      order: result.rows[0]
+    });
 
   } catch (err) {
     console.error('SQL Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+
 
 
 app.get('/api/project-po/:id', async (req, res) => {
@@ -7704,7 +8104,10 @@ app.get("/assigned-projects/:userId", async (req, res) => {
         delivery_date,
         target_date,
         po_no,
-        project_status
+        project_status,
+        remaining_budget,
+        quantity,
+        documents
 
 
        FROM project_info
@@ -7728,11 +8131,12 @@ app.get("/attendance", (req, res) => {
 });
 
 app.put("/api/mark_project_completed", async (req, res) => {
-  const { projectId } = req.body;
+  const { project_id } = req.body;
+  console.log("backednd retrived",req.body);
   try {
     await pool.query(
-      "UPDATE project_info SET project_status = 'Completed' WHERE project_code = $1",
-      [projectId]
+      "UPDATE project_info SET project_status = 'Completed',delivery_status = 'Completed'  WHERE project_code = $1",
+      [project_id]
     );
     res.status(200).json({ message: "Project marked completed" });
   } catch (err) {
@@ -7878,7 +8282,8 @@ app.put('/update/dc/close',async(req,res)=>{
   try {
     await pool.query(
       "UPDATE delivery_challan SET approval_status = 'Returned' WHERE id = $1",
-      [project_id]
+      [id_close
+      ]
     );
     res.status(200).json({ message: "Project marked completed" });
   } catch (err) {
@@ -7908,6 +8313,340 @@ app.get('/process/view/json', async (req, res) => {
     'SELECT process, who, created_at,project_code FROM process_log ORDER BY created_at DESC'
   );
   res.json(result.rows);
+});
+
+
+
+
+app.get('/getreq/:project_code/:supplier_name', async (req, res) => {
+  try {
+    const { project_code,supplier_name } = req.params;
+    console.log("project_code",project_code);
+    console.log("supplier_name",supplier_name);
+
+    const result = await pool.query(
+      `SELECT assigned_to FROM project_info WHERE project_code = $1`,
+      [project_code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project code not found" });
+    }
+
+    const assignedToEmail = result.rows[0].assigned_to;
+
+    // Mail transporter
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: process.env.NO_PASSWORD,
+      },
+      tls: { rejectUnauthorized: false },
+    });
+    console.log("assigned_to ",assignedToEmail);
+
+    const approvalLink = `https://kietprocure.com/approve-project/'${project_code}'/'${supplier_name}'`;
+    const viewLink = `https://kietprocure.com/view-project/${project_code}/${supplier_name}`;
+
+    await transporter.sendMail({
+      from: "No-reply@kietsindia.com",
+      to:assignedToEmail,
+      subject: `Approval Required — ${project_code}`,
+      html: `
+        <p><b>Dear Approver,</b></p>
+        <p>A new Purchase Order has been raised.</p>
+
+        <table border="1" cellpadding="6" style="border-collapse:collapse;">
+          <tr><td><b>Project Code</b></td><td>${project_code}</td></tr>
+          <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+        </table>
+
+        <div style="margin-top:20px;">
+        <a href="${viewLink}"
+           style="background:#007bff;color:white;
+           padding:12px 20px;margin-right:10px;
+           text-decoration:none;border-radius:5px;">
+           👁 VIEW ORDER
+        </a>
+          <a href="${approvalLink}"
+             style="background:#28a745;color:white;padding:12px 20px;
+             text-decoration:none;border-radius:5px;">
+             ✅ APPROVE
+          </a>
+        </div>
+
+        <p style="font-size:12px;color:#777;margin-top:30px;">
+          © 2025 KIET TECHNOLOGIES PVT LTD
+        </p>
+      `,
+    });
+
+    res.json({
+      success: true,
+      message: "Approval mail sent successfully",
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+app.get('/view-project/:project_code/:supplier_name', async (req, res) => {
+  try {
+    const { project_code,supplier_name } = req.params;
+
+    // 1️⃣ Get PO Header
+    const result = await pool.query(
+      `SELECT * FROM purchase_orders WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2 `,
+      [project_code,supplier_name]
+    );
+
+    if (!result.rows.length) {
+      return res.send("<h3>Project not found</h3>");
+    }
+
+    const p = result.rows[0];
+
+    // 2️⃣ Get PO Items
+    const itemsResult = await pool.query(
+      `SELECT * FROM purchase_order_items WHERE purchase_order_id = $1`,
+      [p.id]
+    );
+
+    // 3️⃣ Calculations
+    let subTotal = 0;
+    let gstTotal = 0;
+
+    const itemRows = itemsResult.rows.map((i, index) => {
+      const qty = Number(i.quantity);
+      const price = Number(i.unit_price);
+      const discount = Number(i.discount || 0);
+      const gstRate = Number(i.gst || 0);
+
+      const base = (qty * price) - discount;
+      const gstAmt = (base * gstRate) / 100;
+      const total = base + gstAmt;
+
+      subTotal += base;
+      gstTotal += gstAmt;
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${i.part_no}</td>
+          <td>${i.description}</td>
+          <td>${i.hsn_code || "-"}</td>
+          <td>${qty}</td>
+          <td>${i.unit || "-"}</td>
+          <td>₹${price.toFixed(2)}</td>
+          <td>${gstRate}%</td>
+          <td>₹${gstAmt.toFixed(2)}</td>
+          <td>₹${total.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const grandTotal = subTotal + gstTotal;
+
+    // 4️⃣ Send HTML
+    res.send(`
+      <h2>📄 Purchase Order Details</h2>
+
+      <table border="1" cellpadding="8" style="border-collapse:collapse;margin-bottom:20px;">
+        <tr><td><b>Project Code</b></td><td>${p.project_code_number}</td></tr>
+        <tr><td><b>Project Name</b></td><td>${p.project_name}</td></tr>
+        
+        <tr><td><b>Status</b></td><td>${p.assign_status}</td></tr>
+        <tr><td><b>Date</b></td><td>${new Date().toLocaleDateString()}</td></tr>
+      </table>
+
+      <h3>🧾 Items</h3>
+
+      <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+        <tr style="background:#f2f2f2;">
+          <th>#</th>
+          <th>Part No</th>
+          <th>Description</th>
+          <th>HSN</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Unit Price</th>
+          <th>GST %</th>
+          <th>GST Amt</th>
+          <th>Total</th>
+        </tr>
+        ${itemRows || `<tr><td colspan="10" align="center">No items found</td></tr>`}
+      </table>
+
+      <div style="margin-top:20px;width:320px;">
+        <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;">
+          <tr><td><b>Sub Total</b></td><td>₹${subTotal.toFixed(2)}</td></tr>
+          <tr><td><b>GST Total</b></td><td>₹${gstTotal.toFixed(2)}</td></tr>
+          <tr style="background:#e8ffe8;">
+            <td><b>Grand Total</b></td>
+            <td><b>₹${grandTotal.toFixed(2)}</b></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top:25px;">
+        <a href="https://kietprocure.com/approve-project/${project_code}/${supplier_name}"
+           style="background:#28a745;color:white;
+           padding:12px 20px;text-decoration:none;border-radius:5px;">
+           ✅ APPROVE
+        </a>
+      </div>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading project");
+  }
+});
+
+
+app.get('/approve-project/:project_code/:supplier_name', async (req, res) => {
+  try {
+    const { project_code,supplier_name } = req.params;
+
+    await pool.query(
+      `
+      UPDATE purchase_orders
+      SET assign_status = 'verified'
+      WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2
+      `,
+      [project_code,supplier_name]
+    );
+
+    res.send(`
+      <h2 style="color:green;">✅ Project Approved Successfully</h2>
+      <p>Project Code: <b>${project_code}</b></p>
+      <p>You may now close this window.</p>
+    `);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Approval failed");
+  }
+});
+
+
+app.get('/process-details/:project_code', async (req, res) => {
+  try {
+    const { project_code } = req.params;
+
+ const result = await pool.query(
+      `SELECT process, who, created_at
+       FROM process_log
+       WHERE project_code = $1
+       ORDER BY created_at ASC`,
+      [project_code]
+    );
+
+
+    // ✅ Return array even if empty
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+const uploadDocument = multer({ storage: docStorage });
+
+app.post(
+  "/upload-project-document",
+  uploadDocument.single("document"),
+  async (req, res) => {
+
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILE:", req.file);   // 🔴 THIS IS KEY
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "File not received by server"
+      });
+    }
+
+    const dbFilePath = `uploads/documents/${req.file.filename}`;
+
+    await pool.query(
+      `UPDATE project_info SET documents = $1 WHERE id = $2`,
+      [dbFilePath, req.body.projectId]
+    );
+
+    res.json({ success: true });
+  }
+);
+
+
+app.get("/po/:poId/items", async (req, res) => {
+  const { poId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT id, part_no, description, quantity, unit_price,hsn_code,unit, gst, discount
+       FROM purchase_order_items
+       WHERE purchase_order_id = $1
+       ORDER BY id`,
+      [poId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch PO items" });
+  }
+});
+
+
+app.get("/api/render-vk_quotations/:creat", async (req, res) => {
+  const client = await pool.connect();
+
+  // Determine which tables to query based on source
+
+  const quotationResult = await client.query(`
+    SELECT
+        id,
+        quotation_type AS "quotationType",
+        quotation_number AS "quotationnumber",
+        quotation_date AS "quotationdate",
+        reference_no AS "referenceNo",
+        valid_until AS "validuntil",
+        currency,
+        payment_terms AS "paymentterms",
+        delivery_duration AS "deliveryduration",
+        company_name AS "companyname",
+        company_email AS "companyEmail",
+        company_gst AS "companyGST",
+        company_address AS "companyAddress",
+        client_name AS "clientname",
+        client_email AS "clientemail",
+        client_phone AS "clientPhone",
+        client_address ,
+
+        kiet_costs::jsonb AS "kietCosts",
+        pv_adaptors::jsonb AS "pvAdaptors",
+
+        total_amount AS "totalamount",
+        notes,
+        status,
+        created_at AS "createdAt",
+        updated_at AS "updatedAt",created_by AS "createdBy"
+
+    FROM vk_quotations
+    WHERE status = 'approved' and created_by='${req.params.creat}'
+    ORDER BY created_at DESC;
+  `);
+  client.release();
+
+  res.json(quotationResult.rows);
 });
 
 

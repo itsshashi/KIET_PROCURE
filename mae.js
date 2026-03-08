@@ -445,6 +445,22 @@ const maeContent = buildMaeContent(poData.textareaDetails);
                           fontSize: 9,
                         },
                       ],
+                      [
+                        {
+                          text: "Lead Time",
+                          font: "Times",
+                          bold: true,
+                          alignment: "left",
+                          fontSize: 9,
+                        },
+                        {
+                          text: poData.maeleadtime || "3 Months",
+                          font: "Times",
+                          alignment: "right",
+                          fontSize: 9,
+                        },
+                      ],
+                      
                     ],
                   },
                   layout: {
@@ -561,8 +577,8 @@ const maeContent = buildMaeContent(poData.textareaDetails);
 
     { text: "Respected Sir,", bold: true, margin: [0, 0, 0, 8] },
     { text: `Kind Attention: ${poData.requester.name || ""}`, bold: true, margin: [0, 0, 0, 12] },
-
-    { text: `Subject: Quotation for Design, Development, Manufacturing, Supply, and Installation of  ${poData.machine || ""}`, bold: true, decoration: "underline", margin: [0, 0, 0, 6] },
+//Design, Development, Manufacturing, Supply, and Installation of 
+    { text: `Subject: Quotation for  ${poData.machine || ""}`, bold: true, decoration: "underline", margin: [0, 0, 0, 6] },
     { text: `Ref: ${poData.reference || "Email"}`, italics: true, margin: [0, 0, 0, 14] },
 
 {
@@ -635,6 +651,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
         // MAE Details Section
        {
   text: "Material Acquisition Estimate (MAE) Details",
+  // text:"Revised price list for 2026-27 as per Hypertak hike",
   font: "Times",
   bold: true,
   fontSize: 14,

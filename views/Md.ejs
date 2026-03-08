@@ -1344,9 +1344,72 @@ select {
     /* Sortable headers */
     table th { cursor: pointer; user-select: none; }
     table th:hover { background: #34495e; }
+
+    .creative-loader {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Card */
+.loader-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 40px 60px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Ring */
+.progress-ring {
+  width: 70px;
+  height: 70px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Text animation */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
   </style>
 </head>
 <body>
+
+   <div id="loaderOverlay" class="creative-loader hidden">
+  <div class="loader-card">
+    <div class="progress-ring"></div>
+    <h3 id="loaderText">Processing</h3>
+    <span class="dots">.</span>
+  </div>
+</div>
+
   <div class=" container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -1909,7 +1972,7 @@ select {
   <select name="project_to" id="to" style="width: 100%; padding: 8px; border-radius: 5px; border: none;">
     <option value="rajesh.km@kietsindia.com">Rajesh K M</option>
     <option value="kumar.p@kietsindia.com">Kumar P</option>
-    <option value="tilak.b@kietsindia.com">Tilak B</option>
+    <option value="tilak@kietsindia.com">Tilak B</option>
     <option value="kathiresan.s@kietsindia.com">Kathiresan S</option>
     <option value="darshan.nm@kietsindia.com">Darshan N M</option>
     <option value="shashank@kietsindia.com">Shashank N</option>
@@ -1917,6 +1980,7 @@ select {
     <option value="kalidass.s@kietsindia.com">Kalidass S</option>
     <option value="purchase@kietsindia.com">Purchase Team</option>
     <option value="jayanth.n@kietsindia.com">Jayanth</option>
+    <option value="sales@kietsindia.com">Sales Team</option>
   </select>
 
   <input type="number" name="budget" id="budget" placeholder="Enter Budget Amount" 
@@ -2258,6 +2322,19 @@ select {
 
     <!-- Project Assignment Tab Content -->
     <div id="project-assignTab" class="tab-content">
+
+<!-- Process Details Modal -->
+<div id="processModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+     background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-height:80%; overflow:auto;">
+    <h3>Process Details</h3>
+    <div id="processModalContent">Loading...</div>
+    <button onclick="closeProcessModal()" style="margin-top:10px; background-color: rgba(211, 11, 11, 0.781); padding:5px 15px;border:1px solid rgb(79, 130, 241);border-radius: 20px;color:white;">Close</button>
+  </div>
+</div>
+
+
+
       <div class="mb-6">
          <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2 hover:text-blue-600 cursor-pointer transition-colors duration-300 " style="font-weight: bolder;">
     <span>📋</span> PROJECT DETAILS
@@ -2303,6 +2380,7 @@ select {
         <th class="px-4 py-3">TOTAL VALUE</th>
         <th class="px-4 py-3">ASSIGNED TO</th>
         <th class="px-4 py-3">VIEW PO</th>
+        <th class="px-4 py-3">PROCESS</th>
       </tr>
     </thead>
     <tbody id="projectAssignmentsBody">
@@ -3290,6 +3368,7 @@ const quotationForm = document.getElementById('quotationForm');
 
 quotationForm.addEventListener('submit', async function (e) {
   e.preventDefault();
+  
 
   try {
     // 1️⃣ Prepare first FormData for trade generation
@@ -3335,8 +3414,7 @@ quotationForm.addEventListener('submit', async function (e) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-
-    console.log('✅ Quotation PDF downloaded successfully.');
+    console.log('✅ Quotation PDF generated and download initiated.');
   } catch (error) {
     console.error('❌ Error generating quotation:', error);
     alert(error.message || 'Failed to generate quotation. Please try again.');
@@ -3524,7 +3602,7 @@ function resetFields() {
     width: 100%;
     max-width: 100%;
     margin: 0;">
-          <form id="quotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
+          <form id="vkquotationForm" method="POST" action="/generate-quotation" enctype="multipart/form-data">
             <!-- Quotation Information Section -->
             <div class="form-section" style=" margin-bottom: 30px;
     padding-bottom: 20px;
@@ -3787,7 +3865,7 @@ function resetFields() {
                   <% const items = [
                     { description: "Standard Housing", cost: 135459.52, qty: 1, value: 135459.52 },
                     { description: "Hypertek parts and pins (Wiring class-2)", cost: 2.86, qty: 35000, value: 100418.42, hasClass: true },
-                    { description: "SOK 10150", cost: 10000.00, qty: 1, value: 10000.00 },
+                    { description: "SOK 10150", cost: 10600.00, qty: 1, value: 10600.00 },
                     { description: "Koaxial-Stift-Radial", cost: 4770.00, qty: 1, value: 4770.00 },
                   ]; %>
 
@@ -3935,7 +4013,7 @@ function resetFields() {
                 </tbody>
               </table>
               <div style="margin: 10px 50px 0 0; text-align: right;">
-                <strong>Total PV Amount INR: </strong><span class="currency-symbol">₹</span> <span id="pv-total-amount">0.00</span>
+                <strong>Total PV Amount: </strong><span class="currency-symbol">₹</span> <span id="pv-total-amount">0.00</span>
               </div>
               <button type="button" id="addPvRow" class="btn btn-secondary" style="margin-top: 10px;">Add Row</button>
             </div>
@@ -4009,14 +4087,88 @@ function resetFields() {
     justify-content: center;
     margin-top: 30px;">
               <button type="submit" class="btn btn-primary" id="generateQuotation" style="visibility: visible !important; opacity: 1 !important;">Generate Quotation</button>
-              <button type="button" class="btn btn-secondary" id="previewQuotation" style="visibility: visible !important; opacity: 1 !important;">Preview</button>
-              <button type="button" class="btn btn-secondary" id="raiseRequest" style="background-color: #4CAF50; color: white; visibility: visible !important; opacity: 1 !important;">Raise Request</button>
+              <button type="button" class="btn btn-secondary" id="previewQuotation" style="display: none !important; opacity: 1 !important;">Preview</button>
+              <button type="button" class="btn btn-secondary" id="raiseRequest" style="background-color: #4CAF50; color: white; display: none !important; opacity: 1 !important;">Raise Request</button>
             </div>
           </form>
         </div>
       </div>
     </div>
   </div>
+  <script>
+      let loaderStart = 0;
+const MIN_TIME = 2000;
+
+function startLoader(text = "Processing") {
+  loaderStart = Date.now();
+  document.getElementById("loaderText").innerText = text;
+  document.getElementById("loaderOverlay").classList.remove("hidden");
+}
+
+function stopLoader() {
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, MIN_TIME - elapsed);
+
+  setTimeout(() => {
+    document.getElementById("loaderOverlay").classList.add("hidden");
+  }, delay);
+}
+
+document.getElementById("vkquotationForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+
+  const form = this;
+  const overlay = document.getElementById("loadingOverlay");
+  const formData = new FormData(form);
+  startLoader( "Generating Quotation... Please wait");
+
+  try {
+    // ✅ show loader
+    
+
+    const response = await fetch(form.action, {
+      method: form.method,
+      body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+    // ✅ hide loader
+    
+const blob = await response.blob();
+
+      // ✅ Create download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+
+      // ✅ Filename (fallback if backend doesn't send one)
+      a.download = `VK_Quotation_${Date.now()}.pdf`;
+
+      document.body.appendChild(a);
+      a.click();
+
+      // ✅ Cleanup
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      alert("Quotation downloaded successfully ✅");
+      form.reset();
+      stopLoader();
+  } catch (error) {
+    stopLoader();
+    console.log("error",error);
+    alert("Server error ❌ Please try again");
+  }
+  finally {
+      stopLoader();
+    }
+});
+</script>
+
 
 
   <!-- Modal for PDF preview -->
@@ -4198,7 +4350,7 @@ function resetFields() {
 <!-- KIET Cost Calculations Section -->
 <div id="editKietSection" class="mt-8 hidden">
 
-    <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations</h3>
+    <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations(note: Class will not change)</h3>
     <p class="text-sm text-gray-600 mb-3">
         As per Price Agreement - Document No:
         <strong>con_GPAG_PU14_54808</strong>
@@ -4229,7 +4381,7 @@ function resetFields() {
 <!-- PV Adaptor Details Section -->
 <div id="editPvAdaptors" class="mt-10 hidden">
 
-    <h3 class="text-lg font-semibold text-gray-800">PV Wiring Adaptor Details</h3>
+    <h3 class="text-lg font-semibold text-gray-800">PV Wiring Adaptor Details(Do not update in this table)</h3>
 
     <div class="overflow-x-auto w-full mt-2">
         <table class="min-w-[900px] w-full border border-gray-300 rounded-lg text-sm">
@@ -5205,6 +5357,10 @@ function renderProjectAssignments(assignments) {
              assigned : ${new Date(assignment.assigned_on).toLocaleDateString()}(₹${assignment.budget})
            </span>
            <span class = "text-xm text-red-800" style="font-size:10px;"> Target:  ${new Date(assignment.target_date).toLocaleDateString()}</span>
+           <button class="btn btn-primary btn-sm"
+                 onclick="openModal(${assignment.id}, this)">
+           Assign To
+         </button>
          </div>`
   }
 </td>
@@ -5219,6 +5375,7 @@ function renderProjectAssignments(assignments) {
       assignment.project_status?.toLowerCase() === "completed";
 
     const btnClass = isCompleted ? "btn-success" : "btn-danger";
+    
 
     return `
       <button class="btn ${btnClass} btn-sm"
@@ -5228,8 +5385,40 @@ function renderProjectAssignments(assignments) {
     `;
   })()
 }
+);
+</td>
+<td style="gap: 5px; display: flex; flex-direction: column;">
+  <button class="btn btn-info btn-sm"
+          onclick="viewProcessDetails('${assignment.project_code}')">
+    View Process Details
+  </button>
+  ${assignment.documents 
+    ? `
+      <button 
+        class="btn btn-info btn-sm"
+        onclick="viewDocument('${assignment.documents}')">
+        View Document
+      </button>
+    `
+    : `
+      <input 
+        type="file" 
+        id="documentInput-${assignment.id}" 
+        style="display:none"
+        onchange="uploadDocument(${assignment.id})"
+      />
+
+      <button 
+        class="btn btn-warning btn-sm"
+        onclick="document.getElementById('documentInput-${assignment.id}').click()">
+        Upload Document
+      </button>
+    `
+  }
 
 </td>
+
+
 
       </tr>`;
 
@@ -5314,6 +5503,41 @@ function renderProjectAssignments(assignments) {
 //   }
 // }
 
+async function uploadDocument(projectId) {
+  const fileInput = document.getElementById(`documentInput-${projectId}`);
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("document", file);
+  formData.append("projectId", projectId);
+
+  const res = await fetch("/upload-project-document", {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await res.json();
+
+  if (result.success) {
+    alert("Document uploaded successfully");
+    location.reload(); // refresh to show View button
+  } else {
+    alert("Upload failed");
+  }
+}
+
+
+function viewDocument(filePath) {
+  if (!filePath) {
+    alert("No document available");
+    return;
+  }
+
+  window.open(`/${filePath}`, "_blank");
+}
+
 function open_po(id) {
   fetch(`/api/project-po/${id}`)
     .then(res => {
@@ -5328,6 +5552,45 @@ function open_po(id) {
       console.error(err);
       alert('PO file not found');
     });
+}
+
+
+async function viewProcessDetails(projectCode) {
+  try {
+    const res = await fetch(`/process-details/${projectCode}`);
+    const data = await res.json();
+
+    const modalContent = document.getElementById('processModalContent');
+
+    if (!Array.isArray(data) || data.length === 0) {
+      modalContent.innerHTML = `<p>No process details found for project <b>${projectCode}</b>.</p>`;
+    } else {
+      let html = '<table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;">';
+      html += '<tr><th>Date</th><th>Process</th><th>By / Remarks</th></tr>';
+      data.forEach(row => {
+        html += `<tr style="border-bottom:1px solid #ccc; font-size:20px;">
+                   <td>${new Date(row.created_at).toLocaleString()}</td>
+                 <td>${row.process}</td>
+                 <td>${row.who}</td>
+                 </tr>`;
+      });
+      html += '</table>';
+      modalContent.innerHTML = html;
+    }
+
+    // ✅ Show modal
+    const modal = document.getElementById('processModal');
+    modal.style.display = 'flex';
+
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching process details");
+  }
+}
+
+// Close modal function
+function closeProcessModal() {
+  document.getElementById('processModal').style.display = 'none';
 }
 
 
@@ -5379,7 +5642,7 @@ function renderApproveQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
 
-
+console.log('Rendering Quotations for Approval: rendering', quotations);
 
   quotations.forEach(quotation => {
     const row = `
@@ -5390,7 +5653,7 @@ function renderApproveQuotations(quotations, tbodyId) {
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
-        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td>${quotation.Currency}.${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
         <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
         <td class="actions">
           <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
@@ -5416,6 +5679,7 @@ function renderApproveQuotations(quotations, tbodyId) {
 function renderApprovevkQuotations(quotations, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = "";
+  console.log('Rendering VK Quotations:', quotations);
 
 
 
@@ -5481,7 +5745,7 @@ function renderApprovedQuotations(quotations, tbodyId) {
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
-        <td>₹${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
+        <td>${quotation.currency} .${quotation.total_amount ? quotation.total_amount.toLocaleString() : '0.00'}</td>
         <td><span class="status-badge status-${quotation.status}">${quotation.status}</span></td>
         <td class="actions">
           <button class="view" onclick="editQuotation(${quotation.id},'${quotation.quotation_type}')">
@@ -5906,115 +6170,263 @@ function closeEditQuotation() {
 }
 
 // Handle Edit Quotation Form Submission
-document.getElementById('editQuotationForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  let quotation_typ=document.getElementById('editQuotationType').innerText;
- if (quotation_typ == "VK") {
-  const rev_=document.getElementById('editQuotationProjectCode').value;
-  const quotationId = document.getElementById("editQuotationid").innerText;
+document
+  .getElementById("editQuotationForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  // send complete form data including pv adaptors
-  const form = new FormData(document.getElementById("editQuotationForm"));
+    const quotationType =
+      document.getElementById("editQuotationType").innerText.trim();
 
-  try {
-    const res = await fetch(`/update-vk-quotation_md/${quotationId}`, {
-      method: "POST",
-      body: form  // 🔥 not JSON, must be form-data because backend expects arrays
-    });
+    const quotationId =
+      document.getElementById("editQuotationid").innerText.trim();
 
-    const result = await res.json();
-    if (result.success) {
-      alert("VK quotation updated successfully! ✅");
+    /* ===========================
+       VK QUOTATION UPDATE
+    ============================ */
+    if (quotationType === "VK") {
+      const form = new FormData(this);
+
+      /* 🔥 append missing structured data */
+      form.append("kiet_costs", JSON.stringify(collectKietCosts()));
+      form.append("pv_adaptors", JSON.stringify(collectPvAdaptors()));
+
+      try {
+        const res = await fetch(
+          `/update-vk-quotation_md/${quotationId}`,
+          {
+            method: "POST",
+            body: form // multipart/form-data
+          }
+        );
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.error || "Update failed");
+        }
+
+        alert("VK quotation updated successfully! ✅");
+        closeEditQuotation();
+        location.reload();
+      } catch (err) {
+        console.error("Error updating VK quotation:", err);
+        alert("❌ Failed to update VK quotation");
+      }
+
+      return;
+    }
+
+    /* ===========================
+       NON-VK QUOTATION UPDATE
+    ============================ */
+    try {
+      const items = [];
+      const itemRows = document.querySelectorAll(
+        "#editQuotationTableBody tr"
+      );
+
+      itemRows.forEach((row) => {
+        items.push({
+          partNo: row.querySelector(".edit-quotation-part-no")?.value || "",
+          description:
+            row.querySelector(".edit-quotation-description")?.value || "",
+          hsn: row.querySelector(".edit-quotation-hsn")?.value || "",
+          quantity:
+            Number(
+              row.querySelector(".edit-quotation-quantity")?.value
+            ) || 0,
+          unitPrice:
+            Number(
+              row.querySelector(".edit-quotation-unit-price")?.value
+            ) || 0,
+          unit: row.querySelector(".edit-quotation-unit")?.value || "",
+          total:
+            Number(
+              row.querySelector(".edit-quotation-total")?.value
+            ) || 0
+        });
+      });
+
+      const response = await fetch(
+        `/api/quotations/${currentEditId}/items`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update quotation");
+      }
+
+      alert("Quotation updated successfully! ✅");
       closeEditQuotation();
-      location.reload();
-    } else {
-      alert("Failed to update VK quotation ❌");
+      loadApproveQuotations();
+    } catch (err) {
+      console.error("Error updating quotation:", err);
+      alert("❌ Failed to update quotation");
     }
+  });
+  function parseNumber(value) {
+  if (value === null || value === undefined) return 0;
 
-  } catch (error) {
-    console.error("Error updating VK quotation:", error);
-    alert("❌ Something went wrong");
-  }
+  return Number(
+    value
+      .toString()
+      .replace(/,/g, "")        // remove commas
+      .replace(/₹/g, "")        // remove currency symbol
+      .replace(/[^\d.-]/g, "") // remove junk
+      .trim()
+  ) || 0;
+}
+function getCellValue(cell) {
+  // Check for input field
+  const input = cell.querySelector("input");
+  if (input) return input.value;
 
-  return; // stop default form submit
+  // Check for textarea
+  const textarea = cell.querySelector("textarea");
+  if (textarea) return textarea.value;
+
+  // Fallback to text content
+  return cell.textContent || "";
 }
 
 
-  else{
-   const form = new FormData(this);   // get form object
-   console.log("Form Data Entries:");
-   for (let pair of form.entries()) {
-    console.log(pair[0] + ': ' + pair[1]);
-  }
-  const data = {};
+/* ===========================
+   HELPERS (NO HTML CHANGE)
+============================ */
 
-  // Convert form data into JSON (supports arrays like name="pvSlNo[]")
-  form.forEach((value, key) => {
-    if (key.endsWith("[]")) {
-      const cleanKey = key.replace("[]", "");
-      if (!data[cleanKey]) data[cleanKey] = [];
-      data[cleanKey].push(value);
-    } else {
-      data[key] = value;
-    }
-  });
+/* KIET COSTS */
+function collectKietCosts() {
+  const rows = document.querySelectorAll("#editKietTableBody tr");
+  const data = [];
 
-  console.log("Final form data:", data);
+  rows.forEach((row, index) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 2) return;
 
-  
-  
+    const description = getCellValue(cells[0]).trim();
 
-  // Collect quotation items
-  const items = [];
-  const itemRows = document.querySelectorAll('#editQuotationTableBody tr');
-  console.log('Item Rows:', itemRows);
+    const qtyCell = cells[2];   // may not exist
+    const costCell = cells[1];
 
-  itemRows.forEach(row => {
-    const item = {
-      partNo: row.querySelector('.edit-quotation-part-no').value,
-      description: row.querySelector('.edit-quotation-description').value,
-      hsn: row.querySelector('.edit-quotation-hsn').value,
-      quantity: row.querySelector('.edit-quotation-quantity').value,
-      unitPrice: row.querySelector('.edit-quotation-unit-price').value,
-     
-      unit: row.querySelector('.edit-quotation-unit').value,
-      
-      total: row.querySelector('.edit-quotation-total').value
-    };
-    items.push(item);
-  });
+    const qty = qtyCell ? parseNumber(getCellValue(qtyCell)) : 0;
+    const cost = parseNumber(getCellValue(costCell));
 
-  const formData = {
-    items: items
-  };
+    // 🔥 detect summary / extra charge rows
+    const isSummaryRow =
+      description.toLowerCase().includes("total") ||
+      description.toLowerCase().includes("export") ||
+      description.toLowerCase().includes("packaging") ||
+      description.toLowerCase().includes("box");
 
-  try {
-    // Update quotation items
-    const response = await fetch(`/api/quotations/${currentEditId}/items`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
+    const totalValue = isSummaryRow
+      ? cost
+      : Number((qty * cost).toFixed(2));
+
+    data.push({
+      slNo: index + 1,
+      description,
+      qty: isSummaryRow ? "" : qty,
+      cost,
+      totalValue,
+      isSummaryRow
     });
-    
+  });
+  console.log("Collected KIET Costs:", data);
 
-    if (!response.ok) throw new Error('Failed to update quotation');
-
-    // Handle file uploads if any
-   
-
-    alert('Quotation updated successfully! ✅');
-    closeEditQuotation();
-    loadApproveQuotations(); // Reload the current tab data
-
-  } catch (error) {
-    console.error('Error updating quotation:', error);
-    alert('Failed to update quotation. Please try again.');
-  }
+  return data;
 }
-});
+
+
+
+
+function debugTableValues(tableBodyId) {
+  const rows = document.querySelectorAll(`#${tableBodyId} tr`);
+
+  console.log(`🔍 Debugging table: ${tableBodyId}`);
+  console.log("Total rows:", rows.length);
+
+  rows.forEach((row, rowIndex) => {
+    const cells = row.querySelectorAll("td");
+    console.log(`\n🟦 Row ${rowIndex + 1} (cells: ${cells.length})`);
+
+    cells.forEach((cell, cellIndex) => {
+      const rawText = cell.innerText.trim();
+      const input = cell.querySelector("input, textarea, select");
+      const inputValue = input ? input.value : null;
+
+      console.log(
+        `  Cell[${cellIndex}] →`,
+        {
+          rawText,
+          inputValue,
+          usedValue: input ? inputValue : rawText
+        }
+      );
+    });
+  });
+}
+
+debugTableValues("editPvAdaptorsTable");
+
+
+
+
+/* PV ADAPTORS */
+function collectPvAdaptors() {
+  const rows = document.querySelectorAll("#editPvAdaptorsTable tr");
+  const data = [];
+
+  const kietTotal = getKietTotalAmount(); // 🔥 single source of truth
+
+  rows.forEach((row, index) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 9) return;
+
+    const qty = parseNumber(getCellValue(cells[7])) || 1;
+    const rate = kietTotal; // ✅ DERIVED, NOT READ FROM TABLE
+
+    data.push({
+      slNo: index + 1,
+      familyName: getCellValue(cells[1]).trim(),
+      revNo: getCellValue(cells[2]).trim(),
+      coaxialPin: getCellValue(cells[3]).trim(),
+      sokCard: getCellValue(cells[4]).trim(),
+      sokQty: parseNumber(getCellValue(cells[5])),
+      qty,
+      rate,
+      totalAmount: Number((qty * rate).toFixed(2))
+    });
+  });
+
+  return data;
+}
+
+function getKietTotalAmount() {
+  const kietCosts = collectKietCosts();
+
+  // Prefer explicit "Total Cost" row
+  const totalRow = kietCosts.find(row =>
+    row.description.toLowerCase() === "total cost"
+  );
+
+  if (totalRow) {
+    return Number(totalRow.totalValue) || 0;
+  }
+
+  // Fallback
+  return kietCosts.reduce(
+    (sum, row) => sum + Number(row.totalValue || 0),
+    0
+  );
+}
+
+
+
 
 
 // Handle Edit Form Submission
@@ -6872,7 +7284,7 @@ For detailed technical documentation, please contact the development team.`);
         pvQtyInputs.forEach(input => {
           totalPvQty += parseFloat(input.value) || 0;
         });
-        const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
+        const unitRate = totalRate;
         const pvRateInputs = document.querySelectorAll('.pv-rate-input');
         pvRateInputs.forEach(input => {
           input.value = unitRate.toFixed(2);
@@ -8894,7 +9306,6 @@ function toggleMenu(id) {
 //     container.appendChild(div);
 //   });
 // }
-
 
 
 

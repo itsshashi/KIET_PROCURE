@@ -7,6 +7,8 @@
     <link href="../public/images/logo.png" rel="icon" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
      
         * {
@@ -170,19 +172,16 @@
 }
         /* Sidebar Styles - Enhanced */
         .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            padding: 0;
-            box-shadow: 0 0 25px rgba(30, 64, 175, 0.2);
-            position: relative;
-            overflow: hidden;
-            z-index: 10;
-            
-            flex-shrink: 0;
-            width: 280px;
-            max-width: 100%;
-        }
+    width: 260px;
+    height: 100vh;
+    background: linear-gradient(180deg, #0b1e3d, #081833);
+    border-right: 1px solid var(--sidebar-border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    
+}
+
         
         .sidebar::before {
             content: '';
@@ -205,7 +204,7 @@
         }
         
         .logo img {
-            max-width: 200px;
+            max-width: 150px;
             height: auto;
             filter: brightness(0) invert(1);
         }
@@ -214,75 +213,87 @@
             list-style: none;
             padding: 0 15px;
         }
-        
         .menu-item {
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-weight: 500;
-            position: relative;
-            overflow: visible;
-        }
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    margin: 4px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+}
 
-        .menu-item.submenu-open .submenu {
-            display: block;
-        }
-        
-        .menu-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: all 0.5s ease;
-        }
-        
-        .menu-item:hover::before {
-            left: 100%;
-        }
-        
-        .menu-item:hover, .menu-item.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            transform: translateX(5px);
-        }
-        
-        .menu-item i {
-            font-size: 1.2rem;
-            width: 24px;
-            text-align: center;
-        }
- .submenu {
-            list-style: none;
-            padding-left: 0;
-            display: none;
-            position: relative;
-            top: 0;
-        }
-        
-        .submenu-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 6px;
-            margin-bottom: 3px;
-            font-weight: 400;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.9);
-            white-space: nowrap;
-        }
+.menu-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 14px;
+    color: white;
+}
 
-        .submenu-item:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            transform: translateX(3px);
-        }
-        
+.menu-item:hover {
+    background: var(--menu-hover);
+}
+
+ /* Submenu container */
+.submenu {
+    list-style: none;
+    padding: 8px;
+    margin: 6px 0 0;
+    position: relative;
+    left: 45px;
+    background-color: rgb(20, 29, 54);
+    border-radius: 10px;
+
+    /* Smooth animation */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+        max-height 0.35s ease,
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+/* Open state */
+.submenu.open {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Submenu items */
+.submenu-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 12px;
+    margin-bottom: 4px;
+    font-weight: 400;
+    font-size: 14px;
+    color: rgb(247, 245, 245);
+    white-space: nowrap;
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+.submenu-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(6px);
+}
+
+/* Arrow animation */
+.arrow {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.arrow.rotate {
+    transform: rotate(180deg);
+}
+
         /* Main Content Styles - Enhanced */
         .main-content {
 
@@ -290,6 +301,7 @@
             padding: 30px;
             overflow-y: auto;
             background: #f8fafc;
+            margin-left: 260px; /* Width of sidebar */
             
         }
         
@@ -297,8 +309,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 35px;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
         
@@ -364,7 +376,7 @@
         }
         
         .tab-header h3 {
-            font-size: 24px;
+            font-size: 20px;
             color: #1e293b;
             margin-bottom: 8px;
             font-weight: 600;
@@ -372,7 +384,7 @@
         
         .tab-header p {
             color: #64748b;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         /* Form Styles - Enhanced */
@@ -390,10 +402,10 @@
         
         .form-control {
             width: 100%;
-            padding: 14px 16px;
+            padding: 10px 14px;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s;
             background: #f8fafc;
         }
@@ -406,7 +418,7 @@
         
         .form-row {
             display: flex;
-            gap: 24px;
+            gap: 20px;
         }
         
         .form-row .form-group {
@@ -420,7 +432,7 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.3s;
             box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
@@ -867,7 +879,7 @@
         }
         
         .product-table th {
-            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            background: linear-gradient(135deg, #4f9eec, #28538b);
             padding: 16px 15px;
             text-align: left;
             font-weight: 600;
@@ -1734,11 +1746,96 @@
     opacity: 1;
   }
 }
+.creative-loader {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Card */
+.loader-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 40px 60px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Ring */
+.progress-ring {
+  width: 70px;
+  height: 70px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Text animation */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 9999;
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-content {
+  background: #fff;
+  margin: 5% auto;
+  padding: 20px;
+  width: 95%;
+  max-width: 1200px;
+  border-radius: 6px;
+}
+
+
+
 
 
     </style>
 </head>
 <body>
+  <div id="loaderOverlay" class="creative-loader hidden">
+  <div class="loader-card">
+    <div class="progress-ring"></div>
+    <h3 id="loaderText">Processing</h3>
+    <span class="dots">.</span>
+  </div>
+</div>
+
+
     <!-- Task Popup -->
 <!-- Task Popup -->
 <div id="taskModal" class="task-modal">
@@ -1784,65 +1881,95 @@
     <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="logo">
-            <img src="images/wt_img.png" alt="Company Logo">
-        </div>
 
-        <h4 style="color: white; font-size: 14px; margin: 20px 15px 10px; font-weight: 600;">Create</h4>
+    <!-- Logo -->
+    <div class="logo">
+        <img src="images/wt_img.png" alt="Company Logo" />
+    </div>
 
-        <ul class="menu">
-            <li class="menu-item active" data-tab="raise-order">
-                <i class="fas fa-plus-circle"></i> Raise Order
+    <!-- Section title -->
+    
+
+    <ul class="menu">
+
+        <!-- Raise Order -->
+        <li class="menu-item active" data-tab="raise-order">
+            <i class="fas fa-plus-circle"></i>
+            <span>Raise Order</span>
+        </li>
+
+        <!-- Quotation -->
+        <li class="menu-item has-submenu">
+            <i class="fas fa-file-alt"></i>
+            <span>Quotation</span>
+            <i class="fas fa-chevron-down arrow"></i>
+        </li>
+        <ul class="submenu">
+            <li class="submenu-item" data-tab="trade-service">
+                <i class="fas fa-handshake"></i>
+                <span>Trade & Service</span>
             </li>
-
-            <!-- Parent: Quotation -->
-            <li class="menu-item" data-tab="quotation" id="quotation-toggle">
-                <i class="fas fa-file-alt"></i> Quotation
-                <i class="fas fa-chevron-down arrow"></i>
+            <li class="submenu-item" data-tab="vk">
+                <i class="fas fa-building"></i>
+                <span>VK</span>
             </li>
-
-            <!-- Submenu -->
-            <ul class="submenu" id="quotation-submenu">
-                <li class="submenu-item" data-tab="trade-service">
-                    <i class="fas fa-handshake"></i> Trade & Service
-                </li>
-                <li class="submenu-item" data-tab="vk">
-                    <i class="fas fa-building"></i> VK
-                </li>
-                <li class="submenu-item" data-tab="mae">
-                    <i class="fas fa-cogs"></i> MAE
-                </li>
-                <li class="submenu-item" data-tab="quotation-uploads" style="display: none;">
-                    <i class="fas fa-upload"></i> View file Uploads
-                </li>
-            </ul>
-
-            <li class="menu-item" data-tab="delivery-challan">
-                    <i class="fas fa-truck"></i> Delivery Challan
-                </li>
-
-            <li class="menu-item" data-tab="status">
-                <i class="fas fa-tasks"></i> Status
-            </li>
-
-            <li class="menu-item" data-tab="approved-quotation">
-                <i class="fas fa-check-circle"></i> Approved Quotation
-            </li>
-
-            <li class="menu-item" data-tab="assigned-project">
-                <i class="fas fa-project-diagram"></i> Assigned Project
-            </li>
-
-            <li class="menu-item" id="logout-btn">
-                <form action="/logout" method="post">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;">
-                        Logout
-                    </button>
-                </form>
+            <li class="submenu-item" data-tab="mae">
+                <i class="fas fa-cogs"></i>
+                <span>MAE</span>
             </li>
         </ul>
-    </div>
+
+        <!-- Delivery Challan -->
+        <li class="menu-item" data-tab="delivery-challan">
+            <i class="fas fa-truck"></i>
+            <span>Delivery Challan</span>
+        </li>
+
+        <!-- Assigned Project -->
+        <li class="menu-item" data-tab="assigned-project">
+            <i class="fas fa-project-diagram"></i>
+            <span>Assigned Project</span>
+        </li>
+
+        <!-- Approved & Status -->
+        <li class="menu-item has-submenu">
+            <i class="fas fa-check-circle"></i>
+            <span>Approved & Status</span>
+            <i class="fas fa-chevron-down arrow"></i>
+        </li>
+        <ul class="submenu">
+            <li class="submenu-item" data-tab="statusContent">
+                <i class="fas fa-tasks"></i>
+                <span>Status(Purchase Order)</span>
+            </li>
+            <li class="submenu-item" data-tab="approved-quotation">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Approved Quotation</span>
+            </li>
+        </ul>
+
+        <!-- Logout -->
+        <li class="menu-item" id="logout-btn" onclick="window.location.href='/'">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </li>
+
+    </ul>
+</div>
+<script>
+document.querySelectorAll(".has-submenu").forEach(menu => {
+    menu.addEventListener("click", () => {
+        const submenu = menu.nextElementSibling;
+        const arrow = menu.querySelector(".arrow");
+
+        if (!submenu || !submenu.classList.contains("submenu")) return;
+
+        submenu.classList.toggle("open");
+        arrow.classList.toggle("rotate");
+    });
+});
+</script>
+
 
         
         <!-- Main Content -->
@@ -1912,7 +2039,6 @@
       <input type="text" class="form-control" id="supplierGst" name="supplierGst" placeholder="Enter Supplier GSTIN" >
     </div>
   </div>
-
   <div class="form-group">
     <label for="supplierAddress">Supplier Address </label>
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" placeholder="Enter Supplier Address" ></textarea>
@@ -1922,15 +2048,16 @@
     <label for="shippingAddress">Shipping Address *</label>
     <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="2" required>KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078</textarea>
   </div>
-
+ <div class="form-row">
   <div class="form-group">
     <label for="reference_no">Ref number *</label>
-    <input style="height: 25px;" type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
+    <input type="text" name="reference_no" id="referenceNumber" placeholder="Reference no." required>
   </div>
 
   <div class="form-group">
     <label for="termsOfPayment">Terms of Payment *</label>
     <input type="text" class="form-control" id="termsOfPayment" name="termsOfPayment" placeholder="e.g., 45 days net" required>
+  </div>
   </div>
     <div class="checky">
       <label for="singleSupplier" style="font-weight: bold;">Single Supplier</label>
@@ -1938,15 +2065,13 @@
       <label for="contact" style="font-weight: bold;">Contact info</label>
       <input type="tel" id="phone" name="phone" placeholder="+91 -------------" pattern="[0-9]{10}">
     </div>
+  
 
-<!-- multiple file upload for quotation-->
-
-  <div class="form-group">
+  <div class="form-row">
+    <div class="form-group">
     <label for="quotation">Quotation*</label>
     <input type="file" name="quotation[]" id="quotation" multiple required>
   </div>
-
-  <div class="form-row">
     <div class="form-group">
       <label for="urgency">Urgency *</label>
       <select class="form-control" id="urgency" name="urgency" required>
@@ -1958,7 +2083,7 @@
     </div>
     <div class="form-group">
       <label for="dateRequired">Date Required *</label>
-      <input type="date" class="form-control" id="dateRequired" name="dateRequired" required>
+      <input type="date" class="form-control" id="dateRequired" name="dateRequired" required style="padding: 10px 15px;">
     </div>
   </div>
 
@@ -1972,18 +2097,18 @@
 
   <table class="product-table" id="productTable">
     <thead>
-      <tr>
-        <th>SL No</th>
-        <th>Part No</th>
-        <th>Description</th>
-        <th>HSN Code</th>
-        <th>Quantity</th>
-        <th>Unit Price (₹)</th>
-        <th>GST %</th>
-        <th>Unit</th>
-        <th>Discount(₹)</th>
-        <th>Total (₹)</th>
-        <th>Actions</th>
+      <tr style="background-color: blue;">
+        <th style="font-size:13px; padding: 11px; color:white;">Sl.</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Part No</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Description</th>
+        <th style="font-size:13px; padding: 11px; color:white;">HSN Code</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Quantity</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Unit Price (₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">GST %</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Unit</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Discount(₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Total (₹)</th>
+        <th style="font-size:13px; padding: 11px; color:white;">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -2351,7 +2476,23 @@ function populateItemTable(items) {
                 </form>
             </div>
             <script>
-            
+            let loaderStart = 0;
+const MIN_TIME = 2000;
+
+function startLoader(text = "Processing") {
+  loaderStart = Date.now();
+  document.getElementById("loaderText").innerText = text;
+  document.getElementById("loaderOverlay").classList.remove("hidden");
+}
+
+function stopLoader() {
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, MIN_TIME - elapsed);
+
+  setTimeout(() => {
+    document.getElementById("loaderOverlay").classList.add("hidden");
+  }, delay);
+}
 
 const dcType = document.getElementById("dcType");
 const expiryContainer = document.getElementById("expiryContainer");
@@ -3073,7 +3214,10 @@ document.getElementById("deliveryChallanForm").addEventListener("submit", async 
                                         <label for="maeWarranty">Warranty</label>
                                         <input type="text" id="maeWarranty" name="maeWarranty" placeholder=" 6 months">
                                     </div>
-                             
+                             <div class="form-group">
+                                        <label for="leadTime">Lead Time</label>
+                                        <input type="text" id="maeleadtime" name="maeleadtime" placeholder=" 3 months">
+                                    </div>
                             </div>
                             
                         </div>
@@ -3305,6 +3449,73 @@ images_upload_handler: function (blobInfo) {
 });
 
 </script>
+<div id="editItemsModal" class="modal">
+  <div class="modal-content" style="max-width:95%;">
+
+    <h3>Edit Purchase Order Items</h3>
+
+    <table border="1" width="100%" cellspacing="0" cellpadding="6">
+      <thead>
+        <tr>
+          <th>Part No</th>
+          <th>Description</th>
+          <th>HSN</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Price</th>
+          <th>Discount %</th>
+          <th>GST %</th>
+          <th>Total</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody id="editItemsTableBody">
+        <!-- rows injected by JS -->
+      </tbody>
+    </table>
+
+    <div style="margin-top:15px; text-align:right;">
+      <button class="btn btn-success" onclick="savePoItems()">Save Items</button>
+      <button class="btn btn-secondary" onclick="closeItemsModal()">Close</button>
+    </div>
+
+  </div>
+</div>
+<script>
+    async function openItemsModal(poId) {
+  
+
+  // show modal
+  document.getElementById("editItemsModal").classList.add("show");
+
+  // load items
+  const res = await fetch(`/po/${poId}/items`);
+  const items = await res.json();
+
+  const tbody = document.getElementById("editItemsTableBody");
+  tbody.innerHTML = "";
+
+  items.forEach(item => {
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr class="item-row">
+        <td>${item.part_no}</td>
+        <td><textarea>${item.description}</textarea></td>
+        <td><input type="number" value="${item.quantity}"></td>
+        <td><input type="number" value="${item.unit_price}"></td>
+        <td><input type="number" value="${item.gst}"></td>
+        <td><input type="number" value="${item.discount}"></td>
+        <td><input type="number" readonly></td>
+      </tr>
+    `);
+  });
+}
+function closeItemsModal() {
+  document.getElementById("editItemsModal").classList.remove("show");
+}
+
+</script>
+
 
             <!-- VK Tab -->
             <div class="tab-content" id="vk">
@@ -3344,20 +3555,72 @@ images_upload_handler: function (blobInfo) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-row">
+                             <div class="form-row">
+                
+                <div class="form-col">
+               <div class="form-row">
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="gst">GST</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="gst" name="vkgst" placeholder="GST">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="packaging">Packaging</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="packaging" name="vkpackaging" placeholder="Packaging">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="insurance">Insurance</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="insurance" name="vkinsurance" placeholder="Insurance">
+                   </div>
+                 </div>
+                 <div class="form-col">
+                   <div class="form-group">
+                     <label for="deliveryTerms">Delivery Terms</label>
+                     <input style="width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;" type="text" id="deliveryTerms" name="vkdeliveryTerms" placeholder="Delivery Terms">
+                   </div>
+                 </div>
+               </div>
+                  <!-- Empty column for balance -->
+                </div>
+              </div>
+                            <!-- <div class="form-row">
                                 <div class="form-col">
-                                    <div class="form-group">
+                                     <div class="form-group">
                                         <label for="vkReferenceNo">Reference Number <span style="color: red;">*</span></label>
                                         <div style="display: flex; gap: 10px;">
                                             <input type="text" id="vkReferenceNo" name="referenceNo" required style="flex: 1; cursor: not-allowed; background-color: #f0f0f0;">
                                             <button type="button" id="vkGenerateReferenceNumber" class="btn btn-secondary btn-small">Generate</button>
                                         </div>
-                                    </div>
+                                    </div> 
                                 </div>
                                 <div class="form-col">
-                                    <!-- Empty column for balance -->
+                                   
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
@@ -3609,7 +3872,7 @@ images_upload_handler: function (blobInfo) {
                         </div>
                         <!-- Submit Buttons -->
                         <div class="form-actions">
-                            <button type="button" class="btn btn-warning" id="vkSendApprovalRequest" style="background-color: #ffc107; color: #212529;">Send Approval Request</button>
+                            <button type="submit" class="btn btn-warning" id="vkSendApprovalRequest" style="background-color: #ffc107; color: #212529;">Send Approval Request</button>
                         </div>
                         
 
@@ -3618,6 +3881,958 @@ images_upload_handler: function (blobInfo) {
                         
                     </form>
                     </div>
+                    <script>
+document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
+  e.preventDefault(); // stop page reload
+  startLoader(); // Start loader animation
+  
+
+  const form = this;
+  const formData = new FormData(form);
+
+  try {
+    const res = await fetch(form.action, {
+      method: form.method,
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // ✅ ALERT
+      alert("Quotation sent successfully ✅");
+      stopLoader(); // Stop loader animation
+
+      // ✅ RESET FORM
+      form.reset();
+
+      // ✅ OPTIONAL: clear quotation number
+      document.getElementById("vkQuotationNumber").value = "";
+
+    } else {
+      alert("Failed to send quotation ❌");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+});
+
+
+function initializeVKForm() {      
+let currencySymbol = '₹';
+
+            const vkQtyInputs = document.querySelectorAll('#vk .qty-input');
+            const vkValueDisplays = document.querySelectorAll('#vk .value-display');
+            const vkTotalCostsDisplay = document.getElementById('vk-total-costs');
+            const vkClassSelects = document.querySelectorAll('#vk .class-select');
+            const vkPvQtyInputs = document.querySelectorAll('#vk .pv-qty-input');
+            const vkPvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
+            const vkPvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
+            const vkPvAdaptorQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            const vkAddPvRowBtn = document.getElementById('vkAddPvRow');
+            const vkPvTableBody = document.getElementById('vkPvTableBody');
+
+            // Add PV Family Modal functionality
+            const pvFamilyModal = document.getElementById('pvFamilyModal');
+            const closeBtn = document.querySelector('.close');
+            const savePvFamilyBtn = document.getElementById('savePvFamily');
+            let currentFamilyInput = null;
+
+            function openPvFamilyModal(familyInput) {
+                currentFamilyInput = familyInput;
+                pvFamilyModal.style.display = 'block';
+                // Clear modal fields
+                document.getElementById('modalFamilyName').value = '';
+                document.getElementById('modalCode').value = '';
+                document.getElementById('modalRevType').value = '';
+                document.getElementById('modalConfig').value = '';
+                document.getElementById('modalSokCard').value = '';
+                document.getElementById('modalpart_no').value = '';
+            }
+
+            function closePvFamilyModal() {
+                pvFamilyModal.style.display = 'none';
+                currentFamilyInput = null;
+            }
+
+            function savePvFamily() {
+                if (currentFamilyInput) {
+                    const pins = document.querySelector('#vk .qty-input[data-index="1"]').value;
+                    const familyName = document.getElementById('modalFamilyName').value;
+                    const code = document.getElementById('modalCode').value;
+                    const revType = document.getElementById('modalRevType').value;
+                    const config = document.getElementById('modalConfig').value;
+                    const sokCard = document.getElementById('modalSokCard').value;
+                    const part_no = document.getElementById('modalpart_no').value;
+
+                    const formattedFamilyName = ` Wiring according to ${familyName} Code: - ${code} Rev-Type- ${revType}Config- ${config} \n PART NO.- ${part_no}\n Inc \n    • Hypertak parts and pins\n    • Wires and Wirings\n    `;
+                    const formattedValue = `${formattedFamilyName}• SOK CARD -${sokCard} \n As price agreement_Wiring_Class_${document.querySelector('#vk .class-select[data-index="1"]').value} \n Total no of pins - ${pins} Nos`;
+
+                    currentFamilyInput.value = formattedValue;
+                }
+                closePvFamilyModal();
+            }
+            
+            // Event listeners for family name inputs within VK tab
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('pv-family-input') && e.target.closest('#vk')) {
+                    openPvFamilyModal(e.target);
+                }
+            });
+
+            if (closeBtn) closeBtn.addEventListener('click', closePvFamilyModal);
+
+            window.addEventListener('click', function(e) {
+                if (e.target === pvFamilyModal) {
+                    closePvFamilyModal();
+                }
+            });
+
+            if (savePvFamilyBtn) savePvFamilyBtn.addEventListener('click', savePvFamily);
+
+            // Class prices for different quantities
+            const originalPrices = [
+                { class: 1, cost: 280.11 },
+                { class: 2, cost: 213.33 },
+                { class: 3, cost: 199.02 },
+                { class: 4, cost: 190.01 },
+                { class: 5, cost: 181.53 },
+                { class: 6, cost: 175.17 },
+                { class: 7, cost: 164.57 },
+                { class: 8, cost: 161.39 },
+                { class: 9, cost: 157.15 },
+                { class: 10, cost: 157.15 },
+                { class: 11, cost: 155.03 },
+                { class: 12, cost: 153.00 }
+            ];
+
+            const qty2Prices = [
+                { class: 1, cost: 276.62 },
+                { class: 2, cost: 211.14 },
+                { class: 3, cost: 197.12 },
+                { class: 4, cost: 188.28 },
+                { class: 5, cost: 179.97 },
+                { class: 6, cost: 173.73 },
+                { class: 7, cost: 163.34 },
+                { class: 8, cost: 160.22 },
+                { class: 9, cost: 158.14 },
+                { class: 10, cost: 156.06 },
+                { class: 11, cost: 153.99 },
+                { class: 12, cost: 152.00 }
+            ];
+
+            const qtyAbove2Prices = [
+                { class: 1, cost: 274.92 },
+                { class: 2, cost: 210.08 },
+                { class: 3, cost: 196.18 },
+                { class: 4, cost: 187.44 },
+                { class: 5, cost: 179.21 },
+                { class: 6, cost: 173.03 },
+                { class: 7, cost: 162.74 },
+                { class: 8, cost: 159.66 },
+                { class: 9, cost: 157.60 },
+                { class: 10, cost: 155.54 },
+                { class: 11, cost: 153.48 },
+                { class: 12, cost: 151.50 }
+            ];
+
+            function updateValue(input, valueDisplay) {
+                const cost = parseFloat(input.getAttribute('data-cost'));
+                const qty = parseFloat(input.value) || 0;
+                const value = cost * qty;
+                valueDisplay.textContent = value.toFixed(2);
+                return value;
+            }
+
+            function updateTotalCosts() {
+                const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
+                let total = 0;
+                for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                    const display = rows[i].querySelector('.value-display');
+                    if (display) {
+                        total += parseFloat(display.textContent) || 0;
+                    }
+                }
+                vkTotalCostsDisplay.textContent = total.toFixed(2);
+            }
+            console.log('sdfghsdf',vkClassSelects);
+            console.log(vkQtyInputs);
+
+            function updateClassCost(select) {
+                const selectedOption = select.options[select.selectedIndex];
+                const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
+                const index = select.getAttribute('data-index');
+                const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
+                const valueDisplay = vkValueDisplays[index];
+                const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
+
+                qtyInput.setAttribute('data-cost', newCost);
+                if (priceInputHidden) {
+                    priceInputHidden.value = newCost.toFixed(2);
+                }
+                updateValue(qtyInput, valueDisplay);
+                updateTotalCosts();
+            }
+
+            function getClassFromQty(qty) {
+                if (qty >= 1 && qty <= 300) return 1;
+                if (qty >= 301 && qty <= 500) return 2;
+                if (qty >= 501 && qty <= 600) return 3;
+                if (qty >= 601 && qty <= 700) return 4;
+                if (qty >= 701 && qty <= 800) return 5;
+                if (qty >= 801 && qty <= 900) return 6;
+                if (qty >= 901 && qty <= 1100) return 7;
+                if (qty >= 1101 && qty <= 1200) return 8;
+                if (qty >= 1201 && qty <= 1300) return 9;
+                if (qty >= 1301 && qty <= 1400) return 10;
+                if (qty >= 1401 && qty <= 1500) return 11;
+                return 12; // default for > 1500
+            }
+
+            function updateClassOptions() {
+                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+                if (!classSelect) return;
+
+                // Calculate total PV quantity for pricing
+                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+                let totalPvQty = 0;
+                pvQtyInputs.forEach(input => {
+                    totalPvQty += parseFloat(input.value) || 0;
+                });
+
+                console.log('Total PV Qty:', totalPvQty);
+
+                let prices;
+                if (totalPvQty > 2) {
+                    prices = qtyAbove2Prices;
+                    console.log('Using qtyAbove2Prices');
+                } else if (totalPvQty == 2) {
+                    prices = qty2Prices;
+                    console.log('Using qty2Prices');
+                } else {
+                    prices = originalPrices;
+                    console.log('Using originalPrices');
+                }
+
+                // Store current selected value
+                const currentValue = classSelect.value;
+
+                classSelect.innerHTML = '';
+
+                prices.forEach(price => {
+                    const option = document.createElement('option');
+                    option.value = price.class;
+                    option.setAttribute('data-cost', price.cost);
+                    option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
+                    classSelect.appendChild(option);
+                });
+
+                // Get Hypertek qty and select class based on it
+                const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+                const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
+                const selectedClass = getClassFromQty(hypertekQty);
+
+                // Set the selected class if it exists in options, otherwise default to 2
+                if (prices.some(price => price.class == selectedClass)) {
+                    classSelect.value = selectedClass;
+                    console.log('Set class value based on Hypertek qty:', selectedClass, 'for qty:', hypertekQty);
+                } else {
+                    classSelect.value = '2';
+                    console.log('Set default class value: 2 (class not available in current price set)');
+                }
+
+                // Update the cost after changing options
+                updateClassCost(classSelect);
+                updateHypertekDescription();
+            }
+
+            
+
+            function updatePvValue(qtyInput, rateInput, valueDisplay) {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const rate = parseFloat(rateInput.value) || 0;
+                const value = qty * rate;
+                valueDisplay.textContent = value.toFixed(2);
+                updatePvTotal();
+            }
+
+           
+
+            function addPvRow() {
+                const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
+                const newRow = document.createElement('tr');
+                newRow.className = 'pv-row';
+                newRow.innerHTML = `
+                    <td>${rowCount}</td>
+                    <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
+                    <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
+                    <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
+                    <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
+                    <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
+                    <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
+                    <td><div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
+                    <td><span class="currency-symbol">₹</span> <span class="pv-value-display">0.00</span></td>
+                `;
+                vkPvTableBody.appendChild(newRow);
+
+                const newQtyInput = newRow.querySelector('.pv-qty-input');
+                const newRateInput = newRow.querySelector('.pv-rate-input');
+                const newValueDisplay = newRow.querySelector('.pv-value-display');
+                const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
+
+                newQtyInput.addEventListener('input', function() {
+                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                });
+
+                newRateInput.addEventListener('input', function() {
+                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                });
+
+                newPvAdaptorQtyInput.addEventListener('input', function() {
+                    updateClassOptions();
+                });
+
+                updateClassOptions();
+                updatePvRates();
+            }
+
+            vkQtyInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const valueDisplay = input.closest('tr').querySelector('.value-display');
+                    updateValue(input, valueDisplay);
+                    updateTotalCosts();
+                });
+            });
+
+            // Add event listener to qty input (data-index="1") to detect change and update class options
+            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+            hypertekQtyInput.addEventListener('input', function() {
+                updateClassOptions();
+            });
+
+            // Update class options when PV qty changes
+            // This is already handled above, remove duplicate
+
+            vkClassSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    console.log('Class select changed to:', this.value);
+                    updateClassCost(this);
+                    updateHypertekDescription();
+                    updatePvRates();
+                });
+            });
+
+            vkPvAdaptorQtyInputs.forEach((input, index) => {
+                const rateInput = vkPvRateInputs[index];
+                const valueDisplay = vkPvValueDisplays[index];
+                input.addEventListener('input', function() {
+                    updatePvValue(input, rateInput, valueDisplay);
+                });
+            });
+
+            vkPvRateInputs.forEach((input, index) => {
+                const qtyInput = vkPvAdaptorQtyInputs[index];
+                const valueDisplay = vkPvValueDisplays[index];
+                input.addEventListener('input', function() {
+                    updatePvValue(qtyInput, input, valueDisplay);
+                });
+            });
+
+            vkAddPvRowBtn.addEventListener('click', addPvRow);
+
+            vkPvAdaptorQtyInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    console.log('PV qty input changed, updating class options');
+                    updateClassOptions();
+                });
+            });
+
+            const exportPriceInput = document.querySelector('#vk .price-input[data-index="export"]');
+            const exportValueDisplay = exportPriceInput.closest('tr').querySelector('.value-display');
+            exportPriceInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                exportValueDisplay.textContent = value.toFixed(2);
+                updatePvRates();
+            });
+
+            const boxPriceInput = document.querySelector('#vk .price-input[data-index="box"]');
+            const boxValueDisplay = boxPriceInput.closest('tr').querySelector('.value-display');
+            boxPriceInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                boxValueDisplay.textContent = value.toFixed(2);
+                updatePvRates();
+            });
+
+            // Update value display for Standard Housing price input
+            const standardHousingPriceInput = document.querySelector('#vk .price-input[data-index="0"]');
+            if (standardHousingPriceInput) {
+                standardHousingPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qtyInput = this.closest('tr').querySelector('.qty-input');
+                    const qty = parseFloat(qtyInput.value) || 0;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            // Update value display for SOK 10150 and Koaxial-Stift-Radial price inputs
+            const sokPriceInput = document.querySelector('#vk .price-input[data-index="2"]');
+            if (sokPriceInput) {
+                sokPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qty = 1;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            const coaxialPriceInput = document.querySelector('#vk .price-input[data-index="3"]');
+            if (coaxialPriceInput) {
+                coaxialPriceInput.addEventListener('input', function() {
+                    const cost = parseFloat(this.value) || 0;
+                    const qty = 1;
+                    const value = cost * qty;
+                    const valueDisplay = this.closest('tr').querySelector('.value-display');
+                    valueDisplay.textContent = value.toFixed(2);
+                    updateTotalCosts();
+                });
+            }
+
+            function updateSokDescription() {
+                const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
+                const sokDescriptionInput = document.getElementById('vk-sok-description-input');
+                let sokValue = '';
+                sokCardInputs.forEach(input => {
+                    if (input.value.trim()) {
+                        sokValue = input.value.trim();
+                    }
+                });
+                if (sokValue) {
+                    sokDescriptionInput.value = `SOK ${sokValue}`;
+                } else {
+                    sokDescriptionInput.value = 'SOK 10150';
+                }
+            }
+
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('pv-sok-card-input') && e.target.closest('#vk')) {
+                    updateSokDescription();
+                }
+            });
+
+            function updateHypertekDescription() {
+                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+                const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
+                if (classSelect && hypertekDescriptionInput) {
+                    const selectedClass = classSelect.value;
+                    hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
+                    console.log('Updated Hypertek description to class:', selectedClass);
+                }
+            }
+
+            updateSokDescription();
+            updateHypertekDescription();
+
+            // Generate Quotation Number for VK
+            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
+            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
+
+            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
+                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
+                    
+                        try {
+                            const response = await fetch('/api/generate-vk-quotation-number');
+                            if (response.ok) {
+                                const data = await response.json();
+
+                                 const famN = prompt('Enter Family Name'); // browser prompt
+                      if (famN) {
+                        // Modify the quotation number string
+                        data.quotationNumber = data.quotationNumber.replace("VK-", `VK-${famN}-`);
+                      }
+                    
+                      // Set the modified number in your input field
+                      vkQuotationNumberInput.value = data.quotationNumber;
+                                    
+
+
+                                // vkQuotationNumberInput.value = data.quotationNumber;
+                            } else {
+                                console.error('Error fetching VK quotation number');
+                                alert('Error generating quotation number. Please try again.');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching VK quotation number:', error);
+                            alert('Error generating quotation number. Please try again.');
+                        }
+                    }
+                )
+            };
+
+            // Generate Reference Number for VK
+            const vkGenerateReferenceNumberBtn = document.getElementById('vkGenerateReferenceNumber');
+            const vkReferenceNoInput = document.getElementById('vkReferenceNo');
+
+            if (vkGenerateReferenceNumberBtn && vkReferenceNoInput) {
+                vkGenerateReferenceNumberBtn.addEventListener('click', function() {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const referenceNumber = `REF-${dateStr}-${randomNum}`;
+                    vkReferenceNoInput.value = referenceNumber;
+                });
+            }
+
+            updateTotalCosts();
+            updateClassOptions();
+            updatePvRates();
+
+            const vkCurrencySelect = document.getElementById('currency');
+            vkCurrencySelect.addEventListener('change', function() {
+                currencySymbol = getCurrencySymbol(this.value);
+                document.querySelectorAll('#vk .currency-symbol').forEach(span => span.textContent = currencySymbol);
+                updateHeaderCurrency();
+                updateClassOptions();
+                updateTotalRowCurrency();
+            });
+
+            function updateHeaderCurrency() {
+                const header = document.getElementById('totalValueHeader');
+                if (header) {
+                    header.textContent = `Total Value in ${vkCurrencySelect.value}`;
+                }
+            }
+
+            function updateTotalRowCurrency() {
+                const totalRowLabel = document.querySelector('#vk .total-row td strong');
+                if (totalRowLabel) {
+                    totalRowLabel.textContent = `Total costs in ${vkCurrencySelect.value} (qty of 1 No.)`;
+                }
+            }
+
+            // Remove duplicate getCurrencySymbol function
+
+            function getCurrencySymbol(currency) {
+                switch (currency) {
+                    case 'INR': return '₹';
+                    case 'USD': return '$';
+                    case 'EUR': return '€';
+                    default: return '₹';
+                }
+            }
+
+            // VK Send Approval Request button functionality
+            document.getElementById('vkSendApprovalRequest').addEventListener('click', async function() {
+                const form = document.getElementById('vkQuotationForm');
+                const formData = new FormData(form);
+
+                // Collect PV adaptors data
+                const pvAdaptors = [];
+                document.querySelectorAll('#vkPvTableBody .pv-row').forEach(row => {
+                    const adaptor = {
+                        qty: row.querySelector('.pv-adaptor-qty-input').value,
+                        familyName: row.querySelector('.pv-family-input').value,
+                        revNo: row.querySelector('input[name="pvRevNo[]"]').value,
+                        coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
+                        sokCard: row.querySelector('.pv-sok-card-input').value,
+                        sokQty: row.querySelector('.pv-qty-input').value,
+                        rate: row.querySelector('.pv-rate-input').value
+                    };
+                    pvAdaptors.push(adaptor);
+                });
+
+                // Collect KIET costs data
+                const kietCosts = [];
+                document.querySelectorAll('#vk .kiet-table tbody tr').forEach(row => {
+                    if (!row.classList.contains('total-row')) {
+                        const descriptionCell = row.cells[0];
+                        let description = descriptionCell.textContent.trim();
+                        const input = descriptionCell.querySelector('input[name="itemDescription[]"]');
+                        if (input) {
+                            description = input.value;
+                        }
+                        let cost = '0';
+                        const qtyInput = row.querySelector('.qty-input');
+                        if (qtyInput) {
+                            cost = qtyInput.getAttribute('data-cost') || '0';
+                        } else {
+                            const priceInput = row.querySelector('.price-input');
+                            if (priceInput) {
+                                cost = priceInput.value;
+                            }
+                        }
+                        const costItem = {
+                            description: description,
+                            cost: cost,
+                            qty: row.querySelector('.qty-input') ? row.querySelector('.qty-input').value : '1',
+                            totalValue: row.querySelector('.value-display') ? row.querySelector('.value-display').textContent : '0'
+                        };
+                        kietCosts.push(costItem);
+                    }
+                });
+
+                formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
+                formData.append('kietCosts', JSON.stringify(kietCosts));
+                formData.append('status', 'pending_approval');
+
+                try {
+                    const response = await fetch('/api/send-vk-quotation-approval', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    console.log('Response from approval request:', response);
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert('VK Quotation approval request sent successfully! MD will review your quotation.');
+                        // Reset form or redirect as needed
+                    } else {
+                        const error = await response.json();
+                        alert('Error sending approval request: ' + (error.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error sending approval request:', error);
+                    alert('Error sending approval request. Please try again.');
+                }
+            });
+
+            // VK Form submission
+            document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
+                // Show loading screen
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            });
+
+        }
+
+        // Initialize VK form when VK tab becomes active
+        function checkVKTabActivation() {
+            const vkTab = document.getElementById('vk');
+            if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
+                initializeVKForm();
+                vkTab.setAttribute('data-initialized', 'true');
+            }
+        }
+
+        // VK KIET Table Dynamic Calculation Functions
+        function updateValue(input, valueDisplay) {
+            const cost = parseFloat(input.getAttribute('data-cost'));
+            const qty = parseFloat(input.value) || 0;
+            const value = cost * qty;
+            valueDisplay.textContent = value.toFixed(2);
+            return value;
+        }
+
+        function updateTotalCosts() {
+            const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
+            let total = 0;
+            for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
+                const display = rows[i].querySelector('.value-display');
+                if (display) {
+                    total += parseFloat(display.textContent) || 0;
+                }
+            }
+            const totalCostsDisplay = document.getElementById('vk-total-costs');
+            if (totalCostsDisplay) {
+                totalCostsDisplay.textContent = total.toFixed(2);
+            }
+        }
+
+        function updateClassCost(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
+            const index = select.getAttribute('data-index');
+            const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
+            const valueDisplay = document.querySelector(`#vk .value-display[data-index="${index}"]`);
+            const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
+
+            qtyInput.setAttribute('data-cost', newCost);
+            if (priceInputHidden) {
+                priceInputHidden.value = newCost.toFixed(2);
+            }
+            updateValue(qtyInput, valueDisplay);
+            updateTotalCosts();
+        }
+
+        function getClassFromQty(qty) {
+            if (qty >= 1 && qty <= 300) return 1;
+            if (qty >= 301 && qty <= 500) return 2;
+            if (qty >= 501 && qty <= 600) return 3;
+            if (qty >= 601 && qty <= 700) return 4;
+            if (qty >= 701 && qty <= 800) return 5;
+            if (qty >= 801 && qty <= 900) return 6;
+            if (qty >= 901 && qty <= 1100) return 7;
+            if (qty >= 1101 && qty <= 1200) return 8;
+            if (qty >= 1201 && qty <= 1300) return 9;
+            if (qty >= 1301 && qty <= 1400) return 10;
+            if (qty >= 1401 && qty <= 1500) return 11;
+            return 12;
+        }
+
+        function updateClassOptions() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            if (!classSelect) return;
+
+            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
+            let totalPvQty = 0;
+            pvQtyInputs.forEach(input => {
+                totalPvQty += parseFloat(input.value) || 0;
+            });
+
+            let prices;
+            if (totalPvQty > 2) {
+                prices = qtyAbove2Prices;
+            } else if (totalPvQty == 2) {
+                prices = qty2Prices;
+            } else {
+                prices = originalPrices;
+            }
+
+            classSelect.innerHTML = '';
+
+            prices.forEach(price => {
+                const option = document.createElement('option');
+                option.value = price.class;
+                option.setAttribute('data-cost', price.cost);
+                option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
+                classSelect.appendChild(option);
+            });
+
+            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
+            const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
+            const selectedClass = getClassFromQty(hypertekQty);
+
+            if (prices.some(price => price.class == selectedClass)) {
+                classSelect.value = selectedClass;
+            } else {
+                classSelect.value = '2';
+            }
+
+            updateClassCost(classSelect);
+            updateHypertekDescription();
+        }
+
+    function updatePvRates() {
+    const totalCostsEl = document.querySelector('#vk-total-costs');
+    const totalCosts = parseFloat(totalCostsEl?.textContent || '0') || 0;
+
+    const exportInput = document.querySelector('.price-input[data-index="export"]');
+
+    const boxInput = document.querySelector('.price-input[data-index="box"]');
+
+    const exportValue = parseFloat(
+        exportInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const boxValue = parseFloat(
+        boxInput?.closest('tr')?.querySelector('.value-display')?.textContent || '0'
+    ) || 0;
+
+    const totalRate = totalCosts + exportValue + boxValue;
+// Calculate total PV qty
+    const pvQtyInputs = document.querySelectorAll('.pv-adaptor-qty-input');
+    let totalPvQty = 0;
+
+    pvQtyInputs.forEach(input => {
+        totalPvQty += parseFloat(input.value) || 0;
+    });
+
+    if (totalPvQty === 0) return;
+
+    const unitRate = totalRate * totalPvQty;
+
+    document.querySelectorAll('.pv-rate-input').forEach(input => {
+        input.value = unitRate.toFixed(2);
+
+        const row = input.closest('tr');
+        if (!row) return;
+
+        const qtyInput = row.querySelector('.pv-adaptor-qty-input');
+        const valueDisplay = row.querySelector('.pv-value-display');
+
+        if (qtyInput && valueDisplay) {
+            updatePvValue(qtyInput, input, valueDisplay);
+        }
+    });
+}
+
+
+        function updatePvValue(qtyInput, rateInput, valueDisplay) {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            const value = qty * rate;
+            valueDisplay.textContent = value.toFixed(2);
+            console.log('Updated PV Value:', value.toFixed(2), 'for Qty:', qty, 'Rate:', rate);
+            updatePvTotal();
+            updatePvRates();
+            
+
+            
+
+            
+        }
+
+        function updatePvTotal() {
+            const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
+            let total = 0;
+            pvValueDisplays.forEach(display => {
+                total += parseFloat(display.textContent) || 0;
+            });
+            const pvTotalAmount = document.getElementById('vk-pv-total-amount');
+            if (pvTotalAmount) {
+                pvTotalAmount.textContent = total.toFixed(2);
+            }
+            updatePvRates()
+        
+
+        }
+
+        function addPvRow() {
+            const vkPvTableBody = document.getElementById('vkPvTableBody');
+            if (!vkPvTableBody) return;
+
+            const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
+            const newRow = document.createElement('tr');
+            newRow.className = 'pv-row';
+            newRow.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
+                <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
+                <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
+                <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
+                <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
+                <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
+                <td><div style="display: flex; align-items: center;"><span class="currency-symbol">${currencySymbol}</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
+                <td><span class="currency-symbol">${currencySymbol}</span> <span class="pv-value-display">0.00</span></td>
+            `;
+            vkPvTableBody.appendChild(newRow);
+
+            const newQtyInput = newRow.querySelector('.pv-qty-input');
+            const newRateInput = newRow.querySelector('.pv-rate-input');
+            const newValueDisplay = newRow.querySelector('.pv-value-display');
+            const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
+
+            newQtyInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+                updatePvRates();
+            });
+            
+
+            newRateInput.addEventListener('input', function() {
+                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
+            });
+
+            newPvAdaptorQtyInput.addEventListener('input', function() {
+                updateClassOptions();
+                
+            });
+
+            updateClassOptions();
+            updatePvRates();
+        }
+
+        function updateSokDescription() {
+            const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
+            const sokDescriptionInput = document.getElementById('vk-sok-description-input');
+            if (!sokDescriptionInput) return;
+
+            let sokValue = '';
+            sokCardInputs.forEach(input => {
+                if (input.value.trim()) {
+                    sokValue = input.value.trim();
+                }
+            });
+            if (sokValue) {
+                sokDescriptionInput.value = `SOK ${sokValue}`;
+            } else {
+                sokDescriptionInput.value = 'SOK 10150';
+            }
+        }
+
+        function updateHypertekDescription() {
+            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
+            const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
+            if (classSelect && hypertekDescriptionInput) {
+                const selectedClass = classSelect.value;
+                hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
+            }
+        }
+
+        // Check for VK tab activation on submenu clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.submenu-item[data-tab="vk"]')) {
+                // Use requestAnimationFrame to ensure DOM updates are complete
+                requestAnimationFrame(checkVKTabActivation);
+            }
+        });
+
+        // Also check when tab becomes visible (for direct navigation)
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const vkTab = document.getElementById('vk');
+                    if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
+                        setTimeout(initializeVKForm, 100);
+                        vkTab.setAttribute('data-initialized', 'true');
+                    }
+                }
+            });
+        });
+
+        // Observe the VK tab for class changes
+        const vkTabElement = document.getElementById('vk');
+        if (vkTabElement) {
+            observer.observe(vkTabElement, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Initialize VK form immediately if tab is already active
+        checkVKTabActivation();
+
+        // VK Add Attachment functionality
+        const vkAddAttachmentBtn = document.getElementById('vkAddAttachment');
+        const vkAttachmentsContainer = document.getElementById('vkAttachmentsContainer');
+
+        vkAddAttachmentBtn.addEventListener('click', function() {
+            const newAttachmentRow = document.createElement('div');
+            newAttachmentRow.className = 'attachment-row';
+            newAttachmentRow.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            newAttachmentRow.innerHTML = `
+                <div class="form-group" style="flex: 1;">
+                    <label>Upload File</label>
+                    <input type="file" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.png,.txt,.dwg,.xls,.xlsx">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Note</label>
+                    <textarea name="attachmentNotes[]" rows="2" placeholder="Description of the attachment"></textarea>
+                </div>
+                <button type="button" class="btn btn-danger btn-small vk-remove-attachment" style="margin-top: 25px;">Remove</button>
+            `;
+            vkAttachmentsContainer.appendChild(newAttachmentRow);
+        });
+
+        // VK Remove Attachment functionality
+        vkAttachmentsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('vk-remove-attachment')) {
+                e.target.closest('.attachment-row').remove();
+            }
+        });
+
+
+</script>
+
+
+
+
+
+
+            
               
             <!-- Approved Quotation Tab -->
             <div class="tab-content" id="approved-quotation">
@@ -3626,8 +4841,10 @@ images_upload_handler: function (blobInfo) {
                     <p>Download your approved quotations</p>
                 </div>
                 <div class="sub-tabs">
-                    <button class="sub-tab active" data-filter="all">All Approved</button>
+                    <button class="sub-tab active" data-filter="all">Trade Approved</button>
                     <button class="sub-tab" data-filter="mae">MAE Approved</button>
+                    <button class="sub-tab" data-filter="vk">VK Approved</button>
+                    
                 </div>
 
                 <div class="status-cards" id="approvedCardsContainer">
@@ -3646,6 +4863,32 @@ images_upload_handler: function (blobInfo) {
                 </div>
             </div><script>
 document.addEventListener("DOMContentLoaded", loadAssignedProjects);
+async function markProjectCompleted(projectId) {
+    console.log(projectId);
+  if (!confirm("Are you sure you want to mark this project as completed?")) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/mark_project_completed', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ project_id: projectId })
+    });
+
+    const data = await res.json();
+
+    
+      alert("Project marked as completed ✅");
+    //   loadProcessHistory(); // refresh table
+   
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+}
 
 async function loadAssignedProjects() {
   const valu = document.querySelector(".user-info span")?.textContent.trim() || "";
@@ -3655,6 +4898,8 @@ async function loadAssignedProjects() {
   if (!container) return;
 
   try {
+    
+
     const res = await fetch(`/assigned-projects/${userId}`);
     const data = await res.json();
     container.innerHTML = "";
@@ -3688,48 +4933,23 @@ async function loadAssignedProjects() {
         <p><b>Assigned To:</b> ${p.assigned_to || '-'}</p>
         <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
         <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
+        <p><b>Quantity:</b> ${p.quantity}</p>
+        <p><b>Remaining:</b> ₹${Number(p.remaining_budget|| 0).toLocaleString()}</p>
         <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
         <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
         ${
           p.project_status?.toLowerCase() !== "completed"
-            ? `<p><button class="btn btn-success btn-complete" onclick="markProjectCompleted(${p.project_code})">Completed</button></p>`
+            ? `<p><button class="btn btn-success btn-complete" onclick="markProjectCompleted('${p.project_code}')">Completed</button></p>`
             : ""
         }
         <button class="btn btn-danger" onclick="openProcessModal()">Process</button>
-
-      `;
+         <button class="btn btn-secondary" onclick="viewDocument('${p.documents}')">View Doc</button>    `;
 
       container.appendChild(card);
     });
-    async function markProjectCompleted(projectId) {
-  if (!confirm("Are you sure you want to mark this project as completed?")) {
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/mark_project_completed', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ project_id: projectId })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("Project marked as completed ✅");
-      loadProcessHistory(); // refresh table
-    } else {
-      alert(data.error || "Failed to mark project ❌");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Server error ❌");
-  }
-}
-
+    
+    
     // ✅ Show modal if there is at least one incomplete project
     if (hasIncomplete) {
       document.getElementById("incompleteProjectsModal").style.display = "block";
@@ -3738,6 +4958,14 @@ async function loadAssignedProjects() {
     console.error(err);
     container.innerHTML = "<p>Error loading projects.</p>";
   }
+}
+function viewDocument(filePath) {
+  if (!filePath || filePath.trim() === "null") {
+    alert("No document available");
+    return;
+  }
+
+  window.open(`/${filePath}`, "_blank");
 }
 
 // Function to close the modal
@@ -3900,7 +5128,7 @@ function closeProcessModal() {
             </div>
 
             <!-- Status Tab -->
-            <div class="tab-content" id="status">
+            <div class="tab-content" id="statusContent">
                 <div class="tab-header">
                     <h3>Order Status</h3>
                     <p>Track the status of your orders</p>
@@ -3976,7 +5204,7 @@ function closeProcessModal() {
                 </div>
 
                 <!-- Status Cards Container -->
-                <div class="status-cards" id="statusCardsContainer">
+                <div class="status-cards" id="statustab">
                     <!-- Status cards will be dynamically generated -->
                 </div>
 
@@ -3995,6 +5223,7 @@ function closeProcessModal() {
         let orders = [];
         let approvedQuotations = [];
         let maeapprovedQuotations =[];
+        let vkapprovedQuotations =[];
 
         async function fetchApprovedQuotations(filter = 'all') {
             try {
@@ -4006,6 +5235,10 @@ function closeProcessModal() {
 
                     endpoint = `/api/mae-quotations/get/approved/${creat}`;
 ;
+                }
+                else if (filter === 'vk') {
+                    const creat=document.querySelector('#maeCreatedBy').value;
+                    endpoint = `/api/render-vk_quotations/${creat}`;
                 }
 
                 const res = await fetch(endpoint);
@@ -4047,24 +5280,32 @@ function closeProcessModal() {
         // }
 
         async function fetchOrders() {
-            try {
-                const res = await fetch("/status");
-                if (!res.ok) throw new Error("Failed to fetch orders");
+  try {
+    const res = await fetch("/status");
+    if (!res.ok) throw new Error("Failed to fetch orders");
 
-                const contentType = res.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Server returned non-JSON response");
-                }
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json") && !contentType.includes("+json")) {
+      throw new Error("Server returned non-JSON response");
+    }
 
-                orders = await res.json();
-                renderStatusCards();
-                updateOrderTracking();
-            } catch (err) {
-                console.error("❌ Error fetching orders:", err);
-                document.getElementById("statusCardsContainer").innerHTML =
-                "<p>Could not load your orders.</p>";
-            }
-        }
+    const orders = await res.json();
+    //renderStatusCards(orders) ;
+
+    console.log("✅ Orders fetched:", orders);
+    renderStatusCards(orders);
+  } catch (err) {
+    console.error("❌ Error fetching orders:", err);
+
+    const container = document.getElementById("statustab");
+    if (container) {
+      container.innerHTML = "<p>Could not load your orders.</p>";
+    } else {
+      console.warn("⚠️ statusCardsContainer not found; cannot show error message in UI.");
+    }
+  }
+}
+
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -4100,7 +5341,7 @@ function closeProcessModal() {
 
             orderForm.addEventListener("submit", async function(e) {
                 e.preventDefault();
-
+                
                 // Show loader and disable button
                 loader.style.display = "flex";
                 submitBtn.disabled = true;
@@ -4127,7 +5368,7 @@ function closeProcessModal() {
                         alert(result.message);
 
                         // 🔹 Reset form fields
-                        orderForm.reset();
+                        
 
                         // 🔹 Reset product table
                         resetProductTable();
@@ -4137,6 +5378,41 @@ function closeProcessModal() {
                     } else {
                         alert("Order submission failed: " + (result.error || result.message || "Unknown error"));
                     }
+                    const project_cde = document.getElementById("projectCodeNumber").value.trim();
+                    const supplier_name = document.getElementById("supplierName").value;
+
+                    console.log(project_cde);
+                    console.log('supplier_name:',supplier_name);
+                    
+    // const orderId = ;
+      if (result) {
+    const statusRes = await fetch(`/getreq/${project_cde}/${supplier_name}`, {
+          method: "GET",
+          headers: { "Accept": "application/json",project_code:project_cde,supplier_name:supplier_name }
+        });
+
+        const statusContentType = statusRes.headers.get("content-type");
+        if (!statusContentType || !statusContentType.includes("application/json")) {
+            throw new Error("PROJECT CODE YOU SPECIFIED IS NOT DEFINED");
+        }
+
+        const statusData = await statusRes.json();
+        console.log(statusData);
+
+        if (!statusRes.ok) {
+            throw new Error(statusData.error || "Failed to fetch order status");
+        }
+
+
+        // Use the status data however you need:
+        console.log("Order status:", statusData.assigned_to);
+        // Optionally update the UI:
+        const statusEl = document.getElementById("orderStatus");
+        if (statusEl) statusEl.textContent = statusData.status || "Unknown";
+      } else {
+        console.warn("No orderId in createResult; skipping status fetch.");
+      }
+
                 } catch (err) {
                     console.error("❌ Error submitting order:", err);
                     alert("Order submission failed! Server returned invalid response.");
@@ -4145,6 +5421,7 @@ function closeProcessModal() {
                     loader.style.display = "none";
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Order';
+                    orderForm.reset();
                 }
             });
         });
@@ -4157,6 +5434,7 @@ function closeProcessModal() {
         // Tab switching functionality
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function() {
+                console.log("Menu item clicked:", this.dataset.tab);
                 if (this.id !== 'logout-btn') {
                     // Special handling for quotation - only toggle submenu, don't switch tabs
                     if (this.dataset.tab === 'quotation') {
@@ -4184,7 +5462,10 @@ function closeProcessModal() {
 
                     // 👉 When switching to Status tab, fetch fresh orders
                     if (this.dataset.tab === 'status') {
+                        console.log("status is pressed")
+                        
                         fetchOrders();
+                        
                     }
                     if (this.dataset.tab === 'delivery-challan'){
                         console.log("delivery challan is pressed")
@@ -4197,6 +5478,7 @@ function closeProcessModal() {
                     }
                     if (this.dataset.tab ==='assigned-project'){
                         loadAssignedProjects();
+                    
                     }
                    
                 }
@@ -4250,6 +5532,19 @@ function closeProcessModal() {
                     loadQuotationUploads(); // Load uploads when tab is opened
                     
                 }
+                if (this.dataset.tab === 'statusContent') {
+                        console.log("status is pressed")
+                        fetchOrders();
+                        document.getElementById('statusContent').classList.add('active');
+                        
+                        
+                    }
+                if(this.dataset.tab === 'approved-quotation') {
+                        const activeFilter = document.querySelector('.sub-tab.active').dataset.filter || 'all';
+                        fetchApprovedQuotations(activeFilter);
+                        document.getElementById('approved-quotation').classList.add('active');
+                    }
+                    
                
             });
         });
@@ -4485,10 +5780,11 @@ function closeProcessModal() {
                 }
             });
         }
+        
 
         // Render status cards based on orders and filter
-         function renderStatusCards() {
-             const container = document.getElementById('statusCardsContainer');
+         function renderStatusCards(orders) {
+             const container = document.getElementById('statustab');
              container.innerHTML = '';
 
              const filter = document.getElementById('statusFilter').value.toLowerCase();
@@ -4512,24 +5808,42 @@ function closeProcessModal() {
                      <div class="status-header">
                          <h4>${order.purchaseOrderNumber}</h4>
                          <span class="status-badge badge-${order.status.toLowerCase()}">${order.status}</span>
-                     </div>
+                     
+                         </div>
                      <div class="status-body">
                         
                          <p><strong>Project:</strong> ${order.projectName}</p>
                          <p><strong>Supplier:</strong> ${order.supplierName}</p>
                          <p><strong>Amount:</strong> ${order.totalAmount}</p>
-                        <button class="btn btn-secondary download-btn"
+                        <div class="status-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                         <button class="btn btn-secondary download-btn"
     ${["purchase","pending","rejected"].includes(order.status?.toLowerCase()) ? "disabled" : ""}
     onclick="downloadPO('${order.id}')">
     Download PO
 </button>
+${order.status?.toLowerCase() === "pending"
+  ? `<i class="fa-solid fa-pen-to-square edit-icon" 
+       onclick="openItemsModal('${order.id}')"></i>`
+  : ""
+}
 
+</div>
+
+
+
+ 
+</div>
 
                  `;
 
+
+
+
+
+
                  container.appendChild(card);
                  card.addEventListener("click", () => {
-                 selectedOrder = order;
+                 
                  updateOrderTracking(order);
 
              // highlight selected card
@@ -4537,14 +5851,22 @@ function closeProcessModal() {
                  card.classList.add("active");
 
                  // Show order details section
-                 showOrderDetails(order);
+                //  openItemsModal(order.id);
                  console.log("Order details should now be visible for:", order.purchaseOrderNumber);
          });
 
              });
          }
+
+
+
+     
    async function downloadPO(orderId) {
+    const loader = document.getElementById("loader");
+
   try {
+    startLoader("Downloading P O");
+
     const response = await fetch(`/api/orders/${orderId}/pdf`);
     if (!response.ok) throw new Error("Download failed");
 
@@ -4575,6 +5897,7 @@ function closeProcessModal() {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    stopLoader();
   } catch (error) {
     console.error("Error downloading PO:", error);
     alert("Failed to download PO. Please try again.");
@@ -4595,7 +5918,14 @@ function closeProcessModal() {
             } else if (filter === 'all') {
                 // For all, we might need to fetch from general endpoint or combine
                 // For now, keep as is since we fetch from general endpoint for 'all'
+                
             }
+            else if (filter === 'vk') {
+                // For VK filter, we might need to fetch from VK-specific endpoint
+                // For now, keep as is since we fetch from general endpoint for 'all'
+                filteredQuotations = approvedQuotations
+            }
+           
 
             console.log("Rendering approved quotations for filter:", filter, "Data:", filteredQuotations);
 
@@ -4644,6 +5974,14 @@ function closeProcessModal() {
                 // For now, keep as is since we fetch from general endpoint for 'all'
                  });
             }
+            else if (filter === 'vk') {
+
+                
+                    card.querySelector('.download-btn').addEventListener('click', function() {
+                         view_vk(quotation.id);
+                    });
+                }
+            
 
                 // Add download functionality
                 });
@@ -4681,6 +6019,7 @@ function closeProcessModal() {
                 alert('Failed to download quotation. Please try again.');
             }
         }
+        
         async function downloadQuotationmae(quotationId) {
             try {
                 const response = await fetch(`/download-mae-quotation/${quotationId}`);
@@ -4715,8 +6054,8 @@ function closeProcessModal() {
                 alert('Failed to download quotation. Please try again.');
             }
         }
-
-
+        
+        
         // Load quotation uploads
         async function loadQuotationUploads() {
             try {
@@ -4752,6 +6091,21 @@ function closeProcessModal() {
             } catch (error) {
                 console.error('Error loading quotation uploads:', error);
                 document.getElementById('uploadsCardsContainer').innerHTML = '<p>Failed to load uploaded files.</p>';
+            }
+        }
+        async function view_vk(quotationId){
+            try {
+                const response = await fetch(`/view-vk-quotation/${quotationId}`);
+                if (!response.ok) throw new Error('Failed to fetch VK quotation');
+
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error viewing VK quotation:', error);
+                alert('Failed to view VK quotation. Please try again.');
             }
         }
 
@@ -5387,889 +6741,8 @@ function closeProcessModal() {
         // PV Family Modal functionality (global scope) - removed duplicate
 
         // VK Form JavaScript - Initialize when VK tab is activated
-        function initializeVKForm() {
-            let currencySymbol = '₹';
-
-            const vkQtyInputs = document.querySelectorAll('#vk .qty-input');
-            const vkValueDisplays = document.querySelectorAll('#vk .value-display');
-            const vkTotalCostsDisplay = document.getElementById('vk-total-costs');
-            const vkClassSelects = document.querySelectorAll('#vk .class-select');
-            const vkPvQtyInputs = document.querySelectorAll('#vk .pv-qty-input');
-            const vkPvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-            const vkPvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-            const vkPvAdaptorQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            const vkAddPvRowBtn = document.getElementById('vkAddPvRow');
-            const vkPvTableBody = document.getElementById('vkPvTableBody');
-
-            // Add PV Family Modal functionality
-            const pvFamilyModal = document.getElementById('pvFamilyModal');
-            const closeBtn = document.querySelector('.close');
-            const savePvFamilyBtn = document.getElementById('savePvFamily');
-            let currentFamilyInput = null;
-
-            function openPvFamilyModal(familyInput) {
-                currentFamilyInput = familyInput;
-                pvFamilyModal.style.display = 'block';
-                // Clear modal fields
-                document.getElementById('modalFamilyName').value = '';
-                document.getElementById('modalCode').value = '';
-                document.getElementById('modalRevType').value = '';
-                document.getElementById('modalConfig').value = '';
-                document.getElementById('modalSokCard').value = '';
-                document.getElementById('modalpart_no').value = '';
-            }
-
-            function closePvFamilyModal() {
-                pvFamilyModal.style.display = 'none';
-                currentFamilyInput = null;
-            }
-
-            function savePvFamily() {
-                if (currentFamilyInput) {
-                    const pins = document.querySelector('#vk .qty-input[data-index="1"]').value;
-                    const familyName = document.getElementById('modalFamilyName').value;
-                    const code = document.getElementById('modalCode').value;
-                    const revType = document.getElementById('modalRevType').value;
-                    const config = document.getElementById('modalConfig').value;
-                    const sokCard = document.getElementById('modalSokCard').value;
-                    const part_no = document.getElementById('modalpart_no').value;
-
-                    const formattedFamilyName = ` Wiring according to ${familyName} Code: - ${code} Rev-Type- ${revType}Config- ${config} \n PART NO.- ${part_no}\n Inc \n    • Hypertak parts and pins\n    • Wires and Wirings\n    `;
-                    const formattedValue = `${formattedFamilyName}• SOK CARD -${sokCard} \n As price agreement_Wiring_Class_${document.querySelector('#vk .class-select[data-index="1"]').value} \n Total no of pins - ${pins} Nos`;
-
-                    currentFamilyInput.value = formattedValue;
-                }
-                closePvFamilyModal();
-            }
-            
-            // Event listeners for family name inputs within VK tab
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('pv-family-input') && e.target.closest('#vk')) {
-                    openPvFamilyModal(e.target);
-                }
-            });
-
-            if (closeBtn) closeBtn.addEventListener('click', closePvFamilyModal);
-
-            window.addEventListener('click', function(e) {
-                if (e.target === pvFamilyModal) {
-                    closePvFamilyModal();
-                }
-            });
-
-            if (savePvFamilyBtn) savePvFamilyBtn.addEventListener('click', savePvFamily);
-
-            // Class prices for different quantities
-            const originalPrices = [
-                { class: 1, cost: 280.11 },
-                { class: 2, cost: 213.33 },
-                { class: 3, cost: 199.02 },
-                { class: 4, cost: 190.01 },
-                { class: 5, cost: 181.53 },
-                { class: 6, cost: 175.17 },
-                { class: 7, cost: 164.57 },
-                { class: 8, cost: 161.39 },
-                { class: 9, cost: 157.15 },
-                { class: 10, cost: 157.15 },
-                { class: 11, cost: 155.03 },
-                { class: 12, cost: 153.00 }
-            ];
-
-            const qty2Prices = [
-                { class: 1, cost: 276.62 },
-                { class: 2, cost: 211.14 },
-                { class: 3, cost: 197.12 },
-                { class: 4, cost: 188.28 },
-                { class: 5, cost: 179.97 },
-                { class: 6, cost: 173.73 },
-                { class: 7, cost: 163.34 },
-                { class: 8, cost: 160.22 },
-                { class: 9, cost: 158.14 },
-                { class: 10, cost: 156.06 },
-                { class: 11, cost: 153.99 },
-                { class: 12, cost: 152.00 }
-            ];
-
-            const qtyAbove2Prices = [
-                { class: 1, cost: 274.92 },
-                { class: 2, cost: 210.08 },
-                { class: 3, cost: 196.18 },
-                { class: 4, cost: 187.44 },
-                { class: 5, cost: 179.21 },
-                { class: 6, cost: 173.03 },
-                { class: 7, cost: 162.74 },
-                { class: 8, cost: 159.66 },
-                { class: 9, cost: 157.60 },
-                { class: 10, cost: 155.54 },
-                { class: 11, cost: 153.48 },
-                { class: 12, cost: 151.50 }
-            ];
-
-            function updateValue(input, valueDisplay) {
-                const cost = parseFloat(input.getAttribute('data-cost'));
-                const qty = parseFloat(input.value) || 0;
-                const value = cost * qty;
-                valueDisplay.textContent = value.toFixed(2);
-                return value;
-            }
-
-            function updateTotalCosts() {
-                const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
-                let total = 0;
-                for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
-                    const display = rows[i].querySelector('.value-display');
-                    if (display) {
-                        total += parseFloat(display.textContent) || 0;
-                    }
-                }
-                vkTotalCostsDisplay.textContent = total.toFixed(2);
-            }
-            console.log('sdfghsdf',vkClassSelects);
-            console.log(vkQtyInputs);
-
-            function updateClassCost(select) {
-                const selectedOption = select.options[select.selectedIndex];
-                const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
-                const index = select.getAttribute('data-index');
-                const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
-                const valueDisplay = vkValueDisplays[index];
-                const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
-
-                qtyInput.setAttribute('data-cost', newCost);
-                if (priceInputHidden) {
-                    priceInputHidden.value = newCost.toFixed(2);
-                }
-                updateValue(qtyInput, valueDisplay);
-                updateTotalCosts();
-            }
-
-            function getClassFromQty(qty) {
-                if (qty >= 1 && qty <= 300) return 1;
-                if (qty >= 301 && qty <= 500) return 2;
-                if (qty >= 501 && qty <= 600) return 3;
-                if (qty >= 601 && qty <= 700) return 4;
-                if (qty >= 701 && qty <= 800) return 5;
-                if (qty >= 801 && qty <= 900) return 6;
-                if (qty >= 901 && qty <= 1100) return 7;
-                if (qty >= 1101 && qty <= 1200) return 8;
-                if (qty >= 1201 && qty <= 1300) return 9;
-                if (qty >= 1301 && qty <= 1400) return 10;
-                if (qty >= 1401 && qty <= 1500) return 11;
-                return 12; // default for > 1500
-            }
-
-            function updateClassOptions() {
-                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-                if (!classSelect) return;
-
-                // Calculate total PV quantity for pricing
-                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-                let totalPvQty = 0;
-                pvQtyInputs.forEach(input => {
-                    totalPvQty += parseFloat(input.value) || 0;
-                });
-
-                console.log('Total PV Qty:', totalPvQty);
-
-                let prices;
-                if (totalPvQty > 2) {
-                    prices = qtyAbove2Prices;
-                    console.log('Using qtyAbove2Prices');
-                } else if (totalPvQty == 2) {
-                    prices = qty2Prices;
-                    console.log('Using qty2Prices');
-                } else {
-                    prices = originalPrices;
-                    console.log('Using originalPrices');
-                }
-
-                // Store current selected value
-                const currentValue = classSelect.value;
-
-                classSelect.innerHTML = '';
-
-                prices.forEach(price => {
-                    const option = document.createElement('option');
-                    option.value = price.class;
-                    option.setAttribute('data-cost', price.cost);
-                    option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
-                    classSelect.appendChild(option);
-                });
-
-                // Get Hypertek qty and select class based on it
-                const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-                const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
-                const selectedClass = getClassFromQty(hypertekQty);
-
-                // Set the selected class if it exists in options, otherwise default to 2
-                if (prices.some(price => price.class == selectedClass)) {
-                    classSelect.value = selectedClass;
-                    console.log('Set class value based on Hypertek qty:', selectedClass, 'for qty:', hypertekQty);
-                } else {
-                    classSelect.value = '2';
-                    console.log('Set default class value: 2 (class not available in current price set)');
-                }
-
-                // Update the cost after changing options
-                updateClassCost(classSelect);
-                updateHypertekDescription();
-            }
-
-            function updatePvRates() {
-                const totalCosts = parseFloat(vkTotalCostsDisplay.textContent) || 0;
-                const exportValue = parseFloat(document.querySelector('#vk .price-input[data-index="export"]').closest('tr').querySelector('.value-display').textContent) || 0;
-                const boxValue = parseFloat(document.querySelector('#vk .price-input[data-index="box"]').closest('tr').querySelector('.value-display').textContent) || 0;
-                const totalRate = totalCosts + exportValue + boxValue;
-
-                const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-                let totalPvQty = 0;
-                pvQtyInputs.forEach(input => {
-                    totalPvQty += parseFloat(input.value) || 0;
-                });
-                const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
-                const pvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-                pvRateInputs.forEach(input => {
-                    input.value = unitRate.toFixed(2);
-                    const qtyInput = input.closest('tr').querySelector('.pv-adaptor-qty-input');
-                    const valueDisplay = input.closest('tr').querySelector('.pv-value-display');
-                    updatePvValue(qtyInput, input, valueDisplay);
-                });
-            }
-
-            function updatePvValue(qtyInput, rateInput, valueDisplay) {
-                const qty = parseFloat(qtyInput.value) || 0;
-                const rate = parseFloat(rateInput.value) || 0;
-                const value = qty * rate;
-                valueDisplay.textContent = value.toFixed(2);
-                updatePvTotal();
-            }
-
-            function updatePvTotal() {
-                const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-                let total = 0;
-                pvValueDisplays.forEach(display => {
-                    total += parseFloat(display.textContent) || 0;
-                });
-                const pvTotalAmount = document.getElementById('vk-pv-total-amount');
-                pvTotalAmount.textContent = total.toFixed(2);
-            }
-
-            function addPvRow() {
-                const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
-                const newRow = document.createElement('tr');
-                newRow.className = 'pv-row';
-                newRow.innerHTML = `
-                    <td>${rowCount}</td>
-                    <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
-                    <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
-                    <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
-                    <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
-                    <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
-                    <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
-                    <td><div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
-                    <td><span class="currency-symbol">₹</span> <span class="pv-value-display">0.00</span></td>
-                `;
-                vkPvTableBody.appendChild(newRow);
-
-                const newQtyInput = newRow.querySelector('.pv-qty-input');
-                const newRateInput = newRow.querySelector('.pv-rate-input');
-                const newValueDisplay = newRow.querySelector('.pv-value-display');
-                const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
-
-                newQtyInput.addEventListener('input', function() {
-                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-                });
-
-                newRateInput.addEventListener('input', function() {
-                    updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-                });
-
-                newPvAdaptorQtyInput.addEventListener('input', function() {
-                    updateClassOptions();
-                });
-
-                updateClassOptions();
-                updatePvRates();
-            }
-
-            vkQtyInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const valueDisplay = input.closest('tr').querySelector('.value-display');
-                    updateValue(input, valueDisplay);
-                    updateTotalCosts();
-                });
-            });
-
-            // Add event listener to qty input (data-index="1") to detect change and update class options
-            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-            hypertekQtyInput.addEventListener('input', function() {
-                updateClassOptions();
-            });
-
-            // Update class options when PV qty changes
-            // This is already handled above, remove duplicate
-
-            vkClassSelects.forEach(select => {
-                select.addEventListener('change', function() {
-                    console.log('Class select changed to:', this.value);
-                    updateClassCost(this);
-                    updateHypertekDescription();
-                    updatePvRates();
-                });
-            });
-
-            vkPvAdaptorQtyInputs.forEach((input, index) => {
-                const rateInput = vkPvRateInputs[index];
-                const valueDisplay = vkPvValueDisplays[index];
-                input.addEventListener('input', function() {
-                    updatePvValue(input, rateInput, valueDisplay);
-                });
-            });
-
-            vkPvRateInputs.forEach((input, index) => {
-                const qtyInput = vkPvAdaptorQtyInputs[index];
-                const valueDisplay = vkPvValueDisplays[index];
-                input.addEventListener('input', function() {
-                    updatePvValue(qtyInput, input, valueDisplay);
-                });
-            });
-
-            vkAddPvRowBtn.addEventListener('click', addPvRow);
-
-            vkPvAdaptorQtyInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    console.log('PV qty input changed, updating class options');
-                    updateClassOptions();
-                });
-            });
-
-            const exportPriceInput = document.querySelector('#vk .price-input[data-index="export"]');
-            const exportValueDisplay = exportPriceInput.closest('tr').querySelector('.value-display');
-            exportPriceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value) || 0;
-                exportValueDisplay.textContent = value.toFixed(2);
-                updatePvRates();
-            });
-
-            const boxPriceInput = document.querySelector('#vk .price-input[data-index="box"]');
-            const boxValueDisplay = boxPriceInput.closest('tr').querySelector('.value-display');
-            boxPriceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value) || 0;
-                boxValueDisplay.textContent = value.toFixed(2);
-                updatePvRates();
-            });
-
-            // Update value display for Standard Housing price input
-            const standardHousingPriceInput = document.querySelector('#vk .price-input[data-index="0"]');
-            if (standardHousingPriceInput) {
-                standardHousingPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qtyInput = this.closest('tr').querySelector('.qty-input');
-                    const qty = parseFloat(qtyInput.value) || 0;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            // Update value display for SOK 10150 and Koaxial-Stift-Radial price inputs
-            const sokPriceInput = document.querySelector('#vk .price-input[data-index="2"]');
-            if (sokPriceInput) {
-                sokPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qty = 1;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            const coaxialPriceInput = document.querySelector('#vk .price-input[data-index="3"]');
-            if (coaxialPriceInput) {
-                coaxialPriceInput.addEventListener('input', function() {
-                    const cost = parseFloat(this.value) || 0;
-                    const qty = 1;
-                    const value = cost * qty;
-                    const valueDisplay = this.closest('tr').querySelector('.value-display');
-                    valueDisplay.textContent = value.toFixed(2);
-                    updateTotalCosts();
-                });
-            }
-
-            function updateSokDescription() {
-                const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
-                const sokDescriptionInput = document.getElementById('vk-sok-description-input');
-                let sokValue = '';
-                sokCardInputs.forEach(input => {
-                    if (input.value.trim()) {
-                        sokValue = input.value.trim();
-                    }
-                });
-                if (sokValue) {
-                    sokDescriptionInput.value = `SOK ${sokValue}`;
-                } else {
-                    sokDescriptionInput.value = 'SOK 10150';
-                }
-            }
-
-            document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('pv-sok-card-input') && e.target.closest('#vk')) {
-                    updateSokDescription();
-                }
-            });
-
-            function updateHypertekDescription() {
-                const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-                const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
-                if (classSelect && hypertekDescriptionInput) {
-                    const selectedClass = classSelect.value;
-                    hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
-                    console.log('Updated Hypertek description to class:', selectedClass);
-                }
-            }
-
-            updateSokDescription();
-            updateHypertekDescription();
-
-            // Generate Quotation Number for VK
-            const vkGenerateQuotationNumberBtn = document.getElementById('vkGenerateQuotationNumber');
-            const vkQuotationNumberInput = document.getElementById('vkQuotationNumber');
-
-            if (vkGenerateQuotationNumberBtn && vkQuotationNumberInput) {
-                vkGenerateQuotationNumberBtn.addEventListener('click', async()=> {
-                    
-                        try {
-                            const response = await fetch('/api/generate-vk-quotation-number');
-                            if (response.ok) {
-                                const data = await response.json();
-                                vkQuotationNumberInput.value = data.quotationNumber;
-                            } else {
-                                console.error('Error fetching VK quotation number');
-                                alert('Error generating quotation number. Please try again.');
-                            }
-                        } catch (error) {
-                            console.error('Error fetching VK quotation number:', error);
-                            alert('Error generating quotation number. Please try again.');
-                        }
-                    }
-                )
-            };
-
-            // Generate Reference Number for VK
-            const vkGenerateReferenceNumberBtn = document.getElementById('vkGenerateReferenceNumber');
-            const vkReferenceNoInput = document.getElementById('vkReferenceNo');
-
-            if (vkGenerateReferenceNumberBtn && vkReferenceNoInput) {
-                vkGenerateReferenceNumberBtn.addEventListener('click', function() {
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const dateStr = `${year}${month}${day}`;
-                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                    const referenceNumber = `REF-${dateStr}-${randomNum}`;
-                    vkReferenceNoInput.value = referenceNumber;
-                });
-            }
-
-            updateTotalCosts();
-            updateClassOptions();
-            updatePvRates();
-
-            const vkCurrencySelect = document.getElementById('currency');
-            vkCurrencySelect.addEventListener('change', function() {
-                currencySymbol = getCurrencySymbol(this.value);
-                document.querySelectorAll('#vk .currency-symbol').forEach(span => span.textContent = currencySymbol);
-                updateHeaderCurrency();
-                updateClassOptions();
-                updateTotalRowCurrency();
-            });
-
-            function updateHeaderCurrency() {
-                const header = document.getElementById('totalValueHeader');
-                if (header) {
-                    header.textContent = `Total Value in ${vkCurrencySelect.value}`;
-                }
-            }
-
-            function updateTotalRowCurrency() {
-                const totalRowLabel = document.querySelector('#vk .total-row td strong');
-                if (totalRowLabel) {
-                    totalRowLabel.textContent = `Total costs in ${vkCurrencySelect.value} (qty of 1 No.)`;
-                }
-            }
-
-            // Remove duplicate getCurrencySymbol function
-
-            function getCurrencySymbol(currency) {
-                switch (currency) {
-                    case 'INR': return '₹';
-                    case 'USD': return '$';
-                    case 'EUR': return '€';
-                    default: return '₹';
-                }
-            }
-
-            // VK Send Approval Request button functionality
-            document.getElementById('vkSendApprovalRequest').addEventListener('click', async function() {
-                const form = document.getElementById('vkQuotationForm');
-                const formData = new FormData(form);
-
-                // Collect PV adaptors data
-                const pvAdaptors = [];
-                document.querySelectorAll('#vkPvTableBody .pv-row').forEach(row => {
-                    const adaptor = {
-                        qty: row.querySelector('.pv-adaptor-qty-input').value,
-                        familyName: row.querySelector('.pv-family-input').value,
-                        revNo: row.querySelector('input[name="pvRevNo[]"]').value,
-                        coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
-                        sokCard: row.querySelector('.pv-sok-card-input').value,
-                        sokQty: row.querySelector('.pv-qty-input').value,
-                        rate: row.querySelector('.pv-rate-input').value
-                    };
-                    pvAdaptors.push(adaptor);
-                });
-
-                // Collect KIET costs data
-                const kietCosts = [];
-                document.querySelectorAll('#vk .kiet-table tbody tr').forEach(row => {
-                    if (!row.classList.contains('total-row')) {
-                        const descriptionCell = row.cells[0];
-                        let description = descriptionCell.textContent.trim();
-                        const input = descriptionCell.querySelector('input[name="itemDescription[]"]');
-                        if (input) {
-                            description = input.value;
-                        }
-                        let cost = '0';
-                        const qtyInput = row.querySelector('.qty-input');
-                        if (qtyInput) {
-                            cost = qtyInput.getAttribute('data-cost') || '0';
-                        } else {
-                            const priceInput = row.querySelector('.price-input');
-                            if (priceInput) {
-                                cost = priceInput.value;
-                            }
-                        }
-                        const costItem = {
-                            description: description,
-                            cost: cost,
-                            qty: row.querySelector('.qty-input') ? row.querySelector('.qty-input').value : '1',
-                            totalValue: row.querySelector('.value-display') ? row.querySelector('.value-display').textContent : '0'
-                        };
-                        kietCosts.push(costItem);
-                    }
-                });
-
-                formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
-                formData.append('kietCosts', JSON.stringify(kietCosts));
-                formData.append('status', 'pending_approval');
-
-                try {
-                    const response = await fetch('/api/send-vk-quotation-approval', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    console.log('Response from approval request:', response);
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        alert('VK Quotation approval request sent successfully! MD will review your quotation.');
-                        // Reset form or redirect as needed
-                    } else {
-                        const error = await response.json();
-                        alert('Error sending approval request: ' + (error.message || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Error sending approval request:', error);
-                    alert('Error sending approval request. Please try again.');
-                }
-            });
-
-            // VK Form submission
-            document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
-                // Show loading screen
-                document.getElementById('loadingOverlay').style.display = 'flex';
-            });
-
-        }
-
-        // Initialize VK form when VK tab becomes active
-        function checkVKTabActivation() {
-            const vkTab = document.getElementById('vk');
-            if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
-                initializeVKForm();
-                vkTab.setAttribute('data-initialized', 'true');
-            }
-        }
-
-        // VK KIET Table Dynamic Calculation Functions
-        function updateValue(input, valueDisplay) {
-            const cost = parseFloat(input.getAttribute('data-cost'));
-            const qty = parseFloat(input.value) || 0;
-            const value = cost * qty;
-            valueDisplay.textContent = value.toFixed(2);
-            return value;
-        }
-
-        function updateTotalCosts() {
-            const rows = document.querySelectorAll('#vk .kiet-table tbody tr');
-            let total = 0;
-            for (let i = 0; i < 4; i++) { // Sum only the first 4 rows (components)
-                const display = rows[i].querySelector('.value-display');
-                if (display) {
-                    total += parseFloat(display.textContent) || 0;
-                }
-            }
-            const totalCostsDisplay = document.getElementById('vk-total-costs');
-            if (totalCostsDisplay) {
-                totalCostsDisplay.textContent = total.toFixed(2);
-            }
-        }
-
-        function updateClassCost(select) {
-            const selectedOption = select.options[select.selectedIndex];
-            const newCost = parseFloat(selectedOption.getAttribute('data-cost'));
-            const index = select.getAttribute('data-index');
-            const qtyInput = document.querySelector(`#vk .qty-input[data-index="${index}"]`);
-            const valueDisplay = document.querySelector(`#vk .value-display[data-index="${index}"]`);
-            const priceInputHidden = document.querySelector(`#vk .price-input-hidden[data-index="${index}"]`);
-
-            qtyInput.setAttribute('data-cost', newCost);
-            if (priceInputHidden) {
-                priceInputHidden.value = newCost.toFixed(2);
-            }
-            updateValue(qtyInput, valueDisplay);
-            updateTotalCosts();
-        }
-
-        function getClassFromQty(qty) {
-            if (qty >= 1 && qty <= 300) return 1;
-            if (qty >= 301 && qty <= 500) return 2;
-            if (qty >= 501 && qty <= 600) return 3;
-            if (qty >= 601 && qty <= 700) return 4;
-            if (qty >= 701 && qty <= 800) return 5;
-            if (qty >= 801 && qty <= 900) return 6;
-            if (qty >= 901 && qty <= 1100) return 7;
-            if (qty >= 1101 && qty <= 1200) return 8;
-            if (qty >= 1201 && qty <= 1300) return 9;
-            if (qty >= 1301 && qty <= 1400) return 10;
-            if (qty >= 1401 && qty <= 1500) return 11;
-            return 12;
-        }
-
-        function updateClassOptions() {
-            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-            if (!classSelect) return;
-
-            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            let totalPvQty = 0;
-            pvQtyInputs.forEach(input => {
-                totalPvQty += parseFloat(input.value) || 0;
-            });
-
-            let prices;
-            if (totalPvQty > 2) {
-                prices = qtyAbove2Prices;
-            } else if (totalPvQty == 2) {
-                prices = qty2Prices;
-            } else {
-                prices = originalPrices;
-            }
-
-            classSelect.innerHTML = '';
-
-            prices.forEach(price => {
-                const option = document.createElement('option');
-                option.value = price.class;
-                option.setAttribute('data-cost', price.cost);
-                option.textContent = `Class ${price.class} - ${currencySymbol} ${price.cost.toFixed(2)}`;
-                classSelect.appendChild(option);
-            });
-
-            const hypertekQtyInput = document.querySelector('#vk .qty-input[data-index="1"]');
-            const hypertekQty = parseFloat(hypertekQtyInput.value) || 0;
-            const selectedClass = getClassFromQty(hypertekQty);
-
-            if (prices.some(price => price.class == selectedClass)) {
-                classSelect.value = selectedClass;
-            } else {
-                classSelect.value = '2';
-            }
-
-            updateClassCost(classSelect);
-            updateHypertekDescription();
-        }
-
-        function updatePvRates() {
-            const totalCostsDisplay = document.getElementById('vk-total-costs');
-            const totalCosts = parseFloat(totalCostsDisplay ? totalCostsDisplay.textContent : '0') || 0;
-            const exportValue = parseFloat(document.querySelector('#vk .price-input[data-index="export"]').closest('tr').querySelector('.value-display').textContent) || 0;
-            const boxValue = parseFloat(document.querySelector('#vk .price-input[data-index="box"]').closest('tr').querySelector('.value-display').textContent) || 0;
-            const totalRate = totalCosts + exportValue + boxValue;
-
-            const pvQtyInputs = document.querySelectorAll('#vk .pv-adaptor-qty-input');
-            let totalPvQty = 0;
-            pvQtyInputs.forEach(input => {
-                totalPvQty += parseFloat(input.value) || 0;
-            });
-            const unitRate = totalPvQty > 0 ? totalRate / totalPvQty : 0;
-            const pvRateInputs = document.querySelectorAll('#vk .pv-rate-input');
-            pvRateInputs.forEach(input => {
-                input.value = unitRate.toFixed(2);
-                const qtyInput = input.closest('tr').querySelector('.pv-adaptor-qty-input');
-                const valueDisplay = input.closest('tr').querySelector('.pv-value-display');
-                updatePvValue(qtyInput, input, valueDisplay);
-            });
-        }
-
-        function updatePvValue(qtyInput, rateInput, valueDisplay) {
-            const qty = parseFloat(qtyInput.value) || 0;
-            const rate = parseFloat(rateInput.value) || 0;
-            const value = qty * rate;
-            valueDisplay.textContent = value.toFixed(2);
-            updatePvTotal();
-        }
-
-        function updatePvTotal() {
-            const pvValueDisplays = document.querySelectorAll('#vk .pv-value-display');
-            let total = 0;
-            pvValueDisplays.forEach(display => {
-                total += parseFloat(display.textContent) || 0;
-            });
-            const pvTotalAmount = document.getElementById('vk-pv-total-amount');
-            if (pvTotalAmount) {
-                pvTotalAmount.textContent = total.toFixed(2);
-            }
-        }
-
-        function addPvRow() {
-            const vkPvTableBody = document.getElementById('vkPvTableBody');
-            if (!vkPvTableBody) return;
-
-            const rowCount = vkPvTableBody.querySelectorAll('.pv-row').length + 1;
-            const newRow = document.createElement('tr');
-            newRow.className = 'pv-row';
-            newRow.innerHTML = `
-                <td>${rowCount}</td>
-                <td><input type="number" step="0.01" name="pvQty[]" placeholder="Qty" class="pv-adaptor-qty-input" value="1"></td>
-                <td><textarea name="pvFamilyName[]" placeholder="Family Name" class="pv-family-input" readonly rows="2"></textarea></td>
-                <td><input type="text" name="pvRevNo[]" placeholder="Rev NO."></td>
-                <td><input type="text" name="pvCoaxialPin[]" placeholder="Coaxial Pin"></td>
-                <td><input type="text" name="pvSokCard[]" placeholder="SOK Card" class="pv-sok-card-input"></td>
-                <td><input type="number" step="0.01" name="pvSokQty[]" placeholder="Qty" class="pv-qty-input" value="0"></td>
-                <td><div style="display: flex; align-items: center;"><span class="currency-symbol">${currencySymbol}</span> <input type="number" step="0.01" name="pvRate[]" placeholder="Rate" class="pv-rate-input" value="0" readonly></div></td>
-                <td><span class="currency-symbol">${currencySymbol}</span> <span class="pv-value-display">0.00</span></td>
-            `;
-            vkPvTableBody.appendChild(newRow);
-
-            const newQtyInput = newRow.querySelector('.pv-qty-input');
-            const newRateInput = newRow.querySelector('.pv-rate-input');
-            const newValueDisplay = newRow.querySelector('.pv-value-display');
-            const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
-
-            newQtyInput.addEventListener('input', function() {
-                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-            });
-
-            newRateInput.addEventListener('input', function() {
-                updatePvValue(newQtyInput, newRateInput, newValueDisplay);
-            });
-
-            newPvAdaptorQtyInput.addEventListener('input', function() {
-                updateClassOptions();
-            });
-
-            updateClassOptions();
-            updatePvRates();
-        }
-
-        function updateSokDescription() {
-            const sokCardInputs = document.querySelectorAll('#vk .pv-sok-card-input');
-            const sokDescriptionInput = document.getElementById('vk-sok-description-input');
-            if (!sokDescriptionInput) return;
-
-            let sokValue = '';
-            sokCardInputs.forEach(input => {
-                if (input.value.trim()) {
-                    sokValue = input.value.trim();
-                }
-            });
-            if (sokValue) {
-                sokDescriptionInput.value = `SOK ${sokValue}`;
-            } else {
-                sokDescriptionInput.value = 'SOK 10150';
-            }
-        }
-
-        function updateHypertekDescription() {
-            const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
-            const hypertekDescriptionInput = document.getElementById('vk-hypertek-description-input');
-            if (classSelect && hypertekDescriptionInput) {
-                const selectedClass = classSelect.value;
-                hypertekDescriptionInput.value = `Hypertek parts and pins (Wiring class-${selectedClass})`;
-            }
-        }
-
-        // Check for VK tab activation on submenu clicks
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.submenu-item[data-tab="vk"]')) {
-                // Use requestAnimationFrame to ensure DOM updates are complete
-                requestAnimationFrame(checkVKTabActivation);
-            }
-        });
-
-        // Also check when tab becomes visible (for direct navigation)
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    const vkTab = document.getElementById('vk');
-                    if (vkTab && vkTab.classList.contains('active') && !vkTab.hasAttribute('data-initialized')) {
-                        setTimeout(initializeVKForm, 100);
-                        vkTab.setAttribute('data-initialized', 'true');
-                    }
-                }
-            });
-        });
-
-        // Observe the VK tab for class changes
-        const vkTabElement = document.getElementById('vk');
-        if (vkTabElement) {
-            observer.observe(vkTabElement, { attributes: true, attributeFilter: ['class'] });
-        }
-
-        // Initialize VK form immediately if tab is already active
-        checkVKTabActivation();
-
-        // VK Add Attachment functionality
-        const vkAddAttachmentBtn = document.getElementById('vkAddAttachment');
-        const vkAttachmentsContainer = document.getElementById('vkAttachmentsContainer');
-
-        vkAddAttachmentBtn.addEventListener('click', function() {
-            const newAttachmentRow = document.createElement('div');
-            newAttachmentRow.className = 'attachment-row';
-            newAttachmentRow.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
-            newAttachmentRow.innerHTML = `
-                <div class="form-group" style="flex: 1;">
-                    <label>Upload File</label>
-                    <input type="file" name="attachments[]" accept=".pdf,.doc,.docx,.jpg,.png,.txt,.dwg,.xls,.xlsx">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Note</label>
-                    <textarea name="attachmentNotes[]" rows="2" placeholder="Description of the attachment"></textarea>
-                </div>
-                <button type="button" class="btn btn-danger btn-small vk-remove-attachment" style="margin-top: 25px;">Remove</button>
-            `;
-            vkAttachmentsContainer.appendChild(newAttachmentRow);
-        });
-
-        // VK Remove Attachment functionality
-        vkAttachmentsContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('vk-remove-attachment')) {
-                e.target.closest('.attachment-row').remove();
-            }
-        });
+        
+      
 
         
 

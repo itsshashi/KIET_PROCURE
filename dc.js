@@ -102,7 +102,7 @@ function generateDeliveryChallan(dcData, filePath) {
 
     content: [
       {
-        text: `DELIVERY CHALLAN( ${dcData.type.toUpperCase()})`,
+        text: `DELIVERY CHALLAN( ${dcData.type})`,
         font: "Times",
         bold: true,
         fontSize: 18,
@@ -168,6 +168,10 @@ function generateDeliveryChallan(dcData, filePath) {
                     [
                       { text: "Reason", font: "Times", bold: true, alignment: "left" },
                       { text: dcData.reason || "N/A", font: "Times", alignment: "right" },
+                    ],
+                     [
+                      { text: "Expiry date", font: "Times", bold: true, alignment: "left" },
+                      { text: dcData.expiryDate || "N/A", font: "Times", alignment: "right" },
                     ],
                   ],
                 },
