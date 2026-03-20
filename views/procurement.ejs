@@ -7087,6 +7087,21 @@ ${order.status?.toLowerCase() === "pending"
                 alert('Failed to download quotation. Please try again.');
             }
         }
+        async function editQuote(quotationId) {
+            try {
+                const response = await fetch(`/api/quotations/${quotationId}/items`);
+                if (!response.ok) throw new Error('Failed to fetch quotation details');
+
+                const data = await response.json();
+                // Assuming the response contains the quotation details needed for editing
+                // You can now populate an edit form with this data
+                console.log('Quotation details for editing:', data);
+                alert('Edit functionality is not implemented yet. Check console for details.');
+            } catch (error) {
+                console.error('Error fetching quotation details:', error);
+                alert('Failed to fetch quotation details. Please try again.');
+            }
+        }
         
         async function downloadQuotationmae(quotationId) {
             try {

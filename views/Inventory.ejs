@@ -313,44 +313,73 @@
 const hiddenInput = document.getElementById("orderId");
 const suggestionBox = document.getElementById("orderSuggestions");
 
-input.addEventListener("input", async function () {
+let debounceTimer;
+let controller; // for aborting requests
 
+input.addEventListener("input", function () {
   const value = this.value.trim();
+
+  clearTimeout(debounceTimer);
 
   if (!value) {
     suggestionBox.style.display = "none";
     return;
   }
 
-  try {
-    const response = await fetch(`/api/inventory-orders?search=${value}`);
-    const orders = await response.json();
+  // ⏳ Debounce (300ms)
+  debounceTimer = setTimeout(async () => {
+    try {
+      // ❌ Cancel previous request
+      if (controller) controller.abort();
+      controller = new AbortController();
 
-    suggestionBox.innerHTML = "";
+      const response = await fetch(
+        `/api/inventory-orders?search=${encodeURIComponent(value)}`,
+        { signal: controller.signal }
+      );
 
-    if (!orders.length) {
-      suggestionBox.style.display = "none";
-      return;
-    }
+      const orders = await response.json();
 
-    orders.forEach(order => {
-      const item = document.createElement("div");
-      item.className = "list-group-item";
-      item.innerHTML = `<strong>${order.po_number}</strong> - ${order.project}`;
-      
-      item.addEventListener("click", () => {
-        input.value = `${order.po_number} - ${order.project} (${order.supplier})`;
-        hiddenInput.value = order.id;
+      suggestionBox.innerHTML = "";
+
+      if (!orders.length) {
         suggestionBox.style.display = "none";
+        return;
+      }
+
+      orders.forEach(order => {
+        const item = document.createElement("div");
+        item.className = "list-group-item list-group-item-action";
+
+        item.innerHTML = `
+          <strong>${order.po_number}</strong><br>
+          <small>${order.project} | ${order.supplier}</small>
+        `;
+
+        item.addEventListener("click", () => {
+          input.value = `${order.po_number} - ${order.project}`;
+          hiddenInput.value = order.id;
+          suggestionBox.style.display = "none";
+        });
+
+        suggestionBox.appendChild(item);
       });
 
-      suggestionBox.appendChild(item);
-    });
+      suggestionBox.style.display = "block";
 
-    suggestionBox.style.display = "block";
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("Fetch error:", err);
+      }
+    }
+  }, 300);
+});
 
-  } catch (err) {
-    console.error("Fetch error:", err);
+
+// 👇 Hide suggestions when clicking outside
+document.addEventListener("click", (e) => {
+  if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
+    suggestionBox.style.display = "none";
   }
 });
 
