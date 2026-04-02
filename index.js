@@ -698,7 +698,11 @@ app.get("/api/orders/search/filter", async (req, res) => {
 // Get orders for inventory processing
 app.get("/api/inventory-orders", async (req, res) => {
   try {
-    const { search } = req.query;
+    let { search, limit = 20 } = req.query;
+
+    // ✅ sanitize inputs
+    search = search?.trim();
+    limit = Math.min(parseInt(limit) || 20, 50); // max 50
 
     let query = `
       SELECT
@@ -716,7 +720,8 @@ app.get("/api/inventory-orders", async (req, res) => {
         urgency,
         notes,
         quotation_file,
-        created_at,po_number
+        created_at,
+        po_number
       FROM purchase_orders
       WHERE status IN ('sent', 'received')
     `;
@@ -724,23 +729,34 @@ app.get("/api/inventory-orders", async (req, res) => {
     const values = [];
     let count = 1;
 
-    // 🔍 If user typed something
-    if (search) {
+    // 🔍 smart search
+    if (search && search.length >= 2 && search.length <= 100) {
       query += `
         AND (
-          project_code_number ILIKE $${count}
-          OR project_name ILIKE $${count}
-          OR supplier_name ILIKE $${count}
+          project_code_number ILIKE $${count} OR
+          project_name ILIKE $${count} OR
+          supplier_name ILIKE $${count} OR
+          po_number ILIKE $${count}
         )
       `;
       values.push(`%${search}%`);
       count++;
+
+      // ⭐ prioritize exact PO match
+      query += `
+        ORDER BY 
+          CASE 
+            WHEN po_number ILIKE $1 THEN 1
+            ELSE 2
+          END,
+          created_at DESC
+      `;
+    } else {
+      query += ` ORDER BY created_at DESC `;
     }
 
-    query += `
-      ORDER BY created_at DESC
-      LIMIT 20
-    `;
+    query += ` LIMIT $${count}`;
+    values.push(limit);
 
     const { rows } = await pool.query(query, values);
 
@@ -751,7 +767,6 @@ app.get("/api/inventory-orders", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // Get delivery challans for inventory view
 app.get("/api/delivery-challans", async (req, res) => {
@@ -5292,6 +5307,7 @@ app.get("/api/render-mae_quotations", async (req, res) => {
   res.json(quotationResult.rows);
 });
 
+
 // Route to get VK quotation details for editing
 app.get("/edit-vk-quotation/:id", async (req, res) => {
   if (!req.session.user) {
@@ -9035,6 +9051,350 @@ app.put('api/update-po_items/:id', async (req, res) => {
     res.status(500).json({ error: "Failed to update PO items" });
   }
 });
+
+app.get('/dashboard', async (req, res) => {
+  try {
+    const stats = await getDashboardStats();
+    const recentLogs = await getRecentLogs();
+
+    const user = req.session.user || 'shashank'; // or however you store auth
+
+    res.render('dashboard/index', {
+      stats,
+      recentLogs,
+      user
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading dashboard");
+  }
+});
+async function getDashboardStats() {
+  return {
+    totalMaterials: 0,
+    lowStockCount: 0,
+    categoriesCount: 0,
+    recentMaterials: [],
+    lowStockItems: [],
+    categoryBreakdown: []
+  };
+}
+
+async function getRecentLogs() {
+  return [];
+}
+
+app.post("/api/add_materials", async (req, res) => {
+  const mat = req.body;
+
+  try {
+    await pool.query('BEGIN');
+
+    const result = await pool.query(
+      `INSERT INTO materials (
+        part_number, name, category, make,
+        dim_length, dim_width, dim_height, dim_unit,
+        hsn_code, quantity, unit, low_stock_threshold,
+        unit_price, supplier, location, date_added, remarks
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+      ) RETURNING *`,
+      [
+        mat.part_number, mat.name, mat.category, mat.make,
+        mat.dim_length, mat.dim_width, mat.dim_height, mat.dim_unit,
+        mat.hsn_code, mat.quantity, mat.unit, mat.low_stock_threshold,
+        mat.unit_price, mat.supplier, mat.location, mat.date_added,
+        mat.remarks
+      ]
+    );
+
+    const newMat = result.rows[0];  // has the auto-generated integer id
+
+    await pool.query(
+      `INSERT INTO stock_logs (
+        material_id, part_number, material_name,
+        change_type, quantity_changed, quantity_before,
+        quantity_after, unit, reference_note
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        newMat.id,          // ← integer id from DB
+        newMat.part_number,
+        newMat.name,
+        'IN',
+        newMat.quantity,
+        0,
+        newMat.quantity,
+        newMat.unit,
+        'Initial entry'
+      ]
+    );
+
+    await pool.query('COMMIT');
+    res.json(newMat);
+
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Part number already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+
+
+
+
+
+app.get("/api/materials", async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM materials ORDER BY date_added DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch materials' });
+  }
+});
+
+
+// ──────────────────────────────────────────────────────
+//  GET /api/stock-logs
+//  Returns all stock movements joined with material info
+// ──────────────────────────────────────────────────────
+app.get("/api/stock-logs", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        sl.id,
+        sl.material_id,
+        sl.part_number,
+        sl.material_name,
+        sl.change_type,
+        sl.quantity_changed,
+        sl.quantity_before,
+        sl.quantity_after,
+        sl.unit,
+        sl.reference_note,
+        sl.created_at AS date,
+        m.name AS material_name_current
+      FROM stock_logs sl
+      LEFT JOIN materials m ON m.id = sl.material_id
+      ORDER BY sl.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch stock logs' });
+  }
+});
+
+
+// ──────────────────────────────────────────────────────
+//  POST /api/stock-logs
+//  Add a stock movement (IN or OUT) and update quantity
+// ──────────────────────────────────────────────────────
+app.post("/api/stock-logs", async (req, res) => {
+  const { material_id, change_type, quantity_changed, reference_note } = req.body;
+
+  if (!material_id || !change_type || !quantity_changed || quantity_changed <= 0) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
+  if (!['IN', 'OUT'].includes(change_type)) {
+    return res.status(400).json({ error: 'change_type must be IN or OUT' });
+  }
+
+  try {
+    await pool.query('BEGIN');
+
+    // Lock the material row to prevent race conditions
+    const matResult = await pool.query(
+      'SELECT * FROM materials WHERE id = $1 FOR UPDATE',
+      [material_id]
+    );
+
+    if (!matResult.rows.length) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    const mat = matResult.rows[0];
+    const oldQty = parseFloat(mat.quantity);
+    const delta  = parseFloat(quantity_changed);
+    const newQty = change_type === 'IN'
+      ? oldQty + delta
+      : Math.max(0, oldQty - delta);
+
+    // Update the material quantity
+    await pool.query(
+      `UPDATE materials
+       SET quantity = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [newQty, material_id]
+    );
+
+    // Insert the stock log
+    const logResult = await pool.query(
+      `INSERT INTO stock_logs (
+        material_id, part_number, material_name,
+        change_type, quantity_changed,
+        quantity_before, quantity_after,
+        unit, reference_note
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING *`,
+      [
+        material_id,
+        mat.part_number,
+        mat.name,
+        change_type,
+        delta,
+        oldQty,
+        newQty,
+        mat.unit,
+        reference_note || null
+      ]
+    );
+
+    await pool.query('COMMIT');
+    res.json(logResult.rows[0]);
+
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update stock' });
+  }
+});
+
+
+// ──────────────────────────────────────────────────────
+//  PUT /api/materials/:id
+//  Update material fields (edit modal)
+// ──────────────────────────────────────────────────────
+app.put("/api/materials/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    part_number, name, category, make,
+    quantity, unit, low_stock_threshold,
+    unit_price, supplier, location, remarks
+  } = req.body;
+
+  try {
+    await pool.query('BEGIN');
+
+    // Get current quantity to check if it changed (for stock log)
+    const current = await pool.query(
+      'SELECT * FROM materials WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (!current.rows.length) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    const oldQty  = parseFloat(current.rows[0].quantity);
+    const newQty  = parseFloat(quantity);
+
+    const result = await pool.query(
+      `UPDATE materials SET
+        part_number         = $1,
+        name                = $2,
+        category            = $3,
+        make                = $4,
+        quantity            = $5,
+        unit                = $6,
+        low_stock_threshold = $7,
+        unit_price          = $8,
+        supplier            = $9,
+        location            = $10,
+        remarks             = $11,
+        updated_at          = NOW()
+      WHERE id = $12
+      RETURNING *`,
+      [
+        part_number, name, category, make,
+        newQty, unit, low_stock_threshold,
+        unit_price, supplier, location, remarks,
+        id
+      ]
+    );
+
+    // If quantity was manually changed via edit, log it
+    if (oldQty !== newQty) {
+      const diff = newQty - oldQty;
+      await pool.query(
+        `INSERT INTO stock_logs (
+          material_id, part_number, material_name,
+          change_type, quantity_changed,
+          quantity_before, quantity_after,
+          unit, reference_note
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [
+          id,
+          part_number,
+          name,
+          diff > 0 ? 'IN' : 'OUT',
+          Math.abs(diff),
+          oldQty,
+          newQty,
+          unit,
+          'Manual edit'
+        ]
+      );
+    }
+
+    await pool.query('COMMIT');
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Part number already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update material' });
+  }
+});
+
+
+// ──────────────────────────────────────────────────────
+//  DELETE /api/materials/:id
+//  Delete material and all its stock logs
+// ──────────────────────────────────────────────────────
+app.delete("/api/materials/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('BEGIN');
+
+    // Delete logs first (foreign key order)
+    await pool.query(
+      'DELETE FROM stock_logs WHERE material_id = $1',
+      [id]
+    );
+
+    const result = await pool.query(
+      'DELETE FROM materials WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (!result.rows.length) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    await pool.query('COMMIT');
+    res.json({ success: true, deleted_id: id });
+
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete material' });
+  }
+});
+
+
 
 
 const PORT = process.env.PORT || 3000;
