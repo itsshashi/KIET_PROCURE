@@ -563,7 +563,7 @@ function generateVKQuotation(poData, filePath) {
                           fontSize: 9,
                         },
                         {
-                          text: poData.deliveyt,
+                          text: poData.delivery || "",
                           font: "Times",
                           alignment: "right",
                           fontSize: 9,
