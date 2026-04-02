@@ -262,7 +262,7 @@
   color: white !important;
 }
         /* Sidebar Styles - Enhanced */
-        .sidebar {
+   .sidebar {
     width: 260px;
     height: 100vh;
     background: linear-gradient(180deg, #0b1e3d, #081833);
@@ -270,20 +270,13 @@
     display: flex;
     flex-direction: column;
     position: fixed;
-    
+    top: 0;
+    left: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
 }
 
         
-        .sidebar::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            z-index: -1;
-        }
         
         .logo {
             padding: 25px 25px 20px;
@@ -386,15 +379,31 @@
 }
 
         /* Main Content Styles - Enhanced */
-        .main-content {
+       .main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: #f8fafc;
+    margin-left: 260px;
+}
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #334155;
+    cursor: pointer;
+    padding: 6px 10px;
+}
 
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            background: #f8fafc;
-            margin-left: 260px; /* Width of sidebar */
-            
-        }
+@media (max-width: 992px) {
+    .hamburger-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+}
         
         .header {
             display: flex;
@@ -1100,56 +1109,53 @@
         }
         
         @media (max-width: 992px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width:55%;
-                padding: 0;
-                font-size: 8px;
-            }
-            
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-            
-            .status-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            .product-table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .tracking-wrapper {
-                padding: 20px;
-            }
-            
-            .tracking-wrapper::before {
-                left: 40px;
-                right: 40px;
-            }
-            
-            #progressBar {
-                left: 40px;
-            }
-            
-            .tracking-steps {
-                padding: 0 20px;
-            }
-            
-            .step-icon {
-                width: 50px;
-                height: 50px;
-            }
-            
-            .step-label {
-                font-size: 12px;
-            }
-        }
+    .sidebar {
+        width: 260px;
+        transform: translateX(-260px);
+        position: fixed;
+        z-index: 200;
+        height: 100vh;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0);        /* slide in */
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 199;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .product-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
         
         @media (max-width: 576px) {
             .main-content {
@@ -1917,6 +1923,7 @@
 
 
     </style>
+    
 </head>
 <body>
   <div id="loaderOverlay" class="creative-loader hidden">
@@ -1964,20 +1971,24 @@
   </div>
 </div>
 </div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 
 <!-- Incomplete Projects Popup -->
 
 
 
-
+  
     <div class="container">
     <!-- Sidebar -->
+ 
+         
     <div class="sidebar">
 
     <!-- Logo -->
     <div class="logo">
         <img src="images/wt_img.png" alt="Company Logo" />
     </div>
+
 
     <!-- Section title -->
     
@@ -2054,34 +2065,29 @@
 
     </ul>
 </div>
-<script>
-document.querySelectorAll(".has-submenu").forEach(menu => {
-    menu.addEventListener("click", () => {
-        const submenu = menu.nextElementSibling;
-        const arrow = menu.querySelector(".arrow");
 
-        if (!submenu || !submenu.classList.contains("submenu")) return;
 
-        submenu.classList.toggle("open");
-        arrow.classList.toggle("rotate");
-    });
-});
-</script>
 
 
         
         <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <h2>Order Management Dashboard</h2>
-                <div class="user-info">
-                    <div class="user-avatar"><% const out_fl1 = out_fl.slice(0, 2); %>
-                        <%= out_fl1.toUpperCase() %></div>
-                    
-                    
-                    <span><%= out_fl  %></span>
-                </div>
-            </div>
+    <div class="main-content">
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <!-- Remove onclick="toggleMobileSidebar()" -->
+<button class="hamburger-btn" id="hamburger-btn">
+    <i class="fas fa-bars"></i>
+</button>
+            <h2>Order Management Dashboard</h2>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar"><% const out_fl1 = out_fl.slice(0, 2); %>
+                <%= out_fl1.toUpperCase() %></div>
+            <span><%= out_fl %></span>
+        </div>
+    </div>
+    
+             
             
             <!-- Raise Order Tab -->
             <div class="tab-content active" id="raise-order">
@@ -8139,6 +8145,45 @@ document.addEventListener("keydown", (e) => {
 
 
     </script>
+  
+<script>
+// ── Sidebar toggle ──
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const sidebar      = document.querySelector('.sidebar');
+const overlay      = document.getElementById('sidebar-overlay');
+
+hamburgerBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('mobile-open');
+    console.log('Sidebar classes:', sidebar.className);
+    overlay.classList.toggle('active');
+});
+
+overlay.addEventListener('click', function() {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+});
+
+// Close sidebar when any nav item clicked on mobile
+document.querySelectorAll('.menu-item, .submenu-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+        if (window.innerWidth <= 992) {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+    });
+});
+
+// ── Submenu toggle ──
+document.querySelectorAll('.has-submenu').forEach(function(menu) {
+    menu.addEventListener('click', function() {
+        const submenu = menu.nextElementSibling;
+        const arrow   = menu.querySelector('.arrow');
+        if (!submenu || !submenu.classList.contains('submenu')) return;
+        submenu.classList.toggle('open');
+        arrow.classList.toggle('rotate');
+    });
+});
+</script>
 </body>
 </html>
 
