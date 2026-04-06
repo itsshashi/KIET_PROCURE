@@ -998,13 +998,7 @@ const safeUpload = (req, res, next) => {
 
 app.post("/order_raise", safeUpload, async (req, res) => {
   console.log("▶ /order_raise called");
-
-  // 🔹 1. Session validation
-  if (!req.session.user) {
-    return res.status(401).json({ success: false, error: "Not authenticated" });
-  }
-
-  const {
+   const {
     projectName,
     projectCodeNumber,
     supplierName,
@@ -1021,6 +1015,33 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     currency
   } = req.body;
 
+    
+  // 🔹 2. Precondition check (with correct row access)
+  const precond = await pool.query(
+    `SELECT * FROM project_info WHERE project_code = $1`,
+    [projectCodeNumber]
+  );
+
+  if (!precond.rows.length) {
+    return res.status(404).json({ success: false, error: "Project not found" });
+  }
+
+  if (precond.rows[0].remaining_budget < 500) {
+  return res.status(400).json({
+    success: false,
+    error: "Budget Exceeded",
+    remaining: precond.rows[0].remaining_budget,  // send actual value
+    required: 500
+  });
+}
+
+
+  // 🔹 1. Session validation
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, error: "Not authenticated" });
+  }
+
+ 
   // 🔹 2. Build products array (since frontend sends each field as an array)
   let products = [];
   try {
@@ -2840,6 +2861,7 @@ app.get("/approved-quotations", async (req, res) => {
         COALESCE(vq.payment_terms, 'N/A') as paymentterms,
         COALESCE(vq.delivery_duration, 'N/A') as deliveryduration,
         COALESCE(vq.total_amount, 0) as totalamount,
+        vq.deliveryterms,
         vq.status,
         vq.created_at,
         'vk' as quotation_type
@@ -5576,7 +5598,7 @@ app.post("/regenerate-vk-pdf/:id", async (req, res) => {
       termsOfPayment: quotation.payment_terms || "",
       gstterms: quotation.gstterms || "Extra 18%",
       insurance: quotation.insurance || "N/A",
-      deliveyt: quotation.deliveryTerms || "",
+      deliveyt: quotation.deliveryterms || "",
       package: quotation.packaging || "",
       currency: quotation.currency || "INR",
       kietCosts: quotation.kiet_costs ? JSON.parse(quotation.kiet_costs) : [],
