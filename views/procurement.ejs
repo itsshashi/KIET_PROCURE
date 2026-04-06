@@ -6443,7 +6443,12 @@ function closeProcessModal() {
                         document.getElementById("grandTotal").textContent = "0.00";
                     } else {
                         alert("Order submission failed: " + (result.error || result.message || "Unknown error"));
+                        
                     }
+                    if (!result.success && result.error === "Budget Exceeded") {
+  showBudgetAlert(result.remaining, result.required);
+  return;
+}
                     const project_cde = document.getElementById("projectCodeNumber").value.trim();
                     const supplier_name = document.getElementById("supplierName").value;
 
@@ -6451,7 +6456,7 @@ function closeProcessModal() {
                     console.log('supplier_name:',supplier_name);
                     
     // const orderId = ;
-      if (result) {
+      if (result.success) {
         console.log('Order created with ID:', result.poId);
         
     const statusRes = await fetch(`/getreq/${result.poId}/${project_cde}`,
@@ -6497,10 +6502,61 @@ function closeProcessModal() {
                     orderForm.reset();
                 }
             });
+
         });
         
 
+function showBudgetAlert(remaining = 0, required = 500) {
+  // Remove existing alert if any
+  document.getElementById("budget-alert")?.remove();
 
+  const shortfall = required - remaining;
+
+  const html = `
+    <div id="budget-alert" style="
+      position: fixed; top: 24px; right: 24px; z-index: 9999;
+      width: 380px; background: var(--white, #fff);
+      border: 0.5px solid #eee; border-radius: 12px;
+      overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      font-family: sans-serif; animation: slideIn 0.2s ease;">
+      <div style="height: 4px; background: #E24B4A;"></div>
+      <div style="padding: 1rem 1.1rem; display: flex; gap: 12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#FCEBEB;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">
+          ⚠️
+        </div>
+        <div>
+          <p style="margin:0 0 4px;font-weight:500;font-size:14px;color:#111;">Budget exceeded</p>
+          <p style="margin:0;font-size:13px;color:#666;line-height:1.5;">
+            Remaining: <b>₹${remaining}</b> &nbsp;|&nbsp; 
+            Required: <b>₹${required}</b> &nbsp;|&nbsp; 
+            Shortfall: <b style="color:#A32D2D;">₹${shortfall}</b>
+          </p>
+          <p style="margin:6px 0 0;font-size:12px;color:#888;">
+            Contact your project manager to increase the budget.
+          </p>
+        </div>
+      </div>
+      <div style="padding:0.6rem 1.1rem;border-top:0.5px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
+        <button onclick="document.getElementById('budget-alert').remove()"
+          style="font-size:13px;padding:5px 14px;border-radius:8px;border:0.5px solid #ddd;background:transparent;cursor:pointer;">
+          Dismiss
+        </button>
+        <button style="font-size:13px;padding:5px 14px;border-radius:8px;
+          border:none;background:#E24B4A;color:#fff;cursor:pointer;">
+          Request increase
+        </button>
+      </div>
+    </div>
+    <style>
+      @keyframes slideIn { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: translateY(0); } }
+    </style>`;
+
+  document.body.insertAdjacentHTML("beforeend", html);
+
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => document.getElementById("budget-alert")?.remove(), 8000);
+}
             // Logout button
       
         // Tab switching functionality
