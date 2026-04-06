@@ -7802,14 +7802,16 @@ app.put("/api/assign_to", async (req, res) => {
         assigned_to = $1,
         assigned_on = CURRENT_TIMESTAMP,
         budget= $2,
-        target_date=$3
-      WHERE id = $4
+        target_date=$3,
+        remaining_cost=$4
+      WHERE id = $5
       RETURNING *
     `;  
     const values = [
       selectedValue,
       budget  ,
       target,
+      budget,
       id
 
     ];
