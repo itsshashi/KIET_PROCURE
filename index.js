@@ -5923,14 +5923,27 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
 
     // Save inside qt_uploads without subfolders
     // Remove null, undefined, or empty values
+// let safeNumber = poData.poNumber;
+// safeNumber = safeNumber ? String(safeNumber).trim() : null;
+// safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_"); // Keep only safe chars and limit length
+
+// // If null/undefined/empty → use ID or a random short code
+// if (!safeNumber) {
+//   safeNumber = q.id ? `ID-${q.id}` : `AUTO-${Date.now()}`;
+// }
+
 let safeNumber = poData.poNumber;
 safeNumber = safeNumber ? String(safeNumber).trim() : null;
-safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_"); // Keep only safe chars and limit length
 
-// If null/undefined/empty → use ID or a random short code
+// ✅ Handle null FIRST, before calling .slice()
 if (!safeNumber) {
   safeNumber = q.id ? `ID-${q.id}` : `AUTO-${Date.now()}`;
 }
+
+// Now safe to call .slice()
+safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_");
+
+
 
 const fileName = `mae_quotation_${safeNumber}_${Date.now()}.pdf`;
 
