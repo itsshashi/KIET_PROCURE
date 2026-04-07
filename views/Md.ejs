@@ -5829,6 +5829,13 @@ function renderProjectAssignments(assignments) {
          </button>
          </div>`
   }
+         ${assignment.assigned_to && assignment.assigned_to !== 'null' ? `<button class="btn btn-danger btn-sm mt-1"
+                 onclick="reassignBudget(${assignment.id})">
+            Reassign Budget
+          </button>` : ''}
+          
+
+
 </td>
 <td>
    <button class="btn btn-secondary btn-sm"
@@ -5892,6 +5899,39 @@ function renderProjectAssignments(assignments) {
   });
 }
 
+async function reassignBudget(assignmentId) {
+  const new_budget = prompt("Enter new budget amount:");
+
+  if (!new_budget || isNaN(new_budget)) {
+    alert("Valid budget amount is required");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/reassign-budget/${assignmentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        new_budget: Number(new_budget)   // ✅ send to backend
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update");
+    }
+
+    alert("Budget reassigned successfully");
+    
+    // optional: refresh UI
+    location.reload();
+
+  } catch (err) {
+    console.error('Error reassigning budget:', err);
+    alert('Failed to reassign budget');
+  }
+}
 // Render Daily Tasks
 // function renderDailyTasks(tasks, filterOptions = {}) {
 //   const container = document.getElementById('dailyTasksBody');

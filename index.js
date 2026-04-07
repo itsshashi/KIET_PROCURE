@@ -9432,6 +9432,54 @@ app.delete("/api/materials/:id", async (req, res) => {
 });
 
 
+//reassign budget
+app.put("/api/reassign-budget/:project_code", async (req, res) => {
+  const { project_code } = req.params;
+  const { new_budget } = req.body;
+
+  console.log("Reassigning budget for project:", project_code, "New budget:", new_budget);
+
+  try {
+    // ✅ Validate input
+    if (!new_budget || isNaN(new_budget)) {
+      return res.status(400).json({ message: "Invalid budget value" });
+    }
+
+    // ✅ Step 1: Get existing budget
+    const result = await pool.query(
+      `SELECT budget FROM project_info WHERE id = $1`,
+      [project_code]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const old_budget = result.rows[0].budget || 0;
+
+    // ✅ Step 2: Calculate new budget
+    const updated_budget = Number(old_budget) + Number(new_budget);
+
+    // ✅ Step 3: Update budget + remaining_cost
+    const updateResult = await pool.query(
+      `UPDATE project_info
+       SET budget = $1,
+           remaining_cost = $1
+       WHERE id = $2
+       RETURNING id, budget, remaining_cost`,
+      [updated_budget, project_code]
+    );
+
+    return res.json({
+      message: "Budget updated successfully",
+      data: updateResult.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Error updating budget:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 const PORT = process.env.PORT || 3000;
