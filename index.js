@@ -9464,11 +9464,11 @@ app.put("/api/reassign-budget/:project_code", async (req, res) => {
     const updateResult = await pool.query(
       `UPDATE project_info
        SET budget = $1,
-           remaining_cost = $1
-           remaining_budget = $1
+           remaining_cost = $3,
+           remaining_budget = $3
        WHERE id = $2
        RETURNING id, budget, remaining_cost`,
-      [updated_budget, project_code]
+      [updated_budget, project_code,new_budget]
     );
 
     return res.json({
