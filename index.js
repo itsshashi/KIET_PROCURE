@@ -3892,336 +3892,336 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 
 
 // Send VK quotation approval request (separate API for VK quotations)
-app.post(
-  "/api/send-vk-quotation-approval",
-  quotationUpload.array("attachments[]"),
-  async (req, res) => {
-    console.log("🔄 Starting send-vk-quotation-approval request");
-    console.log("Request body keys:", Object.keys(req.body));
-    console.log("Files received:", req.files ? req.files.length : 0);
+// app.post(
+//   "/api/send-vk-quotation-approval",
+//   quotationUpload.array("attachments[]"),
+//   async (req, res) => {
+//     console.log("🔄 Starting send-vk-quotation-approval request");
+//     console.log("Request body keys:", Object.keys(req.body));
+//     console.log("Files received:", req.files ? req.files.length : 0);
 
-    const client = await pool.connect();
+//     const client = await pool.connect();
 
-    try {
-      await client.query("BEGIN");
+//     try {
+//       await client.query("BEGIN");
 
-      // Generate unique VK quotation number
-      const quotationNumber = await client.query(
-        "SELECT generate_vk_quotation_number() as quotation_number"
-      );
-      let quotationNumberValue = quotationNumber.rows[0].quotation_number;
-      quotationNumberValue = quotationNumberValue.replace("VK-", "VK-KQPS-");
-      console.log("Generated VK quotation number:", quotationNumber);
+//       // Generate unique VK quotation number
+//       const quotationNumber = await client.query(
+//         "SELECT generate_vk_quotation_number() as quotation_number"
+//       );
+//       let quotationNumberValue = quotationNumber.rows[0].quotation_number;
+//       quotationNumberValue = quotationNumberValue.replace("VK-", "VK-KQPS-");
+//       console.log("Generated VK quotation number:", quotationNumber);
 
-      // Extract form data
-      const {
-        quotationDate,
-        referenceno,
-        validUntil,
-        currency,
-        paymentTerms,
-        deliveryDuration,
-        companyName,
-        companyEmail,
-        companyGST,
-        companyAddress,
+//       // Extract form data
+//       const {
+//         quotationDate,
+//         referenceno,
+//         validUntil,
+//         currency,
+//         paymentTerms,
+//         deliveryDuration,
+//         companyName,
+//         companyEmail,
+//         companyGST,
+//         companyAddress,
 
-        clientName,
-        clientEmail,
-        clientPhone,
-        notes,
-        vkgst,
-        vkpackaging,
-        vkinsurance,
-        vkdeliveryTerms,
-      } = req.body;
+//         clientName,
+//         clientEmail,
+//         clientPhone,
+//         notes,
+//         vkgst,
+//         vkpackaging,
+//         vkinsurance,
+//         vkdeliveryTerms,
+//       } = req.body;
 
-      console.log("VK Form data extracted:", req.body);
+//       console.log("VK Form data extracted:", req.body);
 
-      // Parse PV adaptors data (this is the main data for VK quotations)
-      const {
-  pvQty = [],
-  pvFamilyName = [],
-  pvRevNo = [],
-  pvCoaxialPin = [],
-  pvSokCard = [],
-  pvSokQty = [],
-  pvRate = []
-} = req.body;
+//       // Parse PV adaptors data (this is the main data for VK quotations)
+//       const {
+//   pvQty = [],
+//   pvFamilyName = [],
+//   pvRevNo = [],
+//   pvCoaxialPin = [],
+//   pvSokCard = [],
+//   pvSokQty = [],
+//   pvRate = []
+// } = req.body;
 
-const pvAdaptors = pvQty.map((_, i) => ({
-  qty: Number(pvQty[i]),
-  familyName: pvFamilyName[i],
-  revNo: pvRevNo[i],
-  coaxialPin: pvCoaxialPin[i],
-  sokCard: pvSokCard[i],
-  sokQty: pvSokQty[i],
-  rate: Number(pvRate[i])
-}));
+// const pvAdaptors = pvQty.map((_, i) => ({
+//   qty: Number(pvQty[i]),
+//   familyName: pvFamilyName[i],
+//   revNo: pvRevNo[i],
+//   coaxialPin: pvCoaxialPin[i],
+//   sokCard: pvSokCard[i],
+//   sokQty: pvSokQty[i],
+//   rate: Number(pvRate[i])
+// }));
 
- // Extract arrays from request
-const {
-  itemDescription = [],
-  priceInput = [],
-  qtyInput = []
-} = req.body;
+//  // Extract arrays from request
+// const {
+//   itemDescription = [],
+//   priceInput = [],
+//   qtyInput = []
+// } = req.body;
 
-// Validation: main items count
-if (itemDescription.length !== qtyInput.length) {
-  return res.status(400).json({
-    error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
-  });
-}
+// // Validation: main items count
+// if (itemDescription.length !== qtyInput.length) {
+//   return res.status(400).json({
+//     error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
+//   });
+// }
 
-// Validation: priceInput must have enough entries for main + additional costs
-if (priceInput.length < itemDescription.length + 2) {
-  return res.status(400).json({
-    error: "KIET cost data mismatch: priceInput must include additional charges"
-  });
-}
+// // Validation: priceInput must have enough entries for main + additional costs
+// if (priceInput.length < itemDescription.length + 2) {
+//   return res.status(400).json({
+//     error: "KIET cost data mismatch: priceInput must include additional charges"
+//   });
+// }
 
-// Build main KIET costs
-const kietCosts = itemDescription.map((desc, i) => ({
-  description: desc,
-  cost: Number(priceInput[i]),
-  qty: Number(qtyInput[i]),
-  totalValue: Number(priceInput[i]) * Number(qtyInput[i])
-}));
+// // Build main KIET costs
+// const kietCosts = itemDescription.map((desc, i) => ({
+//   description: desc,
+//   cost: Number(priceInput[i]),
+//   qty: Number(qtyInput[i]),
+//   totalValue: Number(priceInput[i]) * Number(qtyInput[i])
+// }));
 
-// Append additional costs (always last 2 entries in priceInput)
-kietCosts.push({
-  description: "Export packaging charges included",
-  cost: Number(priceInput[priceInput.length - 2]),
-  qty: 1,
-  totalValue: Number(priceInput[priceInput.length - 2])
-});
+// // Append additional costs (always last 2 entries in priceInput)
+// kietCosts.push({
+//   description: "Export packaging charges included",
+//   cost: Number(priceInput[priceInput.length - 2]),
+//   qty: 1,
+//   totalValue: Number(priceInput[priceInput.length - 2]),
+//   isSummaryRow: true,
+// });
 
-kietCosts.push({
-  description: "Bigger box setup",
-  cost: Number(priceInput[priceInput.length - 1]),
-  qty: 1,
-  totalValue: Number(priceInput[priceInput.length - 1])
-});
+// kietCosts.push({
+//   description: "Bigger box setup",
+//   cost: Number(priceInput[priceInput.length - 1]),
+//   qty: 1,
+//   totalValue: Number(priceInput[priceInput.length - 1]),
+//   isSummaryRow: true,
+// });
 
-// Optional: Calculate total KIET cost
-const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
+// // Optional: Calculate total KIET cost
+// const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
 
-console.log("KIET Costs data:", kietCosts.length, "items");
-console.log("Total KIET Cost:", totalKietCost);
+// console.log("KIET Costs data:", kietCosts.length, "items");
+// console.log("Total KIET Cost:", totalKietCost);
 
-// Now you can insert `kietCosts` into DB along with VK quotation
-// Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
+// // Now you can insert `kietCosts` into DB along with VK quotation
+// // Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
 
 
 
-      console.log("PV Adaptors data:", pvAdaptors.length, "adaptors");
-      console.log("KIET Costs data:", kietCosts.length, "cost items");
+//       console.log("PV Adaptors data:", pvAdaptors.length, "adaptors");
+//       console.log("KIET Costs data:", kietCosts.length, "cost items");
 
-      // Calculate total amount from PV adaptors
-      let totalAmount = 0;
-      pvAdaptors.forEach((adaptor) => {
-        const qty = parseFloat(adaptor.qty) || 0;
-        const rate = parseFloat(adaptor.rate) || 0;
-        totalAmount += qty * rate;
-      });
-      console.log("Calculated total amount from PV adaptors:", totalAmount);
+//       // Calculate total amount from PV adaptors
+//       let totalAmount = 0;
+//       pvAdaptors.forEach((adaptor) => {
+//         const qty = parseFloat(adaptor.qty) || 0;
+//         const rate = parseFloat(adaptor.rate) || 0;
+//         totalAmount += qty * rate;
+//       });
+//       console.log("Calculated total amount from PV adaptors:", totalAmount);
 
-      // Insert VK quotation with pending approval status
-      const quotationQuery = `
-            INSERT INTO vk_quotations (
-                quotation_type, quotation_number, quotation_date, reference_no,
-                valid_until, currency, payment_terms, delivery_duration,
-                company_name, company_email, company_gst, company_address,
-                client_name, client_email, client_phone,
-                total_amount, notes, status, created_by, kiet_costs, pv_adaptors,gstterms,packaging,insurance,deliveryterms
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
-            RETURNING id
-        `;
+//       // Insert VK quotation with pending approval status
+//       const quotationQuery = `
+//             INSERT INTO vk_quotations (
+//                 quotation_type, quotation_number, quotation_date, reference_no,
+//                 valid_until, currency, payment_terms, delivery_duration,
+//                 company_name, company_email, company_gst, company_address,
+//                 client_name, client_email, client_phone,
+//                 total_amount, notes, status, created_by, kiet_costs, pv_adaptors,gstterms,packaging,insurance,deliveryterms
+//             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+//             RETURNING id
+//         `;
 
-      // Set default valid_until to 30 days from now if not provided
-      const defaultValidUntil =
-        validUntil ||
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0];
+//       // Set default valid_until to 30 days from now if not provided
+//       const defaultValidUntil =
+//         validUntil ||
+//         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+//           .toISOString()
+//           .split("T")[0];
 
-      const quotationValues = [
-        "VK",
-        quotationNumberValue,
-        quotationDate || new Date().toISOString().split("T")[0],
-        referenceno || null,
-        defaultValidUntil,
-        currency || "INR",
-        paymentTerms || null,
-        deliveryDuration || null,
-        companyName || null,
-        companyEmail || null,
-        companyGST || null,
-        companyAddress || null,
-        clientName || null,
-        clientEmail || null,
-        clientPhone || null,
-        totalAmount,
-        notes || null,
-        "pending",
-        req.session.user ? req.session.user.email : null,
-        JSON.stringify(kietCosts),
-        JSON.stringify(pvAdaptors),
-        vkgst || null,
-        vkpackaging || null,  
-        vkinsurance || null,
-        vkdeliveryTerms || null
+//       const quotationValues = [
+//         "VK",
+//         quotationNumberValue,
+//         quotationDate || new Date().toISOString().split("T")[0],
+//         referenceno || null,
+//         defaultValidUntil,
+//         currency || "INR",
+//         paymentTerms || null,
+//         deliveryDuration || null,
+//         companyName || null,
+//         companyEmail || null,
+//         companyGST || null,
+//         companyAddress || null,
+//         clientName || null,
+//         clientEmail || null,
+//         clientPhone || null,
+//         totalAmount,
+//         notes || null,
+//         "pending",
+//         req.session.user ? req.session.user.email : null,
+//         JSON.stringify(kietCosts),
+//         JSON.stringify(pvAdaptors),
+//         vkgst || null,
+//         vkpackaging || null,  
+//         vkinsurance || null,
+//         vkdeliveryTerms || null
 
-      ];
-      console.log("Inserting VK quotation with values:", quotationValues);
+//       ];
+//       console.log("Inserting VK quotation with values:", quotationValues);
 
-      const quotationResult = await client.query(
-        quotationQuery,
-        quotationValues
-      );
-      const quotationId = quotationResult.rows[0].id;
-      console.log("VK quotation inserted with ID:", quotationId);
+//       const quotationResult = await client.query(
+//         quotationQuery,
+//         quotationValues
+//       );
+//       const quotationId = quotationResult.rows[0].id;
+//       console.log("VK quotation inserted with ID:", quotationId);
 
-      // Insert attachments
-      if (req.files && req.files.length > 0) {
-        const attachmentNotes = req.body.attachmentNotes || [];
+//       // Insert attachments
+//       if (req.files && req.files.length > 0) {
+//         const attachmentNotes = req.body.attachmentNotes || [];
 
-        for (let i = 0; i < req.files.length; i++) {
-          const file = req.files[i];
-          const attachmentQuery = `
-                    INSERT INTO vk_quotation_attachments (
-                        quotation_id, file_name, original_name, file_path,
-                        file_size, mime_type, notes
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-                `;
+//         for (let i = 0; i < req.files.length; i++) {
+//           const file = req.files[i];
+//           const attachmentQuery = `
+//                     INSERT INTO vk_quotation_attachments (
+//                         quotation_id, file_name, original_name, file_path,
+//                         file_size, mime_type, notes
+//                     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+//                 `;
 
-          const attachmentValues = [
-            quotationId,
-            file.filename,
-            file.originalname,
-            file.path,
-            file.size,
-            file.mimetype,
-            attachmentNotes[i] || "",
-          ];
+//           const attachmentValues = [
+//             quotationId,
+//             file.filename,
+//             file.originalname,
+//             file.path,
+//             file.size,
+//             file.mimetype,
+//             attachmentNotes[i] || "",
+//           ];
 
-          await client.query(attachmentQuery, attachmentValues);
-        }
-        console.log("VK quotation attachments inserted");
-      }
+//           await client.query(attachmentQuery, attachmentValues);
+//         }
+//         console.log("VK quotation attachments inserted");
+//       }
 
-      await client.query("COMMIT");
-      console.log("VK quotation transaction committed successfully");
+//       await client.query("COMMIT");
+//       console.log("VK quotation transaction committed successfully");
 
-      // Send email notification to MD
-      console.log("Sending email notification to MD for VK quotation...");
-      const transporter = nodemailer.createTransport({
-        host: "smtp.office365.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "No-reply@kietsindia.com",
-          pass: process.env.NO_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
+//       // Send email notification to MD
+//       console.log("Sending email notification to MD for VK quotation...");
+//       const transporter = nodemailer.createTransport({
+//         host: "smtp.office365.com",
+//         port: 587,
+//         secure: false,
+//         auth: {
+//           user: "No-reply@kietsindia.com",
+//           pass: process.env.NO_PASSWORD,
+//         },
+//         tls: {
+//           rejectUnauthorized: false,
+//         },
+//       });
 
-      const mailOptions = {
-        from: "No-reply@kietsindia.com",
-        to: "chandrashekaraiah.r@gmail.com", // MD email
-        subject: `VK Quotation Approval Required: ${quotationNumber}`,
+//       const mailOptions = {
+//         from: "No-reply@kietsindia.com",
+//         to: "chandrashekaraiah.r@gmail.com", // MD email
+//         subject: `VK Quotation Approval Required: ${quotationNumber}`,
     
-             html: `
+//              html: `
    
      
-    <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
+//     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
 
-  <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+//   <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
 
-    <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
+//     <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
 
-    <p style="font-size: 15px; color: #444; line-height: 1.5;" >
-      We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
-      Please find the summary details below for your reference:
-    </p>
+//     <p style="font-size: 15px; color: #444; line-height: 1.5;" >
+//       We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
+//       Please find the summary details below for your reference:
+//     </p>
 
-    <table cellpadding="10" cellspacing="0" 
-       style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
+//     <table cellpadding="10" cellspacing="0" 
+//        style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
 
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Quotation Type:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">VK</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${clientName}</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email :'Unknown'}</td>
-      </tr>
-      <tr>
-        <td><strong>Submission Date:</strong></td>
-        <td>${quotationDate}</td>
-      </tr>
-    </table>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Quotation Type:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">VK</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${clientName}</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email :'Unknown'}</td>
+//       </tr>
+//       <tr>
+//         <td><strong>Submission Date:</strong></td>
+//         <td>${quotationDate}</td>
+//       </tr>
+//     </table>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://kietprocure.com/"
-        style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
-        Review Quotation
-      </a>
-    </div>
+//     <div style="text-align: center; margin: 30px 0;">
+//       <a href="https://kietprocure.com/"
+//         style="background: #0056b3; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+//         Review Quotation
+//       </a>
+//     </div>
   
 
     
   
-  <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
-      <img src="cid:logoImage" alt="Company Logo"
-        style="width: 90px; height: auto; margin-bottom: 10px;" />
+//   <div style="text-align: center; padding: 20px; border-top: 1px solid #ddd;">
+//       <img src="cid:logoImage" alt="Company Logo"
+//         style="width: 90px; height: auto; margin-bottom: 10px;" />
 
-      <div style="font-size: 16px; font-weight: bold; color: #000;">
-        KIET TECHNOLOGIES PVT LTD
-      </div>
+//       <div style="font-size: 16px; font-weight: bold; color: #000;">
+//         KIET TECHNOLOGIES PVT LTD
+//       </div>
 
-      <div style="font-size: 13px; margin-top: 5px;">
-        📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
-      </div>
+//       <div style="font-size: 13px; margin-top: 5px;">
+//         📍 51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru, Karnataka 560111
+//       </div>
 
-      <div style="font-size: 13px; margin-top: 5px;">
-        📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
-        🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
-      </div>
+//       <div style="font-size: 13px; margin-top: 5px;">
+//         📞 +91 98866 30491 &nbsp;|&nbsp; ✉️ info@kietsindia.com &nbsp;|&nbsp;
+//         🌐 <a href="https://kietsindia.com" style="color:#0066cc; text-decoration:none;">kietsindia.com</a>
+//       </div>
 
-      <!-- Social Icons -->
-      <div style="margin-top: 12px;">
-        <a href="https://facebook.com" style="margin: 0 6px;">
-          <img src="cid:fbIcon" width="22" />
-        </a>
-        <a href="https://linkedin.com/company" style="margin: 0 6px;">
-          <img src="cid:lkIcon" width="22" />
-        </a>
-        <a href="https://instagram.com" style="margin: 0 6px;">
-          <img src="cid:igIcon" width="22" />
-        </a>
-        <a href="https://kietsindia.com" style="margin: 0 6px;">
-          <img src="cid:webIcon" width="22" />
-        </a>
-      </div>
+//       <!-- Social Icons -->
+//       <div style="margin-top: 12px;">
+//         <a href="https://facebook.com" style="margin: 0 6px;">
+//           <img src="cid:fbIcon" width="22" />
+//         </a>
+//         <a href="https://linkedin.com/company" style="margin: 0 6px;">
+//           <img src="cid:lkIcon" width="22" />
+//         </a>
+//         <a href="https://instagram.com" style="margin: 0 6px;">
+//           <img src="cid:igIcon" width="22" />
+//         </a>
+//         <a href="https://kietsindia.com" style="margin: 0 6px;">
+//           <img src="cid:webIcon" width="22" />
+//         </a>
+//       </div>
 
-      <div style="font-size: 11px; color: #777; margin-top: 15px;">
-        © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
-      </div>
-    </div>
-  </div>
-
-
+//       <div style="font-size: 11px; color: #777; margin-top: 15px;">
+//         © 2025 KIET TECHNOLOGIES PVT LTD — All Rights Reserved.
+//       </div>
+//     </div>
+//   </div>
 
 
 
@@ -4243,75 +4243,77 @@ console.log("Total KIET Cost:", totalKietCost);
 
 
 
-</div>
+
+
+// </div>
 
 
 
-    </div>
-</div>
+//     </div>
+// </div>
 
 
     
 
    
     
-  `,
-        attachments: [
-          {
-            filename: "lg.jpg",
-            path: "public/images/lg.jpg",
-            cid: "logoImage",
-          },
-        ],
-      };
+//   `,
+//         attachments: [
+//           {
+//             filename: "lg.jpg",
+//             path: "public/images/lg.jpg",
+//             cid: "logoImage",
+//           },
+//         ],
+//       };
 
-      try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ VK approval request email sent to MD:", info.response);
-      } catch (err) {
-        console.error("❌ Email failed:", err);
-      }
+//       try {
+//         const info = await transporter.sendMail(mailOptions);
+//         console.log("✅ VK approval request email sent to MD:", info.response);
+//       } catch (err) {
+//         console.error("❌ Email failed:", err);
+//       }
 
-      // Send push notification to MD
-      try {
-        await sendNotification("MD", {
-          title: "New VK Quotation Approval Required",
-          body: `VK Quotation ${quotationNumber} from ${clientName} requires your approval`,
-          icon: "/images/page_logo.png",
-          data: {
-            type: "vk_quotation_approval",
-            quotationId: quotationId,
-            quotationNumber: quotationNumberValue,
-          },
-        });
-        console.log(
-          "✅ Push notification sent to MD for VK quotation approval"
-        );
-      } catch (pushErr) {
-        console.error("❌ Push notification failed:", pushErr);
-      }
+//       // Send push notification to MD
+//       try {
+//         await sendNotification("MD", {
+//           title: "New VK Quotation Approval Required",
+//           body: `VK Quotation ${quotationNumber} from ${clientName} requires your approval`,
+//           icon: "/images/page_logo.png",
+//           data: {
+//             type: "vk_quotation_approval",
+//             quotationId: quotationId,
+//             quotationNumber: quotationNumberValue,
+//           },
+//         });
+//         console.log(
+//           "✅ Push notification sent to MD for VK quotation approval"
+//         );
+//       } catch (pushErr) {
+//         console.error("❌ Push notification failed:", pushErr);
+//       }
 
-      console.log("✅ VK quotation approval request completed successfully");
-      res.json({
-        success: true,
-        message: "VK quotation approval request sent successfully",
-        quotationNumber: quotationNumberValue,
-        quotationId: quotationId,
-      });
-    } catch (error) {
-      console.error("❌ Error in send-vk-quotation-approval:", error);
-      console.error("Error stack:", error.stack);
-      await client.query("ROLLBACK");
-      res.status(500).json({
-        success: false,
-        error: "Failed to send VK quotation approval request",
-        details: error.message,
-      });
-    } finally {
-      client.release();
-    }
-  }
-);
+//       console.log("✅ VK quotation approval request completed successfully");
+//       res.json({
+//         success: true,
+//         message: "VK quotation approval request sent successfully",
+//         quotationNumber: quotationNumberValue,
+//         quotationId: quotationId,
+//       });
+//     } catch (error) {
+//       console.error("❌ Error in send-vk-quotation-approval:", error);
+//       console.error("Error stack:", error.stack);
+//       await client.query("ROLLBACK");
+//       res.status(500).json({
+//         success: false,
+//         error: "Failed to send VK quotation approval request",
+//         details: error.message,
+//       });
+//     } finally {
+//       client.release();
+//     }
+//   }
+// );
 
 // Send quotation approval request (for regular quotations)
 app.post(
