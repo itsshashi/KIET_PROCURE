@@ -5847,7 +5847,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       textareaDetails: quotation.textarea_details || "",
       gstterms: quotation.maegstterms || "",
       insurance: quotation.maeinsurance || "",
-      packaging: quotation.packaging || "",
+      packaging: quotation.maepackaging || "",
       machine:quotation.subject||"",
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
