@@ -4579,7 +4579,8 @@ app.post(
 
       const mailOptions = {
         from: "No-reply@kietsindia.com",
-        to: "chandrashekaraiah.r@kietsindia.com", // MD email
+        // to: "chandrashekaraiah.r@kietsindia.com", // MD email
+        to: "shashank@kietsindia.coom", // Shashank email for testing
         subject: `Quotation Approval Required: ${quotationNumber}`,
        
               
@@ -4802,9 +4803,14 @@ app.post(
         [year]
       );
       const nextSeq = seqResult.rows[0].current_sequence;
+       const quotationNumber = await client.query(
+         "SELECT generate_vk_quotation_number() as quotation_number"
+               );
+      let quotationNumberValue = quotationNumber.rows[0].quotation_number;
+    quotationNumberValue = quotationNumberValue.replace("VK-", "VK-KQPS-");
+     console.log("Generated VK quotation number:", quotationNumberValue);
 
-      console.log("Generated VK quotation number:", quotationNumberValue);
-
+      
       // Extract form data
       const {
         quotationDate,
@@ -4821,19 +4827,96 @@ app.post(
         clientName,
         clientEmail,
         clientPhone,
+        vkgst,
+        vkpackaging,
+        vkinsurance,
+        vkdeliveryTerms,
+        
+
 
         notes,
       } = req.body;
 
       console.log("VK Form data extracted:", { quotationDate, clientName });
 
+    
       // Parse PV adaptors data (this is the main data for VK quotations)
-      const pvAdaptors = req.body.pvAdaptors
-        ? JSON.parse(req.body.pvAdaptors)
-        : [];
-      const kietCosts = req.body.kietCosts
-        ? JSON.parse(req.body.kietCosts)
-        : [];
+      const {
+  pvQty = [],
+  pvFamilyName = [],
+  pvRevNo = [],
+  pvCoaxialPin = [],
+  pvSokCard = [],
+  pvSokQty = [],
+  pvRate = []
+} = req.body;
+
+const pvAdaptors = pvQty.map((_, i) => ({
+  qty: Number(pvQty[i]),
+  familyName: pvFamilyName[i],
+  revNo: pvRevNo[i],
+  coaxialPin: pvCoaxialPin[i],
+  sokCard: pvSokCard[i],
+  sokQty: pvSokQty[i],
+  rate: Number(pvRate[i])
+}));
+
+ // Extract arrays from request
+const {
+  itemDescription = [],
+  priceInput = [],
+  qtyInput = []
+} = req.body;
+
+// Validation: main items count
+if (itemDescription.length !== qtyInput.length) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
+  });
+}
+
+// Validation: priceInput must have enough entries for main + additional costs
+if (priceInput.length < itemDescription.length + 2) {
+  return res.status(400).json({
+    error: "KIET cost data mismatch: priceInput must include additional charges"
+  });
+}
+
+// Build main KIET costs
+const kietCosts = itemDescription.map((desc, i) => ({
+  description: desc,
+  cost: Number(priceInput[i]),
+  qty: Number(qtyInput[i]),
+  totalValue: Number(priceInput[i]) * Number(qtyInput[i])
+}));
+
+// Append additional costs (always last 2 entries in priceInput)
+kietCosts.push({
+  description: "Export packaging charges included",
+  cost: Number(priceInput[priceInput.length - 2]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 2]),
+  isSummaryRow: true,
+});
+
+kietCosts.push({
+  description: "Bigger box setup",
+  cost: Number(priceInput[priceInput.length - 1]),
+  qty: 1,
+  totalValue: Number(priceInput[priceInput.length - 1]),
+  isSummaryRow: true,
+});
+
+// Optional: Calculate total KIET cost
+const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
+
+console.log("KIET Costs data:", kietCosts.length, "items");
+console.log("Total KIET Cost:", totalKietCost);
+
+// Now you can insert `kietCosts` into DB along with VK quotation
+// Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
+
+
 
       console.log("PV Adaptors data:", pvAdaptors.length, "adaptors");
       console.log("KIET Costs data:", kietCosts.length, "cost items");
@@ -4852,10 +4935,10 @@ app.post(
             INSERT INTO vk_quotations (
                 quotation_type, quotation_number, quotation_date, reference_no,
                 valid_until, currency, payment_terms, delivery_duration,
-                company_name, company_email, company_gst, company_address, company_phone, company_website,
-                client_name, client_email, client_phone, client_company, client_designation, client_address,
-                total_amount, notes, status, created_by, kiet_costs, pv_adaptors
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+                company_name, company_email, company_gst, company_address,
+                client_name, client_email, client_phone,
+                total_amount, notes, status, created_by, kiet_costs, pv_adaptors,gstterms,packaging,insurance,deliveryTerms
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             RETURNING id
         `;
 
@@ -4868,7 +4951,7 @@ app.post(
 
       const quotationValues = [
         "VK",
-        quotationNumber,
+        quotationNumberValue,
         quotationDate || new Date().toISOString().split("T")[0],
         referenceNo || null,
         defaultValidUntil,
@@ -4888,6 +4971,10 @@ app.post(
         req.session.user ? req.session.user.email : null,
         JSON.stringify(kietCosts),
         JSON.stringify(pvAdaptors),
+        vkgst || null,
+        vkpackaging || null,
+        vkinsurance || null,
+        vkdeliveryTerms || null,
       ];
 
       const quotationResult = await client.query(
@@ -7854,13 +7941,13 @@ app.get("/api/know_budget/:project_code", async (req, res) => {
     const project_code = req.params.project_code;
     console.log("Project code received:", project_code);
     const result = await pool.query(
-      `SELECT budget FROM project_info WHERE project_code = $1 ORDER BY id DESC LIMIT 1`,
+      `SELECT remaining_cost FROM project_info WHERE project_code = $1 ORDER BY id DESC LIMIT 1`,
       [project_code]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project not found" });
     }
-    const budget = result.rows[0].budget;
+    const budget = result.rows[0].remaining_cost;
     res.json({ budget });
   } catch (error) {
     console.error("Error fetching budget:", error);
