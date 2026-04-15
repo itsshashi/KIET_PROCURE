@@ -4580,8 +4580,8 @@ app.post(
 
       const mailOptions = {
         from: "No-reply@kietsindia.com",
-        // to: "chandrashekaraiah.r@kietsindia.com", // MD email
-        to: "shashank@kietsindia.coom", // Shashank email for testing
+        to: "chandrashekaraiah.r@kietsindia.com", // MD email
+        // to: "shashank@kietsindia.coom", // Shashank email for testing
         subject: `Quotation Approval Required: ${quotationNumber}`,
        
               
