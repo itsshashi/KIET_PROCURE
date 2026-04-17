@@ -5033,7 +5033,7 @@ console.log("Total KIET Cost:", totalKietCost);
 
       const mailOptions = {
         from: "No-reply@kietsindia.com",
-        to: "shashank@kietsindia.com", // MD email
+        to:"chandrashekaraiah.r@kietsindia.com", // MD email
         subject: `VK Quotation Approval Required: ${quotationNumber}`,
         text: `
 Hello MD,
