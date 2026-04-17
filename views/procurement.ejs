@@ -2292,7 +2292,7 @@
                 <td>${p.customer || '-'}</td>
                 <td>${p.assigned_to || '-'}</td>
                 <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
-                <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
+                // <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
                 <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
                 <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
             </tr>`;
