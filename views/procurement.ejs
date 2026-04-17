@@ -2292,7 +2292,7 @@
                 <td>${p.customer || '-'}</td>
                 <td>${p.assigned_to || '-'}</td>
                 <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
-                // <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
+                
                 <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
                 <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
             </tr>`;
@@ -2557,7 +2557,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <th onclick="sortProjectTable('customer')">Customer <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('assigned_to')">Assigned To <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('budget')">Budget (₹) <i class="fas fa-sort"></i></th>
-              <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th>
+              <!-- <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th> -->
               <th onclick="sortProjectTable('delivery_status')">Status <i class="fas fa-sort"></i></th>
               <th onclick="sortProjectTable('assigned_on')">Assigned On <i class="fas fa-sort"></i></th>
               
