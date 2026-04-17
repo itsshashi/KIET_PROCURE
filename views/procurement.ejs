@@ -82,7 +82,83 @@
     font-weight: bold;
     border: 1px solid #27ae60;
 }
+.project_info {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+    margin-bottom: 30px;
+    border: 1px solid #f1f5f9;
+}
 
+.project_info .filters .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.project_info .filter-row input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.project_info .filter-row select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.project_info .filter-row button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+
+.project_info table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.project_info table th {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.project_info table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.project_info table tr:hover td {
+    background: #f8fafc;
+}
+
+.project_info h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
 
 
 
@@ -223,9 +299,29 @@
 }
 
 /* Simple status colors */
-.status.pending { background-color: #f39c12; }    /* Orange */
-.status.completed { background-color: #27ae60; }  /* Green */
-.status.inprogress { background-color: #2980b9; } /* Blue */
+.status.pending { background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }    
+.status.completed { 
+  background: linear-gradient(135deg, #27ae60, #22c55e); 
+  color: white; 
+  padding: 6px 12px; 
+  border-radius: 20px; 
+  font-weight: bold; 
+  font-size: 13px; 
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+.status.completed::after {
+  content: '✓';
+  margin-left: 6px;
+  animation: checkmark 0.6s ease-in-out;
+}
+@keyframes checkmark {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+.status.inprogress { background-color: #2980b9; color: white; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
 .status.overdue { background-color: #c0392b; }    /* Red */
 
 
@@ -262,53 +358,124 @@
   color: white !important;
 }
         /* Sidebar Styles - Enhanced */
-   .sidebar {
-    width: 260px;
+/* Professional Glassmorphism Sidebar */
+.sidebar {
+    width: 280px;
     height: 100vh;
-    background: linear-gradient(180deg, #0b1e3d, #081833);
-    border-right: 1px solid var(--sidebar-border);
+    background: rgba(11, 30, 61, 0.95);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 100;
-    transition: transform 0.3s ease;
+    z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+    pointer-events: none;
 }
 
         
         
-        .logo {
-            padding: 25px 25px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            background: rgba(30, 58, 138, 0.3);
-        }
-        
-        .logo img {
-            max-width: 150px;
-            height: auto;
-            filter: brightness(0) invert(1);
-        }
+/* Enhanced Logo Section */
+.logo {
+    padding: 30px 25px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(30, 58, 138, 0.3));
+    border-radius: 0 0 20px 20px;
+}
+
+.logo::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.logo img {
+    max-width: 160px;
+    height: auto;
+    filter: brightness(0) invert(1) drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+}
+
+.logo:hover img {
+    transform: scale(1.05);
+}
         
         .menu {
             list-style: none;
             padding: 0 15px;
         }
-        .menu-item {
+/* Professional Menu Items */
+.menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
-    margin: 4px 10px;
-    border-radius: 12px;
-    font-size: 14px;
+    gap: 14px;
+    padding: 16px 20px;
+    margin: 6px 12px;
+    border-radius: 16px;
+    font-size: 15px;
     font-weight: 500;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    transition: background 0.25s ease, color 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.menu-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s;
+}
+
+.menu-item:hover::before {
+    left: 100%;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: translateX(8px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.4));
+    color: white;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    transform: scale(1.02);
 }
 
 .menu-item i {
@@ -322,7 +489,7 @@
     background: var(--menu-hover);
 }
 
- /* Submenu container */
+/* Submenu container - FIXED 👈 */
 .submenu {
     list-style: none;
     padding: 8px;
@@ -332,23 +499,29 @@
     background-color: rgb(20, 29, 54);
     border-radius: 10px;
 
-    /* Smooth animation */
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
+/* Smooth animation - ROBUST FIX - DEBUG */
+    display: block !important; /* DEBUG: Force visible */
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.3; /* DEBUG: Semi-visible when closed */
     transform: translateY(-8px);
-    transition:
-        max-height 0.35s ease,
-        opacity 0.25s ease,
-        transform 0.25s ease;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-
-/* Open state */
+/* Open state - FORCE OPEN 👈 */
 .submenu.open {
-    max-height: 500px;
-    opacity: 1;
-    transform: translateY(0);
+    display: block !important; /* FORCE OPEN */
+    max-height: 500px !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    overflow: visible !important;
+}
+
+/* Hover fallback for desktop - ENHANCED */
+.has-submenu:hover .submenu {
+    display: block !important; /* FORCE HOVER */
+    max-height: 500px !important;
+    opacity: 1 !important;
 }
 
 /* Submenu items */
@@ -2056,6 +2229,266 @@
                 <span>Approved Quotation</span>
             </li>
         </ul>
+        <!-- this menu visible only when userEmail is equal to jeyavelraj.k@kietsindia.com -->
+        <% if (user.email === 'jeyavelraj.k@kietsindia.com') { %>
+        <!-- Admin Panel -->
+    <li class="menu-item" data-tab="project-info">
+            <i class="fas fa-user-shield"></i>
+            <span>Project Info</span>    
+        </li>
+
+        <script>
+/**
+ * COMPLETE TAB SWITCHING SYSTEM
+ * Handles ALL menu clicks, submenus, mobile, Project Info
+ * 
+ */
+  document.getElementById('hamburger-btn').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('mobile-open');
+        document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebar-overlay').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.remove('mobile-open');
+        this.classList.remove('active');
+    });
+   
+    
+    async function loadProjectInfo() {
+        try {
+            const res = await fetch('/api/projects');
+            if (!res.ok) throw new Error('Failed to fetch projects');
+            projectData = await res.json();
+            renderProjectTable(projectData);
+            populateAssigneeFilter(projectData);
+        } catch (err) {
+            console.error('Error loading projects:', err);
+            document.getElementById('projectInfoBody').innerHTML =
+                `<tr><td colspan="9" style="text-align:center;padding:20px;color:#ef4444;">
+                    Failed to load projects. Check API endpoint.
+                </td></tr>`;
+        }
+    }
+    
+    function renderProjectTable(data) {
+        console.log('Rendering project table with', data.length, 'projects');
+        const tbody = document.getElementById('projectInfoBody');
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b;">No projects found.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map((p, i) => {
+            const statusColors = {
+                'Pending':     'background:#fffbeb;color:#f59e0b;',
+                'In Progress': 'background:#eff6ff;color:#3b82f6;',
+                'Completed':   'background:#ecfdf5;color:#10b981;',
+                'Delayed':     'background:#fef2f2;color:#ef4444;'
+            };
+            const style = statusColors[p.delivery_status] || 'background:#f1f5f9;color:#64748b;';
+            return `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${p.project_code || '-'}</strong></td>
+                <td>${p.description || '-'}</td>
+                <td>${p.customer || '-'}</td>
+                <td>${p.assigned_to || '-'}</td>
+                <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
+                <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
+                <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
+                <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
+            </tr>`;
+        }).join('');
+    }
+    
+    function populateAssigneeFilter(data) {
+        const select = document.getElementById('assigneeFilter');
+        const assignees = [...new Set(data.map(p => p.assigned_to).filter(Boolean))];
+        select.innerHTML = '<option value="All Assignees">All Assignees</option>' +
+            assignees.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+    
+    function applyProjectFilters() {
+        const search  = document.getElementById('projectSearchInput').value.toLowerCase();
+        const assignee = document.getElementById('assigneeFilter').value;
+        const status   = document.getElementById('statusFilter').value;
+    
+        const filtered = projectData.filter(p => {
+            const matchSearch = !search ||
+                (p.project_code || '').toLowerCase().includes(search) ||
+                (p.description  || '').toLowerCase().includes(search) ||
+                (p.assigned_to  || '').toLowerCase().includes(search);
+            const matchAssignee = assignee === 'All Assignees' || p.assigned_to === assignee;
+            const matchStatus   = status   === 'All Statuses'  || p.delivery_status === status;
+            return matchSearch && matchAssignee && matchStatus;
+        });
+        renderProjectTable(filtered);
+    }
+    
+    function clearProjectFilters() {
+        document.getElementById('projectSearchInput').value = '';
+        document.getElementById('assigneeFilter').value  = 'All Assignees';
+        document.getElementById('statusFilter').value    = 'All Statuses';
+        renderProjectTable(projectData);
+    }
+    
+    function sortProjectTable(col) {
+        if (projectSortCol === col) {
+            projectSortAsc = !projectSortAsc;
+        } else {
+            projectSortCol = col;
+            projectSortAsc = true;
+        }
+        const sorted = [...projectData].sort((a, b) => {
+            const av = a[col] ?? '';
+            const bv = b[col] ?? '';
+            return projectSortAsc
+                ? String(av).localeCompare(String(bv), undefined, {numeric: true})
+                : String(bv).localeCompare(String(av), undefined, {numeric: true});
+        });
+        renderProjectTable(sorted);
+    }
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM Ready - Attaching submenu handlers');
+     let projectData = [];
+    let projectSortCol = '';
+    let projectSortAsc = true;
+    
+    // === MAIN TAB SWITCHING ===
+    function switchTab(tabId) {
+        console.log('Switching to tab:', tabId);
+        // Hide ALL tab contents
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+            tab.style.display = 'none';
+        });
+        
+        // Remove ALL active menu items
+        document.querySelectorAll('.menu-item, .submenu-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Show target tab
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+            targetTab.style.display = 'block';
+        }
+        
+        // Close sidebar on mobile
+        if (window.innerWidth <= 992) {
+            document.querySelector('.sidebar').classList.remove('mobile-open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+        
+        // Special handlers
+        if (tabId === 'project-info') {
+            loadProjectInfo();
+        }
+    }
+    
+    // === MENU CLICK HANDLERS ===
+    document.querySelectorAll('.menu-item[data-tab]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            console.log('Menu item clicked:', this.dataset.tab);
+            e.stopPropagation();
+            switchTab(this.dataset.tab);
+        });
+    });
+    
+    // === SUBMENU CLICK HANDLERS ===
+    document.querySelectorAll('.submenu-item[data-tab]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            console.log('Submenu item clicked:', this.dataset.tab);
+            e.stopPropagation();
+            switchTab(this.dataset.tab);
+        });
+    });
+    
+    // === FIXED SUBMENU TOGGLE === 👈 MAIN FIX
+    document.addEventListener('click', function(e) {
+        // 🟢 HAS-SUBMENU CLICK (toggle)
+        if (e.target.closest('.has-submenu')) {
+            e.stopPropagation(); // Prevent bubbling
+            const hasSubmenu = e.target.closest('.has-submenu');
+            const submenu = hasSubmenu.nextElementSibling;
+            const arrow = hasSubmenu.querySelector('.arrow');
+            
+            console.log('🟢 Has-submenu clicked:', hasSubmenu.textContent.trim());
+            
+            if (submenu && submenu.classList.contains('submenu')) {
+                const isOpen = submenu.classList.contains('open');
+                submenu.classList.toggle('open');
+                if (arrow) arrow.classList.toggle('rotate');
+                
+                console.log('Submenu toggled:', isOpen ? 'closed' : 'opened');
+            }
+            return;
+        }
+        
+        // 🔴 CLICK OUTSIDE → CLOSE ALL
+        const sidebar = document.querySelector('.sidebar');
+        const anySubmenu = document.querySelector('.submenu.open');
+        const hamburger = document.querySelector('.hamburger-btn');
+        
+        if (anySubmenu && !sidebar.contains(e.target) && !hamburger?.contains(e.target)) {
+            document.querySelectorAll('.submenu').forEach(s => s.classList.remove('open'));
+            document.querySelectorAll('.arrow').forEach(a => a.classList.remove('rotate'));
+            document.querySelectorAll('.has-submenu').forEach(h => h.classList.remove('active'));
+            console.log('🔴 All submenus closed (outside click)');
+        }
+    });
+    
+    // Mobile sidebar toggle
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('🍔 Hamburger clicked');
+            document.querySelector('.sidebar').classList.toggle('mobile-open');
+            sidebarOverlay.classList.toggle('active');
+        });
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            console.log('🌑 Overlay clicked → close');
+            document.querySelector('.sidebar').classList.remove('mobile-open');
+            this.classList.remove('active');
+            // Close all submenus on overlay click
+            document.querySelectorAll('.submenu').forEach(s => s.classList.remove('open'));
+        });
+    }
+    
+    console.log('✅ All submenu/mobile handlers attached');
+    
+// });// 
+//                 submenu.classList.toggle('open');
+//                 arrow.classList.toggle('rotate');
+    //         }
+    //     });
+    // });
+    
+    // === MOBILE SIDEBAR ===
+  
+    
+    // === PROJECT INFO FUNCTIONS ===
+    
+    
+    function openAddProjectModal() {
+        alert('Add Project modal — wire this to your backend form.');
+    }
+    window.loadProjectInfo = loadProjectInfo;
+    window.applyProjectFilters = applyProjectFilters;
+    window.clearProjectFilters = clearProjectFilters;
+    window.sortProjectTable = sortProjectTable;
+    window.openAddProjectModal = openAddProjectModal;
+});
+    // Expose functions globally
+  
+        </script>
+        <% } %>
+        
 
         <!-- Logout -->
         <li class="menu-item" id="logout-btn" onclick="window.location.href='/'">
@@ -2085,7 +2518,60 @@
                 <%= out_fl1.toUpperCase() %></div>
             <span><%= out_fl %></span>
         </div>
+
+
+
+
+
     </div>
+    <div class="tab-content project_info" id="project-info" style="padding: 20px;">
+    <h2>PROJECT INFO</h2>
+    <div class="filters">
+        <div class="filter-row">
+          <button onclick="openAddProjectModal()" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            <i class="fas fa-plus"></i> Add Project
+          </button>
+          <input type="text" id="projectSearchInput" placeholder="Search by Project Code, Description, or Assigned To..." onkeyup="applyProjectFilters()">
+          <select id="assigneeFilter" onchange="applyProjectFilters()">
+            <option value="All Assignees">All Assignees</option>
+          </select>
+          <select id="statusFilter" onchange="applyProjectFilters()">
+            <option value="All Statuses">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Delayed">Delayed</option>
+          </select>
+          <button onclick="clearProjectFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Project Information Table -->
+      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table class="min-w-max w-full text-sm text-center whitespace-nowrap">
+          <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+            <tr>
+              <th onclick="sortProjectTable('id')">ID <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('project_code')">Project Code <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('description')">Description <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('customer')">Customer <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_to')">Assigned To <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('budget')">Budget (₹) <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('delivery_status')">Status <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_on')">Assigned On <i class="fas fa-sort"></i></th>
+              
+            </tr>
+          </thead>
+          <tbody id="projectInfoBody">
+            <!-- Rows populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+
+
+</div>
     
              
             
@@ -3490,61 +3976,69 @@ tinymce.init({
     table image code
   `,
   
-  // IMAGE UPLOAD
-  images_upload_url: "/upload_image",
-images_upload_handler: function (blobInfo) {
-  let formData = new FormData();
-  formData.append("image", blobInfo.blob(), blobInfo.filename());
-
-  return fetch("/upload_image", {
-    method: "POST",
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.location) {
-        // TinyMCE will show this message automatically
-        throw new Error("Invalid upload response — `location` missing");
-      }
-      return data.location;   // <-- TinyMCE inserts this into editor
-    })
-    .catch(err => {
-      console.error("Upload failed", err);
-      throw err; // TinyMCE will display it
-    });
-}
-
-,
-
-  // FONT SIZE DROPDOWN
-  fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px',
-
-  // CUSTOM LINE HEIGHT MENU
   setup: function (editor) {
-    editor.ui.registry.addMenuButton('myLineHeight', {
-      text: 'Line Height',
-      fetch: function (callback) {
-        callback([
-          { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
-          { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
-          { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
-          { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
-          { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
-          { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
-        ]);
-      }
-    });
-
-    // Apply custom line height
-    editor.addCommand('mceApplyLineHeight', function (_, value) {
-      editor.formatter.register('lineheight', {
-        inline: 'span',
-        styles: { 'line-height': '%value' }
+    // Safe custom line height
+    try {
+      editor.ui.registry.addMenuButton('myLineHeight', {
+        text: 'Line Height',
+        fetch: function (callback) {
+          callback([
+            { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
+            { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
+            { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
+            { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
+            { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
+            { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
+          ]);
+        }
       });
-      editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
-    });
-  }
+
+      editor.addCommand('mceApplyLineHeight', function (_, value) {
+        try {
+          editor.formatter.register('lineheight', {
+            inline: 'span',
+            styles: { 'line-height': '%value' }
+          });
+          editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
+        } catch(e) {
+          console.warn('Line height apply failed:', e);
+        }
+      });
+    } catch(e) {
+      console.warn('Custom toolbar setup failed:', e);
+    }
+  },
+  
+  init_instance_callback: function(editor) {
+    console.log('TinyMCE Ready');
+  },
+  
+  // Safe image upload with fallback
+  images_upload_handler: function (blobInfo, progress) {
+    try {
+      let formData = new FormData();
+      formData.append("image", blobInfo.blob(), blobInfo.filename());
+
+      return fetch("/upload_image", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.location) {
+            return data.location;
+          }
+          throw new Error("Upload failed - no location");
+        });
+    } catch(err) {
+      console.error("Image upload failed:", err);
+      return Promise.reject(err);
+    }
+  },
+  
+  fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px'
 });
+
 
 </script>
 <div id="editItemsModal" class="modal">
@@ -4148,9 +4642,8 @@ async function savePoeItems(id) {
                     </div>
                     <script>
 document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
-  e.preventDefault(); // stop page reload
-  startLoader(); // Start loader animation
-  
+  e.preventDefault(); 
+  if (typeof startLoader === 'function') startLoader(); 
 
   const form = this;
   const formData = new FormData(form);
@@ -4164,24 +4657,21 @@ document.getElementById("vkQuotationForm").addEventListener("submit", async func
     const data = await res.json();
 
     if (data.success) {
-      // ✅ ALERT
       alert("Quotation sent successfully ✅");
-      stopLoader(); // Stop loader animation
-
-      // ✅ RESET FORM
+      if (typeof stopLoader === 'function') stopLoader();
       form.reset();
-
-      // ✅ OPTIONAL: clear quotation number
-      document.getElementById("vkQuotationNumber").value = "";
-
+      const vkNumField = document.getElementById("vkQuotationNumber");
+      if (vkNumField) vkNumField.value = "";
     } else {
       alert("Failed to send quotation ❌");
     }
   } catch (err) {
-    console.error(err);
+    console.error('VK Submit Error:', err);
     alert("Server error ❌");
+    if (typeof stopLoader === 'function') stopLoader();
   }
 });
+
 
 
 function initializeVKForm() {      
@@ -6599,6 +7089,29 @@ function showBudgetAlert(remaining = 0, required = 500) {
                     if (this.dataset.tab === 'delivery-challan'){
                         console.log("delivery challan is pressed")
                     }
+                    
+     if (this.dataset.tab === 'project-info') {
+    console.log("project info is pressed");
+    loadProjectInfo();
+    const project_info = document.getElementById('projectinfo');
+    console.log("Checking for project info panel:", project_info);
+    if (project_info) {
+        console.log("Project info panel found, displaying it.");
+        // Hide all tab-content first
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        // Show project info panel
+        project_info.style.display = 'block';
+        // Load project data
+        
+    }
+} else {
+    // For all other tabs, hide project info
+    const project_info = document.getElementById('projectinfo');
+    console.log("Hiding project info panel.");
+    if (project_info) project_info.style.display = 'none';
+}
 
                     // 👉 When switching to Approved Quotation tab, fetch approved quotations
                     if (this.dataset.tab === 'approved-quotation') {
@@ -6722,8 +7235,9 @@ function showBudgetAlert(remaining = 0, required = 500) {
 
             // Update row numbers
             updateRowNumbers();
+            calculateRowTotal(newRow);
         }
-        calculateRowTotal(newRow);
+        
         // Add event listeners to a table row
         function addRowEventListeners(row) {
             // Quantity change
@@ -7620,22 +8134,28 @@ ${order.status?.toLowerCase() === "pending"
             document.getElementById('loadingOverlay').style.display = 'flex';
         });
 
-        // MAE Form JavaScript
+// MAE Form JavaScript - SAFE VERSION
         document.addEventListener('DOMContentLoaded', function() {
-            // MAE Quotation Number Generation
-            const maeGenerateQuotationNumberBtn = document.getElementById('maeGenerateQuotationNumber');
-            const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
+            try {
+                const maeGenerateQuotationNumberBtn = document.getElementById('maeGenerateQuotationNumber');
+                const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
 
-            maeGenerateQuotationNumberBtn.addEventListener('click', function() {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${day}`;
-                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                const quotationNumber = `MAE-${dateStr}-${randomNum}`;
-                maeQuotationNumberInput.value = quotationNumber;
-            });
+                if (maeGenerateQuotationNumberBtn && maeQuotationNumberInput) {
+                    maeGenerateQuotationNumberBtn.addEventListener('click', function() {
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                        const quotationNumber = `MAE-${dateStr}-${randomNum}`;
+                        maeQuotationNumberInput.value = quotationNumber;
+                    });
+                }
+            } catch (err) {
+                console.error('MAE Generate Button Error:', err);
+            }
+
 
             // MAE Reference Number Generation
             const maeGenerateReferenceNumberBtn = document.getElementById('maeGenerateReferenceNumber');
@@ -8113,36 +8633,39 @@ document.getElementById("saveBtn").onclick = () => {
             
         }
 async function previewmae() {
-    const form = document.getElementById("maeQuotationForm");
-    if (tinymce.get("editor")) {
-        tinymce.triggerSave();
-    }
-    
-    const formData = new FormData(form);
-    console.log('oke dfs',formData)
-
     try {
+        const form = document.getElementById("maeQuotationForm");
+        if (!form) throw new Error("MAE form not found");
+        
+        // Safe TinyMCE save
+        if (typeof tinymce !== 'undefined' && tinymce.get("editor")) {
+            tinymce.triggerSave();
+        }
+
+        const formData = new FormData(form);
+
         const response = await fetch("/preview", {
             method: "POST",
             body: formData
-            
         });
-        console.log('response',response);
 
-        if (!response.ok) throw new Error("Preview failed");
+        if (!response.ok) throw new Error(`Preview failed: ${response.status}`);
 
         const blob = await response.blob();
         const pdfUrl = URL.createObjectURL(blob);
 
-        // Load preview into iframe modal
         const iframe = document.getElementById("previewFrame");
-        iframe.src = pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
-
-        document.getElementById("previewModal").style.display = "block";
+        const modal = document.getElementById("previewModal");
+        if (iframe && modal) {
+            iframe.src = pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
+            modal.style.display = "block";
+        }
     } catch (err) {
         console.error("Preview Error:", err);
+        alert("Preview failed. Check console for details.");
     }
 }
+
 document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "p")) {
         e.preventDefault();
@@ -8239,6 +8762,107 @@ document.querySelectorAll('.has-submenu').forEach(function(menu) {
         arrow.classList.toggle('rotate');
     });
 });
+
+
+// let projectData = [];
+// let projectSortCol = '';
+// let projectSortAsc = true;
+
+// async function loadProjectInfo() {
+//     try {
+//         const res = await fetch('/api/projects');
+//         if (!res.ok) throw new Error('Failed to fetch projects');
+//         projectData = await res.json();
+//         renderProjectTable(projectData);
+//         populateAssigneeFilter(projectData);
+//     } catch (err) {
+//         console.error('Error loading projects:', err);
+//         document.getElementById('projectInfoBody').innerHTML =
+//             `<tr><td colspan="9" style="text-align:center;padding:20px;color:#ef4444;">
+//                 Failed to load projects. Check API endpoint.
+//             </td></tr>`;
+//     }
+// }
+
+// function renderProjectTable(data) {
+//     const tbody = document.getElementById('projectInfoBody');
+//     if (!data.length) {
+//         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b;">No projects found.</td></tr>`;
+//         return;
+//     }
+//     tbody.innerHTML = data.map((p, i) => {
+//         const statusColors = {
+//             'Pending':     'background:#fffbeb;color:#f59e0b;',
+//             'In Progress': 'background:#eff6ff;color:#3b82f6;',
+//             'Completed':   'background:#ecfdf5;color:#10b981;',
+//             'Delayed':     'background:#fef2f2;color:#ef4444;'
+//         };
+//         const style = statusColors[p.delivery_status] || 'background:#f1f5f9;color:#64748b;';
+//         return `<tr>
+//             <td>${i + 1}</td>
+//             <td><strong>${p.project_code || '-'}</strong></td>
+//             <td>${p.description || '-'}</td>
+//             <td>${p.customer || '-'}</td>
+//             <td>${p.assigned_to || '-'}</td>
+//             <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
+//             <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
+//             <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
+//             <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
+//         </tr>`;
+//     }).join('');
+// }
+
+// function populateAssigneeFilter(data) {
+//     const select = document.getElementById('assigneeFilter');
+//     const assignees = [...new Set(data.map(p => p.assigned_to).filter(Boolean))];
+//     select.innerHTML = '<option value="All Assignees">All Assignees</option>' +
+//         assignees.map(a => `<option value="${a}">${a}</option>`).join('');
+// }
+
+// function applyProjectFilters() {
+//     const search  = document.getElementById('projectSearchInput').value.toLowerCase();
+//     const assignee = document.getElementById('assigneeFilter').value;
+//     const status   = document.getElementById('statusFilter').value;
+
+//     const filtered = projectData.filter(p => {
+//         const matchSearch = !search ||
+//             (p.project_code || '').toLowerCase().includes(search) ||
+//             (p.description  || '').toLowerCase().includes(search) ||
+//             (p.assigned_to  || '').toLowerCase().includes(search);
+//         const matchAssignee = assignee === 'All Assignees' || p.assigned_to === assignee;
+//         const matchStatus   = status   === 'All Statuses'  || p.delivery_status === status;
+//         return matchSearch && matchAssignee && matchStatus;
+//     });
+//     renderProjectTable(filtered);
+// }
+
+// function clearProjectFilters() {
+//     document.getElementById('projectSearchInput').value = '';
+//     document.getElementById('assigneeFilter').value  = 'All Assignees';
+//     document.getElementById('statusFilter').value    = 'All Statuses';
+//     renderProjectTable(projectData);
+// }
+
+// function sortProjectTable(col) {
+//     if (projectSortCol === col) {
+//         projectSortAsc = !projectSortAsc;
+//     } else {
+//         projectSortCol = col;
+//         projectSortAsc = true;
+//     }
+//     const sorted = [...projectData].sort((a, b) => {
+//         const av = a[col] ?? '';
+//         const bv = b[col] ?? '';
+//         return projectSortAsc
+//             ? String(av).localeCompare(String(bv), undefined, {numeric: true})
+//             : String(bv).localeCompare(String(av), undefined, {numeric: true});
+//     });
+//     renderProjectTable(sorted);
+// }
+
+function openAddProjectModal() {
+    alert('Add Project modal — wire this to your backend form.');
+}
 </script>
 </body>
 </html>
