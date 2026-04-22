@@ -697,7 +697,7 @@ function generateVKQuotation(poData, filePath) {
 
         // PV Wiring Adaptor Details Table
         {
-          text: "As per Price Agreement -Document. no: con_GPAG_PUI4_54808 ",
+          text: "As per Price Agreement -Document. no: con_GPAG_PUI4_137128 ",
           font: "Times",
           bold: true,
           fontSize: 14,
@@ -798,7 +798,7 @@ function generateVKQuotation(poData, filePath) {
           margin: [0, 100, 0, 10],
         },
         {
-          text: "As per Price Agreement - Document No: con_GPAG_PU14_54808",
+          text: "As per Price Agreement - Document No: con_GPAG_PUI4_137128",
           font: "Times",
           margin: [0, 0, 0, 10],
         },
