@@ -6691,8 +6691,8 @@ function closeProcessModal() {
                 </div>
                 <div class="status-filters">
                     <div class="form-group">
-                        <label for="statusFilter">Filter by Status:</label>
-                        <select class="form-control" id="statusFilter">
+                        <label for="statuspoFilter">Filter by Status:</label>
+                        <select class="form-control" id="statuspoFilter" onchange="renderStatusCards(all_orders, this.value)">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="purchase">Purchase</option>
@@ -6834,6 +6834,7 @@ function closeProcessModal() {
         //         "<p>Could not load your assigned projects.</p>";
         //     }
         // }
+        let all_orders=[];
 
         async function fetchOrders() {
   try {
@@ -6846,10 +6847,11 @@ function closeProcessModal() {
     }
 
     const orders = await res.json();
-    //renderStatusCards(orders) ;
+    all_orders = orders; // Store all orders
+    renderStatusCards(all_orders);
 
     console.log("✅ Orders fetched:", orders);
-    renderStatusCards(orders);
+    
   } catch (err) {
     console.error("❌ Error fetching orders:", err);
 
@@ -6879,7 +6881,7 @@ function closeProcessModal() {
             setupOrderTracking();
 
             // Setup filter handlers
-            document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
+            document.getElementById('statuspoFilter').addEventListener('change', renderStatusCards);
 
             // Setup sub-tab handlers for approved quotations
             document.querySelectorAll('.sub-tab').forEach(tab => {
@@ -7428,9 +7430,21 @@ function showBudgetAlert(remaining = 0, required = 500) {
         // Render status cards based on orders and filter
          function renderStatusCards(orders) {
              const container = document.getElementById('statustab');
+             const filterEl = document.getElementById('statuspoFilter');
+    console.log("Filter element:", filterEl);         // null = not found
+    console.log("Filter value:", filterEl?.value);
+    if (!Array.isArray(orders)) {
+        console.error("orders is not an array:", orders);
+        return;
+    }
+        
              container.innerHTML = '';
 
-             const filter = document.getElementById('statusFilter').value.toLowerCase();
+             const filter = document.getElementById('statuspoFilter').value.toLowerCase();
+             console.log("All statuses in data:", orders.map(o => o.status));
+console.log("Filter value:", filter);
+             console.log("Selected filter:", filter);
+             console.log("Rendering status cards with filter:", filter, "Orders data:", orders);
 
              const filteredOrders = orders.filter(order => {
                  if (filter === 'all') return true;
