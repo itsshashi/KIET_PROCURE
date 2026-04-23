@@ -3732,7 +3732,7 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
     let quotationsTable;
 
     const vkResult = await client.query(
-      "SELECT id, status FROM vk_quotations WHERE id = $1",
+      "SELECT id, status,created_by FROM vk_quotations WHERE id = $1",
       [quotationId]
     );
 
@@ -3741,7 +3741,7 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
       quotationsTable = "vk_quotations";
     } else {
       const normalResult = await client.query(
-        "SELECT id, status FROM quotations WHERE id = $1",
+        "SELECT id, status,created_by FROM quotations WHERE id = $1",
         [quotationId]
       );
 
@@ -3751,6 +3751,32 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
 
       quotation = normalResult.rows[0];
       quotationsTable = "quotations";
+
+       
+    const transp=nodemailer.createTransport({
+      host:'smtp.office365.com',
+      port:587,
+      secure:false,
+      auth:{
+        user:'No-reply@kietsindia.com',
+        pass:process.env.NO_PASSWORD,
+      },
+    });
+    const mailOptions={
+      from:"No-reply@kietsindia.com",
+      to:quotation.created_by,
+      subject:"Quotation Approved",
+      text:`Your quotation with ID ${quotationId} has been approved.`
+    };
+    transp.sendMail(mailOptions,(err,info)=>{
+      if(err){
+        console.error("Error sending approval email:", err);
+      }else{
+        console.log("Approval email sent:", info.response);
+      }
+    });
+
+
     }
 
     /* -----------------------------------------
@@ -3774,6 +3800,9 @@ app.put("/api/quotations/:id/approve", async (req, res) => {
     );
 
     await client.query("COMMIT");
+
+    //send notification to creator about approval (optional enhancement)
+   
 
     return res.json({
       success: true,
