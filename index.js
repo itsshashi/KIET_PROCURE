@@ -1012,7 +1012,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     phone,
     singleSupplier,
     termsOfPayment,
-    currency
+    currency,
+    billingAddress
   } = req.body;
 
     
@@ -1098,8 +1099,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       (project_name, project_code_number, purchase_order_number, supplier_name,
        supplier_gst, supplier_address, shipping_address, urgency, date_required,
        notes, ordered_by, quotation_file, total_amount, reference_no, contact,
-       single, terms_of_payment,currency,raised_amount)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+       single, terms_of_payment,currency,raised_amount,billing_address)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       RETURNING id`,
       [
         projectName,
@@ -1120,7 +1121,8 @@ app.post("/order_raise", safeUpload, async (req, res) => {
         single,
         termsOfPayment,
         currency,
-        totalAmount
+        totalAmount,
+        billingAddress
 
       ]
     );
@@ -2093,7 +2095,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
       currency:order.currency || "INR",
 
       shipTo: order.shipping_address,
-      invoiceTo: `KIET TECHNOLOGIES PVT.LTD, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078
+      invoiceTo:order.billing_address || `KIET TECHNOLOGIES PVT.LTD, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078
       CIN: U29253KA2014PTC076845
       GSTIN: 29AAFCK6528D1ZG`,
       goodsRecipient: "Kiet-ATPLog1",
@@ -2299,7 +2301,7 @@ app.get("/api/invoice/:poNumber", async (req, res) => {
         email: order.ordered_by_email || "example@mail.com",
       },
       shipTo: order.shipping_address,
-      invoiceTo:
+      invoiceTo:order.billing_address ||
         "KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
       goodsRecipient: "Kiet-ATPLog1",
       termsOfPayment: order.terms_of_payment,
