@@ -58,9 +58,8 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  // password:process.env.DB_PASSWORD,
-  password:'Shashank@KIET1519',
-  port: 5432,
+  password:process.env.DB_PASSWORD,
+    port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
 
@@ -9606,6 +9605,10 @@ app.put("/api/reassign-budget/:project_code", async (req, res) => {
 });
 app.get('/order',  (req, res) => {
   res.render('order');
+});
+
+app.get('/raise-ticket',  (req, res) => {
+  res.render('raise-ticket');
 });
 
 
