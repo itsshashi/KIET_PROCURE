@@ -353,18 +353,10 @@
 
   async function loadOrders() {
     try {
-      const response = await fetch('/api/orders/search/filter?status=sent', { credentials: 'include' });
+      const response = await fetch(`/api/orders/search/filter?status=sent,partial&t=${Date.now()}`, { credentials: 'include' });
       if (!response.ok) return showToast("Failed to load orders", true);
 
-      const orderIds = await response.json();
-      orders = [];
-
-      for (const order of orderIds) {
-        const detailResponse = await fetch(`/api/orders/${order.id}`, { credentials: 'include' });
-        if (detailResponse.ok) {
-          orders.push(await detailResponse.json());
-        }
-      }
+      orders = await response.json();
       populateOrderList();
     } catch (error) {
       console.error(error);
@@ -376,8 +368,17 @@
     orderList.innerHTML = '';
     const filterText = poFilterInput.value.toLowerCase();
 
-    orders.filter(order => order.po_number.toLowerCase().includes(filterText))
-      .forEach(order => createOrderCard(order));
+    orders.filter(order => {
+      const poNum = (order.po_number || '').toLowerCase();
+      const orderId = (order.order_id || '').toLowerCase();
+      const project = (order.project || '').toLowerCase();
+      const supplier = (order.supplier || '').toLowerCase();
+      
+      return poNum.includes(filterText) || 
+             orderId.includes(filterText) || 
+             project.includes(filterText) || 
+             supplier.includes(filterText);
+    }).forEach(order => createOrderCard(order));
   }
 
   function createOrderCard(order) {
@@ -393,7 +394,7 @@
       <div class="order-header">
         <div>
           <div class="supplier-name">${order.supplier}</div>
-          <div class="order-id">${order.po_number}</div>
+          <div class="order-id">${order.po_number || 'N/A'} <span style="font-size: 0.8em; color: #999;">(${order.order_id})</span></div>
         </div>
         <button id="${toggleButtonId}" class="toggle-products-btn">
           <i class="fas fa-clipboard-list"></i>
@@ -425,51 +426,89 @@
 
     toggleBtn.addEventListener('click', async () => {
       modal.style.display = 'flex';
-      if (!productListDiv.dataset.loaded) {
-        try {
-          const res = await fetch(`/api/orders/${order.id}/items`, { credentials: 'include' });
+      productListDiv.innerHTML = 'Loading...';
+      try {
+          const res = await fetch(`/api/orders/${order.id}/items?t=${Date.now()}`, { credentials: 'include' });
           if (!res.ok) return showToast("Failed to load order items", true);
 
           const items = await res.json();
+          console.log(`Fresh items for PO ${order.id}:`, items);
+          
+          // Check if all items are fully received
+          const allReceived = items.every(item => parseFloat(item.receivedQuantity) >= parseFloat(item.quantity));
+          
           let html = `<table class="product-table"><thead>
-            <tr><th>Product</th><th>Quantity</th><th>Verify</th></tr>
+            <tr><th>Product</th><th>Ordered</th><th>Received</th><th>Now Receiving</th></tr>
           </thead><tbody>`;
           items.forEach(item => {
-            html += `<tr>
+            const received = parseFloat(item.receivedQuantity || item.receivedquantity) || 0;
+            const quantity = parseFloat(item.quantity) || 0;
+            const remaining = quantity - received;
+            const isItemDone = received >= quantity;
+            html += `<tr style="${isItemDone ? 'background: #dcfce7;' : ''}">
               <td>${item.description}</td>
               <td>${item.quantity}</td>
-              <td><input type="checkbox"  class="verify-checkbox" data-order-id="${order.id}" data-item-id="${item.id}" ></td>
+              <td>${received}${isItemDone ? ' ✅' : ''}</td>
+              <td>
+                ${remaining > 0 ? `<input type="number" class="receive-qty-input" 
+                       data-item-id="${item.id}" 
+                       data-max-qty="${remaining}" 
+                       value="0" 
+                       min="0" max="${remaining}" 
+                       style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ccc;">` : '<span style="color: green; font-weight: bold;">Complete</span>'}
+              </td>
             </tr>`;
           });
-          html += `</tbody></table>
-            <button class="complete-btn" data-order-id="${order.id}" disabled>Submit</button>`;
+          html += `</tbody></table>`;
+          
+          if (!allReceived) {
+            html += `<div style="display: flex; gap: 10px; margin-top: 15px;">
+              <button class="complete-btn" data-order-id="${order.id}" style="display: block;">Generate GRN</button>
+            </div>`;
+          } else {
+            html += `<div style="margin-top: 15px; padding: 1rem; background: #dcfce7; border-radius: 8px; text-align: center; font-weight: 600; color: #16a34a;">✅ All items fully received</div>`;
+          }
+          
           productListDiv.innerHTML = html;
 
-          const checkboxes = productListDiv.querySelectorAll('.verify-checkbox');
-          const completeBtn = productListDiv.querySelector('.complete-btn');
+          if (!allReceived) {
+            const completeBtn = productListDiv.querySelector('.complete-btn');
 
-          checkboxes.forEach(cb => cb.addEventListener('change', () => {
-            const allChecked = Array.from(checkboxes).every(c => c.checked);
-            completeBtn.disabled = !allChecked;
-            completeBtn.style.display = allChecked ? 'block' : 'none';
-          }));
+            completeBtn.addEventListener('click', async () => {
+              const inputs = productListDiv.querySelectorAll('.receive-qty-input');
+              const itemsToReceive = Array.from(inputs).map(input => ({
+                itemId: input.dataset.itemId,
+                receivedQty: parseFloat(input.value) || 0
+              })).filter(item => item.receivedQty > 0);
 
-          completeBtn.addEventListener('click', async () => await completeOrder(order.id));
-          productListDiv.dataset.loaded = 'true';
+              if (itemsToReceive.length === 0) {
+                return showToast("Please enter a quantity greater than 0 for at least one item.", true);
+              }
+              
+              completeBtn.disabled = true;
+              completeBtn.innerText = "Processing...";
+              await completeOrder(order.id, itemsToReceive);
+              modal.style.display = 'none';
+            });
+          }
         } catch (error) {
           console.error(error);
           showToast("Error loading order items", true);
         }
-      }
     });
 
     closeBtn.addEventListener('click', () => modal.style.display = 'none');
     modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
   }
 
-  async function completeOrder(orderId) {
+  async function completeOrder(orderId, itemsToReceive) {
     try {
-      const res = await fetch(`/api/orders/${orderId}/receive`, { method: 'PUT', credentials: 'include' });
+      const res = await fetch(`/api/orders/${orderId}/receive`, { 
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: itemsToReceive }),
+        credentials: 'include' 
+      });
       if (!res.ok) return showToast("Failed to complete order", true);
       const data = await res.json();
       showToast(`Order completed successfully! Generated GRN: <strong>${data.genNumber}</strong>`);
