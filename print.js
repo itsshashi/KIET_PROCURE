@@ -22,9 +22,12 @@ const fonts = {
 
 const printer = new PdfPrinter(fonts);
 
-function getBase64Image(filePath) {
+async function getBase64Image(filePath, quality = 70) {
   if (!filePath || !fs.existsSync(filePath)) return null;
-  return "data:image/png;base64," + fs.readFileSync(filePath).toString("base64");
+  const compressed = await sharp(filePath)
+    .jpeg({ quality })
+    .toBuffer();
+  return "data:image/jpeg;base64," + compressed.toString("base64");
 }
 
 // Layout = horizontal lines only

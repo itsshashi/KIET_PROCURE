@@ -1,5 +1,7 @@
 // server.js
 import generatePurchaseOrder from "./print.js"; // adjust path if needed
+import sharp from "sharp";
+
 import XLSX from "xlsx";
 // import '@tensorflow/tfjs-node';
 
