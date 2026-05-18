@@ -2,6 +2,7 @@ import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";
 import { text } from "stream/consumers";
+import sharp from "sharp";
 
 const toWordsInstance = new ToWords();
 
@@ -18,28 +19,18 @@ const fonts = {
     italics: "Times-Italic",
     bolditalics: "Times-BoldItalic",
   },
-  Courier: {
-    normal: "Courier",
-    bold: "Courier-Bold",
-    italics: "Courier-Oblique",
-    bolditalics: "Courier-BoldOblique",
-  },
-  // ✅ keep Ubuntu only if fonts exist in your project
-  Ubuntu: {
-    normal: "fonts/Ubuntu-Regular.ttf",
-    bold: "fonts/Ubuntu-Bold.ttf",
-    italics: "fonts/Ubuntu-Italic.ttf",
-    bolditalics: "fonts/Ubuntu-BoldItalic.ttf",
-  },
+  
 };
 
 const printer = new PdfPrinter(fonts);
 
-function getBase64Image(filePath) {
+// REMOVE old function completely and replace with:
+async function getBase64Image(filePath, quality = 70) {
   if (!filePath || !fs.existsSync(filePath)) return null;
-  return (
-    "data:image/png;base64," + fs.readFileSync(filePath).toString("base64")
-  );
+  const compressed = await sharp(filePath)
+    .jpeg({ quality })
+    .toBuffer();
+  return "data:image/jpeg;base64," + compressed.toString("base64");
 }
 
 // Layout = horizontal lines only
@@ -49,9 +40,11 @@ const horizontalLineLayout = {
   hLineColor: () => "#000000",
 };
 
-function generateQuotation(poData, filePath) {
-  const logoBase64 = getBase64Image(poData.company.logo);
-  const signBase64 = getBase64Image(poData.signPath);
+async function generatePurchaseOrder(poData, filePath) {
+  const logoBase64 = await getBase64Image(poData.company.logo, 70);       // ✅ await
+  const signBase64 = await getBase64Image(poData.signPath, 80);           // ✅ await
+  const watermarkBase64 = await getBase64Image("./public/images/lg.jpg", 30); // ✅ await
+  const lineBase64 = await getBase64Image(poData.line, 60);               // ✅ await
 
   // 👉 Build the items table
   const itemsTable = [
@@ -154,30 +147,20 @@ function generateQuotation(poData, filePath) {
         margin: [40, 20, 25, 0],
       };
     },
-    background: [
-      ...(getBase64Image("./public/images/lg.jpg")
-        ? [
-            {
-              image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
-              width: 400, // scale watermark size
-              opacity: 0.08, // make it transparent
-              absolutePosition: { x: 100, y: 350 }, // adjust placement
-            },
-          ]
-        : []),
-      ...(getBase64Image(poData.line)
-        ? [
-            {
-              image: getBase64Image(poData.line), // base64 of your gradient image
-              width: 5, // thickness of the strip
-              height: 842, // A4 page height in pt (adjust if needed)
-              absolutePosition: { x: 590, y: 0 }, // right edge (595pt is A4 width)
-            },
-          ]
-        : []),
-        
-    ],
-    
+  background: [
+  ...(watermarkBase64 ? [{
+    image: watermarkBase64,
+    width: 400,
+    opacity: 0.08,
+    absolutePosition: { x: 100, y: 350 },
+  }] : []),
+  ...(lineBase64 ? [{
+    image: lineBase64,
+    width: 5,
+    height: 842,
+    absolutePosition: { x: 590, y: 0 },
+  }] : []),
+],
 
     content: [
       {
