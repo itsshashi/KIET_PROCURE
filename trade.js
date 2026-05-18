@@ -40,7 +40,7 @@ const horizontalLineLayout = {
   hLineColor: () => "#000000",
 };
 
-async function generatePurchaseOrder(poData, filePath) {
+async function generateQuotation(poData, filePath) {
   const logoBase64 = await getBase64Image(poData.company.logo, 70);       // ✅ await
   const signBase64 = await getBase64Image(poData.signPath, 80);           // ✅ await
   const watermarkBase64 = await getBase64Image("./public/images/lg.jpg", 30); // ✅ await
