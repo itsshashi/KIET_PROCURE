@@ -1,6 +1,7 @@
 import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";
+import sharp from "sharp";
 
 const toWordsInstance = new ToWords();
 
