@@ -115,6 +115,7 @@ function generatePurchaseOrder(poData, filePath) {
     .join("\n");  // join with newlines
   // 👉 Document definition
   const docDefinition = {
+    compress:true,
   background: [
     {
       image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
