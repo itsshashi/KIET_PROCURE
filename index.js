@@ -7169,7 +7169,7 @@ app.get("/generate-challan-no", async (req, res) => {
 app.post("/submit-delivery-challan", async (req, res) => {
     try {
         const data = req.body;
-        const requester = req.session.user ? req.session.user.email : null;
+        const requester = data.requesterEmail || Unknown;
 
         // Insert the challan
         const result = await pool.query(
