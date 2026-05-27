@@ -4108,78 +4108,78 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 //       console.log("VK Form data extracted:", req.body);
 
       // Parse PV adaptors data (this is the main data for VK quotations)
-      const {
-  pvQty = [],
-  pvFamilyName = [],
-  pvRevNo = [],
-  pvCoaxialPin = [],
-  pvSokCard = [],
-  pvSokQty = [],
-  pvRate = []
-} = req.body;
-
-const pvAdaptors = pvQty.map((_, i) => ({
-  qty: Number(pvQty[i]),
-  familyName: pvFamilyName[i],
-  revNo: pvRevNo[i],
-  coaxialPin: pvCoaxialPin[i],
-  sokCard: pvSokCard[i],
-  sokQty: pvSokQty[i],
-  rate: Number(pvRate[i])
-}));
-
- // Extract arrays from request
-const {
-  itemDescription = [],
-  priceInput = [],
-  qtyInput = []
-} = req.body;
-
-// Validation: main items count
-if (itemDescription.length !== qtyInput.length) {
-  return res.status(400).json({
-    error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
-  });
-}
-
-// Validation: priceInput must have enough entries for main + additional costs
-if (priceInput.length < itemDescription.length + 2) {
-  return res.status(400).json({
-    error: "KIET cost data mismatch: priceInput must include additional charges"
-  });
-}
-
-// Build main KIET costs
-const kietCosts = itemDescription.map((desc, i) => ({
-  description: desc,
-  cost: Number(priceInput[i]),
-  qty: Number(qtyInput[i]),
-  totalValue: Number(priceInput[i]) * Number(qtyInput[i])
-}));
-
-// Append additional costs (always last 2 entries in priceInput)
-kietCosts.push({
-  description: "Export packaging charges included",
-  cost: Number(priceInput[priceInput.length - 2]),
-  qty: 1,
-  totalValue: Number(priceInput[priceInput.length - 2])
-});
-
-kietCosts.push({
-  description: "Bigger box setup",
-  cost: Number(priceInput[priceInput.length - 1]),
-  qty: 1,
-  totalValue: Number(priceInput[priceInput.length - 1])
-});
-
-// Optional: Calculate total KIET cost
-const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
-
-console.log("KIET Costs data:", kietCosts.length, "items");
-console.log("Total KIET Cost:", totalKietCost);
-
-// Now you can insert `kietCosts` into DB along with VK quotation
-// Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
+//       const {
+//   pvQty = [],
+//   pvFamilyName = [],
+//   pvRevNo = [],
+//   pvCoaxialPin = [],
+//   pvSokCard = [],
+//   pvSokQty = [],
+//   pvRate = []
+// } = req.body;
+//
+// const pvAdaptors = pvQty.map((_, i) => ({
+//   qty: Number(pvQty[i]),
+//   familyName: pvFamilyName[i],
+//   revNo: pvRevNo[i],
+//   coaxialPin: pvCoaxialPin[i],
+//   sokCard: pvSokCard[i],
+//   sokQty: pvSokQty[i],
+//   rate: Number(pvRate[i])
+// }));
+//
+//  // Extract arrays from request
+// const {
+//   itemDescription = [],
+//   priceInput = [],
+//   qtyInput = []
+// } = req.body;
+//
+// // Validation: main items count
+// if (itemDescription.length !== qtyInput.length) {
+//   return res.status(400).json({
+//     error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
+//   });
+// }
+//
+// // Validation: priceInput must have enough entries for main + additional costs
+// if (priceInput.length < itemDescription.length + 2) {
+//   return res.status(400).json({
+//     error: "KIET cost data mismatch: priceInput must include additional charges"
+//   });
+// }
+//
+// // Build main KIET costs
+// const kietCosts = itemDescription.map((desc, i) => ({
+//   description: desc,
+//   cost: Number(priceInput[i]),
+//   qty: Number(qtyInput[i]),
+//   totalValue: Number(priceInput[i]) * Number(qtyInput[i])
+// }));
+//
+// // Append additional costs (always last 2 entries in priceInput)
+// kietCosts.push({
+//   description: "Export packaging charges included",
+//   cost: Number(priceInput[priceInput.length - 2]),
+//   qty: 1,
+//   totalValue: Number(priceInput[priceInput.length - 2])
+// });
+//
+// kietCosts.push({
+//   description: "Bigger box setup",
+//   cost: Number(priceInput[priceInput.length - 1]),
+//   qty: 1,
+//   totalValue: Number(priceInput[priceInput.length - 1])
+// });
+//
+// // Optional: Calculate total KIET cost
+// const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
+//
+// console.log("KIET Costs data:", kietCosts.length, "items");
+// console.log("Total KIET Cost:", totalKietCost);
+//
+// // Now you can insert `kietCosts` into DB along with VK quotation
+// // Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
 
 
 
@@ -4214,32 +4214,32 @@ console.log("Total KIET Cost:", totalKietCost);
 //           .toISOString()
 //           .split("T")[0];
 
-      const quotationValues = [
-        "VK",
-        quotationNumberValue,
-        quotationDate || new Date().toISOString().split("T")[0],
-        referenceno || null,
-        defaultValidUntil,
-        currency || "INR",
-        paymentTerms || null,
-        deliveryDuration || null,
-        companyName || null,
-        companyEmail || null,
-        companyGST || null,
-        companyAddress || null,
-        clientName || null,
-        clientEmail || null,
-        clientPhone || null,
-        totalAmount,
-        notes || null,
-        "pending",
-        req.session.user ? req.session.user.email : null,
-        JSON.stringify(kietCosts),
-        JSON.stringify(pvAdaptors),
-        vkgst || null,
-        vkpackaging || null,  
-        vkinsurance || null,
-        vkdeliveryTerms || null
+//       const quotationValues = [
+//         "VK",
+//         quotationNumberValue,
+//         quotationDate || new Date().toISOString().split("T")[0],
+//         referenceno || null,
+//         defaultValidUntil,
+//         currency || "INR",
+//         paymentTerms || null,
+//         deliveryDuration || null,
+//         companyName || null,
+//         companyEmail || null,
+//         companyGST || null,
+//         companyAddress || null,
+//         clientName || null,
+//         clientEmail || null,
+//         clientPhone || null,
+//         totalAmount,
+//         notes || null,
+//         "pending",
+//         req.session.user ? req.session.user.email : null,
+//         JSON.stringify(kietCosts),
+//         JSON.stringify(pvAdaptors),
+//         vkgst || null,
+//         vkpackaging || null,  
+//         vkinsurance || null,
+//         vkdeliveryTerms || null
 
 //       ];
 //       console.log("Inserting VK quotation with values:", quotationValues);
@@ -4297,49 +4297,49 @@ console.log("Total KIET Cost:", totalKietCost);
 //         },
 //       });
 
-      const mailOptions = {
-        from: "No-reply@kietsindia.com",
-        to: "chandrashekaraiah.r@gmail.com", // MD email
-        subject: `VK Quotation Approval Required: ${quotationNumber}`,
-    
-             html: `
-   
-     
+//       const mailOptions = {
+//         from: "No-reply@kietsindia.com",
+//         to: "chandrashekaraiah.r@gmail.com", // MD email
+//         subject: `VK Quotation Approval Required: ${quotationNumber}`,
+//     
+//              html: `
+//    
+//      
 //     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
-
+//
 //   <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
-
+//
 //     <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
-
+//
 //     <p style="font-size: 15px; color: #444; line-height: 1.5;" >
 //       We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
 //       Please find the summary details below for your reference:
 //     </p>
-
+//
 //     <table cellpadding="10" cellspacing="0" 
 //        style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
-
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Quotation Type:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">VK</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${clientName}</td>
-      </tr>
-      <tr>
-        <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
-        <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email :'Unknown'}</td>
-      </tr>
-      <tr>
-        <td><strong>Submission Date:</strong></td>
-        <td>${quotationDate}</td>
-      </tr>
-    </table>
+//
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Quotation Type:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">VK</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Client Name:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${clientName}</td>
+//       </tr>
+//       <tr>
+//         <td style="border-bottom: 1px solid #e6e6e6;"><strong>Submitted By:</strong></td>
+//         <td style="border-bottom: 1px solid #e6e6e6;">${req.session.user ? req.session.user.email :'Unknown'}</td>
+//       </tr>
+//       <tr>
+//         <td><strong>Submission Date:</strong></td>
+//         <td>${quotationDate}</td>
+//       </tr>
+//     </table>
 
 //     <div style="text-align: center; margin: 30px 0;">
 //       <a href="https://kietprocure.com/"
@@ -9556,7 +9556,8 @@ app.put("/api/reassign-budget/:project_code", async (req, res) => {
       message: "Budget updated successfully",
       data: updateResult.rows[0]
     });
- 
+
+  } catch (err) {
     console.error("Error updating budget:", err);
     res.status(500).json({ message: "Server error" });
   }
