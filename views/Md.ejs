@@ -1261,7 +1261,7 @@ select {
 
     /* Modal styles */
     .modal { display: none; position: fixed; z-index: 1000; padding-top: 30px; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-    .modal-content { background: #fff; margin: auto; padding: 20px; border-radius: 10px; width: 85%; height: 85%; display: flex; flex-direction: column; }
+    .modal-content { background: #fff; margin: auto; padding: 20px; border-radius: 10px; width: 85%; height: 95%; display: flex; flex-direction: column; }
     .modal-header { margin-bottom: 10px; }
     .modal-header h2 { margin: 0; color: #2c3e50; }
     .close { float: right; color: #e74c3c; font-size: 28px; cursor: pointer; font-weight: bold; }
@@ -1585,7 +1585,31 @@ select {
 
     <!-- All Orders Table -->
     <div id="allTab" class="tab-content">
+      <!-- <input type="text" id="filterPurchaseOrders" placeholder="Filter by Order ID, Project, Supplier..." onkeyup="filterPurchaseOrders()" style="margin-bottom: 15px; padding: 8px 12px; width: 100%; max-width: 400px; border: 1px solid #ced4da; border-radius: 6px;">
+      <button onclick="clearPurchaseOrderFilter()" style="margin-bottom: 15px; padding: 8px 12px; background-color: #dc3545; color: white; border: none; border-radius: 6px;">Clear Filter</button> -->
+
+
+       <div class="filters" id="filtersSection">
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="Search by Order ID, Project, Supplier..." onkeyup="applyFilters()">
+        <select id="supplierFilter" onchange="applyFilters()">
+          <option value="All Suppliers">All Suppliers</option>
+        </select>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="All Statuses">All Statuses</option>
+          <option value="sent">Purchase Requested</option>
+          <option value="inventory_processed">Inventory (KIET)</option>
+          <option value="paid">Paid</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input type="date" id="dateFrom" onchange="applyFilters()">
+        <input type="date" id="dateTo" onchange="applyFilters()">
+        <button onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
       <table id="allOrdersTable">
+
         <thead>
           <tr>
             <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
@@ -1606,27 +1630,11 @@ select {
     </div>
 
     <!-- Search and Filter Section -->
-    <div class="filters" id="filtersSection">
-      <div class="filter-row">
-        <input type="text" id="searchInput" placeholder="Search by Order ID, Project, Supplier..." onkeyup="applyFilters()">
-        <select id="supplierFilter" onchange="applyFilters()">
-          <option value="All Suppliers">All Suppliers</option>
-        </select>
-        <select id="statusFilter" onchange="applyFilters()">
-          <option value="All Statuses">All Statuses</option>
-          <option value="enquired">Enquired</option>
-          <option value="purchase">Purchase Requested</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <input type="date" id="dateFrom" onchange="applyFilters()">
-        <input type="date" id="dateTo" onchange="applyFilters()">
-        <button onclick="clearFilters()">Clear Filters</button>
-      </div>
-    </div>
+   
 
     <!-- Pending Approvals Table -->
     <div id="pendingTab" class="tab-content">
+      
       <table id="pendingTable">
         <thead>
           <tr>
@@ -1875,6 +1883,11 @@ select {
 });
 
 
+
+
+
+
+
     // Generate MAE Quotation Number
     const generateMaeQuotationNumberBtn = document.getElementById('generateMaeQuotationNumber');
     const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
@@ -1981,6 +1994,7 @@ select {
     <option value="purchase@kietsindia.com">Purchase Team</option>
     <option value="jayanth.n@kietsindia.com">Jayanth</option>
     <option value="sales@kietsindia.com">Sales Team</option>
+    <option value="sivaraj.s@kietsindia.com">Sivaraj</option>
   </select>
 
   <input type="number" name="budget" id="budget" placeholder="Enter Budget Amount" 
@@ -2000,12 +2014,15 @@ select {
 
     <!-- Approved Quotations Table -->
     <div id="approvedQuotationsTab" class="tab-content">
+      <input type="text" id="quotationSearchInput" placeholder="Search by Quotation Number..." onkeyup="applyQuotationSearchFilter()" style="margin-bottom: 15px; padding: 8px; width: 800px; border-radius: 5px; border: 1px solid #ccc;">
+      <button onclick="clearQuotationSearchFilter()" style="margin-left: 10px; padding: 8px 12px; border-radius: 5px; border: none; background-color: #10b981; color: #fff; cursor: pointer;">
+        Clear Search</button>
       <table id="approvedQuotationsTable">
         <thead>
           <tr>
             <th onclick="sortTable('id')">ID <i class="fas fa-sort"></i></th>
             <th onclick="sortTable('company_name')">Company <i class="fas fa-sort"></i></th>
-            <th onclick="sortTable('quotation_type')">Quotation Type <i class="fas fa-sort"></i></th>
+            <th onclick="sortTable('quotation_type')">Quotation Number <i class="fas fa-sort"></i></th>
             <th onclick="sortTable('client_name')">Client <i class="fas fa-sort"></i></th>
             <th>Quotation Raiser</th>
             <th onclick="sortTable('created_at')">Date <i class="fas fa-sort"></i></th>
@@ -2020,6 +2037,9 @@ select {
 
     <!-- Approved VK Quotations Table -->
     <div id="approvedVKQuotationsTab" class="tab-content">
+        <input type="text" id="vkQuotationSearchInput" placeholder="Search by Quotation Number..." onkeyup="applyVKQuotationSearchFilter()" style="margin-bottom: 15px; padding: 8px; width: 800px; border-radius: 5px; border: 1px solid #ccc;">
+        <button onclick="clearVKQuotationSearchFilter()" style="margin-left: 10px; padding: 8px 12px; border-radius: 5px; border: none; background-color: #10b981; color: #fff; cursor: pointer;">
+          Clear Search</button>
       <table id="approvedVKQuotationsTable">
         <thead>
           <tr>
@@ -2342,6 +2362,99 @@ select {
   <p class="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-300">
     Review comprehensive project information along with associated purchase order details.
   </p>
+  
+<div style="
+  display:flex; 
+  flex-wrap:wrap; 
+  gap:12px; 
+  align-items:center; 
+  background:#ffffff; 
+  padding:15px; 
+  border-radius:10px; 
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+">
+
+  <!-- Project Code Input -->
+  <input 
+    type="text" 
+    id="projectCodeinput" 
+    placeholder="Enter Project Code"
+    style="
+      padding:10px 14px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:14px;
+      outline:none;
+      width:200px;
+      transition:0.3s;
+    "
+    onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.15)'"
+    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+  />
+
+  <!-- Assigned To Input -->
+  <input 
+    type="text" 
+    id="assignedInput" 
+    placeholder="Enter Assigned Email"
+    style="
+      padding:10px 14px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:14px;
+      outline:none;
+      width:230px;
+      transition:0.3s;
+    "
+    onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.15)'"
+    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+  />
+
+  <!-- Filter Button -->
+  <button 
+    onclick="filterProjectAssignments()" 
+    style="
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color:white;
+      border:none;
+      padding:10px 22px;
+      border-radius:8px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      box-shadow:0 4px 12px rgba(37,99,235,0.3);
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(37,99,235,0.5)'"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(37,99,235,0.3)'"
+  >
+    🔍 Filter
+  </button>
+
+  <!-- Reset Button -->
+  <button 
+    onclick="resetAssignmentFilter()" 
+    style="
+      background: linear-gradient(135deg, #6b7280, #374151);
+      color:white;
+      border:none;
+      padding:10px 22px;
+      border-radius:8px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      box-shadow:0 4px 12px rgba(107,114,128,0.3);
+    "
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(107,114,128,0.5)'"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(107,114,128,0.3)'"
+  >
+    ♻ Reset
+  </button>
+
+</div>
+
+
       </div>
       <!-- Items Modal -->
 <div id="itemsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
@@ -2400,6 +2513,9 @@ select {
         <p class="text-sm text-gray-600">
           Complete project overview with budget tracking and assignment details.
         </p>
+        <p class="text-sm text-green-600 font-semibold mt-2" style="background: #d1fae5; padding: 10px; border-radius: 6px;">
+          <i class="fas fa-info-circle"></i> To add a new project: Go to <strong>Project Details</strong> → <strong>Project Info</strong> tab → Click <strong>Add Project</strong> button
+        </p>
       </div>
 
       <!-- Project Summary Cards -->
@@ -2431,6 +2547,9 @@ select {
       <!-- Search and Filter Section -->
       <div class="filters">
         <div class="filter-row">
+          <button onclick="openAddProjectModal()" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            <i class="fas fa-plus"></i> Add Project
+          </button>
           <input type="text" id="projectSearchInput" placeholder="Search by Project Code, Description, or Assigned To..." onkeyup="applyProjectFilters()">
           <select id="assigneeFilter" onchange="applyProjectFilters()">
             <option value="All Assignees">All Assignees</option>
@@ -2471,6 +2590,73 @@ select {
       <script>
 document.addEventListener("DOMContentLoaded", fetchProjects);
 
+function filterProjectAssignments() {
+
+  const projectCodeInput = document.getElementById("projectCodeinput");
+  const assignedInput = document.getElementById("assignedInput");
+  const tbody = document.getElementById("projectAssignmentsBody");
+
+  if (!tbody) return;
+
+  const projectCodeFilter = projectCodeInput.value.toLowerCase();
+  const assignedFilter = assignedInput.value.toLowerCase();
+
+  const rows = tbody.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+
+    const cells = rows[i].getElementsByTagName("td");
+
+
+    const projectCode = cells[3]?.innerText.toLowerCase() || "";
+    console.log("Project Code:", projectCode); // Debug log
+    const assignedTo = cells[18]?.innerText.toLowerCase() || "";
+    console.log("Assigned To:", assignedTo); 
+    function copyAssignedFromCell(cell) {
+
+  const text = cell.innerText;
+
+  const emailLine = text.split("\n")[0]; 
+  const email = emailLine.replace("Assigned To:", "").trim();
+  
+
+  navigator.clipboard.writeText(email);
+}
+copyAssignedFromCell(cells[18]);
+
+    // Debug log
+
+    const matchProject = projectCode.includes(projectCodeFilter);
+    const matchAssigned = assignedTo.includes(assignedFilter);
+
+    if (projectCodeFilter && assignedFilter) {
+      rows[i].style.display = (matchProject && matchAssigned) ? "" : "none";
+    } 
+    else if (projectCodeFilter) {
+      rows[i].style.display = matchProject ? "" : "none";
+    } 
+    else if (assignedFilter) {
+      rows[i].style.display = matchAssigned ? "" : "none";
+    } 
+    else {
+      rows[i].style.display = "";
+    }
+  }
+}
+
+function resetAssignmentFilter() {
+  document.getElementById("projectCodeinput").value = "";
+  document.getElementById("assignedInput").value = "";
+
+  const rows = document.getElementById("projectAssignmentsBody")
+                       .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+
+
 async function fetchProjects() {
   try {
     const response = await fetch("/api/projects");   // your backend API
@@ -2506,6 +2692,93 @@ async function fetchProjects() {
   }
 }
 
+async function filterPurchaseOrders(){
+  const projectCodeInput = document.getElementById("filterPurchaseOrders").value.toLowerCase();
+  const tbody = document.getElementById("allOrdersBody");
+  const rows = tbody.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+    const projectCode = cells[2]?.innerText.toLowerCase() || "";
+
+    if (projectCode.includes(projectCodeInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+
+
+
+async function applyQuotationSearchFilter() {
+  const searchInput = document
+    .getElementById("quotationSearchInput")
+    .value.toLowerCase();
+
+  const rows = document
+    .getElementById("approvedQuotationsBody")
+    .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+
+    // Quotation Number column (3rd column → index 2)
+    const quotationNumber = cells[2]?.innerText.toLowerCase() || "";
+
+    if (quotationNumber.includes(searchInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+
+function clearQuotationSearchFilter() {
+  document.getElementById("quotationSearchInput").value = "";
+  const rows = document.getElementById("approveBody").getElementsByTagName("tr");
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+//  filter vk quotation by quotation number
+function applyVKQuotationSearchFilter() {
+  const searchInput = document
+    .getElementById("vkQuotationSearchInput")
+    .value.toLowerCase();
+
+  const rows = document
+    .getElementById("approvedVKQuotationsBody")
+    .getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].getElementsByTagName("td");
+
+    // Quotation Number column (3rd column → index 2)
+    const quotationNumber = cells[1]?.innerText.toLowerCase() || "";
+
+    if (quotationNumber.includes(searchInput)) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
+    }
+  }
+}
+function clearVkQuotationSearchFilter() {
+  document.getElementById("vkQuotationSearchInput").value = "";
+  const rows = document.getElementById("vkApproveBody").getElementsByTagName("tr");
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].style.display = "";
+  }
+}
+
+
+
+
+
+
+
+
 function updateSummaryCards(projects) {
   // Total Projects
   document.getElementById("totalProjects").textContent = projects.length;
@@ -2526,6 +2799,84 @@ function updateSummaryCards(projects) {
     `₹${totalBudget.toFixed(2)}`;
 }
 
+// Add Project Modal Functions
+function openAddProjectModal() {
+  document.getElementById('addProjectModal').style.display = 'block';
+}
+
+function closeAddProjectModal() {
+  document.getElementById('addProjectModal').style.display = 'none';
+  document.getElementById('addProjectForm').reset();
+}
+
+async function submitProject(event) {
+  event.preventDefault();
+  
+  const projectData = {
+    projectCode: document.getElementById('newProjectCode').value,
+    description: document.getElementById('newProjectDescription').value,
+    customer: document.getElementById('newProjectCustomer').value,
+    userName: document.getElementById('newProjectUserName').value,
+    poNo: document.getElementById('newProjectPoNo').value,
+    poDate: document.getElementById('newProjectPoDate').value,
+    quantity: document.getElementById('newProjectQuantity').value,
+    valuePerUnit: document.getElementById('newProjectValuePerUnit').value,
+    baseValue: document.getElementById('newProjectBudget').value,
+    totalValue: document.getElementById('newProjectTotalValue').value,
+    deliveryStatus: document.getElementById('newProjectDeliveryStatus').value,
+    deliveryDate: document.getElementById('newProjectDeliveryDate').value,
+    currency: document.getElementById('newProjectCurrency').value,
+    totalPoValuePending: document.getElementById('newProjectTotalPoValuePending').value,
+    invType: document.getElementById('newProjectInvType').value,
+  };
+
+  try {
+    const response = await fetch('/api/project-details', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(projectData)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      // If assigned_to is provided, assign the project using the PUT endpoint
+      const assignedTo = document.getElementById('newProjectAssignedTo').value;
+      const budget = document.getElementById('newProjectBudget').value;
+      if (assignedTo && result.data && result.data.id) {
+        await fetch('/api/assign_to', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedValue: assignedTo,
+            current_id: result.data.id,
+            budgetValue: budget || 0,
+            target: ''
+          })
+        });
+      }
+      alert('Project added successfully!');
+      closeAddProjectModal();
+      fetchProjects(); // Refresh the project list
+    } else {
+      alert('Error: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Failed to add project. Please try again.');
+  }
+}
+
+// Close add project modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('addProjectModal');
+  if (event.target == modal) {
+    closeAddProjectModal();
+  }
+});
+
 
 </script>
 
@@ -2539,6 +2890,123 @@ function updateSummaryCards(projects) {
           </div>
           <div class="modal-body" id="projectDetailsContent">
             <!-- Project details will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Project Modal -->
+      <div id="addProjectModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 600px;">
+          <div class="modal-header" style="background: #10b981; color: white; padding: 16px 20px;">
+            <h2><i class="fas fa-plus-circle"></i> Add New Project</h2>
+            <span class="close" onclick="closeAddProjectModal()">&times;</span>
+          </div>
+          <div class="modal-body" style="padding: 20px;">
+            <form id="addProjectForm" onsubmit="submitProject(event)">
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Project Code *</label>
+                  <input type="text" id="newProjectCode" required placeholder="Enter Project Code" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Description *</label>
+                  <input type="text" id="newProjectDescription" required placeholder="Enter Project Description" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Customer *</label>
+                  <input type="text" id="newProjectCustomer" required placeholder="Enter Customer Name" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">User Name *</label>
+                  <input type="text" id="newProjectUserName" required placeholder="Enter User Name" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">PO Number</label>
+                  <input type="text" id="newProjectPoNo" placeholder="Enter PO Number" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">PO Date</label>
+                  <input type="date" id="newProjectPoDate" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Quantity</label>
+                  <input type="number" id="newProjectQuantity" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Value Per Unit (₹)</label>
+                  <input type="number" id="newProjectValuePerUnit" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Budget (₹)</label>
+                  <input type="number" id="newProjectBudget" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Total Value (₹)</label>
+                  <input type="number" id="newProjectTotalValue" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Delivery Status</label>
+                  <select id="newProjectDeliveryStatus" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="">Select Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Delayed">Delayed</option>
+                  </select>
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Delivery Date</label>
+                  <input type="date" id="newProjectDeliveryDate" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Currency</label>
+                  <select id="newProjectCurrency" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="₹">INR (₹)</option>
+                    <option value="$">USD ($)</option>
+                    <option value="€">EUR (€)</option>
+                  </select>
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Assigned To</label>
+                  
+                  <input type="text" id="newProjectAssignedTo" placeholder="Enter Email" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                <span style="color: red;">you can put later on project info </span>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Total PO Value Pending (₹)</label>
+                  <input type="number" id="newProjectTotalPoValuePending" step="0.01" min="0" placeholder="0.00" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                </div>
+                <div class="form-col">
+                  <label style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; display: block;">Invoice Type</label>
+                  <select id="newProjectInvType" style="width: 100%; padding: 10px; border: 1px solid #c9c9c9; border-radius: 6px;">
+                    <option value="">Select Invoice Type</option>
+                    <option value="Goods">Goods</option>
+                    <option value="Service">Service</option>
+                    
+                  </select>
+
+              
+              </div>
+              </div>
+              <div style="margin-top: 20px; text-align: right;">
+                <button type="button" onclick="closeAddProjectModal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">Cancel</button>
+                <button type="submit" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">Submit Project</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -3849,7 +4317,7 @@ function resetFields() {
     padding-bottom: 20px;
     border-bottom: 1px solid #eee;">
               <h2 style="font-size:30px;font-family: 'Times New Roman', Times, serif; font-weight:bold">KIET Cost Calculations</h2><hr>
-              <p style="font-size:large;">As per Price Agreement - Document No: <strong>con_GPAG_PU14_54808</strong></p>
+              <p style="font-size:large;">As per Price Agreement - Document No: <strong>con_GPAG_PUI4_137128</strong></p>
 
               <table class="kiet-table">
                 <thead>
@@ -4353,7 +4821,7 @@ const blob = await response.blob();
     <h3 class="text-lg font-semibold text-gray-800">KIET Cost Calculations(note: Class will not change)</h3>
     <p class="text-sm text-gray-600 mb-3">
         As per Price Agreement - Document No:
-        <strong>con_GPAG_PU14_54808</strong>
+        <strong>con_GPAG_PUI4_137128</strong>
     </p>
 
     <div class="overflow-x-auto w-full mt-2">
@@ -4814,9 +5282,8 @@ const blob = await response.blob();
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         if (searchTerm) {
           orders = orders.filter(order =>
-            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
-            (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
-            (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
+            (order.po_number || '').toLowerCase().includes(searchTerm)
+            
           );
         }
 
@@ -5363,6 +5830,13 @@ function renderProjectAssignments(assignments) {
          </button>
          </div>`
   }
+         ${assignment.assigned_to && assignment.assigned_to !== 'null' ? `<button class="btn btn-danger btn-sm mt-1"
+                 onclick="reassignBudget(${assignment.id})">
+            Reassign Budget
+          </button>` : ''}
+          
+
+
 </td>
 <td>
    <button class="btn btn-secondary btn-sm"
@@ -5385,7 +5859,7 @@ function renderProjectAssignments(assignments) {
     `;
   })()
 }
-);
+
 </td>
 <td style="gap: 5px; display: flex; flex-direction: column;">
   <button class="btn btn-info btn-sm"
@@ -5426,6 +5900,39 @@ function renderProjectAssignments(assignments) {
   });
 }
 
+async function reassignBudget(assignmentId) {
+  const new_budget = prompt("Enter new budget amount:");
+
+  if (!new_budget || isNaN(new_budget)) {
+    alert("Valid budget amount is required");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/reassign-budget/${assignmentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        new_budget: Number(new_budget)   // ✅ send to backend
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update");
+    }
+
+    alert("Budget reassigned successfully");
+    
+    // optional: refresh UI
+    location.reload();
+
+  } catch (err) {
+    console.error('Error reassigning budget:', err);
+    alert('Failed to reassign budget');
+  }
+}
 // Render Daily Tasks
 // function renderDailyTasks(tasks, filterOptions = {}) {
 //   const container = document.getElementById('dailyTasksBody');
@@ -5741,7 +6248,7 @@ function renderApprovedQuotations(quotations, tbodyId) {
       <tr>
         <td>${quotation.id}</td>
         <td>${quotation.company_name}</td>
-        <td>${quotation.quotation_type}</td>
+        <td>${quotation.quotation_number}</td>
         <td>${quotation.client_name}</td>
         <td>${quotation.created_by|| 'N/A'}</td>
         <td>${new Date(quotation.created_at).toLocaleDateString()}</td>
@@ -5793,49 +6300,49 @@ function renderApprovedQuotations(quotations, tbodyId) {
     }
 
     // Render orders table
-    function renderOrders(orders, tbodyId) {
-      const tbody = document.getElementById(tbodyId);
-      tbody.innerHTML = "";
+    // function renderOrders(orders, tbodyId) {
+    //   const tbody = document.getElementById(tbodyId);
+    //   tbody.innerHTML = "";
 
-      orders.forEach(order => {
-        const row = `
-          <tr>
-            <td>${order.id}</td>
-            <td>${order.purchase_order_number || order.order_id}</td>
-            <td>${order.project_name || order.project}</td>
-            <td>${order.department || 'Design and Development'}</td>
-            <td>${order.supplier_name || order.supplier}</td>
-            <td>${order.urgency || order.description || "-"}</td>
-            <td>${order.ordered_by || order.requested_by}</td>
-            <td>${new Date(order.date_required).toLocaleDateString()}</td>
-            <td>₹${order.total_amount ? order.total_amount.toLocaleString() : '0.00'}</td>
-            <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-            <td class="actions">
-              <button class="view" onclick='viewQuotation(${JSON.stringify(order)})'>
-                <i class="fas fa-file-pdf"></i> Preview
-              </button>
-              <button class="view" onclick="editOrder(${order.id})">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="approve" onclick="updateStatus(${order.id}, 'approved')">
-                <i class="fas fa-check"></i> Approve
-              </button>
-              <button class="reject" onclick="updateStatus(${order.id}, 'rejected')">
-                <i class="fas fa-times"></i> Reject
-              </button>
-              ${order.status === 'approved' || order.status === 'sent' || order.status === 'received'
-                ? `<button class="view" onclick="generatePO(${order.id})">
-                     <i class="fas fa-file-alt"></i> Generate PO
-                   </button>`
-                : `<button class="view" onclick="generatePO(${order.id})" disabled style="opacity: 0.5; cursor: not-allowed;">
-                     <i class="fas fa-file-alt"></i> Generate PO
-                   </button>`}
-            </td>
-          </tr>
-        `;
-        tbody.insertAdjacentHTML("beforeend", row);
-      });
-    }
+    //   orders.forEach(order => {
+    //     const row = `
+    //       <tr>
+    //         <td>${order.id}</td>
+    //         <td>${order.purchase_order_number || order.order_id}</td>
+    //         <td>${order.project_name || order.project}</td>
+    //         <td>${order.department || 'Design and Development'}</td>
+    //         <td>${order.supplier_name || order.supplier}</td>
+    //         <td>${order.urgency || order.description || "-"}</td>
+    //         <td>${order.ordered_by || order.requested_by}</td>
+    //         <td>${new Date(order.date_required).toLocaleDateString()}</td>
+    //         <td>₹${order.total_amount ? order.total_amount.toLocaleString() : '0.00'}</td>
+    //         <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+    //         <td class="actions">
+    //           <button class="view" onclick='viewQuotation(${JSON.stringify(order)})'>
+    //             <i class="fas fa-file-pdf"></i> Preview
+    //           </button>
+    //           <button class="view" onclick="editOrder(${order.id})">
+    //             <i class="fas fa-edit"></i> Edit
+    //           </button>
+    //           <button class="approve" onclick="updateStatus(${order.id}, 'approved')">
+    //             <i class="fas fa-check"></i> Approve
+    //           </button>
+    //           <button class="reject" onclick="updateStatus(${order.id}, 'rejected')">
+    //             <i class="fas fa-times"></i> Reject
+    //           </button>
+    //           ${order.status === 'approved' || order.status === 'sent' || order.status === 'received'
+    //             ? `<button class="view" onclick="generatePO(${order.id})">
+    //                  <i class="fas fa-file-alt"></i> Generate PO
+    //                </button>`
+    //             : `<button class="view" onclick="generatePO(${order.id})" disabled style="opacity: 0.5; cursor: not-allowed;">
+    //                  <i class="fas fa-file-alt"></i> Generate PO
+    //                </button>`}
+    //         </td>
+    //       </tr>
+    //     `;
+    //     tbody.insertAdjacentHTML("beforeend", row);
+    //   });
+    // }
 
 
 
@@ -7832,7 +8339,7 @@ For detailed technical documentation, please contact the development team.`);
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         if (searchTerm) {
           orders = orders.filter(order =>
-            (order.purchase_order_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
+            (order.po_number || order.order_id || '').toLowerCase().includes(searchTerm) ||
             (order.project_name || order.project || '').toLowerCase().includes(searchTerm) ||
             (order.supplier_name || order.supplier || '').toLowerCase().includes(searchTerm)
           );
@@ -8005,7 +8512,7 @@ For detailed technical documentation, please contact the development team.`);
         const row = `
           <tr>
             <td>${order.id}</td>
-            <td>${order.purchase_order_number || order.order_id}</td>
+            <td>${order.po_number}</td>
             <td>${order.project_name || order.project}</td>
             <td>${order.department || 'Design and Development'}</td>
             <td>${order.supplier_name || order.supplier}</td>

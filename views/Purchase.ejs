@@ -1216,7 +1216,8 @@ function addNewProductRow() {
         alert('Please select a project code.');
         return;
       }
-      const filteredOrders = allOrders.filter(order => (order.projectcodenumber === projectCode&& order.status ==='sent'));
+      const filteredOrders = allOrders.filter(order => (order.projectcodenumber === projectCode&& order.status !== 'approved' &&
+  order.status !== 'pending' && order.status !== 'rejected' && order.status!=='purchase'));
       renderCostCalculationTable(filteredOrders);
     }
 

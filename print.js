@@ -1,6 +1,7 @@
 import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";
+import sharp from "sharp";
 
 const toWordsInstance = new ToWords();
 
@@ -17,26 +18,17 @@ const fonts = {
     italics: "Times-Italic",
     bolditalics: "Times-BoldItalic",
   },
-  Courier: {
-    normal: "Courier",
-    bold: "Courier-Bold",
-    italics: "Courier-Oblique",
-    bolditalics: "Courier-BoldOblique",
-  },
-  // ✅ keep Ubuntu only if fonts exist in your project
-  Ubuntu: {
-    normal: "fonts/Ubuntu-Regular.ttf",
-    bold: "fonts/Ubuntu-Bold.ttf",
-    italics: "fonts/Ubuntu-Italic.ttf",
-    bolditalics: "fonts/Ubuntu-BoldItalic.ttf",
-  },
+ 
 };
 
 const printer = new PdfPrinter(fonts);
 
-function getBase64Image(filePath) {
+async function getBase64Image(filePath, quality = 70) {
   if (!filePath || !fs.existsSync(filePath)) return null;
-  return "data:image/png;base64," + fs.readFileSync(filePath).toString("base64");
+  const compressed = await sharp(filePath)
+    .jpeg({ quality })
+    .toBuffer();
+  return "data:image/jpeg;base64," + compressed.toString("base64");
 }
 
 // Layout = horizontal lines only
@@ -49,7 +41,8 @@ const horizontalLineLayout = {
 function generatePurchaseOrder(poData, filePath) {
   const logoBase64 = getBase64Image(poData.company.logo);
   const signBase64 = getBase64Image(poData.signPath);
-
+  const watermarkBase64 = getBase64Image("./public/images/lg.jpg");  // ✅ ADD
+  const lineBase64 = getBase64Image(poData.line);                    // ✅ ADD
   // 👉 Build the items table
   const itemsTable = [
     [
@@ -115,20 +108,21 @@ function generatePurchaseOrder(poData, filePath) {
     .join("\n");  // join with newlines
   // 👉 Document definition
   const docDefinition = {
+    compress:true,
   background: [
-    {
-      image: getBase64Image("./public/images/lg.jpg"), // path to your watermark image
-      width: 400,          // scale watermark size
-      opacity: 0.08,        // make it transparent
-      absolutePosition: { x: 100, y: 350 }, // adjust placement
-    },
-    {
-      image: getBase64Image(poData.line),   // base64 of your gradient image
-      width: 5,                // thickness of the strip
-      height: 842,             // A4 page height in pt (adjust if needed)
-      absolutePosition: { x: 590, y: 0 } // right edge (595pt is A4 width)
-    }
-  ],
+  {
+    image: watermarkBase64,   // ✅ uses cached variable
+    width: 400,
+    opacity: 0.08,
+    absolutePosition: { x: 100, y: 350 },
+  },
+  {
+    image: lineBase64,        // ✅ uses cached variable
+    width: 5,
+    height: 842,
+    absolutePosition: { x: 590, y: 0 }
+  }
+],
 
     content: [
       {

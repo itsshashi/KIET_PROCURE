@@ -2,6 +2,7 @@ import PdfPrinter from "pdfmake";
 import fs from "fs";
 import { ToWords } from "to-words";import { JSDOM } from "jsdom";
 
+
 // Create a fake browser environment for html-to-pdfmake
 const dom = new JSDOM("<!DOCTYPE html>");
 global.window = dom.window;
@@ -86,18 +87,47 @@ global.document = window.document;
 
 // ---- inside generateMAEQuotation() ----
 function buildMaeContent(textareaDetails) {
-
   let html = textareaDetails.trim();
 
-  html = html
-  .replace(/font\s*:[^;"]+;?/gi, "")
-  .replace(/font-family\s*:[^;"]+;?/gi, "")   // 👈 removes Calibri
-  .replace(/font-size\s*:[^;"]+;?/gi, "")
-  .replace(/line-height\s*:[^;"]+;?/gi, "");
-  // ⬇️ ONLY AFTER CLEANING
-  let nodes = htmlToPdfmake(html);
+  // STEP 1: Strip ALL inline styles completely from TinyMCE HTML
+  html = html.replace(/\s*style="[^"]*"/gi, "");
 
-  return nodes;
+  // STEP 2: Also remove any <font> tags TinyMCE may have added
+  html = html.replace(/<font[^>]*>/gi, "").replace(/<\/font>/gi, "");
+
+  // STEP 3: Convert to pdfmake nodes
+  let nodes = htmlToPdfmake(html, { window: global.window });
+
+  // STEP 4: Recursively apply your font, size, and line spacing
+  function applyStyles(node) {
+    if (typeof node === "string") {
+      return { text: node, font: "Times", fontSize: 11, lineHeight: 1.5 };
+    } else if (Array.isArray(node)) {
+      return node.map(applyStyles);
+    } else if (typeof node === "object") {
+      let styledNode = { ...node };
+      if (styledNode.text) {
+        styledNode.font = "Times";
+        styledNode.fontSize = 11;
+        styledNode.lineHeight = 1.5;
+      }
+      if (styledNode.stack) {
+
+        styledNode.stack = styledNode.stack.map(applyStyles);
+      }
+      if (styledNode.columns) {
+        styledNode.columns = styledNode.columns.map(applyStyles);
+      }
+      return styledNode;
+    }
+    return node;
+
+  }
+
+  nodes = applyStyles(nodes);
+
+
+  return Array.isArray(nodes) ? nodes : [nodes];
 }
 
 
@@ -739,7 +769,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
                   decoration: "underline",
                 },
                 {
-                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 56011",
+                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
                   font: "Times",
                   fontSize: 10,
                   bold: true,

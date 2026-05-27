@@ -1,0 +1,116 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/admin-nav') %>
+
+<div class="admin-page">
+
+  <!-- Stats Bar -->
+  <div class="stats-grid">
+    <a href="/admin" class="stat-card <%= !statusFilter ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.total %></span>
+      <span class="stat-label">Total Orders</span>
+    </a>
+    <a href="/admin?status=placed" class="stat-card <%= statusFilter==='placed' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.placed %></span>
+      <span class="stat-label">Placed</span>
+    </a>
+    <a href="/admin?status=processing" class="stat-card <%= statusFilter==='processing' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.processing %></span>
+      <span class="stat-label">Processing</span>
+    </a>
+    <a href="/admin?status=dispatched" class="stat-card <%= statusFilter==='dispatched' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.dispatched %></span>
+      <span class="stat-label">Dispatched</span>
+    </a>
+    <a href="/admin?status=in_transit" class="stat-card <%= statusFilter==='in_transit' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.in_transit %></span>
+      <span class="stat-label">In Transit</span>
+    </a>
+    <a href="/admin?status=delivered" class="stat-card delivered <%= statusFilter==='delivered' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.delivered %></span>
+      <span class="stat-label">Delivered</span>
+    </a>
+    <a href="/admin?status=cancelled" class="stat-card cancelled <%= statusFilter==='cancelled' ? 'active' : '' %>">
+      <span class="stat-num"><%= stats.cancelled %></span>
+      <span class="stat-label">Cancelled</span>
+    </a>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="dashboard-top">
+    <h1 class="page-title">Orders</h1>
+    <div class="top-actions">
+      <form action="/admin" method="GET" class="search-form">
+        <% if (statusFilter) { %><input type="hidden" name="status" value="<%= statusFilter %>"><% } %>
+        <input type="text" name="search" value="<%= searchQuery %>" placeholder="Search orders, companies, products…" class="search-input">
+        <button type="submit" class="btn btn-ghost">🔍</button>
+        <% if (searchQuery) { %><a href="/admin<%= statusFilter ? '?status='+statusFilter : '' %>" class="btn btn-ghost">✕</a><% } %>
+      </form>
+      <a href="/admin/orders/new" class="btn btn-primary">+ New Order</a>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  <% if (success.length > 0) { %><div class="alert alert-success"><%= success[0] %></div><% } %>
+  <% if (error.length > 0) { %><div class="alert alert-error"><%= error[0] %></div><% } %>
+
+  <!-- Orders Table -->
+  <div class="table-wrap">
+    <% if (orders.length === 0) { %>
+      <div class="empty-state">
+        <p>No orders found.</p>
+        <a href="/admin/orders/new" class="btn btn-primary">Create First Order</a>
+      </div>
+    <% } else { %>
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Order No.</th>
+          <th>Company</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Status</th>
+          <th>Est. Delivery</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(order => {
+          const statusObj = statusFlow.find(s => s.key === order.current_status) || {};
+        %>
+        <tr>
+          <td><span class="order-num"><%= order.order_number %></span></td>
+          <td>
+            <div class="company-info">
+              <span class="company-name"><%= order.company_name %></span>
+              <span class="company-email"><%= order.company_email %></span>
+            </div>
+          </td>
+          <td><%= order.product_name %></td>
+          <td><%= order.quantity %> <%= order.unit %></td>
+          <td>
+            <span class="status-badge status-<%= order.current_status %>">
+              <%= statusObj.icon %> <%= statusObj.label %>
+            </span>
+          </td>
+          <td><%= order.estimated_delivery ? new Date(order.estimated_delivery).toLocaleDateString('en-IN') : '—' %></td>
+          <td><%= new Date(order.updated_at).toLocaleDateString('en-IN') %></td>
+          <td>
+            <div class="action-btns">
+              <a href="/admin/orders/<%= order.id %>" class="btn btn-sm">View</a>
+              <a href="/track/<%= order.tracking_token %>" target="_blank" class="btn btn-sm btn-ghost" title="Public tracking link">🔗</a>
+              <form action="/admin/orders/<%= order.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Delete this order?')">
+                <button type="submit" class="btn btn-sm btn-danger">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/foot') %>

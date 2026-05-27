@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,173 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+/* Layout Container */
+.action-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Space between View icon and buttons */
+}
+
+.button-group {
+    display: flex;
+    gap: 8px; /* Space between Approve and Reject buttons */
+}
+
+/* Base Button Styling */
+.btn-action {
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-action:active {
+    transform: translateY(1px);
+}
+
+/* Specific Button Colors */
+.btn-approve {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-approve:hover {
+    background-color: #219150;
+}
+
+.btn-reject {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-reject:hover {
+    background-color: #c0392b;
+}
+
+/* View Icon Styling */
+.view-icon {
+    color: #7f8c8d;
+    cursor: pointer;
+    font-size: 18px;
+    transition: color 0.2s;
+}
+
+.view-icon:hover {
+    color: #3498db;
+}
+
+/* Verified Badge (Status after action) */
+.verified-badge {
+    color: #27ae60;
+    background: #eafaf1;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 1px solid #27ae60;
+}
+.project_info {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+    margin-bottom: 30px;
+    border: 1px solid #f1f5f9;
+}
+
+.project_info .filters .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.project_info .filter-row input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.project_info .filter-row select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.project_info .filter-row button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+
+.project_info table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.project_info table th {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.project_info table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.project_info table tr:hover td {
+    background: #f8fafc;
+}
+
+.project_info h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
      
         * {
             margin: 0;
@@ -132,9 +299,29 @@
 }
 
 /* Simple status colors */
-.status.pending { background-color: #f39c12; }    /* Orange */
-.status.completed { background-color: #27ae60; }  /* Green */
-.status.inprogress { background-color: #2980b9; } /* Blue */
+.status.pending { background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }    
+.status.completed { 
+  background: linear-gradient(135deg, #27ae60, #22c55e); 
+  color: white; 
+  padding: 6px 12px; 
+  border-radius: 20px; 
+  font-weight: bold; 
+  font-size: 13px; 
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+.status.completed::after {
+  content: '✓';
+  margin-left: 6px;
+  animation: checkmark 0.6s ease-in-out;
+}
+@keyframes checkmark {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+.status.inprogress { background-color: #2980b9; color: white; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
 .status.overdue { background-color: #c0392b; }    /* Red */
 
 
@@ -171,60 +358,124 @@
   color: white !important;
 }
         /* Sidebar Styles - Enhanced */
-        .sidebar {
-    width: 260px;
+/* Professional Glassmorphism Sidebar */
+.sidebar {
+    width: 280px;
     height: 100vh;
-    background: linear-gradient(180deg, #0b1e3d, #081833);
-    border-right: 1px solid var(--sidebar-border);
+    background: rgba(11, 30, 61, 0.95);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     position: fixed;
-    
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+    pointer-events: none;
 }
 
         
-        .sidebar::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            z-index: -1;
-        }
         
-        .logo {
-            padding: 25px 25px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            background: rgba(30, 58, 138, 0.3);
-        }
-        
-        .logo img {
-            max-width: 150px;
-            height: auto;
-            filter: brightness(0) invert(1);
-        }
+/* Enhanced Logo Section */
+.logo {
+    padding: 30px 25px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(30, 58, 138, 0.3));
+    border-radius: 0 0 20px 20px;
+}
+
+.logo::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.logo img {
+    max-width: 160px;
+    height: auto;
+    filter: brightness(0) invert(1) drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+}
+
+.logo:hover img {
+    transform: scale(1.05);
+}
         
         .menu {
             list-style: none;
             padding: 0 15px;
         }
-        .menu-item {
+/* Professional Menu Items */
+.menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
-    margin: 4px 10px;
-    border-radius: 12px;
-    font-size: 14px;
+    gap: 14px;
+    padding: 16px 20px;
+    margin: 6px 12px;
+    border-radius: 16px;
+    font-size: 15px;
     font-weight: 500;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    transition: background 0.25s ease, color 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.menu-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s;
+}
+
+.menu-item:hover::before {
+    left: 100%;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: translateX(8px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.4));
+    color: white;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    transform: scale(1.02);
 }
 
 .menu-item i {
@@ -238,7 +489,7 @@
     background: var(--menu-hover);
 }
 
- /* Submenu container */
+/* Submenu container - FIXED 👈 */
 .submenu {
     list-style: none;
     padding: 8px;
@@ -248,23 +499,29 @@
     background-color: rgb(20, 29, 54);
     border-radius: 10px;
 
-    /* Smooth animation */
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
+/* Smooth animation - ROBUST FIX - DEBUG */
+    display: block !important; /* DEBUG: Force visible */
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.3; /* DEBUG: Semi-visible when closed */
     transform: translateY(-8px);
-    transition:
-        max-height 0.35s ease,
-        opacity 0.25s ease,
-        transform 0.25s ease;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-
-/* Open state */
+/* Open state - FORCE OPEN 👈 */
 .submenu.open {
-    max-height: 500px;
-    opacity: 1;
-    transform: translateY(0);
+    display: block !important; /* FORCE OPEN */
+    max-height: 500px !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    overflow: visible !important;
+}
+
+/* Hover fallback for desktop - ENHANCED */
+.has-submenu:hover .submenu {
+    display: block !important; /* FORCE HOVER */
+    max-height: 500px !important;
+    opacity: 1 !important;
 }
 
 /* Submenu items */
@@ -295,15 +552,31 @@
 }
 
         /* Main Content Styles - Enhanced */
-        .main-content {
+       .main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: #f8fafc;
+    margin-left: 260px;
+}
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #334155;
+    cursor: pointer;
+    padding: 6px 10px;
+}
 
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            background: #f8fafc;
-            margin-left: 260px; /* Width of sidebar */
-            
-        }
+@media (max-width: 992px) {
+    .hamburger-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+}
         
         .header {
             display: flex;
@@ -1009,55 +1282,53 @@
         }
         
         @media (max-width: 992px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                padding: 0;
-            }
-            
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-            
-            .status-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            .product-table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .tracking-wrapper {
-                padding: 20px;
-            }
-            
-            .tracking-wrapper::before {
-                left: 40px;
-                right: 40px;
-            }
-            
-            #progressBar {
-                left: 40px;
-            }
-            
-            .tracking-steps {
-                padding: 0 20px;
-            }
-            
-            .step-icon {
-                width: 50px;
-                height: 50px;
-            }
-            
-            .step-label {
-                font-size: 12px;
-            }
-        }
+    .sidebar {
+        width: 260px;
+        transform: translateX(-260px);
+        position: fixed;
+        z-index: 200;
+        height: 100vh;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0);        /* slide in */
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 199;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .product-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
         
         @media (max-width: 576px) {
             .main-content {
@@ -1825,6 +2096,7 @@
 
 
     </style>
+    
 </head>
 <body>
   <div id="loaderOverlay" class="creative-loader hidden">
@@ -1872,20 +2144,24 @@
   </div>
 </div>
 </div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 
 <!-- Incomplete Projects Popup -->
 
 
 
-
+  
     <div class="container">
     <!-- Sidebar -->
+ 
+         
     <div class="sidebar">
 
     <!-- Logo -->
     <div class="logo">
         <img src="images/wt_img.png" alt="Company Logo" />
     </div>
+
 
     <!-- Section title -->
     
@@ -1931,6 +2207,12 @@
             <span>Assigned Project</span>
         </li>
 
+        <!-- Approval Requests -->
+        <li class="menu-item" data-tab="approval-requests">
+            <i class="fas fa-user-check"></i>
+            <span>Approval Requests</span>
+        </li>
+
         <!-- Approved & Status -->
         <li class="menu-item has-submenu">
             <i class="fas fa-check-circle"></i>
@@ -1947,6 +2229,266 @@
                 <span>Approved Quotation</span>
             </li>
         </ul>
+        <!-- this menu visible only when userEmail is equal to jeyavelraj.k@kietsindia.com -->
+        <% if (user.email === 'jeyavelraj.k@kietsindia.com') { %>
+        <!-- Admin Panel -->
+    <li class="menu-item" data-tab="project-info">
+            <i class="fas fa-user-shield"></i>
+            <span>Project Info</span>    
+        </li>
+
+        <script>
+/**
+ * COMPLETE TAB SWITCHING SYSTEM
+ * Handles ALL menu clicks, submenus, mobile, Project Info
+ * 
+ */
+  document.getElementById('hamburger-btn').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('mobile-open');
+        document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    
+    document.getElementById('sidebar-overlay').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.remove('mobile-open');
+        this.classList.remove('active');
+    });
+   
+    
+    async function loadProjectInfo() {
+        try {
+            const res = await fetch('/api/projects');
+            if (!res.ok) throw new Error('Failed to fetch projects');
+            projectData = await res.json();
+            renderProjectTable(projectData);
+            populateAssigneeFilter(projectData);
+        } catch (err) {
+            console.error('Error loading projects:', err);
+            document.getElementById('projectInfoBody').innerHTML =
+                `<tr><td colspan="9" style="text-align:center;padding:20px;color:#ef4444;">
+                    Failed to load projects. Check API endpoint.
+                </td></tr>`;
+        }
+    }
+    
+    function renderProjectTable(data) {
+        console.log('Rendering project table with', data.length, 'projects');
+        const tbody = document.getElementById('projectInfoBody');
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b;">No projects found.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map((p, i) => {
+            const statusColors = {
+                'Pending':     'background:#fffbeb;color:#f59e0b;',
+                'In Progress': 'background:#eff6ff;color:#3b82f6;',
+                'Completed':   'background:#ecfdf5;color:#10b981;',
+                'Delayed':     'background:#fef2f2;color:#ef4444;'
+            };
+            const style = statusColors[p.delivery_status] || 'background:#f1f5f9;color:#64748b;';
+            return `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${p.project_code || '-'}</strong></td>
+                <td>${p.description || '-'}</td>
+                <td>${p.customer || '-'}</td>
+                <td>${p.assigned_to || '-'}</td>
+                <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
+                
+                <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
+                <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
+            </tr>`;
+        }).join('');
+    }
+    
+    function populateAssigneeFilter(data) {
+        const select = document.getElementById('assigneeFilter');
+        const assignees = [...new Set(data.map(p => p.assigned_to).filter(Boolean))];
+        select.innerHTML = '<option value="All Assignees">All Assignees</option>' +
+            assignees.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+    
+    function applyProjectFilters() {
+        const search  = document.getElementById('projectSearchInput').value.toLowerCase();
+        const assignee = document.getElementById('assigneeFilter').value;
+        const status   = document.getElementById('statusFilter').value;
+    
+        const filtered = projectData.filter(p => {
+            const matchSearch = !search ||
+                (p.project_code || '').toLowerCase().includes(search) ||
+                (p.description  || '').toLowerCase().includes(search) ||
+                (p.assigned_to  || '').toLowerCase().includes(search);
+            const matchAssignee = assignee === 'All Assignees' || p.assigned_to === assignee;
+            const matchStatus   = status   === 'All Statuses'  || p.delivery_status === status;
+            return matchSearch && matchAssignee && matchStatus;
+        });
+        renderProjectTable(filtered);
+    }
+    
+    function clearProjectFilters() {
+        document.getElementById('projectSearchInput').value = '';
+        document.getElementById('assigneeFilter').value  = 'All Assignees';
+        document.getElementById('statusFilter').value    = 'All Statuses';
+        renderProjectTable(projectData);
+    }
+    
+    function sortProjectTable(col) {
+        if (projectSortCol === col) {
+            projectSortAsc = !projectSortAsc;
+        } else {
+            projectSortCol = col;
+            projectSortAsc = true;
+        }
+        const sorted = [...projectData].sort((a, b) => {
+            const av = a[col] ?? '';
+            const bv = b[col] ?? '';
+            return projectSortAsc
+                ? String(av).localeCompare(String(bv), undefined, {numeric: true})
+                : String(bv).localeCompare(String(av), undefined, {numeric: true});
+        });
+        renderProjectTable(sorted);
+    }
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM Ready - Attaching submenu handlers');
+     let projectData = [];
+    let projectSortCol = '';
+    let projectSortAsc = true;
+    
+    // === MAIN TAB SWITCHING ===
+    function switchTab(tabId) {
+        console.log('Switching to tab:', tabId);
+        // Hide ALL tab contents
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+            tab.style.display = 'none';
+        });
+        
+        // Remove ALL active menu items
+        document.querySelectorAll('.menu-item, .submenu-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Show target tab
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+            targetTab.style.display = 'block';
+        }
+        
+        // Close sidebar on mobile
+        if (window.innerWidth <= 992) {
+            document.querySelector('.sidebar').classList.remove('mobile-open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+        
+        // Special handlers
+        if (tabId === 'project-info') {
+            loadProjectInfo();
+        }
+    }
+    
+    // === MENU CLICK HANDLERS ===
+    document.querySelectorAll('.menu-item[data-tab]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            console.log('Menu item clicked:', this.dataset.tab);
+            e.stopPropagation();
+            switchTab(this.dataset.tab);
+        });
+    });
+    
+    // === SUBMENU CLICK HANDLERS ===
+    document.querySelectorAll('.submenu-item[data-tab]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            console.log('Submenu item clicked:', this.dataset.tab);
+            e.stopPropagation();
+            switchTab(this.dataset.tab);
+        });
+    });
+    
+    // === FIXED SUBMENU TOGGLE === 👈 MAIN FIX
+    document.addEventListener('click', function(e) {
+        // 🟢 HAS-SUBMENU CLICK (toggle)
+        if (e.target.closest('.has-submenu')) {
+            e.stopPropagation(); // Prevent bubbling
+            const hasSubmenu = e.target.closest('.has-submenu');
+            const submenu = hasSubmenu.nextElementSibling;
+            const arrow = hasSubmenu.querySelector('.arrow');
+            
+            console.log('🟢 Has-submenu clicked:', hasSubmenu.textContent.trim());
+            
+            if (submenu && submenu.classList.contains('submenu')) {
+                const isOpen = submenu.classList.contains('open');
+                submenu.classList.toggle('open');
+                if (arrow) arrow.classList.toggle('rotate');
+                
+                console.log('Submenu toggled:', isOpen ? 'closed' : 'opened');
+            }
+            return;
+        }
+        
+        // 🔴 CLICK OUTSIDE → CLOSE ALL
+        const sidebar = document.querySelector('.sidebar');
+        const anySubmenu = document.querySelector('.submenu.open');
+        const hamburger = document.querySelector('.hamburger-btn');
+        
+        if (anySubmenu && !sidebar.contains(e.target) && !hamburger?.contains(e.target)) {
+            document.querySelectorAll('.submenu').forEach(s => s.classList.remove('open'));
+            document.querySelectorAll('.arrow').forEach(a => a.classList.remove('rotate'));
+            document.querySelectorAll('.has-submenu').forEach(h => h.classList.remove('active'));
+            console.log('🔴 All submenus closed (outside click)');
+        }
+    });
+    
+    // Mobile sidebar toggle
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('🍔 Hamburger clicked');
+            document.querySelector('.sidebar').classList.toggle('mobile-open');
+            sidebarOverlay.classList.toggle('active');
+        });
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            console.log('🌑 Overlay clicked → close');
+            document.querySelector('.sidebar').classList.remove('mobile-open');
+            this.classList.remove('active');
+            // Close all submenus on overlay click
+            document.querySelectorAll('.submenu').forEach(s => s.classList.remove('open'));
+        });
+    }
+    
+    console.log('✅ All submenu/mobile handlers attached');
+    
+// });// 
+//                 submenu.classList.toggle('open');
+//                 arrow.classList.toggle('rotate');
+    //         }
+    //     });
+    // });
+    
+    // === MOBILE SIDEBAR ===
+  
+    
+    // === PROJECT INFO FUNCTIONS ===
+    
+    
+    function openAddProjectModal() {
+        alert('Add Project modal — wire this to your backend form.');
+    }
+    window.loadProjectInfo = loadProjectInfo;
+    window.applyProjectFilters = applyProjectFilters;
+    window.clearProjectFilters = clearProjectFilters;
+    window.sortProjectTable = sortProjectTable;
+    window.openAddProjectModal = openAddProjectModal;
+});
+    // Expose functions globally
+  
+        </script>
+        <% } %>
+        
 
         <!-- Logout -->
         <li class="menu-item" id="logout-btn" onclick="window.location.href='/'">
@@ -1956,34 +2498,82 @@
 
     </ul>
 </div>
-<script>
-document.querySelectorAll(".has-submenu").forEach(menu => {
-    menu.addEventListener("click", () => {
-        const submenu = menu.nextElementSibling;
-        const arrow = menu.querySelector(".arrow");
 
-        if (!submenu || !submenu.classList.contains("submenu")) return;
 
-        submenu.classList.toggle("open");
-        arrow.classList.toggle("rotate");
-    });
-});
-</script>
 
 
         
         <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <h2>Order Management Dashboard</h2>
-                <div class="user-info">
-                    <div class="user-avatar"><% const out_fl1 = out_fl.slice(0, 2); %>
-                        <%= out_fl1.toUpperCase() %></div>
-                    
-                    
-                    <span><%= out_fl  %></span>
-                </div>
-            </div>
+    <div class="main-content">
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <!-- Remove onclick="toggleMobileSidebar()" -->
+<button class="hamburger-btn" id="hamburger-btn">
+    <i class="fas fa-bars"></i>
+</button>
+            <h2>Order Management Dashboard</h2>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar"><% const out_fl1 = out_fl.slice(0, 2); %>
+                <%= out_fl1.toUpperCase() %></div>
+            <span><%= out_fl %></span>
+        </div>
+
+
+
+
+
+    </div>
+    <div class="tab-content project_info" id="project-info" style="padding: 20px;">
+    <h2>PROJECT INFO</h2>
+    <div class="filters">
+        <div class="filter-row">
+          <button onclick="openAddProjectModal()" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            <i class="fas fa-plus"></i> Add Project
+          </button>
+          <input type="text" id="projectSearchInput" placeholder="Search by Project Code, Description, or Assigned To..." onkeyup="applyProjectFilters()">
+          <select id="assigneeFilter" onchange="applyProjectFilters()">
+            <option value="All Assignees">All Assignees</option>
+          </select>
+          <select id="statusFilter" onchange="applyProjectFilters()">
+            <option value="All Statuses">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Delayed">Delayed</option>
+          </select>
+          <button onclick="clearProjectFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Project Information Table -->
+      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table class="min-w-max w-full text-sm text-center whitespace-nowrap">
+          <thead class="bg-gray-200 text-gray-600 uppercase text-xs">
+            <tr>
+              <th onclick="sortProjectTable('id')">ID <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('project_code')">Project Code <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('description')">Description <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('customer')">Customer <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_to')">Assigned To <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('budget')">Budget (₹) <i class="fas fa-sort"></i></th>
+              <!-- <th onclick="sortProjectTable('total_value')">Total Value (₹) <i class="fas fa-sort"></i></th> -->
+              <th onclick="sortProjectTable('delivery_status')">Status <i class="fas fa-sort"></i></th>
+              <th onclick="sortProjectTable('assigned_on')">Assigned On <i class="fas fa-sort"></i></th>
+              
+            </tr>
+          </thead>
+          <tbody id="projectInfoBody">
+            <!-- Rows populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+
+
+</div>
+    
+             
             
             <!-- Raise Order Tab -->
             <div class="tab-content active" id="raise-order">
@@ -2009,7 +2599,7 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
   <label for="projectBudget" class="mr-2 font-weight-bold">Project Budget:</label>
   
   <button id="budget_btn" type="button" class="btn btn-sm btn-primary">
-    Know Budget
+    Know remaining Budget
   </button>
   
   <span id="prjBudget" class="ml-3 text-info font-weight-bolder" style="color: black;"></span>
@@ -2043,6 +2633,11 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
     <label for="supplierAddress">Supplier Address </label>
     <textarea class="form-control" id="supplierAddress" name="supplierAddress" rows="2" placeholder="Enter Supplier Address" ></textarea>
   </div>
+  
+    <div class="form-group">
+      <label for="billingAddress">Billing Address *</label>
+      <textarea class="form-control" id="billingAddress" name="billingAddress" rows="2" required>KIET TECHNOLOGIES PVT.LTD ,51/33, Aaryan Techpark, 3rd cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078, GSTIN: 29AAFCK6528D1ZG</textarea>
+    </div>
 
   <div class="form-group">
     <label for="shippingAddress">Shipping Address *</label>
@@ -2072,6 +2667,8 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
     <label for="quotation">Quotation*</label>
     <input type="file" name="quotation[]" id="quotation" multiple required>
   </div>
+   
+
     <div class="form-group">
       <label for="urgency">Urgency *</label>
       <select class="form-control" id="urgency" name="urgency" required>
@@ -2086,14 +2683,12 @@ document.querySelectorAll(".has-submenu").forEach(menu => {
       <input type="date" class="form-control" id="dateRequired" name="dateRequired" required style="padding: 10px 15px;">
     </div>
   </div>
-
+ <div class="form-group">
+    <label for="excelUpload">Upload Excel if your items are in excel[FORMAT: .xlsx , .xls]</label>
+  <input type="file" id="excelUpload" accept=".xlsx,.xls"  >
+  <button class="btn" type="button" onclick="uploadExcel()" style="margin-top:5px;">Upload Excel</button>
+  <span style="color: red; font-size: smaller;">note: header name should match - 1. part number 2. description </span></div>
   <h4>Product Details</h4>
-
-  <!-- excel upload for product details -->
-
-  <div class="form-group">
-  <input type="file" id="excelUpload" accept=".xlsx,.xls">
-
 
   <table class="product-table" id="productTable">
     <thead>
@@ -2202,10 +2797,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
       }
     });
 
-    <!-- excel uplode script -->
-      let loaderStart = 0;
-      const MIN_TIME = 2000;
-async function uploadExcel() {
+    async function uploadExcel() {
 
     console.log("Excel script loaded");
 
@@ -2230,8 +2822,6 @@ async function uploadExcel() {
         });
 
         const data = await res.json();
-        //console.log("Excel upload response:", data);
-
 
         if (data.success) {
             populateItemTable(data.items);
@@ -2245,8 +2835,6 @@ async function uploadExcel() {
 
     stopLoader();
 }
-
-//<!-- excel auto fill table function -->
 
 function populateItemTable(items) {
 
@@ -2287,7 +2875,7 @@ function populateItemTable(items) {
 
             <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
 
-            <td><input type="text" class="form-control unit" name="unit[]" ></td>
+            <td><input type='text' class="form-control unit" name="unit[]" ></td>
 
             <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
 
@@ -2335,8 +2923,8 @@ function populateItemTable(items) {
                             <div class="form-group">
     <label for="dcType" class="required">DC Type</label>
     <select class="form-control" id="dcType" name="dcType" required>
-        <option value="normal">Non ReturnableDC</option>
-        <option value="returnable">Returnable DC</option>
+        <option value="Non-Returnable">Non ReturnableDC</option>
+        <option value="Returnable">Returnable DC</option>
     </select>
 </div>
 
@@ -3392,102 +3980,159 @@ tinymce.init({
     table image code
   `,
   
-  // IMAGE UPLOAD
-  images_upload_url: "/upload_image",
-images_upload_handler: function (blobInfo) {
-  let formData = new FormData();
-  formData.append("image", blobInfo.blob(), blobInfo.filename());
-
-  return fetch("/upload_image", {
-    method: "POST",
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.location) {
-        // TinyMCE will show this message automatically
-        throw new Error("Invalid upload response — `location` missing");
-      }
-      return data.location;   // <-- TinyMCE inserts this into editor
-    })
-    .catch(err => {
-      console.error("Upload failed", err);
-      throw err; // TinyMCE will display it
-    });
-}
-
-,
-
-  // FONT SIZE DROPDOWN
-  fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px',
-
-  // CUSTOM LINE HEIGHT MENU
   setup: function (editor) {
-    editor.ui.registry.addMenuButton('myLineHeight', {
-      text: 'Line Height',
-      fetch: function (callback) {
-        callback([
-          { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
-          { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
-          { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
-          { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
-          { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
-          { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
-        ]);
-      }
-    });
-
-    // Apply custom line height
-    editor.addCommand('mceApplyLineHeight', function (_, value) {
-      editor.formatter.register('lineheight', {
-        inline: 'span',
-        styles: { 'line-height': '%value' }
+    // Safe custom line height
+    try {
+      editor.ui.registry.addMenuButton('myLineHeight', {
+        text: 'Line Height',
+        fetch: function (callback) {
+          callback([
+            { type: 'menuitem', text: '1', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1') },
+            { type: 'menuitem', text: '1.15', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.15') },
+            { type: 'menuitem', text: '1.5', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.5') },
+            { type: 'menuitem', text: '1.75', onAction: () => editor.execCommand('mceApplyLineHeight', false, '1.75') },
+            { type: 'menuitem', text: '2', onAction: () => editor.execCommand('mceApplyLineHeight', false, '2') },
+            { type: 'menuitem', text: '3', onAction: () => editor.execCommand('mceApplyLineHeight', false, '3') }
+          ]);
+        }
       });
-      editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
-    });
-  }
+
+      editor.addCommand('mceApplyLineHeight', function (_, value) {
+        try {
+          editor.formatter.register('lineheight', {
+            inline: 'span',
+            styles: { 'line-height': '%value' }
+          });
+          editor.formatter.apply('lineheight', { value }, editor.selection.getNode());
+        } catch(e) {
+          console.warn('Line height apply failed:', e);
+        }
+      });
+    } catch(e) {
+      console.warn('Custom toolbar setup failed:', e);
+    }
+  },
+  
+  init_instance_callback: function(editor) {
+    console.log('TinyMCE Ready');
+  },
+  
+  // Safe image upload with fallback
+  images_upload_handler: function (blobInfo, progress) {
+    try {
+      let formData = new FormData();
+      formData.append("image", blobInfo.blob(), blobInfo.filename());
+
+      return fetch("/upload_image", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.location) {
+            return data.location;
+          }
+          throw new Error("Upload failed - no location");
+        });
+    } catch(err) {
+      console.error("Image upload failed:", err);
+      return Promise.reject(err);
+    }
+  },
+  
+  fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 28px 32px'
 });
+
 
 </script>
 <div id="editItemsModal" class="modal">
-  <div class="modal-content" style="max-width:95%;">
+  
+     
 
-    <h3>Edit Purchase Order Items</h3>
+  <div class="modal-content" 
+       style="max-width:95%; width:95%; background:#ffffff; 
+              border-radius:12px; padding:25px; 
+              box-shadow:0 15px 40px rgba(0,0,0,0.2);
+              animation:fadeIn 0.2s ease-in-out;">
 
-    <table border="1" width="100%" cellspacing="0" cellpadding="6">
-      <thead>
+    <h3 style="margin-bottom:18px; font-size:20px; font-weight:600; color:#1e293b;">
+      Edit Purchase Order Items
+    </h3>
+
+    <table border="0" width="100%" cellspacing="0" cellpadding="10"
+           style="border-collapse:collapse; 
+                  font-size:14px; 
+                  border-radius:8px; 
+                  overflow:hidden;
+                  box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+
+      <thead style="background:linear-gradient(135deg,#2563eb,#1e40af); color:#ffffff;">
         <tr>
-          <th>Part No</th>
-          <th>Description</th>
-          <th>HSN</th>
-          <th>Qty</th>
-          <th>Unit</th>
-          <th>Price</th>
-          <th>Discount %</th>
-          <th>GST %</th>
-          <th>Total</th>
-          <th></th>
+          <th style="padding:12px;">Part No</th>
+          <th style="padding:12px;">Description</th>
+          <th style="padding:12px;">HSN</th>
+          <th style="padding:12px;">Qty</th>
+          <th style="padding:12px;">UnitPrice</th>
+          <th style="padding:12px;">Unit</th>
+          <th style="padding:12px;">Discount</th>
+          <th style="padding:12px;">GST %</th>
+          <th style="padding:12px;">Total</th>
         </tr>
       </thead>
 
-      <tbody id="editItemsTableBody">
+      <p class="editedtime" 
+         style="margin:10px 0; font-size:13px; color:#64748b;">
+      </p>
+
+      <tbody id="editItemsTableBody"
+             style="background:#ffffff;">
         <!-- rows injected by JS -->
       </tbody>
     </table>
 
-    <div style="margin-top:15px; text-align:right;">
-      <button class="btn btn-success" onclick="savePoItems()">Save Items</button>
-      <button class="btn btn-secondary" onclick="closeItemsModal()">Close</button>
+    <div style="margin-top:20px; text-align:right;">
+      <button class="btn btn-success"
+              onclick="savePoeItems()"
+              style="background:linear-gradient(135deg,#16a34a,#15803d);
+                     color:#ffffff;
+                     border:none;
+                     padding:10px 22px;
+                     border-radius:8px;
+                     font-size:14px;
+                     font-weight:600;
+                     cursor:pointer;
+                     margin-right:10px;
+                     box-shadow:0 6px 15px rgba(22,163,74,0.3);
+                     transition:all 0.3s ease;">
+        Save Items
+      </button>
+
+      <button class="btn btn-secondary"
+              onclick="closeItemsPModal()"
+              style="background:#e2e8f0;
+                     color:#1e293b;
+                     border:none;
+                     padding:10px 22px;
+                     border-radius:8px;
+                     font-size:14px;
+                     font-weight:600;
+                     cursor:pointer;
+                     transition:all 0.3s ease;">
+        Close
+      </button>
     </div>
 
-  </div>
+
+</div>
 </div>
 <script>
     async function openItemsModal(poId) {
+
   
 
   // show modal
   document.getElementById("editItemsModal").classList.add("show");
+  
 
   // load items
   const res = await fetch(`/po/${poId}/items`);
@@ -3496,24 +4141,142 @@ images_upload_handler: function (blobInfo) {
   const tbody = document.getElementById("editItemsTableBody");
   tbody.innerHTML = "";
 
-  items.forEach(item => {
-    tbody.insertAdjacentHTML("beforeend", `
-      <tr class="item-row">
-        <td>${item.part_no}</td>
-        <td><textarea>${item.description}</textarea></td>
-        <td><input type="number" value="${item.quantity}"></td>
-        <td><input type="number" value="${item.unit_price}"></td>
-        <td><input type="number" value="${item.gst}"></td>
-        <td><input type="number" value="${item.discount}"></td>
-        <td><input type="number" readonly></td>
+
+ items.forEach(item => {
+    document.querySelector("#editItemsModal .editedtime").textContent = `Last Edited: ${new Date(item.created_at).toLocaleString()}`;
+  tbody.insertAdjacentHTML("beforeend", `
+    <tr style="transition:0.2s;" 
+        onmouseover="this.style.backgroundColor='#f8f9fa'" 
+        onmouseout="this.style.backgroundColor='white'">
+
+      <td style="padding:8px;">${item.part_no}</td>
+
+      <td style="padding:8px;">
+        <textarea
+          style="width:100%; padding:6px 8px; font-size:14px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 resize:vertical; min-height:38px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">${item.description}</textarea>
+      </td>
+
+      <td style="padding:2px;">
+        <input type="text" value="${item.hsn_code}"
+          style="width:100%; padding:6px 8px; font-size:14px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number" value="${item.quantity}"
+          style="width:70px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number" value="${item.unit_price}"
+          style="width:120px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="text" value="${item.unit}"
+          style="width:70px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number" value="${item.discount}"
+          style="width:70px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+      <td style="padding:8px;">
+        <input type="number" value="${item.gst}"
+          style="width:70px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'">
+      </td>
+
+
+       
+        
+        <td><input type="number" readonly style="width:210px; text-align:center; padding:6px;
+                 border:1px solid #ced4da; border-radius:6px;
+                 transition:0.2s;"
+          onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 2px rgba(13,110,253,0.15)'"
+          onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none'" value= ${item.total_amount} ></td>
       </tr>
     `);
   });
 }
-function closeItemsModal() {
-  document.getElementById("editItemsModal").classList.remove("show");
-}
 
+function closeItemsPModal() {
+  console.log("Closing items modal");
+    document.getElementById("editItemsModal").classList.remove("show");
+}
+async function savePoeItems(id) {
+
+  const rows = document.querySelectorAll("#editItemsTableBody .item-row");
+
+  const updatedItems = Array.from(rows).map(row => {
+    const cells = row.querySelectorAll("td");
+
+    const qty = parseFloat(cells[2].querySelector("input").value) || 0;
+    const price = parseFloat(cells[3].querySelector("input").value) || 0;
+    const gst = parseFloat(cells[4].querySelector("input").value) || 0;
+    const discount = parseFloat(cells[5].querySelector("input").value) || 0;
+
+    const baseAmount = qty * price;
+    const afterDiscount = baseAmount * (1 - discount / 100);
+    const finalAmount = afterDiscount * (1 + gst / 100);
+
+    return {
+      part_no: cells[0].textContent.trim(),
+      description: cells[1].querySelector("textarea").value.trim(),
+      quantity: qty,
+      unit_price: price,
+      gst: gst,
+      discount: discount,
+      total_amount: parseFloat(finalAmount.toFixed(2))
+    };
+  });
+
+  try {
+    const res = await fetch(`/api/update_po_items/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: updatedItems })
+    });
+
+    if (res.ok) {
+      alert("Items updated successfully!");
+      closeItemsPModal();
+    } else {
+      alert("Failed to update items.");
+    }
+  } catch (error) {
+    console.error("Error updating items:", error);
+    alert("An error occurred while updating items.");
+  }
+}
 </script>
 
 
@@ -3883,9 +4646,8 @@ function closeItemsModal() {
                     </div>
                     <script>
 document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
-  e.preventDefault(); // stop page reload
-  startLoader(); // Start loader animation
-  
+  e.preventDefault(); 
+  if (typeof startLoader === 'function') startLoader(); 
 
   const form = this;
   const formData = new FormData(form);
@@ -3899,24 +4661,21 @@ document.getElementById("vkQuotationForm").addEventListener("submit", async func
     const data = await res.json();
 
     if (data.success) {
-      // ✅ ALERT
       alert("Quotation sent successfully ✅");
-      stopLoader(); // Stop loader animation
-
-      // ✅ RESET FORM
+      if (typeof stopLoader === 'function') stopLoader();
       form.reset();
-
-      // ✅ OPTIONAL: clear quotation number
-      document.getElementById("vkQuotationNumber").value = "";
-
+      const vkNumField = document.getElementById("vkQuotationNumber");
+      if (vkNumField) vkNumField.value = "";
     } else {
       alert("Failed to send quotation ❌");
     }
   } catch (err) {
-    console.error(err);
+    console.error('VK Submit Error:', err);
     alert("Server error ❌");
+    if (typeof stopLoader === 'function') stopLoader();
   }
 });
+
 
 
 function initializeVKForm() {      
@@ -4043,6 +4802,7 @@ let currencySymbol = '₹';
                 const value = cost * qty;
                 valueDisplay.textContent = value.toFixed(2);
                 return value;
+                
             }
 
             function updateTotalCosts() {
@@ -4055,6 +4815,7 @@ let currencySymbol = '₹';
                     }
                 }
                 vkTotalCostsDisplay.textContent = total.toFixed(2);
+                updatePvRates();
             }
             console.log('sdfghsdf',vkClassSelects);
             console.log(vkQtyInputs);
@@ -4646,7 +5407,7 @@ let currencySymbol = '₹';
 
     if (totalPvQty === 0) return;
 
-    const unitRate = totalRate * totalPvQty;
+    const unitRate = totalRate;
 
     document.querySelectorAll('.pv-rate-input').forEach(input => {
         input.value = unitRate.toFixed(2);
@@ -4656,6 +5417,7 @@ let currencySymbol = '₹';
 
         const qtyInput = row.querySelector('.pv-adaptor-qty-input');
         const valueDisplay = row.querySelector('.pv-value-display');
+        updatePvRates();
 
         if (qtyInput && valueDisplay) {
             updatePvValue(qtyInput, input, valueDisplay);
@@ -4720,6 +5482,7 @@ let currencySymbol = '₹';
             const newPvAdaptorQtyInput = newRow.querySelector('.pv-adaptor-qty-input');
 
             newQtyInput.addEventListener('input', function() {
+                updatePvRates();
                 updatePvValue(newQtyInput, newRateInput, newValueDisplay);
                 updatePvRates();
             });
@@ -4861,8 +5624,728 @@ let currencySymbol = '₹';
                 <div class="status-cards" id="assignedProjectsContainer">
                     <!-- Assigned projects will be dynamically generated -->
                 </div>
-            </div><script>
-document.addEventListener("DOMContentLoaded", loadAssignedProjects);
+            </div>
+
+            <!-- Approval Requests Tab -->
+            <div class="tab-content" id="approval-requests">
+                <div class="tab-header">
+                    <h3>Pending Approval Requests(purchase_orders)</h3>
+                    <p>View all pending approval requests awaiting your review</p>
+                </div>
+                
+                <!-- Filter and Search -->
+                <div class="filter-section" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    
+                    <!-- Tab Switch Buttons -->
+                    <button onclick="switchToTab('approval-requests')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shopping-cart"></i> Purchase Orders
+                    </button>
+                    <button onclick="switchToTab('delivery-challan-approval')" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-signature"></i> DC Approval
+                    </button>
+                    
+                    <input type="text" id="approvalSearchInput" onkeyup="filterApprovalRequests()" placeholder="Search by Project Code Or request number or name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
+                    <button onclick="loadApprovalRequests()" class="btn btn-primary" style="padding: 8px 16px;">Refresh</button>
+                </div>
+
+                <!-- Pending Approval Requests Table -->
+                <div class="table-container" style="overflow-x: auto;">
+                    <table id="approvalRequestsTable" style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background: #4a90d9; color: white;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Sl No</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Project</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Project Code</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Date</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Request No</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Request Raised By</th>
+                                
+                                
+                                <th style="padding: 12px; text-align: right; font-weight: 600;">Amount</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalRequestsBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><br>
+                                    Loading pending approval requests...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="poItemsModal" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+">
+
+  <div style="
+    background:white;
+    width:80%;
+    max-width:900px;
+    border-radius:8px;
+    padding:20px;
+    max-height:80%;
+    overflow:auto;
+  ">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3>Purchase Order Items</h3>
+      <button onclick="closeItemsModal()" style="
+        background:#dc3545;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:4px;
+        cursor:pointer;
+      ">Close</button>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#4a90d9; color:white;">
+          <th style="padding:10px;padding-left: 100px;">Item</th>
+          <th style="padding:10px;padding-left: 100px;">Description</th>
+          <th style="padding:10px;padding-left: 100px;">Qty</th>
+          <th style="padding:10px;padding-left: 100px;">Rate</th>
+          <th style="padding:10px;padding-left: 100px;">Total</th>
+        </tr>
+      </thead>
+      <tbody id="poItemsBody">
+        <tr>
+          <td colspan="5" style="text-align:center; padding:20px;">
+            Loading...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+                <!-- Summary Cards -->
+                <!-- <div class="approval-summary" style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+                    <div class="summary-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; flex: 1; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">Total Pending</h4>
+                        <p style="margin: 0; font-size: 28px; font-weight: bold;" id="totalPendingCount">0</p>
+                    </div>
+                    <div class="summary-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; flex: 1; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">Trade & Service</h4>
+                        <p style="margin: 0; font-size: 28px; font-weight: bold;" id="tradePendingCount">0</p>
+                    </div>
+                    <div class="summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 8px; flex: 1; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">VK</h4>
+                        <p style="margin: 0; font-size: 28px; font-weight: bold;" id="vkPendingCount">0</p>
+                    </div>
+                    <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 8px; flex: 1; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">MAE</h4>
+                        <p style="margin: 0; font-size: 28px; font-weight: bold;" id="maePendingCount">0</p>
+                    </div>
+                </div> -->
+            </div>
+
+                <!-- Delivery Challan Approval Tab -->
+                <div class="tab-content" id="delivery-challan-approval">
+                    <div class="tab-header
+">
+                        <h3>Pending DC Approval Requests</h3>
+                        <p>View all pending delivery challan approval requests awaiting your review</p>
+                    </div>
+                    <div class="filter-section" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="switchToTab('approval-requests')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shopping-cart"></i> Purchase Orders
+                    </button>
+                    <button onclick="switchToTab('delivery-challan-approval')" style="background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file-signature"></i> DC Approval
+                    </button>
+                    <input type="text" id="dcApprovalSearchInput" onkeyup="filterDcApprovalRequests()" placeholder="Search by DC number or consignee name..." style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex-grow: 1;">
+                    <button onclick="loaddeliveryChallanApprovalRequests()" class="btn btn-primary" style="padding: 8px 16px;">Refresh</button>
+                </div>
+
+                    <div class="table-container" style="overflow-x: auto;">
+                    <table id="approvalRequestsTable" style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background: #4a90d9; color: white;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Sl No</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">DC NUMBER</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Challan Date</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Dc Type</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Consignee Name</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Reason</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600;">Requester</th>
+                                
+                                
+                                <th style="padding: 12px; text-align: right; font-weight: 600;">Status</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;"> Actions </th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600;"></th> 
+                            </tr>
+                        </thead>
+                        <tbody id="approvaldcRequestsDcBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><br>
+                                    Loading pending approval requests...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                </div>
+                <div id="dcItemsModal" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+">
+
+  <div style="
+    background:white;
+    width:80%;
+    max-width:900px;
+    border-radius:8px;
+    padding:20px;
+    max-height:80%;
+    overflow:auto;
+  ">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h3> DC  Items</h3>
+      <button onclick="closedcItemsModal()" style="
+        background:#dc3545;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:4px;
+        cursor:pointer;
+      ">Close</button>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#4a90d9; color:white;">
+          <th style="padding:10px">Item</th>
+          
+          <th style="padding:10px;">Description</th>
+          <th style="padding:10px;">Qty</th>
+          <th style="padding:10px;">Unit</th>
+          <th style="padding:10px;">Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="dcItemsBody">
+        <tr>
+          <td colspan="5" style="text-align:center; padding:20px;">
+            Loading...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+<p style="color:white;background-color: #1C4D8D;" class="reason_dc"></p>
+  </div>
+  
+</div>
+</div>
+               
+        
+
+            <script>
+document.addEventListener("DOMContentLoaded", action);
+function action(){
+    loadAssignedProjects();
+    loadApprovalRequests();
+    loaddeliveryChallanApprovalRequests();
+}
+
+function filterApprovalRequests() {
+
+    const input = document.getElementById("approvalSearchInput");
+    const tbody = document.getElementById("approvalRequestsBody");
+
+    if (!input || !tbody) return;
+
+    const filter = input.value.toLowerCase();
+    const rows = tbody.getElementsByTagName("tr");
+
+    for (let i = 0; i < rows.length; i++) {
+
+        const cells = rows[i].getElementsByTagName("td");
+
+        const project_code = cells[2]?.innerText.toLowerCase() || "";
+        const raiser = cells[5]?.innerText.toLowerCase() || "";
+
+        rows[i].style.display =
+            project_code.includes(filter) || raiser.includes(filter)
+                ? ""
+                : "none";
+    }
+}
+
+
+
+
+
+async function filterDcApprovalRequests() {
+
+    const input = document.getElementById("dcApprovalSearchInput");
+    if (!input) {
+        console.error("Search input not found");
+        return;
+    }
+
+    const table = document.getElementById("approvaldcRequestsDcBody");
+    if (!table) {
+        console.error("Table approvaldcRequestsDcBody not found");
+        return;
+    }
+
+    const filter = input.value.toLowerCase();
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+
+        const tdDcNumber = tr[i].getElementsByTagName("td")[1];
+        const tdConsignee = tr[i].getElementsByTagName("td")[5];
+
+        if (tdDcNumber && tdConsignee) {
+
+            const dcNumberText = tdDcNumber.textContent.toLowerCase();
+            const consigneeText = tdConsignee.textContent.toLowerCase();
+
+            tr[i].style.display =
+                dcNumberText.includes(filter) || consigneeText.includes(filter)
+                    ? ""
+                    : "none";
+        }
+    }
+}
+
+
+async function viewDCItems(id) {
+
+  const modal = document.getElementById("dcItemsModal");
+  const tbody = document.getElementById("dcItemsBody");
+
+
+  modal.style.display = "flex";
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center; padding:20px;">
+        Loading...
+      </td>
+    </tr>
+  `;
+  try {
+
+    const res = await fetch(`/api/delivery-challans/items/${id}`);
+    const data = await res.json();
+
+    const tbody = document.getElementById("dcItemsBody");
+    tbody.innerHTML = "";
+
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:20px;">
+            No items found for this DC
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    data.forEach(item => {
+      tbody.innerHTML += `
+        <tr>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.part_no}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.description || '-'}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.quantity}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.unit}</td>
+          <td style="padding:10px;border-right:1px solid #EBF4F6;border-bottom:0.5px solid #EBF4F6">${item.remarks}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("dcItemsModal").style.display = "flex";
+    
+
+  } catch (error) {
+    console.error("Failed to load DC items:", error);
+    alert("Failed to load DC items. Please try again.");
+  }
+}
+
+async function approvePO(id) {
+  if (!confirm("Are you sure you want to approve this PO?")) return;
+
+  try {
+    await fetch(`/api/approval-requests/approve/${id}`, {
+      method: "PUT"
+    });
+
+    loadApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("Approval failed:", error);
+  }
+}
+async function rejectPO(id) {
+  if (!confirm("Are you sure you want to reject this PO?")) return;
+
+  try {
+    await fetch(`/api/approval-requests/reject/${id}`, {
+      method: "PUT"
+    });
+
+    loadApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("Rejection failed:", error);
+  }
+}
+
+// Function to switch to specific tab from approval requests
+function switchToTab(tabId) {
+    // Remove active class from all tabs and menu items
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+        menuItem.classList.remove('active');
+    });
+    document.querySelectorAll('.submenu-item').forEach(subItem => {
+        subItem.classList.remove('active');
+    });
+
+    // Add active class to target tab
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+
+    // Find and activate the corresponding menu item
+    const menuItem = document.querySelector(`[data-tab="${tabId}"]`);
+    if (menuItem) {
+        menuItem.classList.add('active');
+    }
+
+    // Scroll to top when switching tabs
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Additional actions for specific tabs
+    if (tabId === 'delivery-challan') {
+        console.log("Switched to DC Approval tab");
+    }
+}
+
+async function loaddeliveryChallanApprovalRequests() {
+  try {
+    const by=document.querySelector(".user-info span")?.textContent.trim() || "";
+    console.log("Loading DC approval requests for user:", by);
+    const res = await fetch(`/api/delivery-challans/${by}`);
+    const data = await res.json();
+      const reasonEl=document.querySelector(".reason_dc");
+  reasonEl.textContent="";
+
+    const tbody = document.getElementById("approvaldcRequestsDcBody");
+    tbody.innerHTML = "";
+
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center;padding:20px;">
+            No pending DC approvals
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    data.forEach((dc, index) => {
+      tbody.innerHTML += `
+<tr style="border-bottom:1px solid #e5e7eb; transition: background 0.2s;">
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${index + 1}
+    </td>
+    
+    <td style="padding:12px; text-align:left; font-weight:500; color:#333;border-right:1px solid #EBF4F6;">
+        ${dc.challan_no}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${new Date(dc.challan_date).toLocaleDateString()}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.dc_type}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.consignee_name}
+    </td>
+    <td style="padding:12px; text-align:left;border-right:1px solid #EBF4F6; color:#555;width: 250px; max-width: 250px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis;">
+        ${dc.reason}
+    </td>
+    
+    <td style="padding:12px; text-align:left; color:#555;border-right:1px solid #EBF4F6;">
+        ${dc.requester}
+    </td>
+    
+    
+    <td style="padding:12px; text-align:right; font-weight:600; color:#1f2937;border-right:1px solid #EBF4F6;">
+        <span style="
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:12px;
+        font-weight:600;
+        background: ${
+            dc.approval_status === 'pending'
+            ? '#fff3cd'
+            : dc.approval_status === 'approved'
+            ? '#d4edda'
+            : dc.approval_status === 'Returned'
+            ? '#cce5ff'
+            : '#f8d7da'
+        };
+        color: ${
+            dc.approval_status === 'pending'
+            ? '#856404'
+            : dc.approval_status === 'approved'
+            ? '#155724'
+            : dc.approval_status === 'Returned'
+            ? '#004085'
+            : '#721c24'
+        };
+        ">
+        ${dc.approval_status}
+        </span>
+    </td>
+    <td style="padding: 12px; text-align: center;border-right:1px solid #EBF4F6;">
+        <div class="action-container">
+            <i class="fas fa-eye view-icon" 
+            onclick="viewDCItems(${dc.id})" 
+            title="View Items"></i>
+
+            ${dc.approval_status === "pending" ? `
+                <div class="button-group">
+                    <button class="btn-action
+                    btn-approve" onclick="approveDC(${dc.id})">
+                    <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn-action
+                    btn-reject" onclick="rejectDC(${dc.id})">
+                    <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            ` : `
+                
+                
+                
+                
+                
+                <span class="verified-badge">
+                    <i class="fas fa-check-double"></i> Verified
+                </span>
+            `}
+        </div>
+    </td>
+    <td style="padding: 12px; text-align: center;">
+        <!-- Additional actions can go here -->
+    </td>
+</tr>
+`;
+
+    });
+    
+    
+
+  } catch (error) {
+    console.error("Error loading DC approvals:", error);
+  }
+};
+
+
+
+
+async function approveDC(id) {
+  if (!confirm("Are you sure you want to approve this DC?")) return;
+
+  try {
+    await fetch(`/api/delivery-challans/approve/${id}`, {
+      method: "PUT"
+    });
+
+    loaddeliveryChallanApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("DC Approval failed:", error);
+  }
+}
+async function rejectDC(id) {
+  if (!confirm("Are you sure you want to reject this DC?")) return;
+
+  try {
+    await fetch(`/api/delivery-challans/reject/${id}`, {
+      method: "PUT"
+    });
+
+    loaddeliveryChallanApprovalRequests(); // Refresh table
+
+  } catch (error) {
+    console.error("DC Rejection failed:", error);
+  }
+}
+
+
+async function loadApprovalRequests() {
+  try {
+    const by=document.querySelector(".user-info span")?.textContent.trim() || "";
+    console.log("Loading approval requests for user:", by);
+    const res = await fetch(`/api/approval-requests/${by}`);
+    const data = await res.json();
+
+    const tbody = document.getElementById("approvalRequestsBody");
+    tbody.innerHTML = "";
+
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center;padding:20px;">
+            No pending approvals
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    let total = 0;
+    let trade = 0;
+    let vk = 0;
+    let mae = 0;
+
+    data.forEach((po, index) => {
+      total++;
+
+      if (po.category === "Trade & Service") trade++;
+      if (po.category === "VK") vk++;
+      if (po.category === "MAE") mae++;
+
+      tbody.innerHTML += `
+<tr style="border-bottom:1px solid #e5e7eb; transition: background 0.2s;">
+  
+  <td style="padding:12px; text-align:left;">
+    ${index + 1}
+  </td>
+
+  <td style="padding:12px; text-align:left; font-weight:500; color:#333;">
+    ${po.project_name}
+  </td>
+
+  <td style="padding:12px; text-align:left; color:#555;">
+    ${po.project_code_number}
+  </td>
+
+  <td style="padding:12px; text-align:left; color:#555;">
+    ${new Date(po.created_at).toLocaleDateString()}
+  </td>
+
+  <td style="padding:12px; text-align:left; font-weight:500;">
+    ${po.purchase_order_number}
+  </td>
+
+  <td style="padding:12px; text-align:left; color:#555;">
+    ${po.ordered_by}
+  </td>
+
+  <td style="padding:12px; text-align:right; font-weight:600; color:#1f2937;">
+    ₹ ${Number(po.total_amount).toLocaleString('en-IN')}
+  </td>
+
+  <td style="padding:12px; text-align:center;">
+    <span style="
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:600;
+      background: ${
+  po.status === 'pending'
+    ? '#fff3cd'
+    : po.status === 'sent'
+    ? '#d4edda'
+    : po.status === 'inventory_processed'
+    ? '#cce5ff'
+    : po.status === 'approved'? '#8494FF'
+    : '#f8d7da'
+};
+
+color: ${
+  po.status === 'pending'
+    ? '#856404'
+    : po.status === 'sent'
+    ? '#155724'
+    : po.status === 'inventory_processed'
+    ? '#004085'
+    : po.status === 'approved'? 'white'
+    : '#721c24'
+};
+    ">
+      ${po.status}
+    </span>
+  </td>
+
+<td style="padding: 12px; text-align: center;">
+  <div class="action-container">
+    
+    <i class="fas fa-eye view-icon" 
+       onclick="viewPOItems(${po.id})" 
+       title="View Items"></i>
+
+    ${po.assign_status === "submitted" ? `
+        <div class="button-group">
+          <button class="btn-action btn-approve" onclick="approvePO(${po.id})">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          
+          <button class="btn-action btn-reject" onclick="rejectPO(${po.id})">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </div>
+    ` : `
+        <span class="verified-badge">
+          <i class="fas fa-check-double"></i> Verified
+        </span>
+    `}
+  </div>
+</td>
+
+</tr>
+`;
+    });
+
+    // // Update summary cards
+    // document.getElementById("totalPendingCount").innerText = total;
+    // document.getElementById("tradePendingCount").innerText = trade;
+    // document.getElementById("vkPendingCount").innerText = vk;
+    // document.getElementById("maePendingCount").innerText = mae;
+
+  } catch (error) {
+    console.error("Error loading approvals:", error);
+  }
+}
 async function markProjectCompleted(projectId) {
     console.log(projectId);
   if (!confirm("Are you sure you want to mark this project as completed?")) {
@@ -4889,7 +6372,82 @@ async function markProjectCompleted(projectId) {
     alert("Server error ❌");
   }
 }
+async function viewPOItems(purchaseId) {
+    
 
+  const modal = document.getElementById("poItemsModal");
+  const tbody = document.getElementById("poItemsBody");
+
+  modal.style.display = "flex";
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center; padding:20px;">
+        Loading...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const res = await fetch(`/api/purchase_order_items/${purchaseId}`);
+    const items = await res.json();
+
+    if (!items.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding:20px;">
+            No items found
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    let grandTotal = 0;
+
+    items.forEach((item, index) => {
+      const total = (item.quantity * item.unit_price); // Assuming 18% tax
+      grandTotal += item.total_amount || total;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.description}</td>
+          <td style='text-align:center;'>${item.quantity || "-"}</td>
+          
+          <td style="text-align:right;">₹${Number(item.unit_price).toLocaleString('en-IN')}</td>
+          <td style="text-align:right;">₹${Number(total).toLocaleString('en-IN')}</td>
+        </tr>
+      `;
+    });
+
+    // Add grand total row
+    tbody.innerHTML += `
+      <tr style="font-weight:600; background:#f8f9fa;">
+        <td colspan="5" style="text-align:right;">Grand Total</td>
+        <td style="text-align:right;">
+          ₹${Number(grandTotal).toLocaleString('en-IN')}
+        </td>
+      </tr>
+    `;
+
+  } catch (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding:20px; color:red;">
+          Failed to load items
+        </td>
+      </tr>
+    `;
+  }
+}
+
+function closeItemsModal() {
+  document.getElementById("poItemsModal").style.display = "none";
+}
+function closedcItemsModal() {
+  document.getElementById("dcItemsModal").style.display = "none";
+}
 async function loadAssignedProjects() {
   const valu = document.querySelector(".user-info span")?.textContent.trim() || "";
   const userId = encodeURIComponent(valu);
@@ -4934,7 +6492,7 @@ async function loadAssignedProjects() {
         <p><b>Assigned On:</b> ${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString() : '-'}</p>
         <p><b>Budget:</b> ₹${Number(p.budget || 0).toLocaleString()}</p>
         <p><b>Quantity:</b> ${p.quantity}</p>
-        <p><b>Remaining:</b> ₹${Number(p.remaining_budget|| 0).toLocaleString()}</p>
+        <p><b>Remaining:</b> ₹${Number(p.remaining_cost|| 0).toLocaleString()}</p>
         <p><b>Target date:</b> ${p.target_date ? new Date(p.target_date).toLocaleDateString() : "Not set"}</p>
         <p><span class="status ${p.delivery_status?.toLowerCase() || ''}"> delivery_status: ${p.delivery_status || '-'}</span></p>
         <span class="status-text"> Project: ${p.project_status || "Not Completed"}</span>
@@ -4954,6 +6512,8 @@ async function loadAssignedProjects() {
     if (hasIncomplete) {
       document.getElementById("incompleteProjectsModal").style.display = "block";
     }
+    
+     // Refresh approval requests to reflect any changes in project status
   } catch (err) {
     console.error(err);
     container.innerHTML = "<p>Error loading projects.</p>";
@@ -5135,8 +6695,8 @@ function closeProcessModal() {
                 </div>
                 <div class="status-filters">
                     <div class="form-group">
-                        <label for="statusFilter">Filter by Status:</label>
-                        <select class="form-control" id="statusFilter">
+                        <label for="statuspoFilter">Filter by Status:</label>
+                        <select class="form-control" id="statuspoFilter" onchange="renderStatusCards(all_orders, this.value)">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="purchase">Purchase</option>
@@ -5278,6 +6838,7 @@ function closeProcessModal() {
         //         "<p>Could not load your assigned projects.</p>";
         //     }
         // }
+        let all_orders=[];
 
         async function fetchOrders() {
   try {
@@ -5290,10 +6851,11 @@ function closeProcessModal() {
     }
 
     const orders = await res.json();
-    //renderStatusCards(orders) ;
+    all_orders = orders; // Store all orders
+    renderStatusCards(all_orders);
 
     console.log("✅ Orders fetched:", orders);
-    renderStatusCards(orders);
+    
   } catch (err) {
     console.error("❌ Error fetching orders:", err);
 
@@ -5323,7 +6885,7 @@ function closeProcessModal() {
             setupOrderTracking();
 
             // Setup filter handlers
-            document.getElementById('statusFilter').addEventListener('change', renderStatusCards);
+            document.getElementById('statuspoFilter').addEventListener('change', renderStatusCards);
 
             // Setup sub-tab handlers for approved quotations
             document.querySelectorAll('.sub-tab').forEach(tab => {
@@ -5377,7 +6939,12 @@ function closeProcessModal() {
                         document.getElementById("grandTotal").textContent = "0.00";
                     } else {
                         alert("Order submission failed: " + (result.error || result.message || "Unknown error"));
+                        
                     }
+                    if (!result.success && result.error === "Budget Exceeded") {
+  showBudgetAlert(result.remaining, result.required);
+  return;
+}
                     const project_cde = document.getElementById("projectCodeNumber").value.trim();
                     const supplier_name = document.getElementById("supplierName").value;
 
@@ -5385,10 +6952,17 @@ function closeProcessModal() {
                     console.log('supplier_name:',supplier_name);
                     
     // const orderId = ;
-      if (result) {
-    const statusRes = await fetch(`/getreq/${project_cde}/${supplier_name}`, {
+      if (result.success) {
+        console.log('Order created with ID:', result.poId);
+        
+    const statusRes = await fetch(`/getreq/${result.poId}/${project_cde}`,
+     {  
           method: "GET",
-          headers: { "Accept": "application/json",project_code:project_cde,supplier_name:supplier_name }
+          headers: {
+  "Accept": "application/json",
+  
+
+}
         });
 
         const statusContentType = statusRes.headers.get("content-type");
@@ -5424,10 +6998,61 @@ function closeProcessModal() {
                     orderForm.reset();
                 }
             });
+
         });
         
 
+function showBudgetAlert(remaining = 0, required = 500) {
+  // Remove existing alert if any
+  document.getElementById("budget-alert")?.remove();
 
+  const shortfall = required - remaining;
+
+  const html = `
+    <div id="budget-alert" style="
+      position: fixed; top: 24px; right: 24px; z-index: 9999;
+      width: 380px; background: var(--white, #fff);
+      border: 0.5px solid #eee; border-radius: 12px;
+      overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      font-family: sans-serif; animation: slideIn 0.2s ease;">
+      <div style="height: 4px; background: #E24B4A;"></div>
+      <div style="padding: 1rem 1.1rem; display: flex; gap: 12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#FCEBEB;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">
+          ⚠️
+        </div>
+        <div>
+          <p style="margin:0 0 4px;font-weight:500;font-size:14px;color:#111;">Budget exceeded</p>
+          <p style="margin:0;font-size:13px;color:#666;line-height:1.5;">
+            Remaining: <b>₹${remaining}</b> &nbsp;|&nbsp; 
+            Required: <b>₹${required}</b> &nbsp;|&nbsp; 
+            Shortfall: <b style="color:#A32D2D;">₹${shortfall}</b>
+          </p>
+          <p style="margin:6px 0 0;font-size:12px;color:#888;">
+            Contact your project manager to increase the budget.
+          </p>
+        </div>
+      </div>
+      <div style="padding:0.6rem 1.1rem;border-top:0.5px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
+        <button onclick="document.getElementById('budget-alert').remove()"
+          style="font-size:13px;padding:5px 14px;border-radius:8px;border:0.5px solid #ddd;background:transparent;cursor:pointer;">
+          Dismiss
+        </button>
+        <button style="font-size:13px;padding:5px 14px;border-radius:8px;
+          border:none;background:#E24B4A;color:#fff;cursor:pointer;">
+          Request increase
+        </button>
+      </div>
+    </div>
+    <style>
+      @keyframes slideIn { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: translateY(0); } }
+    </style>`;
+
+  document.body.insertAdjacentHTML("beforeend", html);
+
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => document.getElementById("budget-alert")?.remove(), 8000);
+}
             // Logout button
       
         // Tab switching functionality
@@ -5470,6 +7095,29 @@ function closeProcessModal() {
                     if (this.dataset.tab === 'delivery-challan'){
                         console.log("delivery challan is pressed")
                     }
+                    
+     if (this.dataset.tab === 'project-info') {
+    console.log("project info is pressed");
+    loadProjectInfo();
+    const project_info = document.getElementById('projectinfo');
+    console.log("Checking for project info panel:", project_info);
+    if (project_info) {
+        console.log("Project info panel found, displaying it.");
+        // Hide all tab-content first
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        // Show project info panel
+        project_info.style.display = 'block';
+        // Load project data
+        
+    }
+} else {
+    // For all other tabs, hide project info
+    const project_info = document.getElementById('projectinfo');
+    console.log("Hiding project info panel.");
+    if (project_info) project_info.style.display = 'none';
+}
 
                     // 👉 When switching to Approved Quotation tab, fetch approved quotations
                     if (this.dataset.tab === 'approved-quotation') {
@@ -5593,8 +7241,9 @@ function closeProcessModal() {
 
             // Update row numbers
             updateRowNumbers();
+            calculateRowTotal(newRow);
         }
-        calculateRowTotal(newRow);
+        
         // Add event listeners to a table row
         function addRowEventListeners(row) {
             // Quantity change
@@ -5785,9 +7434,21 @@ function closeProcessModal() {
         // Render status cards based on orders and filter
          function renderStatusCards(orders) {
              const container = document.getElementById('statustab');
+             const filterEl = document.getElementById('statuspoFilter');
+    console.log("Filter element:", filterEl);         // null = not found
+    console.log("Filter value:", filterEl?.value);
+    if (!Array.isArray(orders)) {
+        console.error("orders is not an array:", orders);
+        return;
+    }
+        
              container.innerHTML = '';
 
-             const filter = document.getElementById('statusFilter').value.toLowerCase();
+             const filter = document.getElementById('statuspoFilter').value.toLowerCase();
+             console.log("All statuses in data:", orders.map(o => o.status));
+console.log("Filter value:", filter);
+             console.log("Selected filter:", filter);
+             console.log("Rendering status cards with filter:", filter, "Orders data:", orders);
 
              const filteredOrders = orders.filter(order => {
                  if (filter === 'all') return true;
@@ -5954,9 +7615,11 @@ ${order.status?.toLowerCase() === "pending"
                         <p><strong>Payment  : </strong>  ${ quotation.paymentterms}</p>
                         <p><strong>Delivery Duration : </strong> ${ quotation.deliveryduration}</p>
                         <p><strong>Total:</strong> ${quotation.currency === 'INR' ? '₹' : '$'}${quotation.totalamount}</p>
+
                     </div>
                     <div class="status-footer">
                         <button class="btn btn-primary download-btn" data-id="${quotation.id}">Download PDF</button>
+                        <i class='fa-solid fa-edit edit-icon' style='margin-left: 10px; cursor: pointer;' data-id="${quotation.id}" onclick='editQuote(${quotation.id})'> Revise</i>
                     </div>
                 `;
 
@@ -6017,6 +7680,21 @@ ${order.status?.toLowerCase() === "pending"
             } catch (error) {
                 console.error('Error downloading quotation:', error);
                 alert('Failed to download quotation. Please try again.');
+            }
+        }
+        async function editQuote(quotationId) {
+            try {
+                const response = await fetch(`/api/quotations/${quotationId}/items`);
+                if (!response.ok) throw new Error('Failed to fetch quotation details');
+
+                const data = await response.json();
+                // Assuming the response contains the quotation details needed for editing
+                // You can now populate an edit form with this data
+                console.log('Quotation details for editing:', data);
+                alert('Edit functionality is not implemented yet. Check console for details.');
+            } catch (error) {
+                console.error('Error fetching quotation details:', error);
+                alert('Failed to fetch quotation details. Please try again.');
             }
         }
         
@@ -6474,22 +8152,28 @@ ${order.status?.toLowerCase() === "pending"
             document.getElementById('loadingOverlay').style.display = 'flex';
         });
 
-        // MAE Form JavaScript
+// MAE Form JavaScript - SAFE VERSION
         document.addEventListener('DOMContentLoaded', function() {
-            // MAE Quotation Number Generation
-            const maeGenerateQuotationNumberBtn = document.getElementById('maeGenerateQuotationNumber');
-            const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
+            try {
+                const maeGenerateQuotationNumberBtn = document.getElementById('maeGenerateQuotationNumber');
+                const maeQuotationNumberInput = document.getElementById('maeQuotationNumber');
 
-            maeGenerateQuotationNumberBtn.addEventListener('click', function() {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${day}`;
-                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                const quotationNumber = `MAE-${dateStr}-${randomNum}`;
-                maeQuotationNumberInput.value = quotationNumber;
-            });
+                if (maeGenerateQuotationNumberBtn && maeQuotationNumberInput) {
+                    maeGenerateQuotationNumberBtn.addEventListener('click', function() {
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                        const quotationNumber = `MAE-${dateStr}-${randomNum}`;
+                        maeQuotationNumberInput.value = quotationNumber;
+                    });
+                }
+            } catch (err) {
+                console.error('MAE Generate Button Error:', err);
+            }
+
 
             // MAE Reference Number Generation
             const maeGenerateReferenceNumberBtn = document.getElementById('maeGenerateReferenceNumber');
@@ -6967,36 +8651,39 @@ document.getElementById("saveBtn").onclick = () => {
             
         }
 async function previewmae() {
-    const form = document.getElementById("maeQuotationForm");
-    if (tinymce.get("editor")) {
-        tinymce.triggerSave();
-    }
-    
-    const formData = new FormData(form);
-    console.log('oke dfs',formData)
-
     try {
+        const form = document.getElementById("maeQuotationForm");
+        if (!form) throw new Error("MAE form not found");
+        
+        // Safe TinyMCE save
+        if (typeof tinymce !== 'undefined' && tinymce.get("editor")) {
+            tinymce.triggerSave();
+        }
+
+        const formData = new FormData(form);
+
         const response = await fetch("/preview", {
             method: "POST",
             body: formData
-            
         });
-        console.log('response',response);
 
-        if (!response.ok) throw new Error("Preview failed");
+        if (!response.ok) throw new Error(`Preview failed: ${response.status}`);
 
         const blob = await response.blob();
         const pdfUrl = URL.createObjectURL(blob);
 
-        // Load preview into iframe modal
         const iframe = document.getElementById("previewFrame");
-        iframe.src = pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
-
-        document.getElementById("previewModal").style.display = "block";
+        const modal = document.getElementById("previewModal");
+        if (iframe && modal) {
+            iframe.src = pdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
+            modal.style.display = "block";
+        }
     } catch (err) {
         console.error("Preview Error:", err);
+        alert("Preview failed. Check console for details.");
     }
 }
+
 document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "p")) {
         e.preventDefault();
@@ -7055,6 +8742,146 @@ document.addEventListener("keydown", (e) => {
 
 
     </script>
+  
+<script>
+// ── Sidebar toggle ──
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const sidebar      = document.querySelector('.sidebar');
+const overlay      = document.getElementById('sidebar-overlay');
+
+hamburgerBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('mobile-open');
+    console.log('Sidebar classes:', sidebar.className);
+    overlay.classList.toggle('active');
+});
+
+overlay.addEventListener('click', function() {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+});
+
+// Close sidebar when any nav item clicked on mobile
+document.querySelectorAll('.menu-item, .submenu-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+        if (window.innerWidth <= 992) {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+    });
+});
+
+// ── Submenu toggle ──
+document.querySelectorAll('.has-submenu').forEach(function(menu) {
+    menu.addEventListener('click', function() {
+        const submenu = menu.nextElementSibling;
+        const arrow   = menu.querySelector('.arrow');
+        if (!submenu || !submenu.classList.contains('submenu')) return;
+        submenu.classList.toggle('open');
+        arrow.classList.toggle('rotate');
+    });
+});
+
+
+// let projectData = [];
+// let projectSortCol = '';
+// let projectSortAsc = true;
+
+// async function loadProjectInfo() {
+//     try {
+//         const res = await fetch('/api/projects');
+//         if (!res.ok) throw new Error('Failed to fetch projects');
+//         projectData = await res.json();
+//         renderProjectTable(projectData);
+//         populateAssigneeFilter(projectData);
+//     } catch (err) {
+//         console.error('Error loading projects:', err);
+//         document.getElementById('projectInfoBody').innerHTML =
+//             `<tr><td colspan="9" style="text-align:center;padding:20px;color:#ef4444;">
+//                 Failed to load projects. Check API endpoint.
+//             </td></tr>`;
+//     }
+// }
+
+// function renderProjectTable(data) {
+//     const tbody = document.getElementById('projectInfoBody');
+//     if (!data.length) {
+//         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b;">No projects found.</td></tr>`;
+//         return;
+//     }
+//     tbody.innerHTML = data.map((p, i) => {
+//         const statusColors = {
+//             'Pending':     'background:#fffbeb;color:#f59e0b;',
+//             'In Progress': 'background:#eff6ff;color:#3b82f6;',
+//             'Completed':   'background:#ecfdf5;color:#10b981;',
+//             'Delayed':     'background:#fef2f2;color:#ef4444;'
+//         };
+//         const style = statusColors[p.delivery_status] || 'background:#f1f5f9;color:#64748b;';
+//         return `<tr>
+//             <td>${i + 1}</td>
+//             <td><strong>${p.project_code || '-'}</strong></td>
+//             <td>${p.description || '-'}</td>
+//             <td>${p.customer || '-'}</td>
+//             <td>${p.assigned_to || '-'}</td>
+//             <td>₹${Number(p.budget || 0).toLocaleString('en-IN')}</td>
+//             <td>₹${Number(p.total_value || 0).toLocaleString('en-IN')}</td>
+//             <td><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;${style}">${p.delivery_status || '-'}</span></td>
+//             <td>${p.assigned_on ? new Date(p.assigned_on).toLocaleDateString('en-IN') : '-'}</td>
+//         </tr>`;
+//     }).join('');
+// }
+
+// function populateAssigneeFilter(data) {
+//     const select = document.getElementById('assigneeFilter');
+//     const assignees = [...new Set(data.map(p => p.assigned_to).filter(Boolean))];
+//     select.innerHTML = '<option value="All Assignees">All Assignees</option>' +
+//         assignees.map(a => `<option value="${a}">${a}</option>`).join('');
+// }
+
+// function applyProjectFilters() {
+//     const search  = document.getElementById('projectSearchInput').value.toLowerCase();
+//     const assignee = document.getElementById('assigneeFilter').value;
+//     const status   = document.getElementById('statusFilter').value;
+
+//     const filtered = projectData.filter(p => {
+//         const matchSearch = !search ||
+//             (p.project_code || '').toLowerCase().includes(search) ||
+//             (p.description  || '').toLowerCase().includes(search) ||
+//             (p.assigned_to  || '').toLowerCase().includes(search);
+//         const matchAssignee = assignee === 'All Assignees' || p.assigned_to === assignee;
+//         const matchStatus   = status   === 'All Statuses'  || p.delivery_status === status;
+//         return matchSearch && matchAssignee && matchStatus;
+//     });
+//     renderProjectTable(filtered);
+// }
+
+// function clearProjectFilters() {
+//     document.getElementById('projectSearchInput').value = '';
+//     document.getElementById('assigneeFilter').value  = 'All Assignees';
+//     document.getElementById('statusFilter').value    = 'All Statuses';
+//     renderProjectTable(projectData);
+// }
+
+// function sortProjectTable(col) {
+//     if (projectSortCol === col) {
+//         projectSortAsc = !projectSortAsc;
+//     } else {
+//         projectSortCol = col;
+//         projectSortAsc = true;
+//     }
+//     const sorted = [...projectData].sort((a, b) => {
+//         const av = a[col] ?? '';
+//         const bv = b[col] ?? '';
+//         return projectSortAsc
+//             ? String(av).localeCompare(String(bv), undefined, {numeric: true})
+//             : String(bv).localeCompare(String(av), undefined, {numeric: true});
+//     });
+//     renderProjectTable(sorted);
+// }
+
+function openAddProjectModal() {
+    alert('Add Project modal — wire this to your backend form.');
+}
+</script>
 </body>
 </html>
 
