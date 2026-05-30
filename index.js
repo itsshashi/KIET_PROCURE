@@ -58,7 +58,7 @@ const pool = new Pool({
   host: "13.234.3.0",
   database: "mydb",
   // password:process.env.DB_PASSWORD,
-  password:'Shashank@KIET1519',
+  password:'KIET@tech123',
   port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
