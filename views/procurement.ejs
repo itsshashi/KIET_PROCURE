@@ -2924,7 +2924,7 @@ function populateItemTable(items) {
     <label for="dcType" class="required">DC Type</label>
     <select class="form-control" id="dcType" name="dcType" required>
         <option value="Non-Returnable">Non ReturnableDC</option>
-        <option value="Returnable">Returnable DC</option>
+        <option value="returnable">Returnable DC</option>
     </select>
 </div>
 
@@ -3221,6 +3221,9 @@ document.getElementById("deliveryChallanForm").addEventListener("submit", async 
 
     const formData = new FormData(e.target);
     const json = Object.fromEntries(formData.entries());
+    const requesterEmail = document.querySelector('.user-info span').textContent.trim();
+    json.requesterEmail = requesterEmail;
+    
 
     // Collect item table rows (arrays)
     json.partNo = formData.getAll("partNo[]");
