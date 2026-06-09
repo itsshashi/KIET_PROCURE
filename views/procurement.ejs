@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2665,7 +2665,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="form-row">
     <div class="form-group">
     <label for="quotation">Quotation*</label>
-    <input type="file" name="quotation" id="quotation" required>
+    <input type="file" name="quotation[]" id="quotation" multiple required>
   </div>
    
 
@@ -2689,6 +2689,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <button class="btn" type="button" onclick="uploadExcel()" style="margin-top:5px;">Upload Excel</button>
   <span style="color: red; font-size: smaller;">note: header name should match - 1. part number 2. description </span></div>
   <h4>Product Details</h4>
+
   <table class="product-table" id="productTable">
     <thead>
       <tr style="background-color: blue;">
@@ -2795,6 +2796,7 @@ document.getElementById("supplierName").addEventListener("blur", async function 
         console.error("Error fetching project budget:", error);
       }
     });
+
     async function uploadExcel() {
 
     console.log("Excel script loaded");
@@ -2820,8 +2822,6 @@ document.getElementById("supplierName").addEventListener("blur", async function 
         });
 
         const data = await res.json();
-        //console.log("Excel upload response:", data);
-
 
         if (data.success) {
             populateItemTable(data.items);
@@ -2835,8 +2835,6 @@ document.getElementById("supplierName").addEventListener("blur", async function 
 
     stopLoader();
 }
-
-//<!-- excel auto fill table function -->
 
 function populateItemTable(items) {
 
@@ -2877,7 +2875,7 @@ function populateItemTable(items) {
 
             <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
 
-            <td><input type="text" class="form-control unit" name="unit[]" ></td>
+            <td><input type='text' class="form-control unit" name="unit[]" ></td>
 
             <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
 
@@ -2902,6 +2900,7 @@ function populateItemTable(items) {
         updateRowNumbers();
     }
 }
+
     </script>  
      <div class="tab-content" id="delivery-challan">
                 <div class="tab-header">
