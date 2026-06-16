@@ -7,7 +7,6 @@ import XLSX from "xlsx";
 
 
 import generateDeliveryChallan from "./dc.js";
-import { loadModels, getDescriptor, distance } from "./face.js";
 import fetch from "node-fetch";
 
 import dotenv from "dotenv";
@@ -54,14 +53,13 @@ const qtUploadsDir = path.join(__dirname, "qt_uploads");
 if (!fs.existsSync(qtUploadsDir)) {
   fs.mkdirSync(qtUploadsDir, { recursive: true });
 }
-await loadModels();
-console.log("✅ Face models loaded");
 const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:process.env.DB_PASSWORD,
-    port: 5432,
+  // password:process.env.DB_PASSWORD,
+  password:'KIET@tech123',
+  port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
 
@@ -86,6 +84,9 @@ app.use(express.json({ limit: "50mb" }));
 
 // Serve frontend (place index.html in /public)
 app.use(express.static(path.join(__dirname, "public")));
+
+// Serve models directory so the browser can download them
+app.use('/models', express.static(path.join(__dirname, 'models')));
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -268,6 +269,67 @@ app.get("/api/inventory-invoice/:poNumber", async (req, res) => {
   }
 });
 
+//excel uplode
+app.post("/upload-excel", upload.single("excelFile"), (req, res) => {
+  try {
+
+    if (!req.file) {
+      return res.json({ success: false, message: "No file uploaded" });
+    }
+
+    const workbook = XLSX.readFile(req.file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    console.log("Detected headers:", Object.keys(data[0]));
+
+    if (data.length === 0) {
+      return res.json({ success: false, message: "Excel file is empty" });
+    }
+
+    // Get headers
+    const headers = Object.keys(data[0]);
+
+    // Create lowercase header map
+    const headerMap = {};
+    headers.forEach(h => {
+      headerMap[h.toLowerCase().trim()] = h;
+    });
+
+    console.log("Detected headers:", headerMap);
+
+    // Find matching columns (case-insensitive)
+    const partNumberKey = headerMap["part number"];
+    const descriptionKey = headerMap["description"];
+    console.log("Mapped Part Number Key:", partNumberKey, "Mapped Description Key:", descriptionKey);
+
+    if (!partNumberKey || !descriptionKey) {
+      return res.json({
+        success: false,
+        message: "Excel must contain Part Number and Description columns"
+      });
+    }
+
+    const items = data
+      .map(row => ({
+        partNo: row[partNumberKey],
+        description: row[descriptionKey]
+      }))
+      .filter(item =>
+        item.partNo || item.description
+      );
+
+    res.json({ success: true, items });
+
+  } catch (err) {
+    console.error("Excel Upload Error:", err);
+    res.json({ success: false, message: err.message });
+  }
+
+});
+
+
+
 // API route to generate GRN number
 app.post("/api/generate-grn", async (req, res) => {
   try {
@@ -336,9 +398,9 @@ app.post("/api/generate-grn-local", async (req, res) => {
     const grnResult = await pool.query(
       "SELECT generate_grn() AS grn_number")
 
-    
-    const grn=grnResult.rows[0].grn_number;
-    
+
+    const grn = grnResult.rows[0].grn_number;
+
 
     res.json({ grn });
   } catch (err) {
@@ -494,11 +556,12 @@ app.get("/api/orders/:id/items", async (req, res) => {
       `
             SELECT
                 id,
-                part_no as partNo,
+                part_no as "partNo",
                 description,
-                hsn_code as hsnCode,
+                hsn_code as "hsnCode",
                 quantity,
-                unit_price as unitPrice,
+                COALESCE(received_quantity, 0) as "receivedQuantity",
+                unit_price as "unitPrice",
                 gst,
                 discount,
                 unit
@@ -642,6 +705,8 @@ app.get("/api/orders/search/filter", async (req, res) => {
                 urgency,
                 notes,
                 quotation_file,
+                po_number,
+                terms_of_payment as payment_terms,
                 created_at
             FROM purchase_orders
             WHERE 1=1
@@ -663,9 +728,12 @@ app.get("/api/orders/search/filter", async (req, res) => {
     }
 
     if (status && status !== "All Statuses") {
-      paramCount++;
-      query += ` AND status = $${paramCount}`;
-      params.push(status.toLowerCase());
+      const statusList = status.split(',').map(s => s.trim().toLowerCase());
+      if (statusList.length > 0) {
+        paramCount++;
+        query += ` AND status = ANY($${paramCount})`;
+        params.push(statusList);
+      }
     }
 
     if (dateFrom) {
@@ -856,7 +924,7 @@ app.post("/submit-inventory", upload.single("invoice"), async (req, res) => {
       supplier_ifsc_code || null,
       amount ? parseFloat(amount) : null,
       shift_code || null,
-      req.session.user.email,
+      req.session.user ? req.session.user.email : "Unknown",
     ];
 
     const { rows } = await pool.query(insertQuery, values);
@@ -910,7 +978,7 @@ app.post("/submit", async (req, res) => {
       "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) and role=$2",
       [email, role]
     );
-    
+
 
     if (!result.rows.length)
       return res.render("index.ejs", { message: "Invalid email or password" });
@@ -1154,18 +1222,18 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
     await pool.query("COMMIT");
     console.log("✔ DB Transaction committed");
-    const result3=await pool.query(`select remaining_budget from project_info where project_code=$1`,[projectCodeNumber]);
-    const remain_b=result3.rows[0].remaining_budget;
-    const calc=remain_b-totalAmount;
-    const result4=await pool.query(`update project_info  set remaining_budget=$1 where project_code=$2`,[calc,projectCodeNumber]);
-    
-    
-    console.log("result rows",result3.rows[0])
+    const result3 = await pool.query(`select remaining_budget from project_info where project_code=$1`, [projectCodeNumber]);
+    const remain_b = result3.rows[0].remaining_budget;
+    const calc = remain_b - totalAmount;
+    const result4 = await pool.query(`update project_info  set remaining_budget=$1 where project_code=$2`, [calc, projectCodeNumber]);
+
+
+    console.log("result rows", result3.rows[0])
 
 
 
     // 🔹 Send email
-    
+
 
     // 🔹 Final response
     return res.json({ success: true, message: "✅ Order submitted successfully",poId: orderId });
@@ -1174,7 +1242,7 @@ app.post("/order_raise", safeUpload, async (req, res) => {
 
   } catch (err) {
     console.error("❌ ERROR:", err);
-    await pool.query("ROLLBACK").catch(() => {});
+    await pool.query("ROLLBACK").catch(() => { });
     return res.status(500).json({
       success: false,
       error: "Failed to raise purchase order",
@@ -1567,8 +1635,8 @@ app.put("/api/orders/:id/purchase", async (req, res) => {
       from: "No-reply@kietsindia.com",
       to: "chandrashekaraiah.r@kietsindia.com",
       subject: `Action Required: Final Approval Needed for Order ${rows[0].purchase_order_number}`,
-   
-  html: `
+
+      html: `
    
      
     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
@@ -1891,31 +1959,102 @@ KIET TECHNOLOGIES PVT LTD,
   }
 });
 
-// Mark as Received
+// Mark as Received (Supports Partial Receipts)
 app.put("/api/orders/:id/receive", async (req, res) => {
   const { id } = req.params;
-  const { rows } = await pool.query(
-    "UPDATE purchase_orders SET status='received' WHERE id=$1 RETURNING supplier_name",
-    [id]
-  );
-  if (!rows.length) return res.status(404).json({ error: "Order not found" });
+  const { items } = req.body;
+  const client = await pool.connect();
 
-  const supplierName = rows[0].supplier_name;
-
-  // Generate gen_number and insert into grn_gen_entries
-  const genNumber = await generateGenNumber();
   try {
-    await pool.query(
-      `INSERT INTO grn_gen_entries (purchase_order_id, gen_number, grn_number, supplier_name)
-       VALUES ($1, $2, NULL, $3)`,
-      [id, genNumber, supplierName]
-    );
-  } catch (err) {
-    console.error("Error inserting into grn_gen_entries:", err);
-    // Continue, as order update succeeded
-  }
+    await client.query("BEGIN");
 
-  res.json({ success: true, order: rows[0], genNumber });
+    // 1. Update received quantities for items
+    if (items && Array.isArray(items)) {
+      console.log(`PO ${id} receiving items:`, items);
+      for (const item of items) {
+        await client.query(
+          "UPDATE purchase_order_items SET received_quantity = COALESCE(received_quantity, 0) + $1 WHERE id = $2",
+          [item.receivedQty, item.itemId]
+        );
+      }
+    }
+
+    // 2. Check if the entire order is now complete
+    const { rows: itemRows } = await client.query(
+      "SELECT quantity, COALESCE(received_quantity, 0) as received_quantity FROM purchase_order_items WHERE purchase_order_id = $1",
+      [id]
+    );
+
+    let isComplete = itemRows.length > 0;
+    for (const item of itemRows) {
+      const qty = parseFloat(item.quantity) || 0;
+      const rec = parseFloat(item.received_quantity) || 0;
+      const itemFinished = rec >= qty;
+      console.log(`  - Item ${item.id}: Qty=${qty}, Received=${rec} -> Finished=${itemFinished}`);
+      if (!itemFinished) {
+        isComplete = false;
+      }
+    }
+    
+    console.log(`PO ${id} Final Result: isComplete=${isComplete}`);
+
+    // 3. Update PO status and get supplier name
+    let supplierName = "";
+    if (isComplete) {
+      const { rows } = await client.query(
+        "UPDATE purchase_orders SET status='received' WHERE id=$1 RETURNING supplier_name",
+        [id]
+      );
+      if (rows.length) supplierName = rows[0].supplier_name;
+    } else {
+      const hasSomeReceived = itemRows.some(item => parseFloat(item.received_quantity) > 0);
+      if (hasSomeReceived) {
+        await client.query(
+          "UPDATE purchase_orders SET status='partial' WHERE id=$1",
+          [id]
+        );
+      }
+      
+      const { rows } = await client.query(
+        "SELECT supplier_name FROM purchase_orders WHERE id=$1",
+        [id]
+      );
+      if (rows.length) supplierName = rows[0].supplier_name;
+    }
+
+    if (!supplierName) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // 4. Generate gen_number and insert into grn_gen_entries (if not already exists)
+    const { rows: existingGenRows } = await client.query(
+      "SELECT gen_number FROM grn_gen_entries WHERE purchase_order_id = $1",
+      [id]
+    );
+
+    let genNumber;
+    if (existingGenRows.length > 0) {
+      genNumber = existingGenRows[0].gen_number;
+    } else {
+      genNumber = await generateGenNumber();
+      await client.query(
+        `INSERT INTO grn_gen_entries (purchase_order_id, gen_number, grn_number, supplier_name)
+         VALUES ($1, $2, NULL, $3)
+         ON CONFLICT (purchase_order_id) DO UPDATE SET supplier_name = EXCLUDED.supplier_name`,
+        [id, genNumber, supplierName]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ success: true, isComplete, genNumber });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error in partial receive:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
+  }
 });
 
 //md
@@ -2093,7 +2232,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
         plant: "Aaryan Tech Park", // fixed or from DB
         email: order.ordered_by_email || "example@mail.com",
       },
-      currency:order.currency || "INR",
+      currency: order.currency || "INR",
 
       shipTo: order.shipping_address,
       invoiceTo:order.billing_address || `KIET TECHNOLOGIES PVT.LTD, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560078
@@ -2134,7 +2273,7 @@ app.get("/api/orders/:id/pdf", async (req, res) => {
     // 5️⃣ Send PDF as response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    
+
 
     // Wait a bit for PDF generation to complete, then send file
     setTimeout(() => {
@@ -2210,7 +2349,7 @@ app.get("/api/dc/:id/pdf", async (req, res) => {
       },
       reason: dc.reason,
       items: items, // from DB query delivery_challan_items
-      type:dc.dc_type,
+      type: dc.dc_type,
 
       signPath: "public/images/signature.png",
       company: { logo: "public/images/lg.jpg" },
@@ -2535,9 +2674,8 @@ app.post(
 
           // ➕ Add total row (colspan-ready)
           kietCosts.push({
-            description: `Total costs in ${
-              formData.currency || "INR"
-            } (qty of 1 No.)`,
+            description: `Total costs in ${formData.currency || "INR"
+              } (qty of 1 No.)`,
             cost: kietTotal,
             qty: 1,
             totalValue: kietTotal,
@@ -2892,13 +3030,12 @@ app.get("/download-quotation/:param", async (req, res) => {
   try {
     const { param } = req.params;
     console.log("Received param for quotation download:", param);
-    
+
 
     const isNumeric = /^\d+$/.test(param);
 
     const quotationResult = await pool.query(
-      `SELECT * FROM quotations WHERE ${
-        isNumeric ? "id" : "quotation_number"
+      `SELECT * FROM quotations WHERE ${isNumeric ? "id" : "quotation_number"
       } = $1 LIMIT 1`,
       [param]
     );
@@ -2972,18 +3109,17 @@ app.get("/download-quotation/:param", async (req, res) => {
     };
 
     console.log("quotation poData:", poData);
-    
+
 
     // =======================================================
     //  GENERATE PDF
     // =======================================================
-    const fileName = `quotation_${
-      poData.poNumber
-    }_${Date.now()}.pdf`;
+    const fileName = `quotation_${poData.poNumber
+      }_${Date.now()}.pdf`;
     const filePath = path.join(qtUploadsDir, fileName);
 
     console.log("📄 Generating PDF:", filePath);
-    console.log('quotation poData items:',fileName)
+    console.log('quotation poData items:', fileName)
 
     await generateQuotation(poData, filePath);
 
@@ -3897,7 +4033,7 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       `,
-      [ quotationId]
+      [quotationId]
     );
 
     await client.query("COMMIT");
@@ -3971,7 +4107,7 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 
 //       console.log("VK Form data extracted:", req.body);
 
-//       // Parse PV adaptors data (this is the main data for VK quotations)
+      // Parse PV adaptors data (this is the main data for VK quotations)
 //       const {
 //   pvQty = [],
 //   pvFamilyName = [],
@@ -3981,7 +4117,7 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 //   pvSokQty = [],
 //   pvRate = []
 // } = req.body;
-
+//
 // const pvAdaptors = pvQty.map((_, i) => ({
 //   qty: Number(pvQty[i]),
 //   familyName: pvFamilyName[i],
@@ -3991,28 +4127,28 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 //   sokQty: pvSokQty[i],
 //   rate: Number(pvRate[i])
 // }));
-
+//
 //  // Extract arrays from request
 // const {
 //   itemDescription = [],
 //   priceInput = [],
 //   qtyInput = []
 // } = req.body;
-
+//
 // // Validation: main items count
 // if (itemDescription.length !== qtyInput.length) {
 //   return res.status(400).json({
 //     error: "KIET cost data mismatch: itemDescription and qtyInput length must match"
 //   });
 // }
-
+//
 // // Validation: priceInput must have enough entries for main + additional costs
 // if (priceInput.length < itemDescription.length + 2) {
 //   return res.status(400).json({
 //     error: "KIET cost data mismatch: priceInput must include additional charges"
 //   });
 // }
-
+//
 // // Build main KIET costs
 // const kietCosts = itemDescription.map((desc, i) => ({
 //   description: desc,
@@ -4020,30 +4156,28 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 //   qty: Number(qtyInput[i]),
 //   totalValue: Number(priceInput[i]) * Number(qtyInput[i])
 // }));
-
+//
 // // Append additional costs (always last 2 entries in priceInput)
 // kietCosts.push({
 //   description: "Export packaging charges included",
 //   cost: Number(priceInput[priceInput.length - 2]),
 //   qty: 1,
-//   totalValue: Number(priceInput[priceInput.length - 2]),
-//   isSummaryRow: true,
+//   totalValue: Number(priceInput[priceInput.length - 2])
 // });
-
+//
 // kietCosts.push({
 //   description: "Bigger box setup",
 //   cost: Number(priceInput[priceInput.length - 1]),
 //   qty: 1,
-//   totalValue: Number(priceInput[priceInput.length - 1]),
-//   isSummaryRow: true,
+//   totalValue: Number(priceInput[priceInput.length - 1])
 // });
-
+//
 // // Optional: Calculate total KIET cost
 // const totalKietCost = kietCosts.reduce((sum, item) => sum + item.total, 0);
-
+//
 // console.log("KIET Costs data:", kietCosts.length, "items");
 // console.log("Total KIET Cost:", totalKietCost);
-
+//
 // // Now you can insert `kietCosts` into DB along with VK quotation
 // // Example: pool.query('INSERT INTO kiet_costs ...', [JSON.stringify(kietCosts), ...])
 
@@ -4167,24 +4301,24 @@ app.put("/api/quotations/:id/reject", async (req, res) => {
 //         from: "No-reply@kietsindia.com",
 //         to: "chandrashekaraiah.r@gmail.com", // MD email
 //         subject: `VK Quotation Approval Required: ${quotationNumber}`,
-    
+//     
 //              html: `
-   
-     
+//    
+//      
 //     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
-
+//
 //   <div style="max-width: 620px; margin: auto; background: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
-
+//
 //     <p style="font-size: 15px; color: #333; line-height: 1.7;"><strong>Dear MD Sir,</strong></p>
-
+//
 //     <p style="font-size: 15px; color: #444; line-height: 1.5;" >
 //       We wish to notify you that a new quotation has been prepared and is now awaiting your approval.<br>
 //       Please find the summary details below for your reference:
 //     </p>
-
+//
 //     <table cellpadding="10" cellspacing="0" 
 //        style="margin: 18px 0; font-size: 14px; border-collapse: collapse; width: 100%; background: #fafafa; border-radius: 6px; border: 1px solid #ccc;">
-
+//
 //       <tr>
 //         <td style="border-bottom: 1px solid #e6e6e6; width: 40%;"><strong>Quotation Number:</strong></td>
 //         <td style="border-bottom: 1px solid #e6e6e6;">${quotationNumberValue}</td>
@@ -4615,9 +4749,9 @@ app.post(
         to: "chandrashekaraiah.r@kietsindia.com", // MD email
         // to: "shashank@kietsindia.coom", // Shashank email for testing
         subject: `Quotation Approval Required: ${quotationNumber}`,
-       
-              
-  html: `
+
+
+        html: `
    
      
     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
@@ -5941,14 +6075,14 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       `SELECT * FROM mae_quotations WHERE ${isNumeric ? "id" : "quotationnumber"} = $1 LIMIT 1`,
       [param]
     );
-    
+
 
     if (quotationResult.rows.length === 0) {
       return res.status(404).json({ error: "MAE Quotation not found" });
     }
 
     const quotation = quotationResult.rows[0];
-    console.log('quotation details is down there',quotation);
+    console.log('quotation details is down there', quotation);
 
     const poData = {
       company: {
@@ -5956,7 +6090,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
         name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
         email: quotation.clientemail || "info@kiet.com",
         gst: "29AAFCK6528D1ZG", // Fixed GST as per mae.js
-        contact:quotation.clientphone || " ",
+        contact: quotation.clientphone || " ",
         address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
       },
       poNumber: quotation.quotationnumber,
@@ -5969,7 +6103,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       textareaDetails: quotation.textarea_details || "",
       gstterms: quotation.maegstterms || "",
       insurance: quotation.maeinsurance || "",
-      packaging: quotation.maepackaging || "",
+      packaging: quotation.packaging || "",
       machine:quotation.subject||"",
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
@@ -6009,10 +6143,10 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
     if (quotationResult.rows.length === 0) {
       return res.status(404).json({ error: "MAE Quotation not found" });
     }
-    
+
 
     const q = quotationResult.rows[0];
-    console.log("hjk",q)
+    console.log("hjk", q)
 
     const poData = {
       company: {
@@ -6036,7 +6170,7 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
       warranty: q.maewarranty || "",
       gstterms: q.maegstterms || "",
       textareaDetails: q.textarea_details || "",
-      packaging:q.maepackaging || " ",
+      packaging: q.maepackaging || " ",
       insurance: q.maeinsurance || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
@@ -6045,29 +6179,16 @@ app.get("/download-mae-quotation/:param", async (req, res) => {
 
     // Save inside qt_uploads without subfolders
     // Remove null, undefined, or empty values
-// let safeNumber = poData.poNumber;
-// safeNumber = safeNumber ? String(safeNumber).trim() : null;
-// safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_"); // Keep only safe chars and limit length
-
-// // If null/undefined/empty → use ID or a random short code
-// if (!safeNumber) {
-//   safeNumber = q.id ? `ID-${q.id}` : `AUTO-${Date.now()}`;
-// }
-
 let safeNumber = poData.poNumber;
 safeNumber = safeNumber ? String(safeNumber).trim() : null;
+safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_"); // Keep only safe chars and limit length
 
-// ✅ Handle null FIRST, before calling .slice()
+// If null/undefined/empty → use ID or a random short code
 if (!safeNumber) {
   safeNumber = q.id ? `ID-${q.id}` : `AUTO-${Date.now()}`;
 }
 
-// Now safe to call .slice()
-safeNumber = safeNumber.slice(0, 20).replace(/[^a-zA-Z0-9.-]/g, "_");
-
-
-
-const fileName = `mae_quotation_${safeNumber}_${Date.now()}.pdf`;
+    const fileName = `mae_quotation_${safeNumber}_${Date.now()}.pdf`;
 
     const filePath = path.join(qtUploadsDir, fileName);
 
@@ -6246,7 +6367,7 @@ app.post("/preview-vk", upload.none(), async (req, res) => {
 app.post("/preview", upload.none(), async (req, res) => {
   try {
     const formData = req.body || {};
-    console.log("formdatat",formData)
+    console.log("formdatat", formData)
 
     // Prepare data for MAE PDF generation
     const poData = {
@@ -6268,12 +6389,12 @@ app.post("/preview", upload.none(), async (req, res) => {
       textareaDetails: formData.textarea_details || "",
       gstterms: formData.maeGstTerms || "",
       insurance: formData.maeInsurance || "",
-      packaging:formData.maePackaging || " ",
+      packaging: formData.maePackaging || " ",
       machine: formData.subject || "",
       warranty: formData.maeWarranty || "",
       line: path.join(__dirname, "public/images/line.png"),
       signPath: path.join(__dirname, "public/images/signature.png"),
-        maeleadtime: formData.maeleadtime || "",
+      maeleadtime: formData.maeleadtime || "",
     };
 
     const fileName = `mae_preview_${Date.now()}.pdf`;
@@ -6308,7 +6429,7 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
        PARSE JSON FROM FORMDATA
     ============================ */
     const pvAdaptors = JSON.parse(req.body.pv_adaptors || "[]");
-    const kietCosts  = JSON.parse(req.body.kiet_costs || "[]");
+    const kietCosts = JSON.parse(req.body.kiet_costs || "[]");
 
     /* ===========================
        CALCULATE TOTALS
@@ -6378,43 +6499,43 @@ app.post("/update-vk-quotation_md/:id", upload.none(), async (req, res) => {
 
 
 
-app.get('/generate_quotation_mae',async(req,res)=>{
-   const client = await pool.connect();
+app.get('/generate_quotation_mae', async (req, res) => {
+  const client = await pool.connect();
   await client.query("BEGIN");
-   const resp=await client.query(`SELECT generate_quotation_number_mae()`)
-   res.json({quotation_number:resp.rows[0].generate_quotation_number_mae})
-   client.release()
+  const resp = await client.query(`SELECT generate_quotation_number_mae()`)
+  res.json({ quotation_number: resp.rows[0].generate_quotation_number_mae })
+  client.release()
 
-  
+
 });
-app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
-  const{
-   quotationNumber,
-   quotationDate,
-   validUntil,
-   currency,
-   companyName,
-   companyAddress,
-   clientName,
-   clientEmail,
-   clientPhone,
-   textarea_details,
-   maePaymentTerms,
-   maeGstTerms,
-   maeInsurance,
-   maeWarranty,
-   maePackaging,
-   maeleadtime,
-   
-   subject,
-   createdBy
+app.post("/api/sendApproval/mae", upload.none(), async (req, res) => {
+  const {
+    quotationNumber,
+    quotationDate,
+    validUntil,
+    currency,
+    companyName,
+    companyAddress,
+    clientName,
+    clientEmail,
+    clientPhone,
+    textarea_details,
+    maePaymentTerms,
+    maeGstTerms,
+    maeInsurance,
+    maeWarranty,
+    maePackaging,
+    maeleadtime,
 
-  }=req.body;
+    subject,
+    createdBy
+
+  } = req.body;
   console.log(req.body);
   const client = await pool.connect();
-  try{
-   await client.query("BEGIN");
-   const maeQut=`
+  try {
+    await client.query("BEGIN");
+    const maeQut = `
    INSERT INTO mae_quotations(
    quotationNumber,
    quotationDate,
@@ -6438,57 +6559,57 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
        $5, $6, $7, $8, $9,
        $10, $11, $12, $13,
        $14, $15, $16,$17,$18,$19) RETURNING id`;
-   const maeValues=[
-     quotationNumber,
-   quotationDate,
-   validUntil,
-   currency,
-   companyName,
-   companyAddress,
-   clientName,
-   clientEmail,
-   clientPhone,
-   textarea_details,
-   maePaymentTerms,
-   maeGstTerms,
-   maeInsurance,
-   maeWarranty,
-   "pending",
-   subject,
-   createdBy,
-   maePackaging,
-   maeleadtime,
+    const maeValues = [
+      quotationNumber,
+      quotationDate,
+      validUntil,
+      currency,
+      companyName,
+      companyAddress,
+      clientName,
+      clientEmail,
+      clientPhone,
+      textarea_details,
+      maePaymentTerms,
+      maeGstTerms,
+      maeInsurance,
+      maeWarranty,
+      "pending",
+      subject,
+      createdBy,
+      maePackaging,
+      maeleadtime,
 
-   ];
-   const result=await client.query(maeQut,maeValues);
-   console.log(req.body);
-   await client.query("COMMIT");
+    ];
+    const result = await client.query(maeQut, maeValues);
+    console.log(req.body);
+    await client.query("COMMIT");
 
-     res.status(200).json({
-       success: true,
-       id: result.rows[0].id,
-       message: "Quotation saved successfully",
-     });
-  const transporter = nodemailer.createTransport({
-        host: "smtp.office365.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "No-reply@kietsindia.com",
-          pass: process.env.NO_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
+    res.status(200).json({
+      success: true,
+      id: result.rows[0].id,
+      message: "Quotation saved successfully",
+    });
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: process.env.NO_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
-      const mailOptions = {
-        from: "No-reply@kietsindia.com",
-        to: "chandrashekaraiah.r@kietsindia.com", // MD email
-        subject: `Quotation Approval Required: ${quotationNumber}`,
-       
-              
-  html: `
+    const mailOptions = {
+      from: "No-reply@kietsindia.com",
+      to: "chandrashekaraiah.r@kietsindia.com", // MD email
+      subject: `Quotation Approval Required: ${quotationNumber}`,
+
+
+      html: `
    
      
     <div style="font-family: Arial, sans-serif; background: #f5f7fa; padding: 10px;">
@@ -6614,37 +6735,37 @@ app.post("/api/sendApproval/mae",upload.none(),async(req,res)=>{
    
     
   `,
-        attachments: [
-          {
-            filename: "lg.jpg",
-            path: "public/images/lg.jpg",
-            cid: "logoImage",
-          },
-        ],
-      };
-      // try {
-      //   const info = await transporter.sendMail(mailOptions);
-      //   console.log("✅ Approval request email sent to MD:", info.response);
-      // } catch (err) {
-      //   console.error("❌ Email failed:", err);
-      // }
+      attachments: [
+        {
+          filename: "lg.jpg",
+          path: "public/images/lg.jpg",
+          cid: "logoImage",
+        },
+      ],
+    };
+    // try {
+    //   const info = await transporter.sendMail(mailOptions);
+    //   console.log("✅ Approval request email sent to MD:", info.response);
+    // } catch (err) {
+    //   console.error("❌ Email failed:", err);
+    // }
 
 
   }
-  catch(error){
+  catch (error) {
     await client.query("ROLLBACK");
-       console.error("Error saving quotation:", error);
-       res.status(500).json({
-         success: false,
-         error: "Failed to save quotation",
-         details: error.message,
-       });
+    console.error("Error saving quotation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to save quotation",
+      details: error.message,
+    });
 
 
   }
-   finally {
-       client.release();
-     }
+  finally {
+    client.release();
+  }
 
 
 });
@@ -6834,8 +6955,8 @@ app.put("/api/mae-quotations/:id", upload.none(), async (req, res) => {
 
 // Get approved MAE quotations
 app.get("/api/mae-quotations/get/approved/:by", async (req, res) => {
-  console.log('lparams',req.params);
-  const user= req.params.by;
+  console.log('lparams', req.params);
+  const user = req.params.by;
   const client = await pool.connect();
 
   try {
@@ -6863,8 +6984,8 @@ app.get("/api/mae-quotations/get/approved/:by", async (req, res) => {
       FROM mae_quotations
       WHERE LOWER(status::text) = 'approved' and created_by= $1
       ORDER BY created_at DESC
-    `,[user]
-);
+    `, [user]
+    );
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -6950,7 +7071,7 @@ app.post(
         totalPoValuePending,
         currency
       } = req.body;
-      
+
 
       const poFilePath = req.file ? req.file.path : null;
 
@@ -7109,7 +7230,7 @@ app.post("/md/mae_generation", upload.none(), async (req, res) => {
       gstterms: quotation.maegstterms || "",
       insurance: quotation.maeinsurance || "",
       machine: quotation.subject || "",
-      packaging:quotation.maepackaging || "",
+      packaging: quotation.maepackaging || "",
       warranty: quotation.maewarranty || "",
       line: path.join(process.cwd(), "public/images/line.png"),
       signPath: path.join(process.cwd(), "public/images/signature.png"),
@@ -7155,25 +7276,25 @@ app.post("/upload_image", upload.single("image"), (req, res) => {
     return res.status(500).json({ error: "Image upload failed" });
   }
 });
-app.get('/dc_approve',(req,res)=>{
+app.get('/dc_approve', (req, res) => {
   res.render('dc.ejs');
 });
 app.get("/generate-challan-no", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT generate_dc_challan_no() AS challan_no");
-        res.json({ success: true, challan_no: result.rows[0].challan_no });
-    } catch (err) {
-        res.json({ success: false, message: err.message });
-    }
+  try {
+    const result = await pool.query("SELECT generate_dc_challan_no() AS challan_no");
+    res.json({ success: true, challan_no: result.rows[0].challan_no });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
 });
 app.post("/submit-delivery-challan", async (req, res) => {
-    try {
-        const data = req.body;
-        const requester = data.requesterEmail || Unknown;
+  try {
+    const data = req.body;
+    const requester = req.session.user ? req.session.user.email : null;
 
-        // Insert the challan
-        const result = await pool.query(
-            `INSERT INTO delivery_challan
+    // Insert the challan
+    const result = await pool.query(
+      `INSERT INTO delivery_challan
             (challan_no, challan_date, delivery_date, vehicle_no,
              consignor_name, consignor_gst, consignor_address,
              consignee_name, consignee_gst, consignee_address,
@@ -7184,72 +7305,72 @@ app.post("/submit-delivery-challan", async (req, res) => {
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
                      $14,$15,$16,$17,'pending',$18)
              RETURNING id`,
-            [
-                data.challanNumber,
-                data.challanDate,
-                data.deliveryDate,
-                data.vehicleNumber,
+      [
+        data.challanNumber,
+        data.challanDate,
+        data.deliveryDate,
+        data.vehicleNumber,
 
-                data.consignorName,
-                data.consignorGST,
-                data.consignorAddress,
+        data.consignorName,
+        data.consignorGST,
+        data.consignorAddress,
 
-                data.consigneeName,
-                data.consigneeGST,
-                data.consigneeAddress,
-                data.consigneeContact,
-                data.consigneePhone,
-                data.reason,
+        data.consigneeName,
+        data.consigneeGST,
+        data.consigneeAddress,
+        data.consigneeContact,
+        data.consigneePhone,
+        data.reason,
 
-                data.dcType,
-                data.expiryDate || null,
-                data.escalationStatus || "NORMAL",
+        data.dcType,
+        data.expiryDate || null,
+        data.escalationStatus || "NORMAL",
 
-                data.managerEmail,
-                requester
-            ]
-        );
+        data.managerEmail,
+        requester
+      ]
+    );
 
-        const challan_id = result.rows[0].id;
+    const challan_id = result.rows[0].id;
 
-        // Insert item rows
-        for (let i = 0; i < data.partNo.length; i++) {
-            await pool.query(
-                `INSERT INTO delivery_challan_items 
+    // Insert item rows
+    for (let i = 0; i < data.partNo.length; i++) {
+      await pool.query(
+        `INSERT INTO delivery_challan_items 
                 (challan_id, part_no, description, hsn, quantity, unit, remarks)
                 VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-                [
-                    challan_id,
-                    data.partNo[i],
-                    data.description[i],
-                    data.hsn[i],
-                    data.quantity[i],
-                    data.unit[i],
-                    data.remarks[i]
-                ]
-            );
-        }
+        [
+          challan_id,
+          data.partNo[i],
+          data.description[i],
+          data.hsn[i],
+          data.quantity[i],
+          data.unit[i],
+          data.remarks[i]
+        ]
+      );
+    }
 
-        // Send approval email to manager
-        const approvalLink = `https://kietprocure.com/approve-dc/${challan_id}`;
-        const transporter = nodemailer.createTransport({
-        host: "smtp.office365.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "No-reply@kietsindia.com",
-          pass: process.env.NO_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
+    // Send approval email to manager
+    const approvalLink = `https://kietprocure.com/approve-dc/${challan_id}`;
+    const transporter = nodemailer.createTransport({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "No-reply@kietsindia.com",
+        pass: process.env.NO_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
-        await transporter.sendMail({
-  from: "No-reply@kietsindia.com",
-  to: data.managerEmail,
-  subject: "Delivery Challan Approval Required",
-  html: `
+    await transporter.sendMail({
+      from: "No-reply@kietsindia.com",
+      to: data.managerEmail,
+      subject: "Delivery Challan Approval Required",
+      html: `
     <div style="font-family:Arial,sans-serif;">
       <h3>Delivery Challan Approval Required</h3>
       <p><strong>Challan No:</strong> ${data.challanNumber}</p>
@@ -7271,15 +7392,15 @@ app.post("/submit-delivery-challan", async (req, res) => {
       </p>
     </div>
   `
-});
+    });
 
 
-        res.json({ success: true, challan_no: data.challanNumber });
+    res.json({ success: true, challan_no: data.challanNumber });
 
-    } catch (err) {
-        console.error(err);
-        res.json({ success: false, message: err.message });
-    }
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: err.message });
+  }
 });
 app.get("/approve-dc/:id", async (req, res) => {
   try {
@@ -7325,102 +7446,102 @@ app.get("/approve-dc/:id", async (req, res) => {
 
 app.post("/approve-dc/:id/approve@89", async (req, res) => {
   console.log('approve dc has been done');
-      try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        // Update DC status
-        await pool.query(
-            `UPDATE delivery_challan
+    // Update DC status
+    await pool.query(
+      `UPDATE delivery_challan
              SET
                 approval_status='approved',
                 approved_at=NOW(),
                 approved_by=manager_email
              WHERE id=$1`,
-            [id]
-        );
-        const dcResult = await pool.query(
-            "SELECT * FROM delivery_challan WHERE id = $1",
-            [id]
-        );
-        if (dcResult.rows.length === 0) {
-            return res.status(404).send("DC not found");
-        }
-        const dc = dcResult.rows[0];
-        const requesterEmail = dc.requester;
-         if (!requesterEmail) {
-            return res.send(`
+      [id]
+    );
+    const dcResult = await pool.query(
+      "SELECT * FROM delivery_challan WHERE id = $1",
+      [id]
+    );
+    if (dcResult.rows.length === 0) {
+      return res.status(404).send("DC not found");
+    }
+    const dc = dcResult.rows[0];
+    const requesterEmail = dc.requester;
+    if (!requesterEmail) {
+      return res.send(`
                 <h1 style="color:green; font-family:sans-serif;">
                     ✔ Delivery Challan Approved Successfully!
                 </h1>
                 <p>Note: No requester email found to send PDF.</p>
             `);
-        }
-      const itemsResult = await pool.query(
-            "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
-            [id]
-        );
-        const items = itemsResult.rows.map((row) => ({
-            part_no: row.part_no,
-            description: row.description,
-            hsn: row.hsn,
-            quantity: row.quantity,
-            unit: row.unit || "pcs",
-            remarks: row.remarks,
-        }));
+    }
+    const itemsResult = await pool.query(
+      "SELECT * FROM delivery_challan_items WHERE challan_id = $1 ORDER BY id",
+      [id]
+    );
+    const items = itemsResult.rows.map((row) => ({
+      part_no: row.part_no,
+      description: row.description,
+      hsn: row.hsn,
+      quantity: row.quantity,
+      unit: row.unit || "pcs",
+      remarks: row.remarks,
+    }));
 
-        // Prepare DC data for PDF
-        const dcData = {
-            challanNo: dc.challan_no,
-            challanDate: new Date(dc.challan_date).toLocaleDateString(),
-            deliveryDate: dc.delivery_date ? new Date(dc.delivery_date).toLocaleDateString() : "N/A",
-            vehicleNo: dc.vehicle_no,
-            consignor: {
-                name: dc.consignor_name,
-                address: dc.consignor_address,
-                gst: dc.consignor_gst,
-            },
-            consignee: {
-                name: dc.consignee_name,
-                address: dc.consignee_address,
-                gst: dc.consignee_gst,
-                contact: dc.consignee_contact,
-                phone: dc.consignee_phone,
-            },
-            reason: dc.reason,
-            items: items,
-            type: dc.dc_type,
-            signPath: "public/images/signature.png",
-            company: { logo: "public/images/lg.jpg" },
-            line: "public/images/line.png",
-            expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
+    // Prepare DC data for PDF
+    const dcData = {
+      challanNo: dc.challan_no,
+      challanDate: new Date(dc.challan_date).toLocaleDateString(),
+      deliveryDate: dc.delivery_date ? new Date(dc.delivery_date).toLocaleDateString() : "N/A",
+      vehicleNo: dc.vehicle_no,
+      consignor: {
+        name: dc.consignor_name,
+        address: dc.consignor_address,
+        gst: dc.consignor_gst,
+      },
+      consignee: {
+        name: dc.consignee_name,
+        address: dc.consignee_address,
+        gst: dc.consignee_gst,
+        contact: dc.consignee_contact,
+        phone: dc.consignee_phone,
+      },
+      reason: dc.reason,
+      items: items,
+      type: dc.dc_type,
+      signPath: "public/images/signature.png",
+      company: { logo: "public/images/lg.jpg" },
+      line: "public/images/line.png",
+      expiryDate: dc.expiry_date ? new Date(dc.expiry_date).toLocaleDateString() : "N/A",
 
-        };
-        const timestamp = Date.now();
-        const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
-        const filePath = path.join(uploadsDir, fileName);
+    };
+    const timestamp = Date.now();
+    const fileName = `DC_${dc.challan_no}_${timestamp}.pdf`;
+    const filePath = path.join(uploadsDir, fileName);
 
-        generateDeliveryChallan(dcData, filePath);
+    generateDeliveryChallan(dcData, filePath);
 
-        // Wait for PDF generation
-        setTimeout(async () => {
-            if (fs.existsSync(filePath)) {
-                // Send email with PDF to requester
-                const transporter = nodemailer.createTransport({
-                    host: "smtp.office365.com",
-                    port: 587,
-                    secure: false,
-                    auth: {
-                        user: "No-reply@kietsindia.com",
-                        pass: process.env.NO_PASSWORD,
-                    },
-                    tls: { rejectUnauthorized: false },
-                });
+    // Wait for PDF generation
+    setTimeout(async () => {
+      if (fs.existsSync(filePath)) {
+        // Send email with PDF to requester
+        const transporter = nodemailer.createTransport({
+          host: "smtp.office365.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: "No-reply@kietsindia.com",
+            pass: process.env.NO_PASSWORD,
+          },
+          tls: { rejectUnauthorized: false },
+        });
 
-                await transporter.sendMail({
-                    from: "No-reply@kietsindia.com",
-                    to: requesterEmail,
-                    subject: `Delivery Challan Approved - ${dc.challan_no}`,
-                    html: `
+        await transporter.sendMail({
+          from: "No-reply@kietsindia.com",
+          to: requesterEmail,
+          subject: `Delivery Challan Approved - ${dc.challan_no}`,
+          html: `
                         <div style="font-family: Arial, sans-serif; padding: 20px;">
                             <h2 style="color: #28a745;">Delivery Challan Approved</h2>
                             <p>Dear User,</p>
@@ -7430,38 +7551,38 @@ app.post("/approve-dc/:id/approve@89", async (req, res) => {
                             <p>Best regards,<br>KIET Technologies Team</p>
                         </div>
                     `,
-                    attachments: [
-                        {
-                            filename: fileName,
-                            path: filePath,
-                            contentType: 'application/pdf'
-                        }
-                    ]
-                });
+          attachments: [
+            {
+              filename: fileName,
+              path: filePath,
+              contentType: 'application/pdf'
+            }
+          ]
+        });
 
-                // Clean up file after sending
-                fs.unlinkSync(filePath);
+        // Clean up file after sending
+        fs.unlinkSync(filePath);
 
-                res.send(`
+        res.send(`
                     <h1 style="color:green; font-family:sans-serif;">
                         ✔ Delivery Challan Approved Successfully!
                     </h1>
                     <p>PDF has been sent to the requester.</p>
                 `);
-            } else {
-                res.send(`
+      } else {
+        res.send(`
                     <h1 style="color:green; font-family:sans-serif;">
                         ✔ Delivery Challan Approved Successfully!
                     </h1>
                     <p>Note: PDF generation failed, but approval was successful.</p>
                 `);
-            }
-        }, 2000); // Wait 2 seconds for PDF generation
+      }
+    }, 2000); // Wait 2 seconds for PDF generation
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error approving DC");
-    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error approving DC");
+  }
 
 });
 
@@ -7788,7 +7909,7 @@ app.post("/submit-inventory_local", upload.single("invoice_local"), async (req, 
       addditionInfo,
       purchasedBy
     } = req.body;
-    console.log('req.body',req.body);
+    console.log('req.body', req.body);
 
     // Check if invoice file is uploaded
     const invoiceFile = req.file ? req.file.filename : null;
@@ -7927,11 +8048,11 @@ app.get("/api/daily-tasks", async (req, res) => {
 
 app.put("/api/assign_to", async (req, res) => {
   try {
-    const selectedValue=req.body.selectedValue;
-    console.log("req body values",req.body)
-    const id=req.body.current_id;
-    const budget=parseFloat(req.body.budgetValue);
-    const target=req.body.target;
+    const selectedValue = req.body.selectedValue;
+    console.log("req body values", req.body)
+    const id = req.body.current_id;
+    const budget = parseFloat(req.body.budgetValue);
+    const target = req.body.target;
     const updateQuery = `
       UPDATE project_info SET
         assigned_to = $1,
@@ -7941,10 +8062,10 @@ app.put("/api/assign_to", async (req, res) => {
         remaining_cost=$4
       WHERE id = $5
       RETURNING *
-    `;  
+    `;
     const values = [
       selectedValue,
-      budget  ,
+      budget,
       target,
       budget,
       id
@@ -8074,12 +8195,12 @@ app.post(
   upload.single('po_upload'),
   async (req, res) => {
     console.log('RAW BODY:', req.body);
-console.log('RAW ITEMS FIELD:', req.body.items);
-console.log('TYPE OF ITEMS:', typeof req.body.items);
+    console.log('RAW ITEMS FIELD:', req.body.items);
+    console.log('TYPE OF ITEMS:', typeof req.body.items);
 
-const poFilePath = req.file
-  ? `uploads/${req.file.filename}`
-  : null;
+    const poFilePath = req.file
+      ? `uploads/${req.file.filename}`
+      : null;
 
 
 
@@ -8131,7 +8252,7 @@ const poFilePath = req.file
           baseValue,
           totalValue,
           totalPoValuePending,
-          invoiceNo ,
+          invoiceNo,
           invoiceDate
         ]
       );
@@ -8246,15 +8367,11 @@ app.get("/assigned-projects/:userId", async (req, res) => {
 });
 
 
-app.get("/attendance", (req, res) => {
-  res.render("attendence", {
-    user: req.session.user
-  });
-});
+
 
 app.put("/api/mark_project_completed", async (req, res) => {
   const { project_id } = req.body;
-  console.log("backednd retrived",req.body);
+  console.log("backednd retrived", req.body);
   try {
     await pool.query(
       "UPDATE project_info SET project_status = 'Completed',delivery_status = 'Completed'  WHERE project_code = $1",
@@ -8267,106 +8384,11 @@ app.put("/api/mark_project_completed", async (req, res) => {
   }
 });
 
-app.post("/api/register-face", async (req, res) => {
-  try {
-    const { empId, name, image } = req.body;
-    console.log("Received:", empId, name, image?.substring(0,50));
 
-    const desc = await getDescriptor(image);
-    if (!desc) return res.json({ success: false, message: "No face detected" });
 
-    await pool.query(
-      `INSERT INTO employees (emp_id, name)
-       VALUES ($1,$2)
-       ON CONFLICT (emp_id) DO NOTHING`,
-      [empId, name]
-    );
 
-    await pool.query(
-      `INSERT INTO face_data (emp_id, face_descriptor)
-       VALUES ($1,$2)
-       ON CONFLICT (emp_id) DO UPDATE SET face_descriptor = EXCLUDED.face_descriptor`,
-      [empId, JSON.stringify(desc)]
-    );
 
-    res.json({ success: true, message: "Face registered successfully ✅" });
-  } catch (err) {
-    console.error("Register face error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
-/* SCAN ATTENDANCE */
-app.post("/api/scan", async (req, res) => {
-  const scanDesc = await getDescriptor(req.body.image);
-  const location=req.body.location;
-  
-  if (!scanDesc) return res.json({ success: false });
-
-  const faces = await pool.query("SELECT emp_id, face_descriptor FROM face_data");
-
-  let matched = null;
-  let min = 0.6;
-
-  for (const f of faces.rows) {
-    const d = distance(scanDesc, f.face_descriptor);
-    if (d < min) {
-      min = d;
-      matched = f.emp_id;
-    }
-  }
-
-  if (!matched) return res.json({ success: false });
-
-  const now = new Date();
-  const status = now.getHours() > 9 ? "Late" : "Present";
-
-  await pool.query(
-    `INSERT INTO attendance (emp_id, date, time_in, status,lat, lng)
-     VALUES ($1,CURRENT_DATE,CURRENT_TIME,$2,$3,$4)
-     ON CONFLICT (emp_id,date) DO NOTHING`,
-    [matched, status,location.lat,location.lng]
-  );
-
-  res.json({ success: true, empId: matched, status });
-});
-
-/* HISTORY */
-async function getLocationName(lat, lng) {
-  if (!lat || !lng) return null;
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "FaceAttendanceApp/1.0" } // required by Nominatim
-    });
-    const data = await res.json();
-    return data.display_name;
-  } catch (err) {
-    console.error("Reverse geocoding error:", err);
-    return null;
-  }
-}
-
-app.get("/api/history", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT emp_id, date, time_in, status, lat, lng
-       FROM attendance ORDER BY date DESC`
-    );
-
-    // Map lat/lng to human-readable locations
-    const rows = await Promise.all(result.rows.map(async r => {
-      const location = await getLocationName(r.lat, r.lng);
-      return { ...r, location };
-    }));
-
-    res.json(rows);
-
-  } catch (err) {
-    console.error("Error fetching history:", err);
-    res.status(500).json({ error: "Failed to fetch attendance history" });
-  }
-});
 
 
 app.get("/api/projects", async (req, res) => {
@@ -8399,8 +8421,8 @@ app.get("/api/projects", async (req, res) => {
 });
 
 
-app.put('/update/dc/close',async(req,res)=>{
-  const id_close=req.body.order_id;
+app.put('/update/dc/close', async (req, res) => {
+  const id_close = req.body.order_id;
   try {
     await pool.query(
       "UPDATE delivery_challan SET approval_status = 'Returned' WHERE id = $1",
@@ -8415,8 +8437,8 @@ app.put('/update/dc/close',async(req,res)=>{
 });
 
 app.post("/process/store", async (req, res) => {
-  const { process, who,prj_code} = req.body;
-  console.log("received data to backend",req.body);
+  const { process, who, prj_code } = req.body;
+  console.log("received data to backend", req.body);
 
   if (!process || !who) {
     return res.status(400).json({ message: "All fields required" });
@@ -8424,7 +8446,7 @@ app.post("/process/store", async (req, res) => {
 
   await pool.query(
     "INSERT INTO process_log (process, who,project_code) VALUES ($1, $2,$3)",
-    [process, who,prj_code]
+    [process, who, prj_code]
   );
 
   res.json({ message: "Stored successfully" });
@@ -8443,15 +8465,9 @@ app.get('/process/view/json', async (req, res) => {
 app.get('/getreq/:id/:project_code', async (req, res) => {
   
   try {
-    const { id } = req.params;
-    const order_id=id;
-    
-  
-    const { project_code } = req.params;
-    console.log("Project code received:", project_code);
-
-
-    
+    const { project_code,supplier_name } = req.params;
+    console.log("project_code",project_code);
+    console.log("supplier_name",supplier_name);
 
     const result = await pool.query(
       `SELECT assigned_to FROM project_info WHERE project_code = $1`,
@@ -8478,14 +8494,14 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
 
       },
     });
-    console.log("assigned_to ",assignedToEmail);
+    console.log("assigned_to ", assignedToEmail);
 
     const approvalLink = `https://kietprocure.com/approve-project/${order_id}`;
     const viewLink = `https://kietprocure.com/view-project/${order_id}`;
 
     await transporter.sendMail({
       from: "No-reply@kietsindia.com",
-      to:assignedToEmail,
+      to: assignedToEmail,
       subject: `Approval Required — ${project_code}`,
       html: `
         <p><b>Dear Approver,</b></p>
@@ -8530,19 +8546,12 @@ app.get('/getreq/:id/:project_code', async (req, res) => {
 
 app.get('/view-project/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // 🔒 Basic validation
-    if (isNaN(id)) {
-      return res.status(400).send("Invalid Project ID");
-    }
+    const { project_code,supplier_name } = req.params;
 
     // 1️⃣ Get PO Header
     const result = await pool.query(
-      `SELECT * 
-       FROM purchase_orders 
-       WHERE id = $1`,
-      [id]
+      `SELECT * FROM purchase_orders WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2 `,
+      [project_code,supplier_name]
     );
 
     if (!result.rows.length) {
@@ -8654,68 +8663,16 @@ app.get('/view-project/:id', async (req, res) => {
 
 app.get('/approve-project/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const itemsResult = await pool.query(
-      `SELECT * 
-       FROM purchase_orders
-       WHERE id = $1`,
-      [id]
-    );
-    console.log("Items result:", itemsResult.rows);
-    console.log("Project code:", itemsResult.rows[0].project_code_number);
-    const project_code=itemsResult.rows[0].project_code_number;
-    const raised_amt=itemsResult.rows[0].total_amount;
-    const raised_amount=raised_amt-raised_amt*0.18;
-    const itemResult2=await pool.query(
-      `SELECT remaining_cost FROM project_info WHERE project_code = $1`,[project_code])
+    const { project_code,supplier_name } = req.params;
+
     await pool.query(
       `
       UPDATE purchase_orders
       SET assign_status = 'verified'
-      WHERE id = $1
+      WHERE project_code_number = $1 and assign_status='submitted' and supplier_name=$2
       `,
-      [id]
+      [project_code,supplier_name]
     );
-
-    const updatedRemainingCost=itemResult2.rows[0].remaining_cost-raised_amount;
-    await pool.query(
-      `
-      UPDATE project_info
-      SET remaining_cost = $1
-      WHERE project_code = $2
-      `,
-      [updatedRemainingCost,project_code]
-    );
-
- const transporter = nodemailer.createTransport({
-      host: "smtp.office365.com",
-      port: 587,
-      secure: false, // STARTTLS
-      auth: {
-        user: "No-reply@kietsindia.com",
-        pass: process.env.NO_PASSWORD,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    
-    const mailSubject = "New Order Approve Request - Action Required";
-    const mailBody = `
-  <p>Hello Purchase Team,</p>
-  <p>We received a request to approve a purchase order for project ${project_code}.</p>
-  <p>Please review and approve the purchase order at your earliest convenience.</p>
-  <p>Thank you,<br>The KIET Technologies Team</p>
-`;
-
-    await transporter.sendMail({
-      from: '"KIET Technologies" <no-reply@kietsindia.com>', // display name + Office 365 email
-      to: 'purchase@kietsindia.com',
-      subject: mailSubject,
-      html: mailBody,
-    });
-
 
     res.send(`
       <h2 style="color:green;">✅ Project Approved Successfully</h2>
@@ -8734,7 +8691,7 @@ app.get('/process-details/:project_code', async (req, res) => {
   try {
     const { project_code } = req.params;
 
- const result = await pool.query(
+    const result = await pool.query(
       `SELECT process, who, created_at
        FROM process_log
        WHERE project_code = $1

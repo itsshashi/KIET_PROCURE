@@ -1,11 +1,11 @@
-# TODO: Add Invoice Download Button to Accounts.ejs
+# Submenu Visibility Fix - procurement.ejs
 
-- [ ] Add CSS styles for the download button (.download-btn)
-- [ ] Add the Download Invoice button in the Action column of the table
-- [ ] Add the downloadInvoice function to handle the download
+## Plan Steps:
+1. [x] Create TODO.md ✅
+2. [ ] Edit CSS: Force .submenu visibility + debug styles  
+3. [ ] Edit JS: Add console logs + simplify toggle logic
+4. [ ] Test: User F12 → click submenu → share logs/errors
+5. [ ] Update TODO + finalize
+6. [ ] Complete task
 
-# COMPLETED: Fixed Edit Order Functionality in Purchase.ejs
-
-- [x] Fixed destructuring error in PUT /api/orders/:id route in index.js
-- [x] Tested API endpoint successfully - order updates work correctly
-- [x] Frontend API_URL set to localhost for testing (change to production when deploying)
+**Current**: Step 2 - CSS edits for immediate visibility test.
