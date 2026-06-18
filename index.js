@@ -905,6 +905,7 @@ app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
 app.post("/submit", async (req, res) => {
  // Guard against missing/empty body
   if (!req.body || typeof req.body !== "object") {
+   
     console.warn("⚠ /submit received with no parsable body. Headers:", req.headers["content-type"]);
     return res.render("index.ejs", { message: "Invalid request. Please try again." });
   }

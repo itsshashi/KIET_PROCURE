@@ -4291,7 +4291,7 @@ async function savePoeItems(id) {
                     <p>Create professional VK quotations for your clients</p>
                 </div>
                 <div class="form-container">
-                    <form id="vkQuotationForm" method="POST" enctype="multipart/form-data">
+                    <form id="vkQuotationForm" method="POST">
                         <!-- Quotation Information Section -->
                         <div class="form-section">
                             <h2 class="section-title">Quotation Information</h2>
@@ -4675,7 +4675,7 @@ document.getElementById("vkQuotationForm").addEventListener("submit", async func
     }
   } catch (err) {
     console.error('VK Submit Error:', err);
-    alert("Server error ❌");
+    // alert("Server error ❌");
     if (typeof stopLoader === 'function') stopLoader();
   }
 });
