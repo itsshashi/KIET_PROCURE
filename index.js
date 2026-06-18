@@ -60,7 +60,8 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  password:process.env.DB_PASSWORD,
+  // password:process.env.DB_PASSWORD,/
+  password:'KIET@tech123',
     port: 5432,
 });
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
@@ -902,7 +903,18 @@ app.get("/", (req, res) => res.render("index.ejs", { message: "" }));
 
 // Login submit
 app.post("/submit", async (req, res) => {
+ // Guard against missing/empty body
+  if (!req.body || typeof req.body !== "object") {
+    console.warn("⚠ /submit received with no parsable body. Headers:", req.headers["content-type"]);
+    return res.render("index.ejs", { message: "Invalid request. Please try again." });
+  }
+
   const { email, password, role } = req.body;
+
+  if (!email || !password || !role) {
+    return res.render("index.ejs", { message: "Email, password, and role are required" });
+  }
+
   console.log("▶ /submit called for", email, "as", role);
 
   try {
@@ -5066,14 +5078,14 @@ console.log("Total KIET Cost:", totalKietCost);
       const mailOptions = {
         from: "No-reply@kietsindia.com",
         to:"chandrashekaraiah.r@kietsindia.com", // MD email
-        subject: `VK Quotation Approval Required: ${quotationNumber}`,
+        subject: `VK Quotation Approval Required: ${quotationNumberValue}`,
         text: `
 Hello MD,
 
 A new VK quotation has been submitted and requires your approval.
 
 📋 VK Quotation Details:
-- Quotation Number: ${quotationNumber}
+- Quotation Number: ${quotationNumberValue}
 - Type: VK
 - Client: ${clientName}
 - Submitted by: ${req.session.user ? req.session.user.email : "Unknown"}
@@ -5106,7 +5118,7 @@ KIET TECHNOLOGIES PVT LTD
       res.json({
         success: true,
         message: "VK quotation approval request sent successfully",
-        quotationNumber: quotationNumber,
+        quotationNumber: quotationNumberValue,
         quotationId: quotationId,
       });
     } catch (error) {

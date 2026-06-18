@@ -4291,7 +4291,7 @@ async function savePoeItems(id) {
                     <p>Create professional VK quotations for your clients</p>
                 </div>
                 <div class="form-container">
-                    <form id="vkQuotationForm" method="POST"  enctype="multipart/form-data">
+                    <form id="vkQuotationForm" method="POST" enctype="multipart/form-data">
                         <!-- Quotation Information Section -->
                         <div class="form-section">
                             <h2 class="section-title">Quotation Information</h2>
@@ -4651,7 +4651,7 @@ async function savePoeItems(id) {
                     <script>
 document.getElementById("vkQuotationForm").addEventListener("submit", async function (e) {
   e.preventDefault(); 
-  if (typeof startLoader === 'function') startLoader(); 
+  if (typeof startLoader === 'function') startLoader('sending VK quotation...'); 
 
   const form = this;
   const formData = new FormData(form);
@@ -5271,10 +5271,10 @@ let currencySymbol = '₹';
             });
 
             // VK Form submission
-            document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
-                // Show loading screen
-                document.getElementById('loadingOverlay').style.display = 'flex';
-            });
+            // document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
+            //     // Show loading screen
+            //     document.getElementById('loadingOverlay').style.display = 'flex';
+            // });
 
         }
 
@@ -8035,66 +8035,66 @@ ${order.status?.toLowerCase() === "pending"
         });
 
         // VK Send Approval Request button functionality
-        const vkRaiseRequestBtn = document.getElementById('raiseRequest');
-        vkRaiseRequestBtn.addEventListener('click', async function() {
-            const form = document.getElementById('quotationForm');
-            const formData = new FormData(form);
+        // const vkRaiseRequestBtn = document.getElementById('raiseRequest');
+        // vkRaiseRequestBtn.addEventListener('click', async function() {
+        //     const form = document.getElementById('quotationForm');
+        //     const formData = new FormData(form);
 
-            // Collect VK specific data
-            const pvAdaptors = [];
-            document.querySelectorAll('#pvTableBody tr').forEach(row => {
-                const adaptor = {
-                    qty: parseFloat(row.querySelector('input[name="pvQty[]"]').value) || 0,
-                    familyName: row.querySelector('textarea[name="pvFamilyName[]"]').value,
-                    revNo: row.querySelector('input[name="pvRevNo[]"]').value,
-                    coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
-                    sokCard: row.querySelector('input[name="pvSokCard[]"]').value,
-                    sokQty: parseFloat(row.querySelector('input[name="pvSokQty[]"]').value) || 0,
-                    rate: parseFloat(row.querySelector('input[name="pvRate[]"]').value) || 0
-                };
-                pvAdaptors.push(adaptor);
-            });
+        //     // Collect VK specific data
+        //     const pvAdaptors = [];
+        //     document.querySelectorAll('#pvTableBody tr').forEach(row => {
+        //         const adaptor = {
+        //             qty: parseFloat(row.querySelector('input[name="pvQty[]"]').value) || 0,
+        //             familyName: row.querySelector('textarea[name="pvFamilyName[]"]').value,
+        //             revNo: row.querySelector('input[name="pvRevNo[]"]').value,
+        //             coaxialPin: row.querySelector('input[name="pvCoaxialPin[]"]').value,
+        //             sokCard: row.querySelector('input[name="pvSokCard[]"]').value,
+        //             sokQty: parseFloat(row.querySelector('input[name="pvSokQty[]"]').value) || 0,
+        //             rate: parseFloat(row.querySelector('input[name="pvRate[]"]').value) || 0
+        //         };
+        //         pvAdaptors.push(adaptor);
+        //     });
 
-            const kietCosts = [];
-                document.querySelectorAll('#vk .kiet-table tbody tr').forEach((row, index) => {
-                    if (index < 4) { // First 4 rows are the main items
-                        const description = row.querySelector('td:first-child').textContent.trim();
-                        const cost = parseFloat(row.querySelector('input[name="priceInput[]"]').value) || 0;
-                        const qty = parseFloat(row.querySelector('input[name="qtyInput[]"]').value) || 0;
-                        const totalValue = cost * qty;
+        //     const kietCosts = [];
+        //         document.querySelectorAll('#vk .kiet-table tbody tr').forEach((row, index) => {
+        //             if (index < 4) { // First 4 rows are the main items
+        //                 const description = row.querySelector('td:first-child').textContent.trim();
+        //                 const cost = parseFloat(row.querySelector('input[name="priceInput[]"]').value) || 0;
+        //                 const qty = parseFloat(row.querySelector('input[name="qtyInput[]"]').value) || 0;
+        //                 const totalValue = cost * qty;
 
-                        kietCosts.push({
-                            description: description,
-                            cost: cost,
-                            qty: qty,
-                            totalValue: totalValue
-                        });
-                    }
-                });
+        //                 kietCosts.push({
+        //                     description: description,
+        //                     cost: cost,
+        //                     qty: qty,
+        //                     totalValue: totalValue
+        //                 });
+        //             }
+        //         });
 
-            formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
-            formData.append('kietCosts', JSON.stringify(kietCosts));
-            formData.append('status', 'pending');
+        //     formData.append('pvAdaptors', JSON.stringify(pvAdaptors));
+        //     formData.append('kietCosts', JSON.stringify(kietCosts));
+        //     formData.append('status', 'pending');
 
-            try {
-                const response = await fetch('/api/send-vk-quotation-approval', {
-                    method: 'POST',
-                    body: formData
-                });
+        //     try {
+        //         const response = await fetch('/api/send-vk-quotation-approval', {
+        //             method: 'POST',
+        //             body: formData
+        //         });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    alert('VK quotation approval request sent successfully! MD will review your quotation.');
-                    // Reset form or redirect as needed
-                } else {
-                    const error = await response.json();
-                    alert('Error sending VK approval request: ' + (error.message || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error sending VK approval request:', error);
-                alert('Error sending VK approval request. Please try again.');
-            }
-        });
+        //         if (response.ok) {
+        //             const result = await response.json();
+        //             alert('VK quotation approval request sent successfully! MD will review your quotation.');
+        //             // Reset form or redirect as needed
+        //         } else {
+        //             const error = await response.json();
+        //             alert('Error sending VK approval request: ' + (error.message || 'Unknown error'));
+        //         }
+        //     } catch (error) {
+        //         console.error('Error sending VK approval request:', error);
+        //         alert('Error sending VK approval request. Please try again.');
+        //     }
+        // });
 
         // Save Quotation button functionality
         const saveQuotationBtn = document.getElementById('saveQuotation');
@@ -8142,10 +8142,10 @@ ${order.status?.toLowerCase() === "pending"
         });
 
         // Form submission with loading screen
-        document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
-            // Show loading screen
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        });
+        // document.getElementById('vkQuotationForm').addEventListener('submit', function(e) {
+        //     // Show loading screen
+        //     document.getElementById('loadingOverlay').style.display = 'flex';
+        // });
 
 // MAE Form JavaScript - SAFE VERSION
         document.addEventListener('DOMContentLoaded', function() {
