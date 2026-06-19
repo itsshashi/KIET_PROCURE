@@ -4,6 +4,7 @@ import { ToWords } from "to-words";
 
 const toWordsInstance = new ToWords();
 
+
 const fonts = {
   Roboto: {
     normal: "Helvetica",
@@ -60,6 +61,7 @@ function getCurrencySymbol(currency) {
 }
 
 function generateVKQuotation(poData, filePath) {
+  
   return new Promise((resolve, reject) => {
     const logoBase64 = getBase64Image(poData.company.logo);
     const signBase64 = getBase64Image(poData.signPath);
@@ -233,10 +235,15 @@ function generateVKQuotation(poData, filePath) {
     ];
 
     let pvTotal = 0;
+    let rateDisplay = "-"; // Initialize rateDisplay
     if (poData.pvAdaptors && poData.pvAdaptors.length > 0) {
       poData.pvAdaptors.forEach((item, i) => {
         const qty = parseFloat(item.qty || 0);
         const rate = parseFloat(item.rate || 0);
+        rateDisplay = rate 
+  ? `${currencySymbol}${Number(rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+  : '';//show value after the table below 
+        console.log("Rate Display:", rateDisplay); // Debugging line
         const total = qty * rate;
         pvTotal += total;
 
@@ -803,36 +810,75 @@ function generateVKQuotation(poData, filePath) {
           margin: [0, 0, 0, 10],
         },
         {
-          table: {
-            widths: ["*", "auto", "auto", "auto"],
-            body:
-              poData.kietCosts && poData.kietCosts.length > 0
-                ? kietCostsTable
-                : [
-                    [
-                      {
-                        text: "No KIET Cost Calculations available",
-                        colSpan: 4,
-                        alignment: "center",
-                      },
-                      {},
-                      {},
-                      {},
-                    ],
-                  ],
-          },
-          layout: {
-            ...horizontalLineLayout,
-            paddingLeft: () => 8,
-            paddingRight: () => 4,
-            paddingTop: () => 10,
-            paddingBottom: () => 10,
-          },
-          font: "Roboto",
-          fontSize: 10,
-          margin: [0, 0, 0, 0],
-          linespacing: 1.5,
+  table: {
+    widths: ["*", "auto", "auto", "auto"],
+    body: [
+      ...(poData.kietCosts && poData.kietCosts.length > 0
+        ? kietCostsTable
+        : [
+            [
+              {
+                text: "No KIET Cost Calculations available",
+                colSpan: 4,
+                alignment: "center",
+              },
+              {},
+              {},
+              {},
+            ],
+          ]),
+      
+    ],
+  },
+  
+  layout: {
+    ...horizontalLineLayout,
+    paddingLeft: () => 8,
+    paddingRight: () => 4,
+    paddingTop: () => 10,
+    paddingBottom: () => 10,
+  },
+  font: "Roboto",
+  fontSize: 10,
+  margin: [0, 0, 0, 0],
+  linespacing: 1.5,
+},
+{
+  table: {
+    widths: ['*', 'auto'],
+    body: [
+      [
+        {
+          text: "Total PV Wiring Amount",
+          font: "Times",
+          bold: true,
+          alignment: "left",
+          fontSize: 9,
+          margin: [0, 5, 0, 5],
+          border: [true, true, false, true], // left, top, right, bottom
+          noWrap: true,
         },
+        {
+          text: rateDisplay.toLocaleString(),
+          font: "Times",
+          bold: true,
+          alignment: "right",
+          fontSize: 9,
+          margin: [0, 5, 0, 5],
+          border: [false, true, true, true],
+          noWrap: true,
+        },
+      ],
+    ],
+  },
+  layout: {
+    hLineWidth: function () { return 1; },
+    vLineWidth: function () { return 1; },
+  },
+},
+
+        //add rate disply after the table for better visibility
+       
         {
           text: "Thank you for considering our quotation. We look forward to the opportunity to serve you and contribute to the success of your projects.",
           font: "Times",

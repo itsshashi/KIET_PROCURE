@@ -4575,7 +4575,7 @@ async function savePoeItems(id) {
                                                     </select>
                                                     <input type="hidden" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input-hidden" data-index="<%= index %>">
                                                 <% } else { %>
-                                                    <div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span><input type="number" step="1" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input" data-index="<%= index %>"></div>
+                                                    <div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span><input type="number" step="1" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input" data-index="<%= index %>" readonly></div>
                                                 <% } %>
                                             </td>
                                             <td><input id="vk-numb" type="number" step="1" value="<%= item.qty %>" data-cost="<%= item.cost %>" data-index="<%= index %>" class="qty-input" name="qtyInput[]"></td>
