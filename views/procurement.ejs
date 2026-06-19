@@ -4547,7 +4547,7 @@ async function savePoeItems(id) {
                value="<%= item.description %>" 
                class="item-description-input" 
                id="vk-hypertek-description-input" 
-               placeholder="Enter Hypertek details">
+               placeholder="Enter Hypertek details" readyonly>
     <% 
     } else { 
     %>
@@ -4573,7 +4573,7 @@ async function savePoeItems(id) {
                                                         <option value="11" data-cost="155.03">Class 11 - ₹ 155.03</option>
                                                         <option value="12" data-cost="153.00">Class 12 - ₹ 153.00</option>
                                                     </select>
-                                                    <input type="hidden" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input-hidden" data-index="<%= index %>">
+                                                    <input type="hidden" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input-hidden" data-index="<%= index %>" readonly>
                                                 <% } else { %>
                                                     <div style="display: flex; align-items: center;"><span class="currency-symbol">₹</span><input type="number" step="1" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input" data-index="<%= index %>" readonly></div>
                                                 <% } %>
