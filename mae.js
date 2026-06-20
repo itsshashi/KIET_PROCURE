@@ -769,7 +769,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
                   decoration: "underline",
                 },
                 {
-                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
+                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560078",
                   font: "Times",
                   fontSize: 10,
                   bold: true,
@@ -820,7 +820,7 @@ We would like to thank you for the opportunity to submit our techno-commercial p
                   italics: true,
                 },
                 {
-                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560111",
+                  text: "KIET TECHNOLOGIES PRIVATE LIMITED, 51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout,Bengaluru, Karnataka - 560078",
                   alignment: "left",
                   fontSize: 6,
                   font: "Times",
