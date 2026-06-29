@@ -2735,7 +2735,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="form-group">
     <label for="notes">Additional Notes</label>
-    <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+    <textarea class="form-control" id="notes" name="notes" rows="2" required></textarea>
   </div>
 
   <button type="submit" class="btn">
@@ -3454,7 +3454,7 @@ document.getElementById("deliveryChallanForm").addEventListener("submit", async 
                                 <tbody id="itemsTableBody">
                                     <tr class="item-row">
                                         <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                                        <td> <textarea class="item-descriptin" 
+                                        <td> <textarea class="item-description" 
               name="itemDescription[]" 
               placeholder="Item or service description" 
               rows="4" 
@@ -8492,7 +8492,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 newRow.className = 'item-row';
                 newRow.innerHTML = `
                     <td><input type="text" name="itemPartNo[]" placeholder="Part No"></td>
-                    <td><input type="text" class="item-description" name="itemDescription[]" placeholder="Item or service description" required></td>
+                    <td> <textarea class="item-description" 
+              name="itemDescription[]" 
+              placeholder="Item or service description" 
+              rows="4" 
+              style="
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border 0.3s;
+    resize: vertical;
+"></textarea></td>
                     <td><input type="text" name="itemHSN[]" placeholder="HSN Code"></td>
                     <td><input type="number" step="0.01" name="itemQuantity[]" placeholder="Qty" required></td>
                     <td><input type="text" name="itemUnit[]" placeholder="Unit" value="Nos"></td>
@@ -8557,7 +8569,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Open popup when clicking item description input
 document.addEventListener("click", function(event) {
-    if (event.target.classList.contains("item-descriptin")) {
+    if (event.target.classList.contains("item-description")) {
         activeInput = event.target;
         openPopup();
     }
