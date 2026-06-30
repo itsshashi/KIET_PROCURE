@@ -373,6 +373,8 @@
     left: 0;
     z-index: 1000;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar::before {
@@ -384,6 +386,24 @@
     bottom: 0;
     background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 50%);
     pointer-events: none;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.6);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.9);
 }
 
         
@@ -2201,6 +2221,7 @@
             <span>Delivery Challan</span>
         </li>
 
+
         <!-- Assigned Project -->
         <li class="menu-item" data-tab="assigned-project">
             <i class="fas fa-project-diagram"></i>
@@ -2902,6 +2923,212 @@ function populateItemTable(items) {
 }
 
     </script>  
+     
+     <!-- Revise Order Tab -->
+     <div class="tab-content" id="revise-order">
+                <div class="tab-header">
+                    <h3>Revise Existing Order</h3>
+                    <p>Search for existing orders and modify the details as needed</p>
+                </div>
+
+                <!-- Search Section -->
+                <div class="form-section" style="margin-bottom: 30px;">
+                    <h2 class="section-title">Search Orders</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reviseSearchInput">Search by Order ID or Project Code</label>
+                            <input type="text" class="form-control" id="reviseSearchInput" placeholder="Enter Order ID or Project Code" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reviseStatusFilter">Filter by Status</label>
+                            <select class="form-control" id="reviseStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end; gap: 10px;">
+                            <button type="button" class="btn btn-primary" onclick="searchReviseOrders()" style="flex: 1;">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="clearReviseSearch()" style="flex: 1;">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders List -->
+                <div id="reviseOrdersList" style="display: none; margin-bottom: 30px;">
+                    <h3 style="color: #1e293b; margin-bottom: 15px;">Available Orders</h3>
+                    <div id="reviseOrdersContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                        <!-- Orders will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Edit Form Section -->
+                <div id="reviseFormContainer" style="display: none;">
+                    <h2 class="section-title">Edit Order Details</h2>
+                    
+                    <form id="reviseOrderForm" method="POST">
+                        <input type="hidden" id="reviseOrderId" />
+
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h2 class="section-title" style="font-size: 18px;">Basic Information</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reviseProjectName">Project Name *</label>
+                                    <input type="text" class="form-control" id="reviseProjectName" placeholder="Project Name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reviseProjectCode">Project Code *</label>
+                                    <input type="text" class="form-control" id="reviseProjectCode" placeholder="Project Code" required />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reviseCurrency">Currency *</label>
+                                    <select class="form-control" id="reviseCurrency" required>
+                                        <option value="">Select Currency</option>
+                                        <option value="INR">INR</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reviseUrgency">Urgency *</label>
+                                    <select class="form-control" id="reviseUrgency" required>
+                                        <option value="">Select Urgency</option>
+                                        <option value="high">High - Immediate</option>
+                                        <option value="medium">Medium - Soon</option>
+                                        <option value="low">Low - Normal</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Supplier Information -->
+                        <div class="form-section">
+                            <h2 class="section-title" style="font-size: 18px;">Supplier Information</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reviseSupplierName">Supplier Name</label>
+                                    <input type="text" class="form-control" id="reviseSupplierName" placeholder="Supplier Name" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reviseSupplierGst">Supplier GSTIN</label>
+                                    <input type="text" class="form-control" id="reviseSupplierGst" placeholder="Supplier GSTIN" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reviseSupplierAddress">Supplier Address</label>
+                                <textarea class="form-control" id="reviseSupplierAddress" rows="2" placeholder="Supplier Address"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reviseContactPhone">Contact Phone</label>
+                                <input type="tel" class="form-control" id="reviseContactPhone" placeholder="+91 ----------" />
+                            </div>
+                        </div>
+
+                        <!-- Addresses -->
+                        <div class="form-section">
+                            <h2 class="section-title" style="font-size: 18px;">Addresses</h2>
+                            
+                            <div class="form-group">
+                                <label for="reviseBillingAddress">Billing Address *</label>
+                                <textarea class="form-control" id="reviseBillingAddress" rows="2" required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reviseShippingAddress">Shipping Address *</label>
+                                <textarea class="form-control" id="reviseShippingAddress" rows="2" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Payment Terms -->
+                        <div class="form-section">
+                            <h2 class="section-title" style="font-size: 18px;">Order Details</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reviseReferenceNo">Reference Number *</label>
+                                    <input type="text" class="form-control" id="reviseReferenceNo" placeholder="Reference Number" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reviseTermsOfPayment">Terms of Payment *</label>
+                                    <input type="text" class="form-control" id="reviseTermsOfPayment" placeholder="e.g., 45 days net" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="reviseDateRequired">Date Required *</label>
+                                    <input type="date" class="form-control" id="reviseDateRequired" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="form-section">
+                            <h2 class="section-title" style="font-size: 18px;">Product Details</h2>
+                            <table class="kiet-table" id="reviseProductTable">
+                                <thead>
+                                    <tr>
+                                        <th>Sl.</th>
+                                        <th>Part No</th>
+                                        <th>Description</th>
+                                        <th>HSN Code</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price (₹)</th>
+                                        <th>GST %</th>
+                                        <th>Unit</th>
+                                        <th>Discount (₹)</th>
+                                         <th>Total (₹)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reviseProductTableBody">
+                                    <!-- Products will be populated here -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="8" style="text-align:right; font-weight:bold;">Grand Total (₹):</td>
+                                        <td id="reviseGrandTotal" style="font-weight:bold;">0.00</td>
+                                        <td>
+                                            <button type="button" class="btn btn-small" id="reviseAddProductRow" onclick="addReviseProductRow()">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="reviseNotes">Additional Notes</label>
+                                <textarea class="form-control" id="reviseNotes" rows="3" placeholder="Additional notes..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="reviseSubmitBtn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelReviseEdit()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
      <div class="tab-content" id="delivery-challan">
                 <div class="tab-header">
                     <h3>Create Delivery Challan</h3>
@@ -4282,6 +4509,481 @@ async function savePoeItems(id) {
 }
 </script>
 
+<!-- Edit Quotation Modal -->
+<div id="editQuotationModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+  <div class="modal-content" style="max-width: 90%; width: 90%; background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); margin: 20px auto; animation: fadeIn 0.2s ease-in-out;">
+    <button onclick="closeEditQuotationModal()" style="position: absolute; top: 15px; right: 20px; font-size: 28px; border: none; background: none; cursor: pointer; color: #666;">&times;</button>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+      <h3 style="font-size: 22px; font-weight: 600; color: #1e293b; margin: 0;">
+        <i class="fas fa-edit"></i> Revise Quotation
+      </h3>
+      <div style="text-align: right;">
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Last Revised</div>
+        <div id="lastRevisedTime" style="font-size: 13px; font-weight: 600; color: #3b82f6;">—</div>
+      </div>
+    </div>
+
+    <form id="editQuotationForm" style="display: grid; gap: 20px;">
+      <input type="hidden" id="editQuotationId" />
+      
+      <!-- Quotation Header Info -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Quotation Number</label>
+          <input type="text" id="editQtnNumber" readonly style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; color: #666;">
+        </div>
+        
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Quotation Date</label>
+          <input type="date" id="editQtnDate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Valid Until</label>
+          <input type="date" id="editValidUntil" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+      </div>
+
+      <!-- Client & Company Info -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Client Name</label>
+          <input type="text" id="editClientName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Company Name</label>
+          <input type="text" id="editCompanyName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Client Email</label>
+          <input type="email" id="editClientEmail" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Currency</label>
+          <select id="editCurrency" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+            <option value="INR">INR</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <div style="margin-top: 20px;">
+        <label style="font-weight: 600; color: #334155; margin-bottom: 12px; display: block;">Items & Services</label>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+          <thead style="background: linear-gradient(135deg, #3b82f6, #1e40af); color: white;">
+            <tr>
+              <th style="padding: 12px; text-align: left;">Part No</th>
+              <th style="padding: 12px; text-align: left;">Description</th>
+              <th style="padding: 12px; text-align: center;">Qty</th>
+              <th style="padding: 12px; text-align: center;">Unit Price</th>
+              <th style="padding: 12px; text-align: center;">Total</th>
+              <th style="padding: 12px; text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="editItemsTableBody" style="background: white;">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+        
+        <!-- Grand Total Section -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+          <div style="text-align: right;">
+            <div style="font-size: 14px; color: #64748b; margin-bottom: 6px;">Grand Total:</div>
+            <div id="editGrandTotal" style="font-size: 24px; font-weight: 700; color: #3b82f6;">₹0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Amount -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Payment Terms</label>
+          <input type="text" id="editPaymentTerms" placeholder="e.g., 50% advance, 50% on delivery" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Delivery Duration</label>
+          <input type="text" id="editDeliveryDuration" placeholder="e.g., 2-4 weeks" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">Additional Notes</label>
+        <textarea id="editNotes" rows="4" placeholder="Any additional notes or terms" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <button type="button" onclick="closeEditQuotationModal()" style="background: #e2e8f0; color: #1e293b; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+          Cancel
+        </button>
+        <button type="button" onclick="saveEditedQuotation()" style="background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Edit Quotation Modal Functions
+function closeEditQuotationModal() {
+  document.getElementById('editQuotationModal').style.display = 'none';
+}
+
+async function editQuote(quotationId) {
+  try {
+    // Fetch quotation details
+    const response = await fetch(`/api/quotations/${quotationId}/items`);
+    if (!response.ok) throw new Error('Failed to fetch quotation details');
+
+    const data = await response.json();
+    console.log('Quotation details:', data);
+
+    // Store the quotation ID
+    document.getElementById('editQuotationId').value = quotationId;
+
+    // Populate form fields
+    document.getElementById('editQtnNumber').value = data.quotationnumber || data.quotation_number || 'N/A';
+    document.getElementById('editQtnDate').value = formatDateForInput(data.quotationdate || data.quotation_date || '');
+    document.getElementById('editValidUntil').value = formatDateForInput(data.validuntil || data.valid_until || '');
+    document.getElementById('editClientName').value = data.clientname || data.client_name || '';
+    document.getElementById('editCompanyName').value = data.companyname || data.company_name || '';
+    document.getElementById('editClientEmail').value = data.clientemail || data.client_email || '';
+    document.getElementById('editCurrency').value = data.currency || 'INR';
+    document.getElementById('editPaymentTerms').value = data.paymentterms || data.payment_terms || '';
+    document.getElementById('editDeliveryDuration').value = data.deliveryduration || data.delivery_duration || '';
+    document.getElementById('editNotes').value = data.notes || '';
+
+    // Display last revised time
+    const lastRevised = document.getElementById('lastRevisedTime');
+    if (data.updated_at || data.updatedAt) {
+      const revisionTime = new Date(data.updated_at || data.updatedAt);
+      lastRevised.textContent = revisionTime.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } else {
+      lastRevised.textContent = '—';
+    }
+
+    // Populate items table with EDITABLE fields
+    const tbody = document.getElementById('editItemsTableBody');
+    tbody.innerHTML = '';
+
+    // Store items data globally for saving
+    window.editableQuotationItems = [];
+
+    if (data.items && Array.isArray(data.items)) {
+      data.items.forEach((item, index) => {
+        const quantity = parseFloat(item.quantity || 0);
+        const unitPrice = parseFloat(item.unitprice || item.unit_price || 0);
+        const totalAmount = quantity * unitPrice;
+
+        const row = document.createElement('tr');
+        row.style = 'border-bottom: 1px solid #e2e8f0;';
+        row.className = 'edit-item-row';
+        row.dataset.index = index;
+        
+        row.innerHTML = `
+          <td style="padding: 10px; border-right: 1px solid #e2e8f0;">
+            <input type="text" class="edit-part-no" placeholder="Part No" value="${item.partno || item.part_no || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+          </td>
+          <td style="padding: 10px; border-right: 1px solid #e2e8f0;">
+            <input type="text" class="edit-description" placeholder="Description" value="${item.description || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+          </td>
+          <td style="padding: 10px; border-right: 1px solid #e2e8f0; text-align: center;">
+            <input type="number" class="edit-quantity" min="0.01" step="0.01" placeholder="Qty" value="${quantity}" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: center;" />
+          </td>
+          <td style="padding: 10px; border-right: 1px solid #e2e8f0; text-align: center;">
+            <input type="number" class="edit-unit-price" min="0" step="0.01" placeholder="Price" value="${unitPrice.toFixed(2)}" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: center;" />
+          </td>
+          <td style="padding: 10px; text-align: center; font-weight: 600;">
+            <span class="edit-total">₹${totalAmount.toFixed(2)}</span>
+          </td>
+          <td style="padding: 10px; text-align: center;">
+            <button type="button" class="btn-delete-item" onclick="removeEditItemRow(this)" style="background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+        
+        // Add event listeners for auto-calculation
+        const quantityInput = row.querySelector('.edit-quantity');
+        const priceInput = row.querySelector('.edit-unit-price');
+        const totalSpan = row.querySelector('.edit-total');
+        
+        const calculateTotal = () => {
+          const qty = parseFloat(quantityInput.value) || 0;
+          const price = parseFloat(priceInput.value) || 0;
+          const total = qty * price;
+          totalSpan.textContent = '₹' + total.toFixed(2);
+          calculateGrandTotalEdit();
+        };
+        
+        quantityInput.addEventListener('input', calculateTotal);
+        priceInput.addEventListener('input', calculateTotal);
+        
+        window.editableQuotationItems.push(item);
+      });
+      
+      // Add "Add Item" button
+      const addRowTd = document.createElement('tr');
+      addRowTd.innerHTML = `
+        <td colspan="6" style="text-align: center; padding: 12px;">
+          <button type="button" onclick="addEditItemRow()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+            <i class="fas fa-plus"></i> Add Item
+          </button>
+        </td>
+      `;
+      tbody.appendChild(addRowTd);
+      
+      calculateGrandTotalEdit();
+    }
+
+    // Show the modal
+    document.getElementById('editQuotationModal').style.display = 'block';
+  } catch (error) {
+    console.error('Error fetching quotation details:', error);
+    alert('Failed to fetch quotation details. Please try again.');
+  }
+}
+
+function formatDateForInput(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function saveEditedQuotation() {
+  const quotationId = document.getElementById('editQuotationId').value;
+  
+  if (!quotationId) {
+    alert('Quotation ID is missing');
+    return;
+  }
+
+  // Collect edited items
+  const editedItems = getEditedItemsData();
+  
+  if (editedItems.length === 0) {
+    alert('Please add at least one item to the quotation');
+    return;
+  }
+
+  const updatedData = {
+    quotation_date: document.getElementById('editQtnDate').value,
+    valid_until: document.getElementById('editValidUntil').value,
+    client_name: document.getElementById('editClientName').value,
+    company_name: document.getElementById('editCompanyName').value,
+    client_email: document.getElementById('editClientEmail').value,
+    currency: document.getElementById('editCurrency').value,
+    payment_terms: document.getElementById('editPaymentTerms').value,
+    delivery_duration: document.getElementById('editDeliveryDuration').value,
+    notes: document.getElementById('editNotes').value,
+    items: editedItems // Include edited items
+  };
+
+  try {
+    const response = await fetch(`/api/quotations/${quotationId}/update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      
+      // Show success message with revision timestamp
+      const revisionTime = new Date();
+      const formattedTime = revisionTime.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      
+      // Create success notification
+      const notification = document.createElement('div');
+      notification.style = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease-out;
+      `;
+      notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-check-circle"></i>
+          <div>
+            <div>✓ Quotation Revised Successfully</div>
+            <div style="font-size: 12px; margin-top: 4px; opacity: 0.9;">Revised at: ${formattedTime}</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto-remove notification after 5 seconds
+      setTimeout(() => notification.remove(), 5000);
+      
+      // Close modal after a short delay
+      setTimeout(() => {
+        closeEditQuotationModal();
+        location.reload();
+      }, 1500);
+    } else {
+      const error = await response.json();
+      alert('Error updating quotation: ' + (error.message || 'Unknown error'));
+    }
+  } catch (error) {
+    console.error('Error saving quotation:', error);
+    alert('Failed to save quotation. Please try again.');
+  }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('editQuotationModal');
+  if (event.target === modal) {
+    closeEditQuotationModal();
+  }
+});
+
+// ===== HELPER FUNCTIONS FOR EDITABLE ITEMS =====
+
+// Calculate and display grand total
+function calculateGrandTotalEdit() {
+  let grandTotal = 0;
+  document.querySelectorAll('.edit-item-row .edit-total').forEach(totalSpan => {
+    const text = totalSpan.textContent.replace('₹', '');
+    grandTotal += parseFloat(text) || 0;
+  });
+  document.getElementById('editGrandTotal').textContent = '₹' + grandTotal.toFixed(2);
+}
+
+// Add a new blank item row
+function addEditItemRow() {
+  const tbody = document.getElementById('editItemsTableBody');
+  const lastRow = tbody.querySelector('.edit-item-row:last-of-type');
+  
+  // Create new row before the "Add Item" button row
+  const newRow = document.createElement('tr');
+  newRow.className = 'edit-item-row';
+  newRow.style = 'border-bottom: 1px solid #e2e8f0;';
+  
+  newRow.innerHTML = `
+    <td style="padding: 10px; border-right: 1px solid #e2e8f0;">
+      <input type="text" class="edit-part-no" placeholder="Part No" value="" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+    </td>
+    <td style="padding: 10px; border-right: 1px solid #e2e8f0;">
+      <input type="text" class="edit-description" placeholder="Description" value="" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;" />
+    </td>
+    <td style="padding: 10px; border-right: 1px solid #e2e8f0; text-align: center;">
+      <input type="number" class="edit-quantity" min="0.01" step="0.01" placeholder="Qty" value="1" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: center;" />
+    </td>
+    <td style="padding: 10px; border-right: 1px solid #e2e8f0; text-align: center;">
+      <input type="number" class="edit-unit-price" min="0" step="0.01" placeholder="Price" value="0" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; text-align: center;" />
+    </td>
+    <td style="padding: 10px; text-align: center; font-weight: 600;">
+      <span class="edit-total">₹0.00</span>
+    </td>
+    <td style="padding: 10px; text-align: center;">
+      <button type="button" class="btn-delete-item" onclick="removeEditItemRow(this)" style="background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>
+  `;
+  
+  // Insert before the "Add Item" row
+  const addButtonRow = tbody.querySelector('tr:last-child');
+  if (addButtonRow && addButtonRow.querySelector('.fa-plus')) {
+    tbody.insertBefore(newRow, addButtonRow);
+  } else {
+    tbody.appendChild(newRow);
+  }
+  
+  // Add event listeners for calculation
+  const quantityInput = newRow.querySelector('.edit-quantity');
+  const priceInput = newRow.querySelector('.edit-unit-price');
+  const totalSpan = newRow.querySelector('.edit-total');
+  
+  const calculateTotal = () => {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const total = qty * price;
+    totalSpan.textContent = '₹' + total.toFixed(2);
+    calculateGrandTotalEdit();
+  };
+  
+  quantityInput.addEventListener('input', calculateTotal);
+  priceInput.addEventListener('input', calculateTotal);
+}
+
+// Remove an item row
+function removeEditItemRow(button) {
+  const row = button.closest('tr');
+  const totalRows = document.querySelectorAll('.edit-item-row').length;
+  
+  if (totalRows <= 1) {
+    alert('You must have at least one item in the quotation.');
+    return;
+  }
+  
+  row.remove();
+  calculateGrandTotalEdit();
+}
+
+// Collect edited items data before saving
+function getEditedItemsData() {
+  const items = [];
+  document.querySelectorAll('.edit-item-row').forEach(row => {
+    const partNo = row.querySelector('.edit-part-no').value;
+    const description = row.querySelector('.edit-description').value;
+    const quantity = parseFloat(row.querySelector('.edit-quantity').value) || 0;
+    const unitPrice = parseFloat(row.querySelector('.edit-unit-price').value) || 0;
+    
+    if (description) { // Only include rows with descriptions
+      items.push({
+        part_no: partNo,
+        description: description,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_amount: quantity * unitPrice
+      });
+    }
+  });
+  return items;
+}
+</script>
 
             <!-- VK Tab -->
             <div class="tab-content" id="vk">
@@ -5615,6 +6317,198 @@ let currencySymbol = '₹';
 
                 <div class="status-cards" id="approvedCardsContainer">
                     <!-- Approved quotations will be dynamically generated -->
+                </div>
+            </div>
+
+            <!-- Revise Quotation Modal -->
+            <div id="reviseQuotationModal" style="
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                z-index: 2000;
+                overflow-y: auto;
+                padding: 20px;
+            ">
+                <div style="
+                    max-width: 1100px;
+                    margin: 20px auto;
+                    background: #fff;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+                    overflow: hidden;
+                ">
+                    <!-- Modal Header -->
+                    <div style="
+                        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                        color: white;
+                        padding: 20px 30px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.4rem;"><i class="fas fa-edit"></i> Revise Quotation</h3>
+                            <p style="margin: 5px 0 0; opacity: 0.85; font-size: 0.9rem;" id="reviseQuoteNumber"></p>
+                        </div>
+                        <button onclick="closeReviseQuotationModal()" style="
+                            background: rgba(255,255,255,0.2);
+                            border: none;
+                            color: white;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            font-size: 18px;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">&times;</button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div style="padding: 30px;">
+                        <input type="hidden" id="rqId" />
+                        <input type="hidden" id="rqQuotationType" />
+
+                        <!-- Quotation Info -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                                <i class="fas fa-info-circle" style="color: #3b82f6;"></i> Quotation Information
+                            </h4>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Quotation Number</label>
+                                        <input type="text" id="rqQuotationNumber" readonly style="background: #f1f5f9; cursor: not-allowed;" />
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Quotation Date</label>
+                                        <input type="date" id="rqQuotationDate" />
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Valid Until</label>
+                                        <input type="date" id="rqValidUntil" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Currency</label>
+                                        <select id="rqCurrency">
+                                            <option value="INR">INR</option>
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Payment Terms</label>
+                                        <input type="text" id="rqPaymentTerms" placeholder="e.g., 50% advance, 50% on delivery" />
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Delivery Duration</label>
+                                        <input type="text" id="rqDeliveryDuration" placeholder="e.g., 2-4 weeks" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Info -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                                <i class="fas fa-users" style="color: #3b82f6;"></i> Client &amp; Company Information
+                            </h4>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Company Name</label>
+                                        <input type="text" id="rqCompanyName" placeholder="Company name" />
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Client Name</label>
+                                        <input type="text" id="rqClientName" placeholder="Client name" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Client Email</label>
+                                        <input type="email" id="rqClientEmail" placeholder="client@example.com" />
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Notes</label>
+                                        <textarea id="rqNotes" rows="2" placeholder="Additional notes"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #1e293b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <span><i class="fas fa-boxes" style="color: #3b82f6;"></i> Items &amp; Services</span>
+                                <button type="button" onclick="addRQItemRow()" class="btn btn-secondary btn-small" style="font-size: 0.85rem;">
+                                    <i class="fas fa-plus"></i> Add Row
+                                </button>
+                            </h4>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                                    <thead>
+                                        <tr style="background: #f1f5f9;">
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">#</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Part No</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Description</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">HSN</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">GST%</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Qty</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Unit</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Unit Price</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Discount</th>
+                                            <th style="padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Total</th>
+                                            <th style="padding: 10px; text-align: center; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rqItemsTableBody">
+                                        <!-- items populated dynamically -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background: #f8fafc; font-weight: 700;">
+                                            <td colspan="9" style="padding: 12px; text-align: right;">Grand Total:</td>
+                                            <td style="padding: 12px;" id="rqGrandTotal">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                            <button type="button" onclick="closeReviseQuotationModal()" class="btn btn-secondary" style="padding: 10px 24px;">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="button" onclick="saveRevisedQuotation()" class="btn btn-primary" style="padding: 10px 24px; background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-save"></i> Save Revised Quotation
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -7685,21 +8579,6 @@ ${order.status?.toLowerCase() === "pending"
                 alert('Failed to download quotation. Please try again.');
             }
         }
-        async function editQuote(quotationId) {
-            try {
-                const response = await fetch(`/api/quotations/${quotationId}/items`);
-                if (!response.ok) throw new Error('Failed to fetch quotation details');
-
-                const data = await response.json();
-                // Assuming the response contains the quotation details needed for editing
-                // You can now populate an edit form with this data
-                console.log('Quotation details for editing:', data);
-                alert('Edit functionality is not implemented yet. Check console for details.');
-            } catch (error) {
-                console.error('Error fetching quotation details:', error);
-                alert('Failed to fetch quotation details. Please try again.');
-            }
-        }
         
         async function downloadQuotationmae(quotationId) {
             try {
@@ -8491,6 +9370,347 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         
 
+            // ============================================
+            // REVISE ORDER FUNCTIONALITY
+            // ============================================
+            
+            // Search for existing orders
+            window.searchReviseOrders = async function() {
+                const searchInput = document.getElementById('reviseSearchInput').value.trim();
+                const statusFilter = document.getElementById('reviseStatusFilter').value;
+                
+                if (!searchInput && !statusFilter) {
+                    alert('Please enter an Order ID or Project Code, or select a status filter');
+                    return;
+                }
+                
+                try {
+                    let url = '/api/orders/search/filter?';
+                    if (searchInput) {
+                        url += `search=${encodeURIComponent(searchInput)}&`;
+                    }
+                    if (statusFilter) {
+                        url += `status=${encodeURIComponent(statusFilter)}&`;
+                    }
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Failed to search orders');
+                    
+                    const orders = await response.json();
+                    displayReviseOrders(orders);
+                } catch (error) {
+                    console.error('Error searching orders:', error);
+                    alert('Error searching orders. Please try again.');
+                }
+            };
+            
+            // Display orders as cards
+            function displayReviseOrders(orders) {
+                const container = document.getElementById('reviseOrdersContainer');
+                const ordersList = document.getElementById('reviseOrdersList');
+                
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No orders found. Try a different search.</p>';
+                    ordersList.style.display = 'block';
+                    return;
+                }
+                
+                container.innerHTML = orders.map(order => `
+                    <div class="status-card" style="cursor: pointer;" onclick="loadReviseOrder(${order.id})">
+                        <div class="status-header">
+                            <h4>${order.purchase_order_number || order.id}</h4>
+                            <span class="status-badge badge-${(order.status || 'pending').toLowerCase()}">${order.status || 'Pending'}</span>
+                        </div>
+                        <div class="status-body">
+                            <p><strong>Project:</strong> ${order.project_name || 'N/A'}</p>
+                            <p><strong>Supplier:</strong> ${order.supplier_name || 'N/A'}</p>
+                            <p><strong>Amount:</strong> ₹${Number(order.total_amount || 0).toLocaleString('en-IN')}</p>
+                            <p><strong>Created:</strong> ${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <div class="status-footer">
+                            <button type="button" class="btn btn-primary" onclick="loadReviseOrder(${order.id}); event.stopPropagation();">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                ordersList.style.display = 'block';
+            };
+            
+            // Load order data into the edit form
+            window.loadReviseOrder = async function(orderId) {
+                try {
+                    const response = await fetch(`/api/orders/${orderId}`);
+                    if (!response.ok) throw new Error('Failed to fetch order');
+                    
+                    const order = await response.json();
+                    
+                    // Fetch order items
+                    const itemsResponse = await fetch(`/api/orders/${orderId}/items`);
+                    if (!itemsResponse.ok) throw new Error('Failed to fetch order items');
+                    
+                    const items = await itemsResponse.json();
+                    
+                    // Populate form fields
+                    document.getElementById('reviseOrderId').value = orderId;
+                    document.getElementById('reviseProjectName').value = order.project_name || '';
+                    document.getElementById('reviseProjectCode').value = order.project_code || '';
+                    document.getElementById('reviseCurrency').value = order.currency || 'INR';
+                    document.getElementById('reviseUrgency').value = order.urgency || '';
+                    document.getElementById('reviseSupplierName').value = order.supplier_name || '';
+                    document.getElementById('reviseSupplierGst').value = order.supplier_gst || '';
+                    document.getElementById('reviseSupplierAddress').value = order.supplier_address || '';
+                    document.getElementById('reviseContactPhone').value = order.contact_phone || '';
+                    document.getElementById('reviseBillingAddress').value = order.billing_address || '';
+                    document.getElementById('reviseShippingAddress').value = order.shipping_address || '';
+                    document.getElementById('reviseReferenceNo').value = order.reference_no || '';
+                    document.getElementById('reviseTermsOfPayment').value = order.terms_of_payment || '';
+                    document.getElementById('reviseDateRequired').value = order.date_required ? order.date_required.split('T')[0] : '';
+                    document.getElementById('reviseNotes').value = order.notes || '';
+                    
+                    // Populate product table
+                    populateReviseProductTable(items);
+                    
+                    // Hide search section, show edit form
+                    document.getElementById('reviseOrdersList').style.display = 'none';
+                    document.getElementById('reviseFormContainer').style.display = 'block';
+                    
+                    // Scroll to form
+                    document.getElementById('reviseFormContainer').scrollIntoView({ behavior: 'smooth' });
+                } catch (error) {
+                    console.error('Error loading order:', error);
+                    alert('Error loading order. Please try again.');
+                }
+            };
+            
+            // Populate products in the revise table
+            function populateReviseProductTable(items) {
+                const tbody = document.getElementById('reviseProductTableBody');
+                tbody.innerHTML = '';
+                
+                if (!items || items.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>1</td>
+                        <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                        <td><input type="text" class="form-control" name="description[]" placeholder="Description" required></td>
+                        <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                        <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                        <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
+                        <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+                        <td><input type="text" class="form-control unit" name="unit[]" placeholder="Unit"></td>
+                        <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
+                        <td class="total">0.00</td>
+                        <td><button type="button" class="action-btn delete-row" onclick="deleteReviseRow(this)"><i class="fas fa-trash"></i></button></td>
+                    `;
+                    tbody.appendChild(row);
+                    attachReviseRowListeners(row);
+                } else {
+                    items.forEach((item, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td><input type="text" class="form-control" name="partNo[]" value="${item.part_no || ''}" required></td>
+                            <td><input type="text" class="form-control" name="description[]" value="${item.description || ''}" required></td>
+                            <td><input type="text" class="form-control" name="hsn[]" value="${item.hsn_code || ''}"></td>
+                            <td><input type="number" class="form-control quantity" name="quantity[]" value="${item.quantity || 1}" required></td>
+                            <td><input type="number" class="form-control unit-price" name="unitPrice[]" value="${item.unit_price || 0}" step="0.01" required></td>
+                            <td><input type="number" class="form-control gst-rate" name="gst[]" value="${item.gst_rate || 18}" step="0.01" required></td>
+                            <td><input type="text" class="form-control unit" name="unit[]" value="${item.unit || ''}"></td>
+                            <td><input type="number" class="form-control discount" name="discount[]" value="${item.discount || 0}" step="1" required></td>
+                            <td class="total">${(item.total || 0).toFixed(2)}</td>
+                            <td><button type="button" class="action-btn delete-row" onclick="deleteReviseRow(this)"><i class="fas fa-trash"></i></button></td>
+                        `;
+                        tbody.appendChild(row);
+                        attachReviseRowListeners(row);
+                    });
+                }
+                
+                updateReviseRowNumbers();
+                calculateReviseGrandTotal();
+            }
+            
+            // Attach event listeners to revise table rows
+            function attachReviseRowListeners(row) {
+                row.querySelector('.quantity').addEventListener('input', function() {
+                    calculateReviseRowTotal(row);
+                });
+                row.querySelector('.unit-price').addEventListener('input', function() {
+                    calculateReviseRowTotal(row);
+                });
+                row.querySelector('.gst-rate').addEventListener('change', function() {
+                    calculateReviseRowTotal(row);
+                });
+                row.querySelector('.discount').addEventListener('input', function() {
+                    calculateReviseRowTotal(row);
+                });
+            }
+            
+            // Add new revise product row
+            window.addReviseProductRow = function() {
+                const tbody = document.getElementById('reviseProductTableBody');
+                const rowCount = tbody.querySelectorAll('tr').length;
+                const newRow = document.createElement('tr');
+                
+                newRow.innerHTML = `
+                    <td>${rowCount + 1}</td>
+                    <td><input type="text" class="form-control" name="partNo[]" placeholder="Part Number" required></td>
+                    <td><input type="text" class="form-control" name="description[]" placeholder="Description" required></td>
+                    <td><input type="text" class="form-control" name="hsn[]" placeholder="HSN Code"></td>
+                    <td><input type="number" class="form-control quantity" name="quantity[]" min="1" value="1" required></td>
+                    <td><input type="number" class="form-control unit-price" name="unitPrice[]" min="0" step="0.01" value="0" required></td>
+                    <td><input type="number" class="form-control gst-rate" name="gst[]" min="0" step="0.01" value="18" required></td>
+                    <td><input type="text" class="form-control unit" name="unit[]" placeholder="Unit"></td>
+                    <td><input type="number" class="form-control discount" name="discount[]" min="0" step="1" value="0" required></td>
+                    <td class="total">0.00</td>
+                    <td><button type="button" class="action-btn delete-row" onclick="deleteReviseRow(this)"><i class="fas fa-trash"></i></button></td>
+                `;
+                
+                tbody.appendChild(newRow);
+                attachReviseRowListeners(newRow);
+                updateReviseRowNumbers();
+                calculateReviseGrandTotal();
+            };
+            
+            // Delete revise row
+            window.deleteReviseRow = function(btn) {
+                btn.closest('tr').remove();
+                updateReviseRowNumbers();
+                calculateReviseGrandTotal();
+            };
+            
+            // Calculate row total for revise form
+            function calculateReviseRowTotal(row) {
+                const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+                const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
+                const discount = parseFloat(row.querySelector('.discount').value) || 0;
+
+                const subtotal = quantity * unitPrice;
+                const discountAmount = subtotal * (discount / 100);
+                const afterDiscount = subtotal - discountAmount;
+                const gstAmount = afterDiscount * (gstRate / 100);
+                const total = afterDiscount + gstAmount;
+
+                row.querySelector('.total').textContent = total.toFixed(2);
+                calculateReviseGrandTotal();
+            }
+            
+            // Calculate grand total for revise form
+            function calculateReviseGrandTotal() {
+                let total = 0;
+                document.querySelectorAll('#reviseProductTableBody .total').forEach(cell => {
+                    total += parseFloat(cell.textContent) || 0;
+                });
+                document.getElementById('reviseGrandTotal').textContent = total.toFixed(2);
+            }
+            
+            // Update row numbers
+            function updateReviseRowNumbers() {
+                document.querySelectorAll('#reviseProductTableBody tr').forEach((row, index) => {
+                    row.querySelector('td:first-child').textContent = index + 1;
+                });
+            }
+            
+            // Clear revise search
+            window.clearReviseSearch = function() {
+                document.getElementById('reviseSearchInput').value = '';
+                document.getElementById('reviseStatusFilter').value = '';
+                document.getElementById('reviseOrdersList').style.display = 'none';
+                document.getElementById('reviseFormContainer').style.display = 'none';
+                document.getElementById('reviseOrdersContainer').innerHTML = '';
+            };
+            
+            // Cancel revise edit
+            window.cancelReviseEdit = function() {
+                clearReviseSearch();
+            };
+            
+            // Handle revise form submission
+            document.getElementById('reviseOrderForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const orderId = document.getElementById('reviseOrderId').value;
+                if (!orderId) {
+                    alert('Error: Order ID not found');
+                    return;
+                }
+                
+                try {
+                    // Update order header
+                    const orderData = {
+                        project_name: document.getElementById('reviseProjectName').value,
+                        project_code: document.getElementById('reviseProjectCode').value,
+                        currency: document.getElementById('reviseCurrency').value,
+                        urgency: document.getElementById('reviseUrgency').value,
+                        supplier_name: document.getElementById('reviseSupplierName').value,
+                        supplier_gst: document.getElementById('reviseSupplierGst').value,
+                        supplier_address: document.getElementById('reviseSupplierAddress').value,
+                        contact_phone: document.getElementById('reviseContactPhone').value,
+                        billing_address: document.getElementById('reviseBillingAddress').value,
+                        shipping_address: document.getElementById('reviseShippingAddress').value,
+                        reference_no: document.getElementById('reviseReferenceNo').value,
+                        terms_of_payment: document.getElementById('reviseTermsOfPayment').value,
+                        date_required: document.getElementById('reviseDateRequired').value,
+                        notes: document.getElementById('reviseNotes').value
+                    };
+                    
+                    // Update order
+                    const updateResponse = await fetch(`/api/orders/${orderId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        throw new Error('Failed to update order');
+                    }
+                    
+                    // Update items
+                    const items = [];
+                    document.querySelectorAll('#reviseProductTableBody tr').forEach(row => {
+                        items.push({
+                            part_no: row.querySelector('input[name="partNo[]"]').value,
+                            description: row.querySelector('input[name="description[]"]').value,
+                            hsn_code: row.querySelector('input[name="hsn[]"]').value,
+                            quantity: parseFloat(row.querySelector('input[name="quantity[]"]').value) || 0,
+                            unit_price: parseFloat(row.querySelector('input[name="unitPrice[]"]').value) || 0,
+                            gst_rate: parseFloat(row.querySelector('input[name="gst[]"]').value) || 0,
+                            unit: row.querySelector('input[name="unit[]"]').value,
+                            discount: parseFloat(row.querySelector('input[name="discount[]"]').value) || 0,
+                            total: parseFloat(row.querySelector('.total').textContent) || 0
+                        });
+                    });
+                    
+                    const itemsResponse = await fetch(`/api/orders/${orderId}/items`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items })
+                    });
+                    
+                    if (!itemsResponse.ok) {
+                        throw new Error('Failed to update order items');
+                    }
+                    
+                    alert('Order updated successfully!');
+                    clearReviseSearch();
+                } catch (error) {
+                    console.error('Error updating order:', error);
+                    alert('Error saving changes. Please try again.');
+                }
+            });
+            
+            // END REVISE ORDER FUNCTIONALITY
+            // ============================================
+            
+                const dateStr = `${year}${month}${day}`;
+                const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const referenceNumber = `REF-${dateStr}-${randomNum}`;
+                referenceNoInput.value = referenceNumber;
+            });
+        
+
             // Add Item functionality
             const addItemBtn = document.getElementById('addItem');
             const itemsTableBody = document.getElementById('itemsTableBody');
@@ -8884,6 +10104,260 @@ document.querySelectorAll('.has-submenu').forEach(function(menu) {
 function openAddProjectModal() {
     alert('Add Project modal — wire this to your backend form.');
 }
+
+// =====================================================================
+// Revise Quotation Modal Functions (Trade Approved)
+// =====================================================================
+
+// Open the revise modal and fetch current quotation data
+async function editQuote(quotationId) {
+    try {
+        // Fetch quotation details with items
+        const res = await fetch(`/api/quotations/${quotationId}/details/regular`);
+        if (!res.ok) throw new Error('Failed to fetch quotation details');
+
+        const data = await res.json();
+        console.log('✅ Quotation details for revise:', data);
+
+        // Store the quotation ID
+        document.getElementById('rqId').value = quotationId;
+        document.getElementById('rqQuotationType').value = data.quotationtype || 'Trade & Services';
+
+        // Populate header fields
+        document.getElementById('rqQuotationNumber').value = data.quotationnumber || '';
+        document.getElementById('reviseQuoteNumber').textContent = 'Quotation: ' + (data.quotationnumber || '');
+
+        // Format dates (handle ISO date strings)
+        const formatDate = (d) => {
+            if (!d) return '';
+            return new Date(d).toISOString().split('T')[0];
+        };
+        document.getElementById('rqQuotationDate').value = formatDate(data.quotationdate);
+        document.getElementById('rqValidUntil').value = formatDate(data.validuntil);
+
+        document.getElementById('rqCurrency').value = data.currency || 'INR';
+        document.getElementById('rqPaymentTerms').value = data.paymentterms || '';
+        document.getElementById('rqDeliveryDuration').value = data.deliveryduration || '';
+        document.getElementById('rqCompanyName').value = data.companyname || '';
+        document.getElementById('rqClientName').value = data.clientname || '';
+        document.getElementById('rqClientEmail').value = data.clientemail || '';
+        document.getElementById('rqNotes').value = data.notes || '';
+
+        // Populate items table
+        populateRQItems(data.items || []);
+
+        // Show modal
+        document.getElementById('reviseQuotationModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    } catch (err) {
+        console.error('❌ Error loading quotation for revise:', err);
+        alert('Failed to load quotation data. Please try again.');
+    }
+}
+
+// Close the revise modal
+function closeReviseQuotationModal() {
+    document.getElementById('reviseQuotationModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Close on clicking outside modal content
+document.getElementById('reviseQuotationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReviseQuotationModal();
+    }
+});
+
+// Populate items in the revise modal table
+function populateRQItems(items) {
+    const tbody = document.getElementById('rqItemsTableBody');
+    tbody.innerHTML = '';
+
+    if (!items || items.length === 0) {
+        addRQItemRow();
+        return;
+    }
+
+    items.forEach((item, index) => {
+        const qty       = parseFloat(item.quantity || 1);
+        const price     = parseFloat(item.unitprice || item.unitPrice || item.unit_price || 0);
+        const gst       = 0; // GST forced to 0 — not applied in this table
+        const discount  = parseFloat(item.discount || 0);
+        const subtotal  = qty * price;
+        const afterDiscount = subtotal - discount;
+        const rowTotal  = afterDiscount + afterDiscount * (gst / 100);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="padding: 8px;">${index + 1}</td>
+            <td style="padding: 8px;"><input type="text" class="form-control rq-partno" value="${item.partno || item.partNo || item.part_no || ''}" style="min-width:80px;" /></td>
+            <td style="padding: 8px;"><input type="text" class="form-control rq-description" value="${item.description || ''}" style="min-width:150px;" /></td>
+            <td style="padding: 8px;"><input type="text" class="form-control rq-hsn" value="${item.hsncode || item.hsnCode || item.hsn_code || item.hsn || ''}" style="min-width:70px;" /></td>
+            <td style="padding: 8px;"><input type="number" class="form-control rq-gst" value="0" step="0.01" style="min-width:60px;" /></td>
+            <td style="padding: 8px;"><input type="number" class="form-control rq-quantity" value="${qty}" min="1" style="min-width:60px;" /></td>
+            <td style="padding: 8px;"><input type="text" class="form-control rq-unit" value="${item.unit || ''}" style="min-width:60px;" /></td>
+            <td style="padding: 8px;"><input type="number" class="form-control rq-unitprice" value="${price}" step="0.01" style="min-width:80px;" /></td>
+            <td style="padding: 8px;"><input type="number" class="form-control rq-discount" value="${discount}" step="1" style="min-width:60px;" /></td>
+            <td style="padding: 8px;" class="rq-total">${rowTotal.toFixed(2)}</td>
+            <td style="padding: 8px; text-align: center;"><button type="button" class="action-btn delete-row" onclick="deleteRQItemRow(this)" style="color: #ef4444; border: none; background: none; cursor: pointer;"><i class="fas fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(row);
+        attachRQRowListeners(row);
+    });
+
+    calculateRQGrandTotal();
+}
+
+// Add a new empty item row in the revise modal
+function addRQItemRow() {
+    const tbody = document.getElementById('rqItemsTableBody');
+    const rowCount = tbody.querySelectorAll('tr').length;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td style="padding: 8px;">${rowCount + 1}</td>
+        <td style="padding: 8px;"><input type="text" class="form-control rq-partno" placeholder="Part No" style="min-width:80px;" /></td>
+        <td style="padding: 8px;"><input type="text" class="form-control rq-description" placeholder="Description" style="min-width:150px;" /></td>
+        <td style="padding: 8px;"><input type="text" class="form-control rq-hsn" placeholder="HSN" style="min-width:70px;" /></td>
+        <td style="padding: 8px;"><input type="number" class="form-control rq-gst" value="0" step="0.01" style="min-width:60px;" /></td>
+        <td style="padding: 8px;"><input type="number" class="form-control rq-quantity" value="1" min="1" style="min-width:60px;" /></td>
+        <td style="padding: 8px;"><input type="text" class="form-control rq-unit" placeholder="Unit" style="min-width:60px;" /></td>
+        <td style="padding: 8px;"><input type="number" class="form-control rq-unitprice" value="0" step="0.01" style="min-width:80px;" /></td>
+        <td style="padding: 8px;"><input type="number" class="form-control rq-discount" value="0" step="1" style="min-width:60px;" /></td>
+        <td style="padding: 8px;" class="rq-total">0.00</td>
+        <td style="padding: 8px; text-align: center;"><button type="button" class="action-btn delete-row" onclick="deleteRQItemRow(this)" style="color: #ef4444; border: none; background: none; cursor: pointer;"><i class="fas fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(row);
+    attachRQRowListeners(row);
+    updateRQRowNumbers();
+}
+
+// Delete an item row in the revise modal
+function deleteRQItemRow(btn) {
+    const tbody = document.getElementById('rqItemsTableBody');
+    if (tbody.querySelectorAll('tr').length <= 1) {
+        alert('At least one item row is required.');
+        return;
+    }
+    btn.closest('tr').remove();
+    updateRQRowNumbers();
+    calculateRQGrandTotal();
+}
+
+// Attach input listeners for auto-calculating row total
+function attachRQRowListeners(row) {
+    ['rq-quantity', 'rq-unitprice', 'rq-gst', 'rq-discount'].forEach(cls => {
+        const input = row.querySelector('.' + cls);
+        if (input) {
+            input.addEventListener('input', () => calculateRQRowTotal(row));
+        }
+    });
+}
+
+// Calculate single row total
+function calculateRQRowTotal(row) {
+    const qty = parseFloat(row.querySelector('.rq-quantity').value) || 0;
+    const price = parseFloat(row.querySelector('.rq-unitprice').value) || 0;
+    const gst = parseFloat(row.querySelector('.rq-gst').value) || 0;
+    const discount = parseFloat(row.querySelector('.rq-discount').value) || 0;
+
+    const subtotal = qty * price;
+    const afterDiscount = subtotal - discount;
+    const gstAmount = afterDiscount * (gst / 100);
+    const total = afterDiscount + gstAmount;
+
+    row.querySelector('.rq-total').textContent = total.toFixed(2);
+    calculateRQGrandTotal();
+}
+
+// Calculate grand total for all rows
+function calculateRQGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('#rqItemsTableBody .rq-total').forEach(cell => {
+        total += parseFloat(cell.textContent) || 0;
+    });
+    document.getElementById('rqGrandTotal').textContent = total.toFixed(2);
+}
+
+// Update row numbering
+function updateRQRowNumbers() {
+    document.querySelectorAll('#rqItemsTableBody tr').forEach((row, idx) => {
+        row.querySelector('td:first-child').textContent = idx + 1;
+    });
+}
+
+// Save revised quotation
+async function saveRevisedQuotation() {
+    const quotationId = document.getElementById('rqId').value;
+    if (!quotationId) {
+        alert('Error: Quotation ID not found.');
+        return;
+    }
+
+    try {
+        // 1. Update header data
+        const headerData = {
+            quotation_date: document.getElementById('rqQuotationDate').value || null,
+            valid_until: document.getElementById('rqValidUntil').value || null,
+            client_name: document.getElementById('rqClientName').value,
+            company_name: document.getElementById('rqCompanyName').value,
+            client_email: document.getElementById('rqClientEmail').value,
+            currency: document.getElementById('rqCurrency').value,
+            payment_terms: document.getElementById('rqPaymentTerms').value,
+            delivery_duration: document.getElementById('rqDeliveryDuration').value,
+            notes: document.getElementById('rqNotes').value
+        };
+
+        const headerRes = await fetch(`/api/quotations/${quotationId}/update`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(headerData)
+        });
+
+        if (!headerRes.ok) {
+            throw new Error('Failed to update quotation header');
+        }
+
+        // 2. Collect and update items
+        const items = [];
+        document.querySelectorAll('#rqItemsTableBody tr').forEach(row => {
+            items.push({
+                partNo: row.querySelector('.rq-partno').value,
+                description: row.querySelector('.rq-description').value,
+                hsn: row.querySelector('.rq-hsn').value,
+                gst: parseFloat(row.querySelector('.rq-gst').value) || 0,
+                quantity: parseFloat(row.querySelector('.rq-quantity').value) || 0,
+                unit: row.querySelector('.rq-unit').value,
+                unitPrice: parseFloat(row.querySelector('.rq-unitprice').value) || 0,
+                discount: parseFloat(row.querySelector('.rq-discount').value) || 0,
+                total: parseFloat(row.querySelector('.rq-total').textContent) || 0
+            });
+        });
+
+        const itemsRes = await fetch(`/api/quotations/${quotationId}/items`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items })
+        });
+
+        if (!itemsRes.ok) {
+            throw new Error('Failed to update quotation items');
+        }
+
+        // Success
+        alert('✅ Quotation revised successfully!');
+        closeReviseQuotationModal();
+
+        // Refresh the approved quotations list
+        const activeSubTab = document.querySelector('#approved-quotation .sub-tab.active');
+        const activeFilter = activeSubTab ? activeSubTab.dataset.filter : 'all';
+        fetchApprovedQuotations(activeFilter);
+
+    } catch (err) {
+        console.error('❌ Error saving revised quotation:', err);
+        alert('Failed to save revised quotation. Please try again.');
+    }
+}
+
 </script>
 </body>
 </html>

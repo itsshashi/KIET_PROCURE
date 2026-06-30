@@ -5506,6 +5506,70 @@ app.put("/api/quotations/:id/items", async (req, res) => {
   }
 });
 
+// Update quotation header details (for revise functionality)
+app.put("/api/quotations/:id/update", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      quotation_date,
+      valid_until,
+      client_name,
+      company_name,
+      client_email,
+      currency,
+      payment_terms,
+      delivery_duration,
+      notes
+    } = req.body;
+
+    const client = await pool.connect();
+
+    // Update quotation details
+    const query = `
+      UPDATE quotations 
+      SET quotation_date = $1,
+          valid_until = $2,
+          client_name = $3,
+          company_name = $4,
+          client_email = $5,
+          currency = $6,
+          payment_terms = $7,
+          delivery_duration = $8,
+          notes = $9,
+          updated_at = NOW()
+      WHERE id = $10
+    `;
+
+    const values = [
+      quotation_date || null,
+      valid_until || null,
+      client_name || '',
+      company_name || '',
+      client_email || '',
+      currency || 'INR',
+      payment_terms || '',
+      delivery_duration || '',
+      notes || '',
+      id
+    ];
+
+    await client.query(query, values);
+    client.release();
+
+    res.json({ 
+      success: true,
+      message: "Quotation updated successfully" 
+    });
+  } catch (error) {
+    console.error("Error updating quotation:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to update quotation",
+      details: error.message 
+    });
+  }
+});
+
 //custom api for get approved vk quotations\
 app.get("/api/render-vk_quotations", async (req, res) => {
   const client = await pool.connect();
