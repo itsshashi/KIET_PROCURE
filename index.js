@@ -652,23 +652,25 @@ app.get("/api/orders/search/filter", async (req, res) => {
 
     let query = `
             SELECT
-                id,
-                purchase_order_number as order_id,
-                project_name as project,
-                supplier_name as supplier,
-                supplier_gst,
-                supplier_address,
-                shipping_address,
-                ordered_by as requested_by,
-                date_required,
-                COALESCE(total_amount, 0) as total_amount,
-                status,
-                urgency,
-                notes,
-                quotation_file,
-                created_at
-            FROM purchase_orders
-            WHERE 1=1
+              id,
+              po_number,
+              purchase_order_number as order_id,
+              purchase_order_number,
+              project_name as project,
+              supplier_name as supplier,
+              supplier_gst,
+              supplier_address,
+              shipping_address,
+              ordered_by as requested_by,
+              date_required,
+              COALESCE(total_amount, 0) as total_amount,
+              status,
+              urgency,
+              notes,
+              quotation_file,
+              created_at
+          FROM purchase_orders
+          WHERE 1=1
         `;
 
     let params = [];
@@ -2020,6 +2022,66 @@ app.post("/api/security/grns", async (req, res) => {
     res.json({ success: true, grn_number });
   } catch (err) {
     console.error("Error creating GRN:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Security: Get quantities summary for all orders (total ordered, received, pending) ──
+app.get("/api/security/orders-summary", async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT 
+        po.id as order_id,
+        COALESCE(poi.total_ordered, 0)::int as total_ordered,
+        COALESCE(sgi.total_received, 0)::int as total_received,
+        GREATEST(0, COALESCE(poi.total_ordered, 0) - COALESCE(sgi.total_received, 0))::int as total_pending
+      FROM purchase_orders po
+      LEFT JOIN (
+        SELECT purchase_order_id, SUM(quantity) as total_ordered
+        FROM purchase_order_items
+        GROUP BY purchase_order_id
+      ) poi ON po.id = poi.purchase_order_id
+      LEFT JOIN (
+        SELECT purchase_order_id, SUM(received_qty) as total_received
+        FROM security_grn_items
+        GROUP BY purchase_order_id
+      ) sgi ON po.id = sgi.purchase_order_id
+      WHERE po.status IN ('sent', 'receiving')
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching security orders summary:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Security: Get items with received & pending quantities for an order ─────
+app.get("/api/security/order-items/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { rows } = await pool.query(`
+      SELECT 
+        poi.id,
+        poi.purchase_order_id,
+        poi.part_no,
+        poi.description,
+        poi.unit,
+        poi.quantity as ordered_qty,
+        COALESCE(sgi.total_received, 0)::int as received_qty,
+        GREATEST(0, poi.quantity - COALESCE(sgi.total_received, 0))::int as pending_qty
+      FROM purchase_order_items poi
+      LEFT JOIN (
+        SELECT item_id, SUM(received_qty) as total_received
+        FROM security_grn_items
+        WHERE purchase_order_id = $1
+        GROUP BY item_id
+      ) sgi ON poi.id = sgi.item_id
+      WHERE poi.purchase_order_id = $1
+      ORDER BY poi.id
+    `, [orderId]);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching order items summary:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
