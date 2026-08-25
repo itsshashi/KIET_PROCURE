@@ -134,6 +134,8 @@
           <th>#</th>
           <th>PO Number</th>
           <th>Supplier</th>
+          <th>Received Qty</th>
+          <th>Pending Qty</th>
           <th>Project</th>
           <th>Amount</th>
           <th>Date</th>
@@ -143,7 +145,7 @@
         </tr>
       </thead>
       <tbody id="order-tbody">
-        <tr><td colspan="9" style="text-align:center;padding:2rem"><div class="spinner"></div></td></tr>
+        <tr><td colspan="11" style="text-align:center;padding:2rem"><div class="spinner"></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -180,17 +182,25 @@
   let activeItems = [];
   // grn counts cache: { orderId: count }
   const grnCounts = {};
+  // order quantities summary: { orderId: { total_ordered, total_received, total_pending } }
+  const orderSummaries = {};
 
   document.addEventListener('DOMContentLoaded', loadOrders);
 
   async function loadOrders() {
     try {
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3] = await Promise.all([
         fetch('/api/orders/search/filter?status=sent',      { credentials:'include' }),
-        fetch('/api/orders/search/filter?status=receiving', { credentials:'include' })
+        fetch('/api/orders/search/filter?status=receiving', { credentials:'include' }),
+        fetch('/api/security/orders-summary',               { credentials:'include' })
       ]);
       const pending   = r1.ok ? await r1.json() : [];
       const receiving = r2.ok ? await r2.json() : [];
+      const summaries = r3.ok ? await r3.json() : [];
+
+      summaries.forEach(s => {
+        orderSummaries[s.order_id] = s;
+      });
 
       document.getElementById('cnt-pending').textContent   = pending.length;
       document.getElementById('cnt-receiving').textContent = receiving.length;
@@ -229,19 +239,21 @@
     const tbody  = document.getElementById('order-tbody');
 
     const filtered = allOrders.filter(o => {
+      const poStr = (o.po_number || o.purchase_order_number || o.order_id || '').toLowerCase();
       const matchFilter = activeFilter === 'all' || o.tabStatus === activeFilter;
       const matchSearch = !search ||
-        (o.po_number||'').toLowerCase().includes(search) ||
+        poStr.includes(search) ||
         (o.supplier||'').toLowerCase().includes(search);
       return matchFilter && matchSearch;
     });
 
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><i class="fas fa-box-open"></i>No orders found.</div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="fas fa-box-open"></i>No orders found.</div></td></tr>`;
       return;
     }
 
     tbody.innerHTML = filtered.map((o, i) => {
+      const po_number = o.po_number || o.purchase_order_number || 'N/A';
       const isPending = o.tabStatus === 'pending';
       const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN') : '-';
       const amt  = '₹' + Number(o.total_amount||0).toLocaleString('en-IN');
@@ -252,6 +264,10 @@
       const grnCell = isPending
         ? `<span style="color:var(--gray);font-size:.8rem">—</span>`
         : `<span class="grn-chip"><i class="fas fa-barcode"></i> ${grnCounts[o.id] || 0} GRN(s)</span>`;
+
+      const summary = orderSummaries[o.id] || { total_received: 0, total_pending: 0 };
+      const recQty = summary.total_received || 0;
+      const pendQty = summary.total_pending !== undefined ? summary.total_pending : 0;
 
       const actions = isPending
         ? `<div class="actions">
@@ -266,8 +282,10 @@
 
       return `<tr>
         <td style="color:var(--gray);font-size:.8rem">${i+1}</td>
-        <td><strong>${esc(o.po_number||'N/A')}</strong></td>
+        <td><strong>${esc(po_number)}</strong></td>
         <td>${esc(o.supplier||'-')}</td>
+        <td><strong style="color:var(--success)">${recQty}</strong></td>
+        <td><strong style="color:${pendQty > 0 ? '#d97706' : 'var(--gray)'}">${pendQty}</strong></td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.project||'')}">${esc(o.project||'-')}</td>
         <td>${amt}</td>
         <td>${date}</td>
@@ -308,7 +326,7 @@
     document.getElementById('grnModal').classList.add('open');
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/items`, { credentials:'include' });
+      const res = await fetch(`/api/security/order-items/${orderId}`, { credentials:'include' });
       if (!res.ok) throw new Error();
       activeItems = await res.json();
 
@@ -319,22 +337,28 @@
 
       body.innerHTML = `
         <p style="margin-bottom:1rem;color:var(--gray);font-size:.88rem">
-          <i class="fas fa-info-circle"></i> Select the items being received now and enter the received quantity.
+          <i class="fas fa-info-circle"></i> Select the items being received now and enter the quantity.
         </p>
         <table class="itbl">
-          <thead><tr><th>✓</th><th>Description</th><th>Part No.</th><th>Ordered Qty</th><th>Received Qty</th></tr></thead>
+          <thead><tr><th>✓</th><th>Description</th><th>Part No.</th><th>Ordered</th><th>Already Received</th><th>Pending</th><th>Now Receiving</th></tr></thead>
           <tbody>
-            ${activeItems.map((item, i) => `
-              <tr>
-                <td><input type="checkbox" class="item-chk" data-idx="${i}" onchange="toggleQty(this,${i})"></td>
-                <td>${esc(item.description||'')}</td>
+            ${activeItems.map((item, i) => {
+              const maxVal = item.pending_qty !== undefined ? item.pending_qty : item.ordered_qty;
+              const isDone = maxVal <= 0;
+              return `
+              <tr style="${isDone ? 'opacity:0.65;background:#f9fafb;' : ''}">
+                <td><input type="checkbox" class="item-chk" data-idx="${i}" onchange="toggleQty(this,${i})" ${isDone ? 'disabled' : ''}></td>
+                <td>${esc(item.description||'')} ${isDone ? '<span class="badge badge-receiving" style="font-size:0.7rem;margin-left:4px;">Fully Received</span>' : ''}</td>
                 <td>${esc(item.part_no||'-')}</td>
-                <td>${item.quantity||0} ${esc(item.unit||'')}</td>
+                <td>${item.ordered_qty||0} ${esc(item.unit||'')}</td>
+                <td><strong style="color:var(--success)">${item.received_qty||0}</strong></td>
+                <td><strong style="color:${maxVal > 0 ? '#d97706' : 'var(--gray)'}">${maxVal}</strong></td>
                 <td>
-                  <input type="number" id="qty-${i}" class="qty-inp" min="1" max="${item.quantity||9999}" value="${item.quantity||1}" disabled>
-                  <div style="font-size:.72rem;color:var(--gray);text-align:center">Max: ${item.quantity||'∞'}</div>
+                  <input type="number" id="qty-${i}" class="qty-inp" min="1" max="${maxVal}" value="${maxVal > 0 ? maxVal : 0}" ${isDone ? 'disabled' : 'disabled'}>
+                  <div style="font-size:.72rem;color:var(--gray);text-align:center">Max: ${maxVal}</div>
                 </td>
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
         <div style="text-align:right">
@@ -370,7 +394,7 @@
         items.push({
           item_id: item.id,
           description: item.description,
-          ordered_qty: item.quantity,
+          ordered_qty: item.ordered_qty || item.quantity || 0,
           received_qty: parseInt(document.getElementById(`qty-${i}`).value) || 1
         });
       }
@@ -388,7 +412,7 @@
       showToast(`GRN Created: ${data.grn_number} ✅`);
       grnCounts[activeOrderId] = (grnCounts[activeOrderId] || 0) + 1;
       closeGrn();
-      renderTable();
+      await loadOrders();
     } catch (err) {
       showToast(err.message || 'Error saving GRN', true);
       btn.disabled = false;
