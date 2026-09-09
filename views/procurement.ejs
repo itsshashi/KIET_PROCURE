@@ -4561,8 +4561,17 @@ async function savePoeItems(id) {
                                                 <% if (item.hasClass) { %>
                                                     <select class="class-select" data-index="<%= index %>">
     <option value="1" data-cost="319.33">Class 1 - ₹ 319.33</option>
-    <option value="2" data-cost="315.34" selected>Class 2 - ₹ 315.34</option>
-    <option value="3" data-cost="311.00">Class 3 - ₹ 311.00</option>
+    <option value="2" data-cost="315.34" selected>Class 2 - ₹ 243.20</option>
+    <option value="3" data-cost="226.88">Class 3 - ₹ 226.88</option>
+    <option value="4" data-cost="216.61">Class 4 - ₹ 216.61</option>
+    <option value="5" data-cost="206.94">Class 5 - ₹ 206.94</option>
+    <option value="6" data-cost="199.60">Class 6 - ₹ 199.69</option>
+    <option value="7" data-cost="187.61">Class 7 - ₹ 187.61</option>
+    <option value="8" data-cost="183.98">Class 8 - ₹ 183.98</option>  
+    <option value="9" data-cost="181.57">Class 9 - ₹ 181.57</option>                                                  
+    <option value="10" data-cost="179.25">Class 10 - ₹ 179.25</option>                                            
+    <option value="11" data-cost="176.73">Class 11 - ₹ 176.73</option>
+
 </select>
                                                     <input type="hidden" name="priceInput[]" value="<%= item.cost.toFixed(2) %>" class="price-input-hidden" data-index="<%= index %>" readonly>
                                                 <% } else { %>
@@ -4749,22 +4758,47 @@ let currencySymbol = '₹';
                         // 1 Box tier
             const originalPrices = [
                 { class: 1, cost: 319.33 },
-                { class: 2, cost: 315.34 },
-                { class: 3, cost: 311.00 }
+                { class: 2, cost: 243.20 },
+                { class: 3, cost: 226.88 },
+                { class: 4, cost: 216.61 },
+                { class: 5, cost: 206.94 },
+                { class: 6, cost: 199.69 },
+                { class: 7, cost: 187.61 },
+                { class: 8, cost: 183.98 },
+                { class: 9, cost: 181.57 },
+                { class: 10, cost: 179.25 },
+                { class: 11, cost: 176.73 }
+                
             ];
 
             // 2 - 10 Boxes tier
             const qty2Prices = [
-                { class: 1, cost: 315.34 },
-                { class: 2, cost: 311.00 },
-                { class: 3, cost: 297.50 }
+                { class: 1, cost: 315.35 },
+                { class: 2, cost: 240.70 },
+                { class: 3, cost: 224.72 },
+                { class: 4, cost: 214.60 },
+                { class: 5, cost: 205.17 },
+                { class: 6, cost: 198.05 },
+                { class: 7, cost: 186.21 },
+                { class: 8, cost: 182.65 },
+                { class: 9, cost: 180.28 },
+                { class: 10, cost: 177.91 },
+                { class: 11, cost: 175.55 }
             ];
 
             // > 10 Boxes tier
-            const qtyAbove2Prices = [
-                { class: 1, cost: 313.50 },
-                { class: 2, cost: 297.50 },
-                { class: 3, cost: 293.50 }
+            const qtyAbove10Prices = [
+                { class: 1, cost: 313.41 },
+                { class: 2, cost: 239.49 },
+                { class: 3, cost: 223.65 },
+                { class: 4, cost: 213.68 },
+                { class: 5, cost: 204.30 },
+                { class: 6, cost: 197.25 },
+                { class: 7, cost: 185.52 },
+                { class: 8, cost: 182.01 },
+                { class: 9, cost: 179.66 },
+                { class: 10, cost: 177.32 },
+                { class: 11, cost: 174.97 }
             ];
             function updateValue(input, valueDisplay) {
                 const cost = parseFloat(input.getAttribute('data-cost'));
@@ -4807,10 +4841,18 @@ let currencySymbol = '₹';
             }
 
                         function getClassFromQty(qty) {
-                if (qty >= 1 && qty <= 850) return 1;
-                if (qty >= 851 && qty <= 1200) return 2;
-                if (qty >= 1201 && qty <= 1600) return 3;
-                return 3; // default/cap for > 1600 lines
+                if (qty >= 1 && qty <= 300) return 1;
+                if (qty >= 301 && qty <= 500) return 2;
+                if (qty >= 501 && qty <= 600) return 3;
+                if (qty >= 601 && qty <= 700) return 4;
+                if (qty >= 701 && qty <= 800) return 5;
+                if (qty >= 801 && qty <= 900) return 6;
+                if (qty >= 901 && qty <= 1100) return 7;
+                if (qty >= 1101 && qty <= 1200) return 8;
+                if (qty >= 1201 && qty <= 1300) return 9;
+                if (qty >= 1301 && qty <= 1400) return 10;
+                if (qty >= 1401 && qty <= 1500) return 11;
+                return 11; // default/cap for > 1200 lines
             }
             function updateClassOptions() {
                 const classSelect = document.querySelector('#vk .class-select[data-index="1"]');
@@ -4827,7 +4869,7 @@ let currencySymbol = '₹';
 
                 let prices;
                if (totalPvQty > 10) {
-    prices = qtyAbove2Prices;
+    prices = qtyAbove10Prices;
 } else if (totalPvQty >= 2) {
     prices = qty2Prices;
 } else {
