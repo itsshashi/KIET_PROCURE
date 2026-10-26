@@ -1933,6 +1933,64 @@ app.put("/api/orders/:id/receive", async (req, res) => {
   res.json({ success: true, order: rows[0] });
 });
 
+// ── Security: Orders summary (received & pending qty per order) ─────────────────
+app.get("/api/security/orders-summary", async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        po.id                                           AS order_id,
+        COALESCE(SUM(poi.quantity), 0)                  AS total_ordered,
+        COALESCE(SUM(grn.received_qty_sum), 0)          AS total_received,
+        GREATEST(COALESCE(SUM(poi.quantity), 0)
+          - COALESCE(SUM(grn.received_qty_sum), 0), 0) AS total_pending
+      FROM purchase_orders po
+      LEFT JOIN purchase_order_items poi
+        ON poi.purchase_order_id = po.id
+      LEFT JOIN (
+        SELECT item_id, purchase_order_id, SUM(received_qty) AS received_qty_sum
+        FROM security_grn_items
+        GROUP BY item_id, purchase_order_id
+      ) grn ON grn.item_id = poi.id AND grn.purchase_order_id = po.id
+      WHERE po.status IN ('sent', 'receiving')
+      GROUP BY po.id
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching orders summary:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Security: Get PO items with received/pending qty for GRN modal ────────────
+app.get("/api/security/order-items/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { rows } = await pool.query(`
+      SELECT
+        poi.id,
+        poi.description,
+        poi.part_no,
+        poi.quantity                                        AS ordered_qty,
+        poi.unit,
+        COALESCE(grn.received_qty_sum, 0)                   AS received_qty,
+        GREATEST(poi.quantity - COALESCE(grn.received_qty_sum, 0), 0) AS pending_qty
+      FROM purchase_order_items poi
+      LEFT JOIN (
+        SELECT item_id, SUM(received_qty) AS received_qty_sum
+        FROM security_grn_items
+        WHERE purchase_order_id = $1
+        GROUP BY item_id
+      ) grn ON grn.item_id = poi.id
+      WHERE poi.purchase_order_id = $1
+      ORDER BY poi.id
+    `, [orderId]);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching order items for GRN:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ── Security: Revert order back to Pending (sent) ─────────────────────────────
 app.put("/api/security/revert/:orderId", async (req, res) => {
   try {
