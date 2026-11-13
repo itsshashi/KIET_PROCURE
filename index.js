@@ -87,6 +87,14 @@ const pool = new Pool({
     console.error('❌ Failed to create security_grn_items table:', err.message);
   }
 })();
+
+await pool.query(`
+  ALTER TABLE purchase_orders
+    ADD COLUMN IF NOT EXISTS payment_option TEXT,
+    ADD COLUMN IF NOT EXISTS payment_date DATE,
+    ADD COLUMN IF NOT EXISTS credit_days INTEGER
+`);
+
 app.use('/qt_uploads', express.static(path.join(__dirname, 'qt_uploads')));
 
 
@@ -1057,8 +1065,36 @@ app.post("/order_raise", safeUpload, async (req, res) => {
     singleSupplier,
     termsOfPayment,
     currency,
-    billingAddress
+    billingAddress,
+    paymentOptions,
+    paymentDate,
+    creditDays
   } = req.body;
+
+  const allowedPaymentOptions = ["advance", "credit", "after dispatch", "before dispatch"];
+  if (!allowedPaymentOptions.includes(paymentOptions)) {
+    return res.status(400).json({ success: false, error: "Please select a valid payment option" });
+  }
+
+  let paymentDateValue = null;
+  let creditDaysValue = null;
+  if (paymentOptions === "credit") {
+    creditDaysValue = Number(creditDays);
+    if (!Number.isSafeInteger(creditDaysValue) || creditDaysValue < 1) {
+      return res.status(400).json({ success: false, error: "Enter a valid credit period in days" });
+    }
+  } else {
+    const parsedPaymentDate = new Date(`${paymentDate}T00:00:00.000Z`);
+    if (
+      typeof paymentDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate) ||
+      Number.isNaN(parsedPaymentDate.getTime()) ||
+      parsedPaymentDate.toISOString().slice(0, 10) !== paymentDate
+    ) {
+      return res.status(400).json({ success: false, error: "Select a valid payment date" });
+    }
+    paymentDateValue = paymentDate;
+  }
 
   // 🔹 2. Build products array
   let products = [];
@@ -1158,14 +1194,16 @@ app.post("/order_raise", safeUpload, async (req, res) => {
       (project_name, project_code_number, purchase_order_number, supplier_name,
        supplier_gst, supplier_address, shipping_address, urgency, date_required,
        notes, ordered_by, quotation_file, total_amount, reference_no, contact,
-       single, terms_of_payment, currency, raised_amount, billing_address)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+       single, terms_of_payment, currency, raised_amount, billing_address,
+       payment_option, payment_date, credit_days)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
       RETURNING id`,
       [
         projectName, projectCodeNumber, purchaseOrderNumber, supplierName,
         supplierGst, supplierAddress, shippingAddress, urgency, dateRequired,
         notes, orderedBy, quotationFile, totalAmount, reference_no, contact,
-        single, termsOfPayment, currency, totalAmount, billingAddress
+        single, termsOfPayment, currency, totalAmount, billingAddress,
+        paymentOptions, paymentDateValue, creditDaysValue
       ]
     );
 
@@ -1357,20 +1395,62 @@ app.get("/api/account-details", async (req, res) => {
   }
 
   try {
+    await ensureAccountEmailDecisionsTable();
+
     // Build the base query to fetch purchase orders with status 'sent', left join with inventory_entries for bank details
     let query = `
       SELECT
         po.id as id,
         po.po_number as po_number,
         po.supplier_name,
+        po.ordered_by,
         po.terms_of_payment,
         po.total_amount as amount,
+        po.payment_option,
+        po.payment_date,
+        po.credit_days,
+        first_grn.grn_numbers AS grn_numbers,
+        first_grn.grn_date AS first_grn_date,
+        CASE
+          WHEN po.payment_option = 'credit'
+            AND po.credit_days IS NOT NULL
+            AND first_grn.grn_date IS NOT NULL
+            THEN first_grn.grn_date + po.credit_days
+          WHEN po.payment_date IS NOT NULL THEN po.payment_date
+          ELSE NULL
+        END AS payment_due_date,
         ie.supplier_account_number,
         ie.supplier_account_name,
-        ie.supplier_ifsc_code
+        ie.supplier_ifsc_code,
+        EXISTS (
+          SELECT 1
+          FROM account_email_decisions aed
+          WHERE aed.purchase_order_id = po.id
+        ) AS email_sent
       FROM purchase_orders po
       LEFT JOIN inventory_entries ie ON po.id = ie.purchase_order_id
-      WHERE po.status ='inventory_processed'
+      LEFT JOIN LATERAL (
+        SELECT
+          STRING_AGG(DISTINCT grn_records.grn_number, ', ' ORDER BY grn_records.grn_number) AS grn_numbers,
+          MIN(grn_records.created_at)::date AS grn_date
+        FROM (
+          SELECT grn_number, created_at
+          FROM security_grn_items
+          WHERE purchase_order_id = po.id
+          UNION ALL
+          SELECT grn_number, created_at
+          FROM inventory_entries
+          WHERE purchase_order_id = po.id
+        ) grn_records
+      ) first_grn ON TRUE
+      WHERE (
+        po.status IN ('received', 'inventory_processed')
+        OR EXISTS (
+          SELECT 1
+          FROM security_grn_items saved_grn
+          WHERE saved_grn.purchase_order_id = po.id
+        )
+      )
     `;
     let params = [];
     let paramCount = 0;
@@ -1410,6 +1490,193 @@ app.get("/api/account-details", async (req, res) => {
   }
 });
 
+const ensureAccountEmailDecisionsTable = () => pool.query(`
+  CREATE TABLE IF NOT EXISTS account_email_decisions (
+    token_hash TEXT PRIMARY KEY,
+    purchase_order_id INTEGER NOT NULL,
+    ordered_by TEXT NOT NULL,
+    po_number TEXT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    decision TEXT
+  )
+`);
+
+const escapeEmailHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+}[char]));
+
+async function sendPaymentReminderEmail() {
+  const { rows } = await pool.query(`
+    WITH reference_date AS (
+      SELECT timezone('Asia/Kolkata', NOW())::date AS today
+    ),
+    payments AS (
+      SELECT
+        po.id,
+        po.purchase_order_number AS po_number,
+        po.supplier_name,
+        po.total_amount AS amount,
+        CASE
+          WHEN po.payment_option = 'credit'
+            AND po.credit_days IS NOT NULL
+            AND first_grn.grn_date IS NOT NULL
+            THEN first_grn.grn_date + po.credit_days
+          WHEN po.payment_date IS NOT NULL THEN po.payment_date
+          ELSE NULL
+        END AS payment_due_date
+      FROM purchase_orders po
+      LEFT JOIN LATERAL (
+        SELECT MIN(created_at)::date AS grn_date
+        FROM security_grn_items
+        WHERE purchase_order_id = po.id
+      ) first_grn ON TRUE
+      WHERE po.status = 'inventory_processed'
+    )
+    SELECT
+      payments.*,
+      payments.payment_due_date - reference_date.today AS days_until_due
+    FROM payments
+    CROSS JOIN reference_date
+    WHERE payments.payment_due_date IS NOT NULL
+      AND payments.payment_due_date <= reference_date.today + 7
+    ORDER BY payments.payment_due_date ASC, payments.po_number ASC
+  `);
+
+  if (rows.length === 0) return;
+
+  const overduePayments = rows.filter((payment) => payment.days_until_due < 0);
+  const dueSoonPayments = rows.filter((payment) => payment.days_until_due >= 0);
+  const formatDate = (value) => new Date(`${String(value).slice(0, 10)}T00:00:00Z`)
+    .toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  const formatAmount = (value) => `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+  const renderPaymentRows = (payments) => payments.map((payment) => `
+    <tr>
+      <td>${escapeEmailHtml(payment.po_number)}</td>
+      <td>${escapeEmailHtml(payment.supplier_name)}</td>
+      <td>${escapeEmailHtml(formatAmount(payment.amount))}</td>
+      <td>${escapeEmailHtml(formatDate(payment.payment_due_date))}</td>
+      <td>${payment.days_until_due < 0
+        ? `${Math.abs(payment.days_until_due)} day${Math.abs(payment.days_until_due) === 1 ? "" : "s"} overdue`
+        : payment.days_until_due === 0
+          ? "Due today"
+          : `Due in ${payment.days_until_due} day${payment.days_until_due === 1 ? "" : "s"}`}</td>
+    </tr>
+  `).join("");
+  const renderSection = (title, payments) => payments.length === 0 ? "" : `
+    <h3>${title} (${payments.length})</h3>
+    <table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">PO Number</th>
+          <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Supplier</th>
+          <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Amount</th>
+          <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Due Date</th>
+          <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+        </tr>
+      </thead>
+      <tbody>${renderPaymentRows(payments)}</tbody>
+    </table>
+  `;
+  const transporter = nodemailer.createTransport({
+    host: "smtp.office365.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "No-reply@kietsindia.com",
+      pass: process.env.NO_PASSWORD,
+    },
+  });
+
+  await transporter.sendMail({
+    from: '"KIET Technologies" <No-reply@kietsindia.com>',
+    to: "accounts@kietsindia.com",
+    subject: `Payment reminder: ${dueSoonPayments.length} due soon, ${overduePayments.length} overdue`,
+    html: `
+      <p>Hello Accounts Team,</p>
+      <p>Here is the daily summary of unpaid purchase order payments.</p>
+      ${renderSection("Overdue Payments", overduePayments)}
+      ${renderSection("Due Within 7 Days", dueSoonPayments)}
+      <p>This is an automated reminder from KIET Procure.</p>
+    `,
+    text: [
+      "Hello Accounts Team,",
+      "",
+      "Here is the daily summary of unpaid purchase order payments.",
+      "",
+      `Overdue Payments (${overduePayments.length}):`,
+      ...overduePayments.map((payment) =>
+        `${payment.po_number} | ${payment.supplier_name} | ${formatAmount(payment.amount)} | Due ${formatDate(payment.payment_due_date)} | ${Math.abs(payment.days_until_due)} day(s) overdue`
+      ),
+      "",
+      `Due Within 7 Days (${dueSoonPayments.length}):`,
+      ...dueSoonPayments.map((payment) =>
+        `${payment.po_number} | ${payment.supplier_name} | ${formatAmount(payment.amount)} | Due ${formatDate(payment.payment_due_date)}`
+      ),
+      "",
+      "This is an automated reminder from KIET Procure.",
+    ].join("\n"),
+  });
+
+  console.log(`✅ Payment reminder email sent to accounts@kietsindia.com (${rows.length} payments)`);
+}
+
+function getDelayUntilNextPaymentReminder() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  const todayInIndia = Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+  );
+  const currentTimeInIndia = Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+  );
+  let nextReminderInIndia = todayInIndia + 9 * 60 * 60 * 1000;
+  if (nextReminderInIndia <= currentTimeInIndia) {
+    nextReminderInIndia += 24 * 60 * 60 * 1000;
+  }
+  return nextReminderInIndia - currentTimeInIndia;
+}
+
+function schedulePaymentReminderEmail() {
+  setTimeout(async () => {
+    try {
+      await sendPaymentReminderEmail();
+    } catch (error) {
+      console.error("❌ Failed to send daily payment reminder email:", error);
+    } finally {
+      schedulePaymentReminderEmail();
+    }
+  }, getDelayUntilNextPaymentReminder());
+}
+
 //newly added for sending mail in account.ejs
 
 app.post("/api/send-email/:id", async (req, res) => {
@@ -1419,6 +1686,7 @@ app.post("/api/send-email/:id", async (req, res) => {
 
   try {
     const { id } = req.params;
+    await ensureAccountEmailDecisionsTable();
 
     // Fetch order details
     const orderResult = await pool.query(
@@ -1431,31 +1699,63 @@ app.post("/api/send-email/:id", async (req, res) => {
     }
 
     const { ordered_by, po_number } = orderResult.rows[0];
+    if (!ordered_by) {
+      return res.status(400).json({ error: "Indentor email not found" });
+    }
 
-    // Send email
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    await pool.query(
+      `INSERT INTO account_email_decisions
+        (token_hash, purchase_order_id, ordered_by, po_number, expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '7 days')`,
+      [tokenHash, id, ordered_by, po_number]
+    );
+
+    // Send email for approval/rejection/hold decision for the payments of the suppliers from the indentor
     const transporte = nodemailer.createTransport({
-      host: "smtp.office365.com",
+      //host: "smtp.office365.com",
+      host: "smtp.gmail.com",
       port: 587,
       secure: false, // STARTTLS
       auth: {
-        user: "No-reply@kietsindia.com",
-        pass: process.env.NO_PASSWORD,
+        //user: "No-reply@kietsindia.com",
+        //pass: process.env.NO_PASSWORD,
+        user: "la4400512@gmail.com",
+        pass: "zsfs dvwg peso xokp",
       },
       tls: {
         rejectUnauthorized: false,
       },
     });
 
+   // const BASE_URL = (process.env.BASE_URL || process.env.APP_BASE_URL || "https://kietprocure.com").replace(/\/$/, "");
+   const BASE_URL = "http://65.2.80.144:3000";
+    const approveUrl = `${BASE_URL}/api/email-decision/${token}/approve`;
+    const rejectUrl = `${BASE_URL}/api/email-decision/${token}/reject`;
+    const holdUrl = `${BASE_URL}/api/email-decision/${token}/hold`;
+    const decisionButtons = [
+      { url: approveUrl, label: "Approve", color: "#15803d" },
+      { url: rejectUrl, label: "Reject", color: "#b91c1c" },
+      { url: holdUrl, label: "Hold", color: "#a16207" },
+    ].map(({ url, label, color }) =>
+      `<a href="${url}" ` +
+      `style="display:inline-block;margin:8px 6px;padding:12px 22px;background:${color};` +
+      `color:#fff;text-decoration:none;border-radius:4px;font-weight:bold">${label}</a>`
+    ).join("");
     const mailSubject = "Payment Notification - KIET Technologies";
     const mailBody = `
-      <p>Hello ${ordered_by},</p>
-      <p>Your payment for PO ${po_number} has been processing,Could you Please send Confirmation email to accounts@kietsindia.com.</p>
+      <p>Hello ${escapeEmailHtml(ordered_by)},</p>
+      <p>Please select a status for purchase order ${escapeEmailHtml(po_number || id)}:</p>
+      <p>${decisionButtons}</p>
+      <p>Your selection will be sent to accounts@kietsindia.com. This link expires in 7 days.</p>
       <p>Thank you,<br>The KIET Technologies Team</p>
     `;
 
     await transporte.sendMail({
       to: ordered_by,
-      from: "No-reply@kietsindia.com",
+      //from: "No-reply@kietsindia.com",
+      from: "la4400512@gmail.com", 
       subject: mailSubject,
       html: mailBody,
     });
@@ -1464,6 +1764,71 @@ app.post("/api/send-email/:id", async (req, res) => {
   } catch (error) {
     console.error("Error sending email:", error);
     res.status(500).json({ error: "Failed to send email" });
+  }
+});
+
+console.log("registering email decision route");
+app.get("/api/email-decision/:token/:decision", async (req, res) => {
+  const { token, decision } = req.params;
+  const validDecisions = ["approve", "reject", "hold"];
+  let tokenHash;
+  if (!/^[a-f0-9]{64}$/i.test(token) || !validDecisions.includes(decision)) {
+    return res.status(400).send("Invalid decision link.");
+  }
+
+  try {
+    await ensureAccountEmailDecisionsTable();
+    tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const result = await pool.query(
+      `UPDATE account_email_decisions
+       SET used_at = NOW(), decision = $2
+       WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+       RETURNING ordered_by, po_number, purchase_order_id`,
+      [tokenHash, decision]
+    );
+    if (result.rows.length === 0) {
+      return res.status(410).send("This decision link has expired or has already been used.");
+    }
+
+    //changed the user name and password for sending mail from office365 to gmail
+    //need to change while pushing code to github as the password is in plain text
+
+
+
+    const { ordered_by, po_number, purchase_order_id } = result.rows[0];
+    const transporte = nodemailer.createTransport({
+      //host: "smtp.office365.com",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        //user: "No-reply@kietsindia.com",
+        //pass: process.env.NO_PASSWORD,
+        //user: "la4400512@gmail.com",
+        pass: "zsfs dvwg peso xokp",
+      },
+      tls: { rejectUnauthorized: false },
+    });
+    const formattedDecision = decision.charAt(0).toUpperCase() + decision.slice(1);
+    await transporte.sendMail({
+      from: "No-reply@kietsindia.com",
+      to: "accounts@kietsindia.com",
+      subject: `PO ${po_number || purchase_order_id}: ${formattedDecision} by indentor`,
+      text: `The indentor ${ordered_by} selected ${formattedDecision} for purchase order ${po_number || purchase_order_id}.`,
+      html: `<p>The indentor <strong>${escapeEmailHtml(ordered_by)}</strong> selected <strong>${formattedDecision}</strong> ` +
+        `for purchase order <strong>${escapeEmailHtml(po_number || purchase_order_id)}</strong>.</p>`,
+    });
+
+    res.send(`Your response (${formattedDecision}) has been sent to Accounts.`);
+  } catch (error) {
+    if (tokenHash) {
+      await pool.query(
+        "UPDATE account_email_decisions SET used_at = NULL, decision = NULL WHERE token_hash = $1",
+        [tokenHash]
+      ).catch((resetError) => console.error("Could not restore decision link:", resetError));
+    }
+    console.error("Error processing indentor decision:", error);
+    res.status(500).send("Could not send your response to Accounts. Please contact them directly.");
   }
 });
 
@@ -9821,7 +10186,8 @@ app.get('/raise-ticket',  (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
+schedulePaymentReminderEmail();
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
