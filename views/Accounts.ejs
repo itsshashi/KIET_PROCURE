@@ -306,6 +306,110 @@ tbody tr:hover {
   background-color: #f9fafb;
 }
 
+.payment-tracking-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0 0 22px;
+}
+.payment-tracking-card {
+  padding: 18px 20px;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #3b82f6;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+.payment-tracking-card.overdue {
+  border-left-color: #dc2626;
+}
+.payment-tracking-card.due-soon {
+  border-left-color: #f59e0b;
+}
+.payment-tracking-card.upcoming {
+  border-left-color: #16a34a;
+}
+.payment-tracking-card span {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+.payment-tracking-card strong {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 26px;
+}
+.payment-due-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.payment-due-badge.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.payment-due-badge.due-soon {
+  background: #fef3c7;
+  color: #92400e;
+}
+.payment-due-badge.upcoming {
+  background: #dcfce7;
+  color: #166534;
+}
+.payment-due-badge.no-date {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.payment-due-badge.awaiting-grn {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.account-table-wrap {
+  overflow-x: auto;
+}
+.account-table-wrap > table {
+  min-width: 1050px;
+}
+.account-table-scroll-top {
+  height: 18px;
+  margin-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.account-table-scroll-top > div {
+  height: 1px;
+}
+.account-action-grid {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 8px;
+  min-width: max-content;
+}
+.account-action-grid button {
+  min-height: 36px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .payment-tracking-summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .payment-tracking-card {
+    padding: 14px 16px;
+  }
+}
+
 /* Container */
 .container {
   display: flex;
@@ -357,7 +461,7 @@ tbody tr:hover {
   transition: background 0.3s;
 }
 .logout-btn:hover {
-  background: rgba(231, 76, 60, 0.1);
+  background: rgba(233, 38, 16, 0.1);
 }
 
 .pay-btn { background: #22c55e; color: white; }
@@ -584,12 +688,34 @@ input:focus, select:focus {
       <!-- Main Container -->
       <div class="main-container" id="accountsTab">
         <h1>Account Dashboard</h1>
+        <div class="payment-tracking-summary" aria-label="Payment due date summary">
+          <div class="payment-tracking-card overdue">
+            <span>Overdue Payments</span>
+            <strong id="overduePaymentCount">0</strong>
+          </div>
+          <div class="payment-tracking-card due-soon">
+            <span>Due Within 7 Days</span>
+            <strong id="upcomingPaymentCount">0</strong>
+          </div>
+          <div class="payment-tracking-card upcoming">
+            <span>Later Due Dates</span>
+            <strong id="laterPaymentCount">0</strong>
+          </div>
+          <div class="payment-tracking-card">
+            <span>Awaiting First GRN</span>
+            <strong id="awaitingGrnPaymentCount">0</strong>
+          </div>
+        </div>
         <!-- <div style="margin-bottom: 20px;">
           <label for="poSearch">Search by PO Number:</label>
           <input type="text" id="poSearch" placeholder="Enter PO Number" style="margin-left: 10px; padding: 5px;">
           <button onclick="searchByPO()" style="margin-left: 10px; padding: 5px 10px;">Search</button>
           <button onclick="clearSearch()" style="margin-left: 10px; padding: 5px 10px;">Clear</button>
         </div> -->
+        <div class="account-table-scroll-top" id="accountTableScrollTop" aria-label="Scroll account table horizontally">
+          <div></div>
+        </div>
+        <div class="account-table-wrap">
         <table>
           <thead>
             <tr>
@@ -597,13 +723,22 @@ input:focus, select:focus {
               <th>Supplier</th>
               <th>Amount to Pay</th>
               <th>Terms to Pay</th>
+              <th>Payment Option</th>
+              <th>GRN Number</th>
+              <th>First GRN Date</th>
+              <th>Due Date</th>
+              <th>Countdown</th>
               <th>Action</th>
+              <th>Indentor</th>
+              
+              
             </tr>
           </thead>
           <tbody id="accountTableBody">
             <!-- Data will be populated here -->
           </tbody>
         </table>
+        </div>
         <div id="noDataMessage" style="text-align: center; margin-top: 20px; display: none;">
           No payment details found.
         </div>
@@ -861,6 +996,30 @@ input:focus, select:focus {
     let accountData = [];
     let currentOrderId = null;
 
+    function updateAccountTableScrollbar() {
+      const topScrollbar = document.getElementById('accountTableScrollTop');
+      const table = document.querySelector('.account-table-wrap > table');
+      const scrollbarContent = topScrollbar?.firstElementChild;
+      if (scrollbarContent && table) {
+        scrollbarContent.style.width = `${table.scrollWidth}px`;
+      }
+    }
+
+    function syncAccountTableScrollbars() {
+      const topScrollbar = document.getElementById('accountTableScrollTop');
+      const tableWrap = document.querySelector('.account-table-wrap');
+      if (!topScrollbar || !tableWrap) return;
+
+      topScrollbar.addEventListener('scroll', () => {
+        tableWrap.scrollLeft = topScrollbar.scrollLeft;
+      });
+      tableWrap.addEventListener('scroll', () => {
+        topScrollbar.scrollLeft = tableWrap.scrollLeft;
+      });
+      window.addEventListener('resize', updateAccountTableScrollbar);
+      updateAccountTableScrollbar();
+    }
+
     async function fetchAccountDetails(poNumber = '') {
       try {
         document.getElementById('noDataMessage').style.display = 'none';
@@ -914,9 +1073,11 @@ input:focus, select:focus {
     function populateTable() {
       const tbody = document.getElementById('accountTableBody');
       tbody.innerHTML = '';
+      updatePaymentTrackingSummary();
       
       if (accountData.length === 0) {
         document.getElementById('noDataMessage').style.display = 'block';
+        updateAccountTableScrollbar();
         return;
       }
       
@@ -925,6 +1086,8 @@ input:focus, select:focus {
       accountData.forEach(item => {
         const tr = document.createElement('tr');
         tr.className = 'account-row';
+        tr.dataset.orderId = item.id;
+        tr.dataset.paymentDueDate = item.payment_due_date || '';
 
         // PO Number
         const poNumberTd = document.createElement('td');
@@ -952,16 +1115,47 @@ input:focus, select:focus {
         termsTd.width = '180px';
         tr.appendChild(termsTd);
 
+        const paymentOptionTd = document.createElement('td');
+        paymentOptionTd.setAttribute('data-label', 'Payment Option');
+        paymentOptionTd.textContent = formatPaymentOption(item);
+        tr.appendChild(paymentOptionTd);
+
+        const grnNumberTd = document.createElement('td');
+        grnNumberTd.setAttribute('data-label', 'GRN Number');
+        grnNumberTd.textContent = item.grn_numbers || 'Not set';
+        tr.appendChild(grnNumberTd);
+
+        const grnDateTd = document.createElement('td');
+        grnDateTd.setAttribute('data-label', 'First GRN Date');
+        grnDateTd.textContent = formatPaymentDueDate(item.first_grn_date);
+        tr.appendChild(grnDateTd);
+
+        const dueDateTd = document.createElement('td');
+        dueDateTd.setAttribute('data-label', 'Due Date');
+        dueDateTd.textContent = formatPaymentDueDate(item.payment_due_date);
+        tr.appendChild(dueDateTd);
+
+        const countdownTd = document.createElement('td');
+        countdownTd.setAttribute('data-label', 'Countdown');
+        const dueStatus = getPaymentStatus(item);
+        const dueBadge = document.createElement('span');
+        dueBadge.className = `payment-due-badge ${dueStatus.className}`;
+        dueBadge.textContent = dueStatus.label;
+        countdownTd.appendChild(dueBadge);
+        tr.appendChild(countdownTd);
+
         // Action buttons
         const actionTd = document.createElement('td');
         actionTd.setAttribute('data-label', 'Action');
+        const actionGrid = document.createElement('div');
+        actionGrid.className = 'account-action-grid';
 
         // Pay button
         const payBtn = document.createElement('button');
         payBtn.className = 'pay-btn';
         payBtn.textContent = 'View Bank Details';
         payBtn.onclick = () => openModal(item);
-        actionTd.appendChild(payBtn);
+        actionGrid.appendChild(payBtn);
 
         // Paid button
         const paidBtn = document.createElement('button');
@@ -972,29 +1166,136 @@ input:focus, select:focus {
             markAsPaid(item);
           }
         };
-        actionTd.appendChild(paidBtn);
+        actionGrid.appendChild(paidBtn);
 
         // Download Invoice button
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
         downloadBtn.textContent = 'Download Invoice';
         downloadBtn.onclick = () => downloadInvoice(item.po_number);
-        actionTd.appendChild(downloadBtn);
+        actionGrid.appendChild(downloadBtn);
 
         // Send Email button
         const emailBtn = document.createElement('button');
-        emailBtn.className = 'email-btn';
-        emailBtn.textContent = 'Send Email';
+        let emailSent = item.email_sent === true;
+        emailBtn.className = emailSent ? 'email-sent' : 'email-btn';
+        emailBtn.textContent = emailSent ? 'Resend Email' : 'Send Email';
         emailBtn.onclick = () => {
-          if (confirm('Send email to requested by email?')) {
-            sendEmailRequest(item, emailBtn);
+          const prompt = emailSent
+            ? 'Resend the decision email to the indentor?'
+            : 'Send email to the indentor?';
+          if (confirm(prompt)) {
+            sendEmailRequest(item, emailBtn, () => emailSent, (sent) => {
+              emailSent = sent;
+            });
           }
         };
-        actionTd.appendChild(emailBtn);
+        actionGrid.appendChild(emailBtn);
 
+        actionTd.appendChild(actionGrid);
         tr.appendChild(actionTd);
+
+        // Indentor
+        const indentorTd = document.createElement('td');
+        indentorTd.setAttribute('data-label', 'Indentor');
+        indentorTd.textContent = item.ordered_by || 'N/A';
+        tr.appendChild(indentorTd);
+
         tbody.appendChild(tr);
       });
+      updateAccountTableScrollbar();
+    }
+
+    function formatPaymentOption(item) {
+      const optionLabels = {
+        advance: 'Advance',
+        credit: 'Credit',
+        'after dispatch': 'After Dispatch',
+        'before dispatch': 'Before Dispatch'
+      };
+      const label = optionLabels[item.payment_option];
+      if (!label) return 'Not set';
+      if (item.payment_option === 'credit' && item.credit_days) {
+        return `${label} (${item.credit_days} days)`;
+      }
+      return label;
+    }
+
+    function formatPaymentDueDate(value) {
+      if (!value) return 'Not set';
+      const [year, month, day] = String(value).slice(0, 10).split('-').map(Number);
+      if (!year || !month || !day) return 'Not set';
+      return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC'
+      });
+    }
+
+    function getPaymentDueStatus(value) {
+      if (!value) return { label: 'No due date', className: 'no-date' };
+      const [year, month, day] = String(value).slice(0, 10).split('-').map(Number);
+      if (!year || !month || !day) return { label: 'No due date', className: 'no-date' };
+
+      const dueDay = Date.UTC(year, month - 1, day);
+      const today = new Date();
+      const todayDay = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+      const daysUntilDue = Math.round((dueDay - todayDay) / 86400000);
+
+      if (daysUntilDue < 0) {
+        const daysOverdue = Math.abs(daysUntilDue);
+        return {
+          label: `Overdue by ${daysOverdue} day${daysOverdue === 1 ? '' : 's'}`,
+          className: 'overdue'
+        };
+      }
+      if (daysUntilDue === 0) return { label: 'Due today', className: 'due-soon' };
+      if (daysUntilDue <= 7) {
+        return {
+          label: `Due in ${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'}`,
+          className: 'due-soon'
+        };
+      }
+      return { label: `Due in ${daysUntilDue} days`, className: 'upcoming' };
+    }
+
+    function getPaymentStatus(item) {
+      if (item.payment_option === 'credit' && !item.first_grn_date) {
+        return { label: 'Awaiting first GRN', className: 'awaiting-grn' };
+      }
+      return getPaymentDueStatus(item.payment_due_date);
+    }
+
+    function updatePaymentTrackingSummary() {
+      const counts = { overdue: 0, dueSoon: 0, later: 0, awaitingGrn: 0 };
+      accountData.forEach(item => {
+        const status = getPaymentStatus(item);
+        if (status.className === 'overdue') counts.overdue++;
+        if (status.className === 'due-soon') counts.dueSoon++;
+        if (status.className === 'upcoming') counts.later++;
+        if (status.className === 'awaiting-grn') counts.awaitingGrn++;
+      });
+
+      document.getElementById('overduePaymentCount').textContent = counts.overdue;
+      document.getElementById('upcomingPaymentCount').textContent = counts.dueSoon;
+      document.getElementById('laterPaymentCount').textContent = counts.later;
+      document.getElementById('awaitingGrnPaymentCount').textContent = counts.awaitingGrn;
+    }
+
+    function refreshPaymentCountdowns() {
+      document.querySelectorAll('#accountTableBody tr[data-payment-due-date]').forEach(row => {
+        const item = accountData.find(order => String(order.id) === row.dataset.orderId);
+        const status = item
+          ? getPaymentStatus(item)
+          : getPaymentDueStatus(row.dataset.paymentDueDate);
+        const badge = row.querySelector('.payment-due-badge');
+        if (badge) {
+          badge.className = `payment-due-badge ${status.className}`;
+          badge.textContent = status.label;
+        }
+      });
+      updatePaymentTrackingSummary();
     }
 
     function openModal(item) {
@@ -1385,11 +1686,15 @@ input:focus, select:focus {
   window.location.href = `/api/inventory-invoice/${poNumber}`;
 }
 
-    async function sendEmailRequest(item, button) {
+    async function sendEmailRequest(item, button, wasSent, setSent) {
       if (!item.id) {
         showError('Order ID not found');
         return;
       }
+
+      const alreadySent = wasSent();
+      button.disabled = true;
+      button.textContent = 'Sending...';
 
       try {
         const response = await fetch(`/api/send-email/${item.id}`, {
@@ -1409,15 +1714,18 @@ input:focus, select:focus {
         const result = await response.json();
 
         if (result.success) {
+          setSent(true);
           button.className = 'email-sent';
-          button.textContent = 'Email Sent';
-          button.disabled = true;
-          showSuccess();
+          button.textContent = 'Resend Email';
+          button.disabled = false;
+          showSuccess(alreadySent ? 'Email resent successfully.' : 'Email sent successfully.');
         } else {
           throw new Error('Email sending failed');
         }
       } catch (error) {
         console.error('Error sending email:', error);
+        button.textContent = alreadySent ? 'Resend Email' : 'Send Email';
+        button.disabled = false;
         showError(error.message || 'Error sending email');
       }
     }
@@ -1432,6 +1740,7 @@ input:focus, select:focus {
 
     // Add event listeners
     document.addEventListener('DOMContentLoaded', function() {
+      syncAccountTableScrollbars();
       const hamburger = document.querySelector('.hamburger');
       const sidebarClose = document.querySelector('.sidebar-close');
       if (hamburger) {
@@ -1450,6 +1759,7 @@ input:focus, select:focus {
       });
 
       fetchAccountDetails();
+      window.setInterval(refreshPaymentCountdowns, 60000);
     });
 
     async function saveRow(updatedData) {
