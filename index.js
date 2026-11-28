@@ -60,8 +60,8 @@ const pool = new Pool({
   user: "postgres",
   host: "13.234.3.0",
   database: "mydb",
-  // password:process.env.DB_PASSWORD,
-  password:'KIET@tech123',
+  password:process.env.DB_PASSWORD,
+  
     port: 5432,
 });
 
@@ -6500,7 +6500,7 @@ app.get("/view-mae-quotation/:param", async (req, res) => {
       company: {
         logo: path.join(process.cwd(), "public/images/page_logo.jpg"),
         name: quotation.companyname || "KIET TECHNOLOGIES PRIVATE LIMITED",
-        email: quotation.clientemail || "info@kiet.com",
+        email: quotation.clientemail || "N/A",
         gst: "29AAFCK6528D1ZG", // Fixed GST as per mae.js
         contact:quotation.clientphone || " ",
         address: quotation.companyaddress || "51/33, Aaryan Techpark, 3rd Cross, Bikasipura Main Rd, Vikram Nagar, Kumaraswamy Layout, Bengaluru - 560111",
